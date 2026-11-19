@@ -6,6 +6,7 @@
    placeholder. It reads no other app's files: team requests, Outbox and the Peak desk are read by the page from those apps' own
    endpoints, with their own sign-ins. No model calls here. */
 declare(strict_types=1);
+require_once __DIR__ . '/webpush.php';   /* 19 Nov: J.A.R.V.I.S.'s own phone alerts (jvPush) */
 
 function jvClean($s, int $n): string { return mb_substr(trim((string) preg_replace('/[\x00-\x1F\x7F]+/u', ' ', (string) $s)), 0, $n); }
 /** the laptop's last push: whitelisted fields only, whatever the file holds */
@@ -221,9 +222,84 @@ function jvRemindersRun(): array {
     }
     return $out;
 }
-/** one alert to Matthew's phones, the same one a desk reply makes: jvpush.php loads the Field app's own push code (its helpAlertMatthew) in a
-    separate process. JARVIS_PUSH_CMD is for the test copy only. */
+/* ---------------------------------------------------------------- Phone alerts, J.A.R.V.I.S.'s own (19 Nov, off the Sixfold app)
+   Real Web Push from this server with its own key (data/jarvis/push-vapid.json, 0600, made the first time it is needed and never replaced:
+   a new key would cut off every device) to the devices Matthew turned on from the page (data/jarvis/push-subs.json). The service worker
+   (jarvis/sw.js) shows it and a tap opens J.A.R.V.I.S. An iPhone takes them only from the app added to the Home Screen (Apple's rule).
+   Until a PHONE has subscribed, the old route runs as well (jvpush.php, the Field app's Matthew-only alert), so nothing is missed in the
+   switch; once one has, only Web Push. */
+function jvVapid(bool $make = false): ?array {
+    $f = aDataDir() . '/jarvis/push-vapid.json';
+    $j = is_file($f) ? json_decode((string) file_get_contents($f), true) : null;
+    if (is_array($j) && !empty($j['publicKey']) && !empty($j['privateKey'])) return $j;
+    if (!$make || file_exists($f)) return null;
+    @mkdir(dirname($f), 0700, true);
+    $lk = fopen($f . '.lock', 'c'); flock($lk, LOCK_EX);
+    try {
+        clearstatcache(); if (file_exists($f)) { $j = json_decode((string) file_get_contents($f), true); return is_array($j) ? $j : null; }
+        $k = vapidKeysGenerate();
+        $j = ['publicKey' => $k['publicKey'], 'privateKey' => $k['privateKey'], 'subject' => 'https://traverseplatforms.com/', 'made' => time()];
+        $tmp = $f . '.tmp'; if (@file_put_contents($tmp, json_encode($j, JSON_UNESCAPED_SLASHES), LOCK_EX) === false) return null;
+        @chmod($tmp, 0600); rename($tmp, $f);
+        return $j;
+    } catch (\Throwable $e) { if (function_exists('alog')) alog('push key not made', ['error' => mb_substr($e->getMessage(), 0, 120)]); return null; }
+    finally { flock($lk, LOCK_UN); fclose($lk); }
+}
+function jvSubsFile(): string { @mkdir(aDataDir() . '/jarvis', 0700, true); return 'jarvis/push-subs.json'; }
+function jvSubs(): array { return jget(jvSubsFile()); }
+function jvSubAdd(array $sub, string $device, bool $phone): array {
+    if (($e = webpushSubscriptionError($sub)) !== null) return ['ok' => false, 'error' => 'That subscription is not usable: ' . $e . '.'];
+    $h = substr(hash('sha256', (string) $sub['endpoint']), 0, 16);
+    jedit(jvSubsFile(), function ($a) use ($h, $sub, $device, $phone) {
+        if (!isset($a[$h]) && count($a) >= 6) { uasort($a, fn($x, $y) => ($x['seen'] ?? 0) <=> ($y['seen'] ?? 0)); unset($a[array_key_first($a)]); }
+        $a[$h] = ['sub' => ['endpoint' => (string) $sub['endpoint'], 'keys' => ['p256dh' => (string) $sub['keys']['p256dh'], 'auth' => (string) $sub['keys']['auth']]],
+            'device' => mb_substr(preg_replace('/[^A-Za-z0-9 .\'-]/', '', $device), 0, 30) ?: 'device', 'phone' => $phone, 'at' => (int) ($a[$h]['at'] ?? time()), 'seen' => time()];
+        return $a;
+    });
+    if (function_exists('alog')) alog('push device on', ['device' => $device, 'phone' => $phone]);
+    return ['ok' => true];
+}
+function jvSubDrop(string $endpoint): array {
+    $h = substr(hash('sha256', $endpoint), 0, 16);
+    jedit(jvSubsFile(), function ($a) use ($h) { unset($a[$h]); return $a; });
+    return ['ok' => true];
+}
+/** what the page shows: the devices (names only) and whether the old route still runs */
+function jvPushState(): array {
+    $d = []; $phone = false;
+    foreach (jvSubs() as $h => $s) { $d[] = ['id' => $h, 'device' => (string) ($s['device'] ?? ''), 'phone' => !empty($s['phone']), 'at' => (int) ($s['at'] ?? 0), 'ok' => (int) ($s['ok'] ?? 0)]; if (!empty($s['phone'])) $phone = true; }
+    return ['ok' => true, 'devices' => $d, 'phone' => $phone, 'fallback' => !$phone];
+}
+/** Web Push to every device he turned on: ['sent' => n, 'phone' => a phone is on] */
+function jvWebPush(string $title, string $text, string $url, string $tag): array {
+    $subs = jvSubs(); $out = ['sent' => 0, 'phone' => false, 'gone' => 0];
+    foreach ($subs as $s) if (!empty($s['phone'])) $out['phone'] = true;
+    if (!$subs) return $out;
+    $v = jvVapid(false); if (!$v) return $out;
+    $payload = json_encode(['title' => $title, 'body' => $text, 'url' => $url, 'tag' => $tag, 'at' => time()], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    /* the test copy's push service is a plain listener on 127.0.0.1; never on the host */
+    $opts = ['urgency' => 'high', 'topic' => substr(preg_replace('/[^A-Za-z0-9_-]/', '', $tag), 0, 32) ?: 'jarvis'] + (in_array(PHP_SAPI, ['cli', 'cli-server'], true) && getenv('JARVIS_PUSH_ALLOW_HTTP') ? ['allowHttp' => true] : []);
+    $gone = []; $ok = [];
+    foreach ($subs as $h => $s) {
+        $r = webpushSend((array) $s['sub'], $payload, $v, 86400, $opts);
+        if ($r['ok']) { $out['sent']++; $ok[] = $h; } elseif ($r['gone']) $gone[] = $h;
+        elseif (function_exists('alog')) alog('push failed', ['device' => (string) ($s['device'] ?? ''), 'error' => mb_substr((string) $r['error'], 0, 160)]);
+    }
+    if ($gone || $ok) jedit(jvSubsFile(), function ($a) use ($gone, $ok) { foreach ($gone as $h) unset($a[$h]); foreach ($ok as $h) if (isset($a[$h])) { $a[$h]['ok'] = time(); } return $a; });
+    $out['gone'] = count($gone);
+    if ($gone) { $out['phone'] = false; foreach (jvSubs() as $s) if (!empty($s['phone'])) $out['phone'] = true; }
+    return $out;
+}
+/** one alert to Matthew: Web Push to his devices; and, while no phone has subscribed yet, the old route too (jvPushOld) */
 function jvPush(string $title, string $text, string $url, string $tag): bool {
+    $w = jvWebPush($title, $text, $url, $tag);
+    if ($w['phone']) return $w['sent'] > 0;
+    $old = jvPushOld($title, $text, $url, $tag);
+    return $w['sent'] > 0 || $old;
+}
+/** the old route (fallback until his phone subscribes; remove with jvpush.php after that): jvpush.php loads the Field app's own push code
+    (its helpAlertMatthew) in a separate process. JARVIS_PUSH_CMD is for the test copy only. */
+function jvPushOld(string $title, string $text, string $url, string $tag): bool {
     $cmd = (string) getenv('JARVIS_PUSH_CMD');
     $cmd = $cmd !== '' ? $cmd : escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg(dirname(__DIR__) . '/jvpush.php');
     $p = proc_open($cmd, [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);

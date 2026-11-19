@@ -11,6 +11,11 @@ set -u
 ID="${1:?ticket id}"; ST="${2:-answered}"; shift 2 || shift $#
 case "$ST" in answered|matthew|working) ;; *) echo "status: answered, matthew or working"; exit 2;; esac
 [[ "$ID" =~ ^h[0-9]{14}[0-9a-f]{4}$ ]] || { echo "bad ticket id"; exit 2; }
+# 19 Nov: Matthew's own desk chats moved out of the Sixfold app into J.A.R.V.I.S. (assistant/jarvis/tools/desk-moved.txt lists them). A builder or
+# session that still replies to one here is sent on to J.A.R.V.I.S. (jarvis-reply.sh). Not when the watcher is answering a message written
+# in the Sixfold app itself (it sets HELP_REPLY_SIXFOLD=1 for those sessions). Staff tickets are never on the list.
+MV="$(cd "$(dirname "$0")/../.." && pwd)/assistant/jarvis/tools/desk-moved.txt"
+if [ "${HELP_REPLY_SIXFOLD:-0}" != 1 ] && [ -f "$MV" ] && grep -qx "$ID" "$MV"; then exec bash "$(dirname "$MV")/jarvis-reply.sh" "$ID" "$ST" "$@"; fi
 SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
 RF=""; FILES=""
 while [ $# -gt 0 ]; do

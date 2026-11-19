@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendor)) require $vendor;
-foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk'] as $f) require __DIR__ . '/lib/' . $f . '.php';
 
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -38,6 +38,17 @@ if ($action === 'firstpassword') {
 }
 /* the shared grocery list: Matthew signed in, or Claire with her own grocery-only password (lib/groceries.php) */
 if (in_array($action, ['gro', 'groadd', 'groset', 'groedit', 'grodel', 'groclear', 'gropick', 'grosearch', 'grologin', 'grologout', 'gropass', 'grousers'], true)) groAction($action, $body, $isPost);
+/* 19 Nov: the laptop's side of the J.A.R.V.I.S. desk (lib/desk.php), with the laptop's key in an X-Jarvis-Key header (only its hash is kept
+   here; the key is in the laptop's ~/.ssh). jvdpending: how many threads wait (a bare number, for help-watch.sh's 5-second look);
+   jvdreply: the session's answer (assistant/jarvis/tools/jarvis-reply.sh). Wrong keys count as wrong sign-in tries. */
+if ($action === 'jvdpending' || $action === 'jvdreply') {
+    if (tooManyTries()) out(['ok' => false, 'error' => 'Too many tries.'], 429);
+    if (!jdKeyOk((string) ($_SERVER['HTTP_X_JARVIS_KEY'] ?? ''))) { noteTry(); out(['ok' => false, 'error' => 'Not allowed.'], 403); }
+    if ($action === 'jvdpending') { header('Content-Type: text/plain; charset=utf-8'); echo jdPending(); exit; }
+    if (!$isPost) out(['ok' => false], 405);
+    $fl = array_values(array_filter((array) ($body['files'] ?? []), 'is_string'));
+    out(jdReply((string) ($body['id'] ?? ''), (string) ($body['status'] ?? 'answered'), (string) ($body['text'] ?? ''), !empty($body['refresh']), $fl));
+}
 if (!signedIn()) out(['ok' => false, 'error' => 'Signed out.'], 401);
 
 if ($action === 'signout') { $_SESSION = []; session_destroy(); out(['ok' => true]); }
@@ -59,6 +70,16 @@ if ($action === 'jvbuildhide') { if (!$isPost) out(['ok' => false], 405); out(jv
 if ($action === 'jvremind') { if (!$isPost) out(['ok' => false], 405); out(jvRemAdd((string) ($body['text'] ?? ''), (string) ($body['date'] ?? ''), (string) ($body['time'] ?? ''), is_array($body['money'] ?? null) ? $body['money'] : null, 'page')); }
 if ($action === 'jvremindset') { if (!$isPost) out(['ok' => false], 405); out(jvRemSet((string) ($body['id'] ?? ''), (string) ($body['op'] ?? ''), (int) ($body['days'] ?? 1))); }
 if ($action === 'jvdecide') { if (!$isPost) out(['ok' => false], 405); out(jvDecide($body)); }
+/* 19 Nov: his desk chats, in J.A.R.V.I.S. itself (lib/desk.php), and its own phone alerts (lib/jarvis.php jvPush) */
+if ($action === 'jvdesk') out(['ok' => true, 'threads' => jdList(), 'pending' => jdPending()]);
+if ($action === 'jvdeskfile') jdServeFile((string) ($_GET['id'] ?? ''), (string) ($_GET['f'] ?? ''), !empty($_GET['dl']));
+if ($action === 'jvdesksend') { if (!$isPost) out(['ok' => false], 405); @set_time_limit(60); out(jdSend($body)); }
+if ($action === 'jvdeskclose') { if (!$isPost) out(['ok' => false], 405); out(jdClose((string) ($body['id'] ?? ''))); }
+if ($action === 'jvpushkey') { $v = jvVapid(true); out($v ? ['ok' => true, 'publicKey' => $v['publicKey']] : ['ok' => false, 'error' => 'Alerts are not set up on this server yet.'], $v ? 200 : 503); }
+if ($action === 'jvpushstate') out(jvPushState());
+if ($action === 'jvpushsub') { if (!$isPost) out(['ok' => false], 405); out(jvSubAdd(is_array($body['subscription'] ?? null) ? $body['subscription'] : [], (string) ($body['device'] ?? 'device'), !empty($body['phone']))); }
+if ($action === 'jvpushunsub') { if (!$isPost) out(['ok' => false], 405); out(jvSubDrop((string) ($body['endpoint'] ?? ''))); }
+if ($action === 'jvpushtest') { if (!$isPost) out(['ok' => false], 405); $w = jvWebPush('J.A.R.V.I.S.', 'Test: alerts reach this device. Tap to open J.A.R.V.I.S.', '/a-e018bb82/jarvis/', 'jv-test'); out(['ok' => $w['sent'] > 0, 'sent' => $w['sent'], 'error' => $w['sent'] ? '' : 'No device took it. Turn alerts on first.']); }
 if (!$isPost) out(['ok' => false, 'error' => 'POST needed.'], 405);
 if ($action === 'setup') {   /* keys go in here, never through chat; an empty field leaves the saved one alone */
     jedit('config.json', function ($c) use ($body) {

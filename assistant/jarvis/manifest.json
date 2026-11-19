@@ -1,0 +1,16 @@
+{
+  "name": "J.A.R.V.I.S.",
+  "short_name": "J.A.R.V.I.S.",
+  "description": "Matthew's own assistant: inboxes, the desk on his laptop, reminders, team requests.",
+  "id": "/a-e018bb82/jarvis/",
+  "start_url": "/a-e018bb82/jarvis/",
+  "scope": "/a-e018bb82/jarvis/",
+  "display": "standalone",
+  "background_color": "#03060c",
+  "theme_color": "#03060c",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

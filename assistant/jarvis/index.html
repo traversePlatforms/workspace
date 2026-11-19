@@ -7,12 +7,21 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#03060c">
 <title>J.A.R.V.I.S.</title>
+<!-- 19 Nov (P-9): J.A.R.V.I.S. as its own app, scoped to /a-e018bb82/jarvis/ (manifest.json, sw.js, icons from the halo mark) -->
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="J.A.R.V.I.S.">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <!-- J.A.R.V.I.S., the merged page (2026-11-18). Matthew: "Yeah I want it them merged together. It will give jarvis application more
      function other then just the chat feature"; design: "Definitely the halo version of jarvis" (design/mockups-2026-11-18/jarvis-hub.html,
      direction A); crowding: "focus on changing the inboxes structure vs changing halo ... making them collaspable".
      Matthew's alone, behind the Assistant's sign-in (it lives in the Assistant's folder and talks to ../api.php). Two brains, always named
-     on the command bar: the Assistant (instant, the API, ../api.php?action=chat, only when he asks) and the J.A.R.V.I.S. desk (a ticket
-     to the Field app's help desk, answered by the session on his laptop in a few minutes). Team requests, Outbox and the Peak desk are read
+     on the command bar: the Assistant (instant, the API, ../api.php?action=chat, only when he asks) and the J.A.R.V.I.S. desk (since 19 Nov
+     his desk chats live here, in the Assistant's own data: ../api.php?action=jvdesk*, answered by the session on his laptop in a few
+     minutes; nothing of his goes through the Sixfold app any more). Team requests, Outbox and the Peak desk are read
      from those apps' own endpoints with their own sign-ins. Nothing on this page sends an email except Send in the reply sheet, after a
      yes in the confirm. The staff J.A.R.V.I.S. inside the Sixfold and Houston apps is untouched and cannot reach this page. -->
 <style>
@@ -249,6 +258,16 @@ button.li:hover .lt{color:#fff}
 .sheet .tm.them{align-self:flex-start;border:1px solid #3ee8ff2e;background:#3ee8ff0a}
 .sheet .tm.me{align-self:flex-end;background:#3ee8ff18;border:1px solid #3ee8ff40}
 .sheet .tm small{display:block;font:10px "JetBrains Mono",monospace;color:var(--mut);letter-spacing:.08em;margin-bottom:3px;text-transform:uppercase}
+.sheet .tm img{display:block;max-width:100%;max-height:340px;border-radius:8px;margin-top:6px;cursor:zoom-in;background:#04111b}
+.sheet .tm audio{display:block;width:min(280px,100%);margin-top:6px}
+.sheet .tm .vt{font-size:12.5px;color:var(--mut);margin-top:4px}
+.sheet .tm a.pdf{display:inline-flex;align-items:center;gap:6px;margin-top:6px;color:var(--c);border:1px solid #3ee8ff55;border-radius:6px;padding:5px 10px;text-decoration:none;font-size:12.5px}
+.sheet .attrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sheet .attrow .chipx{font-size:12px;color:var(--ink);border:1px solid #3ee8ff33;border-radius:999px;padding:3px 10px;display:inline-flex;gap:6px;align-items:center}
+.sheet .attrow .chipx button{color:var(--mut)}
+.sheet .btn.rec{border-color:#ff6b6b88;color:#ff6b6b}
+.sheet .nlist{display:flex;flex-direction:column;gap:6px;font-size:13px}
+.sheet .nlist .ok{color:var(--okc)}
 .sheet .warnline{font-size:12.5px;color:var(--warn);border:1px solid #ffb64844;background:#ffb6480d;padding:8px 10px;border-radius:6px}
 .cfbg{position:fixed;inset:0;z-index:60;background:#010409d0;display:grid;place-items:center;padding:16px}
 .cf{width:min(440px,100%);padding:18px 18px 16px}
@@ -327,6 +346,10 @@ button.li:hover .lt{color:#fff}
     { id: 'houston', name: 'Houston', api: '/api/c-houston-lawn-test-rounds.php', page: '/hl-f98938/' }
   ];
   var OUTBOX = '/outbox-092b0f/', PEAK = '/peak-desk-28d38d/';
+  /* 19 Nov (P-9): Posts (his post calendar) and the Sixfold app, one tap from the top bar; each with its own sign-in, as before */
+  var POSTS = '/posts-ab8c57/', SIXAPP = '/summit-de59ae83/';
+  /* 19 Nov: his own desk chats, in J.A.R.V.I.S. itself (../api.php?action=jvdesk...), never the Sixfold app */
+  var JD = { id: 'jarvis', name: 'J.A.R.V.I.S.' };
   var ME = 'Matthew Sharpe';
   var BRAINS = { assistant: 'Assistant, instant', desk: 'J.A.R.V.I.S. desk, sent to your laptop, a few minutes' };
   var STLABEL = { idle: 'Standing by', listen: 'Listening', think: 'Thinking', answer: 'Ready' };
@@ -364,7 +387,11 @@ button.li:hover .lt{color:#fff}
     car: '<path d="M4 16v-4l2-5h12l2 5v4z"/><path d="M4 12h16"/><circle cx="8" cy="16.5" r="1.6"/><circle cx="16" cy="16.5" r="1.6"/>',
     brief: '<path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
     pin: '<path d="M12 21s-6-5.5-6-10a6 6 0 0 1 12 0c0 4.5-6 10-6 10z"/><circle cx="12" cy="11" r="2"/>',
-    notes: '<path d="M5 3h10l4 4v14H5z"/><path d="M8 11h8M8 15h8M8 7h4"/>'
+    notes: '<path d="M5 3h10l4 4v14H5z"/><path d="M8 11h8M8 15h8M8 7h4"/>',
+    posts: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h4M7 17h7"/>',
+    leaf: '<path d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15z"/><path d="M5 19l8-8"/>',
+    cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+    app: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>'
   };
   function ic(n) { var s = document.createElement('span'); s.style.display = 'contents'; s.innerHTML = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">' + P[n] + '</svg>'; return s.firstChild; }
   function el(t, cls, txt) { var e = document.createElement(t); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
@@ -388,7 +415,7 @@ button.li:hover .lt{color:#fff}
 
   /* ------------------------------------------------------------ state */
   var app = document.getElementById('app');
-  var S = { home: null, st: null, team: {}, outbox: null, desk: null, gro: null, brain: store('jarvis.brain') === 'desk' ? 'desk' : 'assistant', tab: 'home',
+  var S = { home: null, st: null, team: {}, jd: null, outbox: null, desk: null, gro: null, brain: store('jarvis.brain') === 'desk' ? 'desk' : 'assistant', tab: 'home',
     fold: Object.assign({ brief: true }, store('jarvis.fold') || {}),   /* 19 Nov: the Morning brief starts folded (Matthew: "if i need a briefing I will ask for it") */ open: store('jarvis.open') || {}, needsAll: false, closedOpen: false, mineOpen: false, state: 'idle', briefed: false, pending: {},
     drive: !!store('jarvis.drive'), relisten: !!store('jarvis.relisten'), notes: {} };
   var phoneMq = window.matchMedia('(max-width: 979px)'), isPhone = phoneMq.matches;
@@ -437,7 +464,16 @@ button.li:hover .lt{color:#fff}
   }
   function drafted() { return items().filter(function (i) { return i.draftId; }).length; }
   /* 18 Nov: a request Matthew checked off is left out until something newer arrives in it (S.st.teamHidden, kept on the server) */
-  function tickets() { var all = [], hid = (S.st && S.st.teamHidden) || {}; DESKS.forEach(function (d) { var t = S.team[d.id]; if (t && t.ok) (t.tickets || []).forEach(function (x) { if ((hid[d.id + ':' + x.id] || 0) >= x.updated) return; all.push({ src: d, t: x }); }); }); return all.sort(function (a, b) { return b.t.updated - a.t.updated; }); }
+  function tickets() { var all = [], hid = (S.st && S.st.teamHidden) || {}; DESKS.forEach(function (d) { var t = S.team[d.id]; if (t && t.ok) (t.tickets || []).forEach(function (x) { if ((hid[d.id + ':' + x.id] || 0) >= x.updated) return; if (d.home && x.by === ME) return; /* 19 Nov: his own chats live in J.A.R.V.I.S. now (moved), not in the Sixfold app's list */ all.push({ src: d, t: x }); }); }); return all.sort(function (a, b) { return b.t.updated - a.t.updated; }); }
+  /* 19 Nov: his desk chats, from J.A.R.V.I.S.'s own store */
+  function myDesk() { return (S.jd && S.jd.ok && S.jd.threads) || []; }
+  function deskRow(th) {
+    var first = (th.msgs || []).filter(function (m) { return m.mine; })[0] || (th.msgs || [])[0] || { text: '' };
+    var r = btn(null, null, 'li', function () { openDesk(th.id); }); r.setAttribute('data-desk', th.id);
+    var lx = el('div', 'lx'); add(lx, el('div', 'lt', oneLine(first.text || (first.audio && first.audio.length ? 'Voice note' : first.photos && first.photos.length ? 'Photo' : ''), 70)), el('div', 'ls', 'J.A.R.V.I.S. desk · ' + plural((th.msgs || []).length, 'message') + ' · ' + ago(th.updated) + ' ago' + (th.moved ? ' · from before the move' : '')));
+    var b = STB[th.status] || ['mu', th.status];
+    add(r, lx, el('span', 'bdg ' + b[0], b[1])); return r;
+  }
   function teamItem(x) {   /* a request row with its Check off */
     var w = el('div', 'titem'), r = ticketRow(x), ck = btn('✓', null, 'tcheck', function () { ck.disabled = true; apost('jvteamhide', { key: x.src.id + ':' + x.t.id, updated: x.t.updated }).then(function (j) { if (j.ok) { S.st = S.st || {}; S.st.teamHidden = S.st.teamHidden || {}; S.st.teamHidden[x.src.id + ':' + x.t.id] = x.t.updated; draw(); toast('Checked off. It comes back if someone writes in it again.'); } else { ck.disabled = false; toast(j.error || 'Could not check it off.'); } }, function () { ck.disabled = false; toast('No connection.'); }); });
     ck.title = 'Check off (done)'; ck.setAttribute('aria-label', 'Check off this request'); add(w, r, ck); return w;
@@ -549,11 +585,14 @@ button.li:hover .lt{color:#fff}
     team: function () {
       var out = [], miss = [];
       DESKS.forEach(function (d) { var t = S.team[d.id]; if (!t) return; if (t._status === 401) miss.push(d); });
-      var open = teamOpen(), closed = tickets().filter(function (x) { return x.t.by !== ME && x.t.status === 'closed'; }), mine = tickets().filter(function (x) { return x.t.by === ME; });
+      var open = teamOpen(), closed = tickets().filter(function (x) { return x.t.by !== ME && x.t.status === 'closed'; }), mine = tickets().filter(function (x) { return x.t.by === ME; }), jd = myDesk();
       open.slice(0, 8).forEach(function (x) { out.push(teamItem(x)); });
       if (!open.length && !miss.length) out.push(el('div', 'empty', Object.keys(S.team).length ? 'No open requests from the team.' : 'Looking…'));
       if (closed.length) { out.push(btn((S.closedOpen ? 'Hide' : 'Show') + ' closed (' + closed.length + ')', null, 'more', function () { S.closedOpen = !S.closedOpen; draw(); })); if (S.closedOpen) closed.slice(0, 10).forEach(function (x) { out.push(ticketRow(x)); }); }
-      if (mine.length) { out.push(btn((S.mineOpen ? 'Hide' : 'Show') + ' your desk chats (' + mine.length + ')', null, 'more', function () { S.mineOpen = !S.mineOpen; draw(); })); if (S.mineOpen) mine.slice(0, 10).forEach(function (x) { out.push(teamItem(x)); }); }
+      /* 19 Nov: his desk chats are J.A.R.V.I.S. conversations (its own store); the Houston test install's chats of his keep their old view */
+      var db = btn((S.mineOpen ? 'Hide' : 'Show') + ' your desk chats (' + jd.length + ')', null, 'more', function () { S.mineOpen = !S.mineOpen; draw(); }); db.id = 'mydesk'; out.push(db);
+      if (S.mineOpen) { jd.slice(0, 12).forEach(function (th) { out.push(deskRow(th)); }); var nd = btn('New desk chat', 'plus', 'more', function () { openDesk(null); }); nd.id = 'newdesk'; out.push(nd); }
+      if (mine.length) { out.push(btn((S.houOpen ? 'Hide' : 'Show') + ' your Houston test chats (' + mine.length + ')', null, 'more', function () { S.houOpen = !S.houOpen; draw(); })); if (S.houOpen) mine.slice(0, 10).forEach(function (x) { out.push(teamItem(x)); }); }
       miss.forEach(function (d) { var h = el('div', 'hint'); add(h, d.name + ' J.A.R.V.I.S.: sign in to its app once on this device, then this fills in. ', btn('Open ' + d.name, null, null, function () { openView('page', d); })); out.push(h); });
       return out;
     },
@@ -760,7 +799,8 @@ button.li:hover .lt{color:#fff}
     var st = el('span', 'st' + (lp.on ? '' : ' off')); add(st, el('i'), lp.text); st.title = 'From the overnight check, which reports from your laptop every 30 minutes';
     add(t, el('span', 'wm', 'J.A.R.V.I.S.'), st, S.home ? el('span', null, plural(accts().length, 'inbox', 'inboxes') + ' linked') : null, sp ? el('span', null, 'API $' + sp.usd.toFixed(2) + ' / $' + Math.round(sp.budget)) : null);
     var vw = el('div', 'vw');
-    [['inbox', 'Full inbox'], ['cart', 'Groceries'], ['out', 'Outbox'], ['peak', 'Peak desk'], ['cog', 'Settings']].forEach(function (v) { var b = btn(null, v[0], null, function () { openView({ inbox: 'inbox', cart: 'groceries', out: 'outbox', peak: 'peak', cog: 'settings' }[v[0]]); }); b.title = v[1]; b.setAttribute('aria-label', v[1]); vw.appendChild(b); });
+    [['inbox', 'Full inbox'], ['cart', 'Groceries'], ['out', 'Outbox'], ['peak', 'Peak desk'], ['posts', 'Posts'], ['leaf', 'Sixfold app'], ['cog', 'Settings']].forEach(function (v) { var b = btn(null, v[0], null, function () { openView({ inbox: 'inbox', cart: 'groceries', out: 'outbox', peak: 'peak', posts: 'posts', leaf: 'sixfold', cog: 'settings' }[v[0]]); }); b.title = v[1]; b.setAttribute('aria-label', v[1]); b.setAttribute('data-view', v[0]); vw.appendChild(b); });
+    var nb = btn(null, 'bell', null, function () { notifySheet(); }); nb.id = 'notifybtn'; nb.title = 'Phone alerts and the app'; nb.setAttribute('aria-label', 'Phone alerts and the app'); if (!S.pushOn) nb.style.color = 'var(--warn)'; vw.insertBefore(nb, vw.firstChild);
     var dv = btn(null, 'car', null, function () { setDrive(true); }); dv.id = 'drivebtn'; dv.title = 'Driving mode: big buttons, read aloud'; dv.setAttribute('aria-label', 'Driving mode'); vw.insertBefore(dv, vw.firstChild);
     add(t, vw, el('span', 'clock mono', nowLine()));
     return t;
@@ -918,9 +958,10 @@ button.li:hover .lt{color:#fff}
   function moreList() {
     var w = el('div', 'vlist'), g = groCount();
     [['inbox', 'inbox', 'Full inbox', 'Every email the Assistant sorted, by inbox and kind'], ['cart', 'groceries', 'Groceries', g == null ? 'The shared list' : g + ' on the list'],
-     ['out', 'outbox', 'Outbox', 'Every automatic email, by business'], ['peak', 'peak', 'Peak desk', 'Sponsors and expo leads'], ['cog', 'settings', 'Settings', 'Inboxes, keys, spending']].forEach(function (v) {
+     ['out', 'outbox', 'Outbox', 'Every automatic email, by business'], ['peak', 'peak', 'Peak desk', 'Sponsors and expo leads'], ['posts', 'posts', 'Posts', 'The post calendar'], ['leaf', 'sixfold', 'Sixfold app', 'The Field app, with its own sign-in'], ['cog', 'settings', 'Settings', 'Inboxes, keys, spending']].forEach(function (v) {
       var b = btn(null, v[0], null, function () { openView(v[1]); }), x = el('span'); add(x, v[2], el('small', null, v[3])); b.appendChild(x); w.appendChild(b);
     });
+    var al = btn(null, 'bell', null, function () { notifySheet(); }), ax = el('span'); add(ax, 'Phone alerts and the app', el('small', null, S.pushOn ? 'On for this device' : 'Off on this device: tap to turn on')); al.appendChild(ax); al.id = 'morealerts'; w.insertBefore(al, w.firstChild);
     var nc = btn(null, 'plus', null, function () { apost('chatclear', {}).then(function () { toast('The Assistant starts a new conversation.'); }); }), nx = el('span'); add(nx, 'New Ask conversation', el('small', null, 'The Assistant forgets this chat (your email is untouched)')); nc.appendChild(nx); w.appendChild(nc);
     return w;
   }
@@ -1199,31 +1240,34 @@ button.li:hover .lt{color:#fff}
       setState('answer'); refresh();
     }, function () { asking = false; sendB.disabled = false; w.remove(); msgAi('No connection. Try again.', 'Assistant · instant').classList.add('bad'); setState('idle'); });
   }
-  /* the desk: a ticket to the Field app's J.A.R.V.I.S. as Matthew (his own tickets have no limits and run on Opus); the session on his
-     laptop answers it. Nothing is answered here. */
+  /* the desk: since 19 Nov a message in J.A.R.V.I.S.'s own desk store (../api.php?action=jvdesksend), never the Sixfold app; the session on
+     his laptop takes it from there (no limits, Opus, as before) and answers. Nothing is answered here. */
   /* 19 Nov: o.show (what his own bubble says, for meeting notes, Remember and decisions) and o.title; resolves with the ticket or null */
   function deskSend(t, o) {
-    o = o || {}; var src = DESKS[0], lp = laptop();
+    o = o || {}; var lp = laptop();
     msgMe(o.show || t); setState('think');
-    return xpost(src.api + '?action=helpsend', { text: t, ctx: { screen: 'jarvis' } }).then(function (r) {
-      if (r._status === 401) { card({ icon: 'help', title: 'J.A.R.V.I.S. desk', warn: true, noRemember: true, quote: 'Sign in to the Field app once on this device (your own sign-in), then send it again. Your message is below so you can copy it.\n\n' + t, acts: [['Open the Field app', 'open', 'sec', function () { openView('page', src); }]] }); setState('idle'); return null; }
-      if (!r.ok || !r.ticket) { msgAi(r.error || 'The desk did not take it. Try again.', 'J.A.R.V.I.S. desk').classList.add('bad'); setState('idle'); return null; }
-      var tk = r.ticket; S.pending[tk.id] = { src: src, seen: (tk.msgs || []).length, at: Date.now() };
+    return apost('jvdesksend', { text: t, ctx: { screen: 'jarvis' } }).then(function (r) {
+      if (r._status === 401) { signin(); return null; }
+      if (!r.ok || !r.thread) { msgAi(r.error || 'The desk did not take it. Try again.', 'J.A.R.V.I.S. desk').classList.add('bad'); setState('idle'); return null; }
+      var tk = r.thread; S.pending[tk.id] = { seen: (tk.msgs || []).length, at: Date.now() }; jdPut(tk);
       card({ id: 'dk-' + tk.id, icon: 'help', title: o.title || 'Sent to J.A.R.V.I.S. desk', badge: ['On your laptop', 'nm'], noRemember: true, warn: !lp.on, quote: (lp.on ? 'It usually answers in a few minutes.' : lp.desk + '.') + ' The answer appears here and in your desk chats.',
-        meta: 'J.A.R.V.I.S. desk · sent to your laptop, a few minutes', acts: [['Open the thread', 'help', 'sec', function () { openThread({ src: src, t: tk }); }]] });
+        meta: 'J.A.R.V.I.S. desk · sent to your laptop, a few minutes', acts: [['Open the thread', 'help', 'sec', function () { openDesk(tk.id); }]] });
       if (S.drive) say(lp.on ? 'Sent to the desk.' : 'Sent. Your laptop is asleep, so the desk answers when it wakes.', true);
       setState('idle'); pollDesk(); return tk;
-    });
+    }, function () { msgAi('No connection: the desk did not get it. Try again.', 'J.A.R.V.I.S. desk').classList.add('bad'); setState('idle'); return null; });
   }
+  function jdPut(th) { S.jd = S.jd || { ok: true, threads: [] }; S.jd.threads = [th].concat((S.jd.threads || []).filter(function (x) { return x.id !== th.id; })); }
+  function loadDesk() { return aget('jvdesk').then(function (r) { if (r.ok) S.jd = r; }, function () {}); }
   function pollDesk() {
     clearTimeout(pollDesk.t);
     var ids = Object.keys(S.pending); if (!ids.length) return;
     pollDesk.t = setTimeout(function () {
       if (document.hidden) { pollDesk(); return; }
-      loadTeam(DESKS[0]).then(function () {
-        var tl = (S.team.sixfold && S.team.sixfold.tickets) || [];
+      var staff = ids.some(function (id) { return S.pending[id].src; });   /* a reply he put into a staff thread (Team requests, unchanged) */
+      Promise.all([loadDesk(), staff ? loadTeam(DESKS[0]) : null]).then(function () {
+        var tl = myDesk(), sl = (S.team.sixfold && S.team.sixfold.tickets) || [];
         ids.forEach(function (id) {
-          var p = S.pending[id], tk = tl.filter(function (x) { return x.id === id; })[0];
+          var p = S.pending[id], tk = (p.src ? sl : tl).filter(function (x) { return x.id === id; })[0];
           if (!tk) { if (Date.now() - p.at > 45 * 60000) delete S.pending[id]; return; }
           var fresh = (tk.msgs || []).slice(p.seen).filter(function (m) { return !m.mine; });
           fresh.forEach(function (m) { msgAi(m.text, 'J.A.R.V.I.S. desk · laptop'); });
@@ -1361,9 +1405,154 @@ button.li:hover .lt{color:#fff}
       });
     });
   }
-  /* the other pages, inside this one: the Assistant's full inbox, Settings and Groceries; Outbox; the Peak desk; a desk thread */
+  /* 19 Nov (Matthew: the open-thread option "just tells me to open the sixfold app"): his desk chat in full, here. Photos and voice notes
+     load from ../api.php?action=jvdeskfile with his own sign-in; PDFs open in the browser's reader. He adds to it from here (words, up to 4
+     photos, a voice note), and it refreshes while open. id null: a new desk chat. */
+  function jdFile(id, n, dl) { return API + '?action=jvdeskfile&id=' + encodeURIComponent(id) + '&f=' + encodeURIComponent(n) + (dl ? '&dl=1' : ''); }
+  function openDesk(id) {
+    var th = id ? myDesk().filter(function (x) { return x.id === id; })[0] : null;
+    var sh = sheet(th ? 'Desk chat · J.A.R.V.I.S.' : 'New desk chat · J.A.R.V.I.S.', th ? (STB[th.status] || ['', th.status])[1] + ' · started ' + ago(th.at) + ' ago' : 'Goes to the desk on your laptop');
+    sh.body.id = 'deskthread';
+    var thr = el('div', 'thr'); thr.id = 'deskmsgs'; sh.body.appendChild(thr);
+    var seen = -1;
+    function paint(t) {
+      if (!t) { thr.textContent = ''; thr.appendChild(el('div', 'hint', 'Write what you need. The desk on your laptop answers here, usually in a few minutes.')); return; }
+      if ((t.msgs || []).length === seen) return; seen = (t.msgs || []).length; thr.textContent = '';
+      if (t.moved) thr.appendChild(el('div', 'hint', 'This chat started in the Sixfold app and moved here on 19 Nov. It is yours alone now.'));
+      (t.msgs || []).forEach(function (m) {
+        var d = el('div', 'tm ' + (m.mine ? 'me' : 'them')); d.appendChild(el('small', null, (m.mine ? 'You' : 'J.A.R.V.I.S.') + ' · ' + whenStr(m.at)));
+        if (m.text) said(d, m.text);
+        (m.photos || []).forEach(function (p) { var im = el('img'); im.src = jdFile(t.id, p.n); im.alt = 'Photo'; im.loading = 'lazy'; im.addEventListener('click', function () { window.open(jdFile(t.id, p.n), '_blank', 'noopener'); }); d.appendChild(im); });
+        (m.audio || []).forEach(function (a) { var au = el('audio'); au.controls = true; au.preload = 'none'; au.src = jdFile(t.id, a.n); d.appendChild(au); d.appendChild(el('div', 'vt', a.text ? 'Voice note: ' + a.text : a.failed ? 'Voice note (could not be turned into text)' : 'Voice note' + (a.secs ? ', ' + a.secs + ' s' : ''))); });
+        (m.files || []).forEach(function (f) { var a = el('a', 'pdf'); a.appendChild(ic('doc')); a.appendChild(document.createTextNode('Open ' + f.n.replace(/\.pdf$/i, '').replace(/[-_]+/g, ' '))); a.href = jdFile(t.id, f.n); a.target = '_blank'; a.rel = 'noopener'; d.appendChild(a); });
+        thr.appendChild(d);
+      });
+      setTimeout(function () { thr.lastChild && thr.lastChild.scrollIntoView({ block: 'end' }); }, 30);
+    }
+    paint(th);
+    sh.body.appendChild(el('label', 'rl', th ? 'Add to this chat' : 'Your message'));
+    var ta = el('textarea'); ta.id = 'deskreply'; ta.style.minHeight = '90px'; sh.body.appendChild(ta);
+    /* photos (up to 4, made smaller on the device) and one voice note, as the Field app's chat allowed */
+    var pics = [], voiceNote = null, att = el('div', 'attrow');
+    var fi = el('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.multiple = true; fi.style.display = 'none'; fi.id = 'deskphotos';
+    var pb = btn('Photo', 'cam', 'btn sec', function () { fi.click(); }); pb.id = 'deskphotobtn';
+    var vb = btn('Voice note', 'mic', 'btn sec', function () { recordNote(); }); vb.id = 'deskvoicebtn';
+    var chips = el('div', 'attrow');
+    function paintAtt() { chips.textContent = ''; pics.forEach(function (p, i) { var c = el('span', 'chipx', 'Photo ' + (i + 1)); c.appendChild(btn('×', null, null, function () { pics.splice(i, 1); paintAtt(); })); chips.appendChild(c); }); if (voiceNote) { var c2 = el('span', 'chipx', 'Voice note, ' + voiceNote.secs + ' s'); c2.appendChild(btn('×', null, null, function () { voiceNote = null; paintAtt(); })); chips.appendChild(c2); } }
+    fi.addEventListener('change', function () { [].slice.call(fi.files || []).slice(0, 4 - pics.length).forEach(function (file) { shrinkPhoto(file).then(function (b64) { if (b64) { pics.push(b64); paintAtt(); } else toast('That photo could not be read.'); }); }); fi.value = ''; });
+    var rec2 = null, recT = 0;
+    function recordNote() {
+      if (rec2) { rec2.stop(); return; }
+      if (!navigator.mediaDevices || !window.MediaRecorder) { toast('Voice notes need a newer browser here. Typing always works.'); return; }
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+        var parts = [], mr = new MediaRecorder(stream); rec2 = mr; recT = Date.now(); vb.classList.add('rec'); vb.lastChild.textContent = 'Stop (2 min max)';
+        var cap = setTimeout(function () { if (mr.state !== 'inactive') mr.stop(); }, 120000);
+        mr.ondataavailable = function (e) { if (e.data && e.data.size) parts.push(e.data); };
+        mr.onstop = function () { clearTimeout(cap); stream.getTracks().forEach(function (tr) { tr.stop(); }); rec2 = null; vb.classList.remove('rec'); vb.lastChild.textContent = 'Voice note';
+          var blob = new Blob(parts, { type: mr.mimeType || 'audio/webm' }), secs = Math.max(1, Math.round((Date.now() - recT) / 1000));
+          var fr = new FileReader(); fr.onload = function () { voiceNote = { data: String(fr.result).split(',')[1], mime: blob.type, secs: secs }; paintAtt(); }; fr.readAsDataURL(blob); };
+        hush(); mr.start();
+      }, function () { toast('The microphone is blocked for this page.'); });
+    }
+    add(att, pb, vb, fi); sh.body.appendChild(att); sh.body.appendChild(chips);
+    var row = el('div', 'racts'), sd = el('div', 'said', 'Answered by J.A.R.V.I.S. desk on your laptop, in a few minutes.'), go = btn('Send to the desk', 'send', 'btn pri'); go.id = 'desksend';
+    add(row, sd, go); sh.body.appendChild(row);
+    sh.setGuard(function () { return !(ta.value.trim() || pics.length || voiceNote) || confirmBox('Close without sending what you wrote?', 'Close it'); });
+    go.addEventListener('click', function () {
+      var text = ta.value.trim(); if (text.length < 2 && !pics.length && !voiceNote) { sd.textContent = 'Write it first.'; return; }
+      go.disabled = true; sd.textContent = 'Sending…';
+      var body = { text: text, ctx: { screen: 'jarvis' } }; if (th) body.id = th.id; if (pics.length) body.photos = pics; if (voiceNote) body.audio = voiceNote;
+      apost('jvdesksend', body).then(function (r) {
+        go.disabled = false;
+        if (!r.ok || !r.thread) { sd.textContent = r.error || 'Not sent.'; return; }
+        th = r.thread; jdPut(th); ta.value = ''; pics = []; voiceNote = null; paintAtt(); paint(th);
+        sd.textContent = 'Sent. The answer appears here.'; S.pending[th.id] = { seen: (th.msgs || []).length, at: Date.now() }; pollDesk(); draw();
+      }, function () { go.disabled = false; sd.textContent = 'No connection: not sent.'; });
+    });
+    /* fresh while open */
+    var tick = setInterval(function () {
+      if (!document.getElementById('deskthread')) { clearInterval(tick); return; }
+      if (document.hidden || !th) return;
+      loadDesk().then(function () { var n = myDesk().filter(function (x) { return x.id === th.id; })[0]; if (n) { th = n; paint(n); } });
+    }, 10000);
+    setTimeout(function () { ta.focus(); }, 60);
+  }
+  /* a photo made smaller on the device (longest side 1600 px, JPEG), as base64 */
+  function shrinkPhoto(file) {
+    return new Promise(function (res) {
+      var u = URL.createObjectURL(file), im = new Image();
+      im.onload = function () { var k = Math.min(1, 1600 / Math.max(im.width, im.height)), c = document.createElement('canvas'); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u); res(c.toDataURL('image/jpeg', 0.85).split(',')[1]); };
+      im.onerror = function () { URL.revokeObjectURL(u); res(null); };
+      im.src = u;
+    });
+  }
+
+  /* 19 Nov (P-9): phone alerts from J.A.R.V.I.S. itself (Web Push, its own key; lib/jarvis.php jvPush) and installing it as its own app.
+     iPhone: alerts only from the app added to the Home Screen (Apple's rule), said on screen. */
+  var installEv = null;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEv = e; });
+  function standalone() { return !!((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone); }
+  function isIos() { var ua = navigator.userAgent; return /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); }
+  function isPhoneUa() { return isIos() || /Android|Mobile/.test(navigator.userAgent); }
+  function pushOk() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && window.isSecureContext; }
+  function deviceName() { var ua = navigator.userAgent; return (isIos() ? (/iPad/.test(ua) ? 'iPad' : 'iPhone') : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'device') + (standalone() ? ' app' : ' browser'); }
+  function keyBytes(b) { var s2 = (b + '==='.slice((b.length + 3) % 4)).replace(/-/g, '+').replace(/_/g, '/'), raw = atob(s2), o = new Uint8Array(raw.length); for (var i = 0; i < raw.length; i++) o[i] = raw.charCodeAt(i); return o; }
+  var swReg = null;
+  function swReady() { return swReg ? Promise.resolve(swReg) : ('serviceWorker' in navigator ? navigator.serviceWorker.register('sw.js', { scope: './', updateViaCache: 'none' }).then(function (r) { swReg = r; return r; }) : Promise.reject(new Error('no sw'))); }
+  function pushCheck() { if (!pushOk()) { S.pushOn = false; return Promise.resolve(false); } return swReady().then(function (r) { return r.pushManager.getSubscription(); }).then(function (sub) { S.pushOn = !!sub && Notification.permission === 'granted'; if (sub && S.pushOn) apost('jvpushsub', { subscription: sub.toJSON(), device: deviceName(), phone: isPhoneUa() }); return S.pushOn; }, function () { S.pushOn = false; return false; }); }
+  function pushOn() {
+    if (!pushOk()) return Promise.resolve(isIos() && !standalone() ? 'ios' : 'unsupported');
+    var key = aget('jvpushkey');
+    return Notification.requestPermission().then(function (perm) {
+      if (perm !== 'granted') return perm === 'denied' ? 'blocked' : 'dismissed';
+      return Promise.all([swReady(), key]).then(function (x) {
+        if (!x[1].ok) return 'nokey';
+        return x[0].pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(x[1].publicKey) })
+          .then(function (sub) { return apost('jvpushsub', { subscription: sub.toJSON(), device: deviceName(), phone: isPhoneUa() }); })
+          .then(function (j) { S.pushOn = !!j.ok; return j.ok ? 'on' : 'failed'; });
+      });
+    }).catch(function () { return 'failed'; });
+  }
+  function pushOff() { return swReady().then(function (r) { return r.pushManager.getSubscription(); }).then(function (sub) { if (!sub) return; var ep = sub.endpoint; return sub.unsubscribe().then(function () { return apost('jvpushunsub', { endpoint: ep }); }); }).then(function () { S.pushOn = false; }, function () { S.pushOn = false; }); }
+  var PUSHSAY = { ios: 'On an iPhone, alerts come only to J.A.R.V.I.S. added to the Home Screen. Steps below.', unsupported: 'This browser cannot take alerts. Chrome or Edge on a computer or Android, or J.A.R.V.I.S. from the iPhone Home Screen, can.',
+    blocked: 'Alerts are blocked for J.A.R.V.I.S. here. Computer: click the icon left of the address and allow Notifications. iPhone: Settings, Notifications, J.A.R.V.I.S.', dismissed: 'Not turned on. Tap again and choose Allow.', nokey: 'The server could not make its alert key. Try again in a minute.', failed: 'That did not work. Try again in a minute.' };
+  function notifySheet() {
+    var sh = sheet('Phone alerts and the app', 'J.A.R.V.I.S. on its own: no Sixfold app needed'); sh.body.id = 'notify';
+    var st = el('div', 'nlist'); sh.body.appendChild(st);
+    function paint() {
+      st.textContent = '';
+      st.appendChild(el('div', S.pushOn ? 'ok' : null, S.pushOn ? 'Alerts are on for this device (' + deviceName() + ').' : 'Alerts are off on this device.'));
+      st.appendChild(el('div', 'hint', 'Desk answers, reminders on the day and builder alerts come here as alerts. A tap opens J.A.R.V.I.S.'));
+      var row = el('div', 'racts');
+      if (!S.pushOn) { var on = btn('Turn on alerts', 'bell', 'btn pri', function () { on.disabled = true; pushOn().then(function (r) { on.disabled = false; if (r === 'on') { toast('Alerts are on for this device.'); draw(); } else toast(PUSHSAY[r] || 'Not turned on.'); paint(); }); }); on.id = 'pushon'; row.appendChild(on); }
+      else {
+        var te = btn('Send a test', 'send', 'btn sec', function () { te.disabled = true; apost('jvpushtest', {}).then(function (j) { te.disabled = false; toast(j.ok ? 'Sent to ' + plural(j.sent, 'device') + '.' : (j.error || 'No device took it.')); }); }); te.id = 'pushtest';
+        var of = btn('Turn off here', null, 'btn gh', function () { pushOff().then(function () { toast('Alerts are off on this device.'); paint(); draw(); }); }); of.id = 'pushoff';
+        add(row, te, of);
+      }
+      st.appendChild(row);
+      aget('jvpushstate').then(function (j) {
+        if (!j.ok) return; var d = j.devices || [];
+        st.appendChild(el('div', 'hint', d.length ? 'Alerts on: ' + d.map(function (x) { return x.device; }).join(', ') + '.' : 'No device has alerts on yet.'));
+        if (j.fallback) st.appendChild(el('div', 'hint', 'Until a phone has them on, alerts also still come the old way (through the Field app).'));
+      });
+      /* install */
+      st.appendChild(el('div', 'sub', 'J.A.R.V.I.S. as its own app'));
+      if (standalone()) st.appendChild(el('div', 'ok', 'You are in the J.A.R.V.I.S. app.'));
+      else if (isIos()) { var ol = el('ol', 'hint'); ol.style.paddingLeft = '18px'; ['Open this page in Safari.', 'Tap Share (the square with an arrow).', 'Tap Add to Home Screen, then Add.', 'Open J.A.R.V.I.S. from the new icon and sign in once.', 'Tap the bell, then Turn on alerts, and Allow.'].forEach(function (x) { ol.appendChild(el('li', null, x)); }); st.appendChild(el('div', null, 'iPhone: alerts need J.A.R.V.I.S. on the Home Screen.')); st.appendChild(ol); }
+      else if (installEv) { var ib = btn('Install J.A.R.V.I.S.', 'app', 'btn sec', function () { installEv.prompt(); installEv.userChoice.then(function () { installEv = null; paint(); }); }); ib.id = 'installbtn'; st.appendChild(ib); }
+      else st.appendChild(el('div', 'hint', 'Chrome or Edge: the install icon at the right of the address bar (or menu, Install J.A.R.V.I.S.). Android: menu, Add to Home screen.'));
+      if (window.top !== window) st.appendChild(el('div', 'hint', 'You are inside the hub. Open J.A.R.V.I.S. in its own tab to install it: ' + location.origin + '/a-e018bb82/jarvis/'));
+    }
+    paint();
+  }
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open') openFromUrl(String(e.data.url || '')); });
+  /* a tap on an alert, or a link: ?desk=<id> opens that desk chat */
+  function openFromUrl(u) { var m = /[?&]desk=(h[0-9]{14}[0-9a-f]{4})/.exec(u); if (!m) return; if (u === location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }   /* a reload does not open it again */ var go = function () { openDesk(m[1]); }; if (myDesk().some(function (x) { return x.id === m[1]; })) go(); else loadDesk().then(go); }
+
+  /* the other pages, inside this one: the Assistant's full inbox, Settings and Groceries; Outbox; the Peak desk; Posts; the Sixfold app; a team thread */
   function openView(kind, src, ticket) {
-    var V = { inbox: ['Full inbox', '../'], settings: ['Settings', '../'], groceries: ['Groceries', '../g.html?v=2'], outbox: ['Outbox', OUTBOX], peak: ['Peak desk', PEAK] }[kind];
+    var V = { inbox: ['Full inbox', '../'], settings: ['Settings', '../'], groceries: ['Groceries', '../g.html?v=2'], outbox: ['Outbox', OUTBOX], peak: ['Peak desk', PEAK], posts: ['Posts', POSTS], sixfold: ['Sixfold app', SIXAPP] }[kind];
     if (kind === 'page') V = [src.name + (ticket ? ' · J.A.R.V.I.S.' : ''), src.page + (ticket ? '?help=' + encodeURIComponent(ticket) : '')];
     var old = document.getElementById('view'); if (old) old.remove();
     var v = el('div', 'view'); v.id = 'view';
@@ -1390,7 +1579,7 @@ button.li:hover .lt{color:#fff}
     return Promise.all([aget('home'), aget('jvstatus')]).then(function (r) {
       if (r[0]._status === 401) { signin(); return; }
       if (r[0].ok) S.home = r[0]; if (r[1].ok) S.st = r[1];
-      return Promise.all(DESKS.map(loadTeam)).then(draw, draw);
+      return Promise.all(DESKS.map(loadTeam).concat([loadDesk()])).then(draw, draw);
     }, function () {});
   }
   function start() {
@@ -1402,7 +1591,8 @@ button.li:hover .lt{color:#fff}
     first.then(function (ok) {
       if (!ok) return;
       var t = new Promise(function (res) { setTimeout(res, 2500); });
-      Promise.race([Promise.all([Promise.all(DESKS.map(loadTeam)), loadSlow()]), t]).then(function () { draw(); if (!S.briefed) { S.briefed = true; greet(); } });
+      Promise.race([Promise.all([Promise.all(DESKS.map(loadTeam)), loadDesk(), loadSlow()]), t]).then(function () { draw(); if (!S.briefed) { S.briefed = true; greet(); } openFromUrl(location.search); });
+      pushCheck().then(draw);
       setInterval(function () { if (!document.hidden && !document.getElementById('view')) refresh(); }, 60000);
       setInterval(function () { if (!document.hidden) loadSlow().then(draw); }, 300000);
       setInterval(function () { var c = document.querySelector('.top .clock'); if (c) c.textContent = nowLine(); }, 20000);

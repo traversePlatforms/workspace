@@ -4,6 +4,7 @@
 //   node assistant/jarvis/tests/jarvis-test.mjs            (SHOTS=<folder> to also save screenshots; default assistant/jarvis/shots)
 import http from 'node:http';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
@@ -104,14 +105,17 @@ const DESK = { ok: true, today: ymd(today), sponsor: { recs: [
   { id: 'done1', name: 'Signed Co', stage: 'signed', next: { date: back(5), what: '' } }, { id: 'later', name: 'Later Co', stage: 'new', next: { date: '2099-01-01', what: '' } }] },
   expo: { recs: [{ id: 'x000000001', name: 'Expo A', stage: 'contacted', next: { date: ymd(today), what: '' } }, { id: 'x000000002', name: 'Expo B', stage: 'contacted', next: { date: ymd(today), what: '' } }] } };
 mk(path.join(PUB, 'peak-desk-28d38d', 'api', 'desk.php'), `<?php header('Content-Type: application/json'); if (($_COOKIE['peakdesk'] ?? '') === '') { http_response_code(401); echo '{"ok":false,"error":"Signed out."}'; exit; } echo ${JSON.stringify(JSON.stringify(DESK))};`);
-for (const p of ['summit-de59ae83', 'hl-f98938', 'outbox-092b0f', 'peak-desk-28d38d']) mk(path.join(PUB, p, 'index.html'), '<!doctype html><title>stub ' + p + '</title><body style="background:#fff">stub ' + p);
+for (const p of ['summit-de59ae83', 'hl-f98938', 'outbox-092b0f', 'peak-desk-28d38d', 'posts-ab8c57']) mk(path.join(PUB, p, 'index.html'), '<!doctype html><title>stub ' + p + '</title><body style="background:#fff">stub ' + p);
 
 /* ---- the Gmail mock: answers like Gmail, counts every call; a send is anything that would send ---- */
-const G = { calls: [], sends: [] };
+const G = { calls: [], sends: [] }; const PUSHES = [];
 const b64u = s => Buffer.from(s).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const gsrv = http.createServer((req, res) => {
-  let body = ''; req.on('data', c => body += c); req.on('end', () => {
+  const chunks = []; req.on('data', c => chunks.push(c)); req.on('end', () => {
+    const raw = Buffer.concat(chunks), body = raw.toString();
     const u = new URL(req.url, 'http://x'), p = u.pathname.replace(/^\/+/, ''), auth = req.headers.authorization || '';
+    /* 19 Nov: a Web Push service (J.A.R.V.I.S.'s own alerts): keeps what came, answers 201; /push/gone answers 410 */
+    if (p.startsWith('push/')) { PUSHES.push({ path: p, headers: req.headers, body: raw }); res.writeHead(p === 'push/gone' ? 410 : 201); res.end(); return; }
     G.calls.push(req.method + ' ' + p);
     const J = (o, c = 200) => { res.writeHead(c, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
     if (auth !== 'Bearer ' + SECRETS[2]) return J({ error: { message: 'bad token' } }, 401);
@@ -134,10 +138,16 @@ await new Promise(r => gsrv.listen(GPORT, '127.0.0.1', r));
 /* 19 Nov: the phone alert a due reminder makes, as a stub that logs what it was given (the real one is jvpush.php, the Field app's alert) */
 const PUSHLOG = path.join(R, 'push.log');
 mk(path.join(R, 'push-stub.php'), `<?php file_put_contents(${JSON.stringify(PUSHLOG.replace(/\\/g, '/'))}, stream_get_contents(STDIN) . "\\n", FILE_APPEND); echo "pushed\\n";`);
-const ENVX = { ASSISTANT_PRIVATE: PRIV, ASSISTANT_GMAIL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_CAL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_PUSH_CMD: 'php ' + JSON.stringify(path.join(R, 'push-stub.php').replace(/\\/g, '/')) };
+const ENVX = { JARVIS_PUSH_ALLOW_HTTP: '1', ASSISTANT_PRIVATE: PRIV, ASSISTANT_GMAIL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_CAL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_PUSH_CMD: 'php ' + JSON.stringify(path.join(R, 'push-stub.php').replace(/\\/g, '/')) };
 const srv = spawn('php', ['-S', '127.0.0.1:' + PORT, '-t', PUB], { stdio: 'ignore', env: { ...process.env, ...ENVX } });
 /* async: the calendar mock lives in this same process, so a blocking spawn would starve it */
 const cronReminders = () => new Promise(res => { let o = ''; const p = spawn('php', [path.join(PRIV, 'cron.php'), '--reminders'], { env: { ...process.env, ...ENVX } }); p.stdout.on('data', d => o += d); p.on('close', () => { try { res(JSON.parse(o.trim().split('\n').pop() || '{}')); } catch { res({}); } }); });
+/* 19 Nov: J.A.R.V.I.S.'s own desk store, and the laptop's command-line side of it */
+const DESKLOG = path.join(DATA, 'jarvis', 'desk', 'desk.log');
+const deskRows = () => fs.existsSync(DESKLOG) ? fs.readFileSync(DESKLOG, 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
+const deskMsgs = () => deskRows().filter(r => r.t === 'msg');
+const cli = (args, input = '') => new Promise(res => { let o = '', e = ''; const p = spawn('php', [path.join(PRIV, 'jvdesk.php'), ...args], { env: { ...process.env, ...ENVX } }); p.stdout.on('data', d => o += d); p.stderr.on('data', d => e += d); p.on('close', code => res({ code, out: o, err: e })); p.stdin.end(input); });
+const helpsends = () => fs.existsSync(path.join(R, 'helpsend.log')) ? fs.readFileSync(path.join(R, 'helpsend.log'), 'utf8').trim().split('\n').filter(Boolean).map(l => JSON.parse(l)) : [];
 await sleep(900);
 const BASE = 'http://127.0.0.1:' + PORT, PAGE = BASE + '/a-e018bb82/jarvis/';
 const hget = async (u, cookie = '') => { const r = await fetch(BASE + u, { headers: cookie ? { Cookie: cookie } : {} }); return [r.status, await r.text()]; };
@@ -145,8 +155,8 @@ const hpost = async (u, body, cookie = '') => { const r = await fetch(BASE + u, 
 
 /* ================================================================ 1. sign-in required; staff cookies open nothing */
 {
-  for (const a of ['home', 'jvstatus', 'chatlog', 'gro']) { const [s] = await hget('/a-e018bb82/api.php?action=' + a); ok(s === 401, 'signed out: ' + a + ' answers 401 (got ' + s + ')'); }
-  for (const a of ['chat', 'send', 'open', 'savedraft', 'write', 'jvremind', 'jvremindset', 'jvdecide']) { const [s] = await hpost('/a-e018bb82/api.php?action=' + a, { text: 'x', key: 'k', confirmed: true }); ok(s === 401, 'signed out: POST ' + a + ' answers 401 (got ' + s + ')'); }
+  for (const a of ['home', 'jvstatus', 'chatlog', 'gro', 'jvdesk', 'jvpushstate', 'jvdeskfile&id=h20261119000000aaaa&f=x.pdf']) { const [s] = await hget('/a-e018bb82/api.php?action=' + a); ok(s === 401, 'signed out: ' + a + ' answers 401 (got ' + s + ')'); }
+  for (const a of ['chat', 'send', 'open', 'savedraft', 'write', 'jvremind', 'jvremindset', 'jvdecide', 'jvdesksend', 'jvdeskclose', 'jvpushsub', 'jvpushunsub', 'jvpushtest']) { const [s] = await hpost('/a-e018bb82/api.php?action=' + a, { text: 'x', key: 'k', confirmed: true }); ok(s === 401, 'signed out: POST ' + a + ' answers 401 (got ' + s + ')'); }
   for (const c of ['sfr=staff', 'sfr=matthew', 'outbox=ok; peakdesk=x; tvhou=x']) { const [s] = await hget('/a-e018bb82/api.php?action=home', c); ok(s === 401, 'a Field app / Outbox / desk cookie alone does not open the Assistant (' + c.split('=')[0] + ')'); }
   const [s2, page] = await hget('/a-e018bb82/jarvis/');
   ok(s2 === 200 && /J\.A\.R\.V\.I\.S\./.test(page), 'the page itself loads (its data does not, signed out)');
@@ -205,9 +215,12 @@ try {
   ok(await ev('document.querySelectorAll(".acard").length===0 && /Good (morning|afternoon|evening), Matthew\./.test(document.querySelector(".msg.ai").innerText) && !/overnight check|waiting across|Right now/i.test(document.querySelector(".msg.ai").innerText)'), '19 Nov: opening is a one-line hello, no briefing card');
   await sleep(600);
 
+    const nodeUntil0 = async (fn, ms = 6000) => { const t = Date.now(); while (Date.now() - t < ms) { try { if (fn()) return true; } catch {} await sleep(120); } return false; };
+  ok(await ev('(document.querySelector("link[rel=manifest]")||{}).getAttribute?.("href")==="manifest.json" && !!document.querySelector("link[rel=apple-touch-icon]")'), 'P-9: the page names its own manifest and Home Screen icon');
+  ok(await until('navigator.serviceWorker.getRegistration("./").then(r=>!!r && /\\/a-e018bb82\\/jarvis\\/$/.test(r.scope))', 6000), 'P-9: its own service worker, scoped to /a-e018bb82/jarvis/ only');
   /* ================================================================ 3. no model call on load; only the expected reads */
-  ok(!reqs.some(r => /action=(chat|write|send|savedraft|check|draft|helpsend|groadd)\b/.test(r)), 'page load makes no model call and sends nothing (' + reqs.filter(r => /action=(chat|write|send|check|draft)/.test(r)).join(', ') + ')');
-  const allowed = /\/a-e018bb82\/(api\.php\?action=(signin|state|home|jvstatus|gro)$|jarvis\/)|\/api\/(rounds|c-houston-lawn-test-rounds)\.php\?action=helplist$|\/outbox-092b0f\/api\.php\?action=state$|\/peak-desk-28d38d\/api\/desk\.php\?action=data$|^data:/;
+  ok(!reqs.some(r => /action=(chat|write|send|savedraft|check|draft|helpsend|groadd|jvdesksend|jvpushtest)\b/.test(r)), 'page load makes no model call and sends nothing (' + reqs.filter(r => /action=(chat|write|send|check|draft)/.test(r)).join(', ') + ')');
+  const allowed = /\/a-e018bb82\/(api\.php\?action=(signin|state|home|jvstatus|gro|jvdesk)$|jarvis\/)|\/api\/(rounds|c-houston-lawn-test-rounds)\.php\?action=helplist$|\/outbox-092b0f\/api\.php\?action=state$|\/peak-desk-28d38d\/api\/desk\.php\?action=data$|^data:/;
   const odd = reqs.filter(r => !allowed.test(r.split(' ')[1]));
   ok(odd.length === 0, 'the page reads only its own sources (' + odd.join(' | ') + ')');
   ok(!reqs.some(r => /googleapis|anthropic|fonts\.g/.test(r)), 'nothing leaves for Google or Anthropic from the page');
@@ -321,13 +334,31 @@ try {
   reqs.length = 0;
   await ev('document.getElementById("ask").value="Check the Houston lot lines are live"'); await click('.cmdbar .snd');
   ok(await until('/Sent to J\\.A\\.R\\.V\\.I\\.S\\. desk/.test(document.querySelector(".chat").innerText)'), 'the desk: a card says it went to the laptop');
-  const hs = fs.readFileSync(path.join(R, 'helpsend.log'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
-  ok(hs.length === 1 && hs[0].by === 'Matthew Sharpe' && hs[0].id === '' && hs[0].text === 'Check the Houston lot lines are live', 'the desk got one new ticket, as Matthew');
+  const dm = deskMsgs();
+  ok(dm.length === 1 && dm[0].from === 'Matthew Sharpe' && /^h\d{14}[0-9a-f]{4}$/.test(dm[0].id) && dm[0].text === 'Check the Houston lot lines are live', '19 Nov: the desk message is in J.A.R.V.I.S.\'s own store, as Matthew');
+  ok(helpsends().length === 0 && !reqs.some(r => /rounds\.php\?action=helpsend/.test(r)), '19 Nov: nothing of his goes to the Sixfold app (no helpsend)');
   ok(!reqs.some(r => /action=chat\b/.test(r)), 'a desk message makes no Ask call');
-  /* the laptop answers: the page shows it, labelled as the desk */
-  const tj = JSON.parse(fs.readFileSync(path.join(R, 'help-sixfold.json'), 'utf8')); tj.h20261118120000eeee.msgs.push({ from: 'J.A.R.V.I.S.', text: 'Live: 1,204 lots on the cards.', at: now + 5, mine: false }); tj.h20261118120000eeee.status = 'answered'; fs.writeFileSync(path.join(R, 'help-sixfold.json'), JSON.stringify(tj));
+  /* the laptop takes it (jvdesk.php next, as help-watch.sh does over SSH) and answers (jvdesk.php reply, as jarvis-reply.sh does) */
+  { const c = await cli(['count']); ok(c.out.trim() === '1', 'the laptop\'s count: 1 waiting'); }
+  const nx = JSON.parse((await cli(['next'])).out);
+  ok(nx.id === dm[0].id && nx.desk === 'jarvis' && nx.by === 'Matthew Sharpe' && nx.conversation.length === 1 && /desk[\\/]files[\\/]h/.test(nx.photoDir), 'next: the thread in the watcher\'s shape (desk: jarvis), and its files folder');
+  ok((await cli(['next'])).out.trim() === '' && (await cli(['count'])).out.trim() === '0', 'next marks it working: nothing else waits');
+  const t0 = Math.floor(Date.now() / 1000) - 1;
+  ok((await cli(['final-since', nx.id, String(t0)])).code === 1, 'final-since: no answer yet');
+  const rp = await cli(['reply', nx.id, 'answered'], 'Live: 1,204 lots on the cards.');
+  ok(rp.code === 0 && /replied \(answered\)/.test(rp.out), 'reply: saved (' + rp.out.trim() + rp.err.trim() + ')');
+  ok((await cli(['final-since', nx.id, String(t0)])).code === 0, 'final-since: answered');
+  ok(fs.existsSync(PUSHLOG) && /"url":"\/a-e018bb82\/jarvis\/\?desk=h/.test(fs.readFileSync(PUSHLOG, 'utf8')), 'no phone has subscribed yet: the alert also goes the old way (fallback), and opens J.A.R.V.I.S. at the thread');
+  fs.unlinkSync(PUSHLOG);
   ok(await until('/Live: 1,204 lots/.test(document.querySelector(".chat").innerText)', 22000), 'the desk\'s answer appears when the laptop replies');
   ok(/J\.A\.R\.V\.I\.S\. DESK · LAPTOP/i.test(await ev('[...document.querySelectorAll(".msg.ai .who")].pop().textContent')), 'and is labelled J.A.R.V.I.S. desk');
+  /* the thread opens in full, here; no Sixfold button on his own chat */
+  await ev('[...document.querySelectorAll(".acard")].reverse().find(c=>/Sent to J\.A\.R\.V\.I\.S\. desk/.test(c.innerText)).querySelector(".acts button").click()');
+  ok(await until('!!document.getElementById("deskthread") && /Live: 1,204 lots/.test(document.getElementById("deskmsgs").innerText) && /Check the Houston lot lines/.test(document.getElementById("deskmsgs").innerText)'), 'Open the thread: the whole conversation, inside J.A.R.V.I.S.');
+  ok(await ev('!/Sixfold app/.test(document.getElementById("sheet").innerText)'), 'his own desk chat has no "Open in the Sixfold app" button');
+  await ev('document.getElementById("deskreply").value="And the Denver ones?"'); await click('#desksend');
+  ok(await nodeUntil0(() => deskMsgs().length === 2 && deskMsgs()[1].id === nx.id && deskMsgs()[1].text === 'And the Denver ones?'), 'a reply from the sheet goes into the same thread');
+  await click('#shclose'); await sleep(200);
   await click('#brainswitch');
   ok(/Assistant, instant/.test(await ev('document.getElementById("brainlabel").textContent')), 'and back to the Assistant');
 
@@ -335,12 +366,13 @@ try {
   await click('#p-team [data-ticket="h20261118090000aaaa"]');
   ok(await until('!!document.getElementById("threply")'), 'a team request opens as its thread');
   ok(/Jen McPherson’s J\.A\.R\.V\.I\.S\. chat/.test(await ev('document.querySelector(".sheet .warnline").textContent')), 'it says plainly where a reply goes');
+  ok(/Open in the Sixfold app/.test(await ev('document.getElementById("sheet").innerText')), 'a staff thread keeps its "Open in the Sixfold app" button');
   await ev('document.getElementById("threply").value="I will call the customer myself."'); await click('#thsend'); await sleep(300);
   ok(await ev('!!document.getElementById("confirm")'), 'replying into a staff thread asks first');
   await click('#cfno'); await sleep(300);
-  ok(fs.readFileSync(path.join(R, 'helpsend.log'), 'utf8').trim().split('\n').length === 1, 'Cancel: nothing went to the thread');
+  ok(helpsends().length === 0, 'Cancel: nothing went to the thread');
   await click('#thsend'); await sleep(200); await click('#cfyes'); await until('!document.getElementById("sheet")');
-  const hs2 = fs.readFileSync(path.join(R, 'helpsend.log'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).pop();
+  const hs2 = helpsends().pop();
   ok(hs2.id === 'h20261118090000aaaa' && hs2.text === 'Matthew: I will call the customer myself.' && hs2.by === 'Matthew Sharpe', 'Yes: one message into that thread, marked Matthew');
 
   /* 19 Nov (Matthew: "there no way to dismiss that chat box once its open"): Close on sheets, a dismiss on every card */
@@ -381,7 +413,7 @@ try {
   ok(errs.length === 0, 'no script errors on the desktop (' + errs.join(' | ') + ')');
 
   /* ================================================================ 13. the eight (19 Nov, P-8) */
-  const hsAll = () => fs.readFileSync(path.join(R, 'helpsend.log'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+  const hsAll = () => deskMsgs().map(m => ({ by: m.from, id: m.id, text: m.text, nw: deskRows().find(r => r.t === 'msg' && r.id === m.id) === m }));   /* 19 Nov: his desk store */
   const nodeUntil = async (fn, ms = 6000) => { const t = Date.now(); while (Date.now() - t < ms) { try { if (fn()) return true; } catch {} await sleep(120); } return false; };
   const apiPost = (a, b) => ev('fetch("../api.php?action=' + a + '",{method:"POST",headers:{"Content-Type":"application/json"},body:' + JSON.stringify(JSON.stringify(b)) + '}).then(r=>r.json())');
   const rems = () => JSON.parse(fs.readFileSync(path.join(DATA, 'jarvis', 'reminders.json'), 'utf8')).list;
@@ -405,8 +437,8 @@ try {
     await click('[data-wait="sixfold-followup-email-off"] [data-act=approve]'); await sleep(300); await click('#cfyes');
     ok(await nodeUntil(() => hsAll().length === n0 + 1), 'Waiting on you: Approve sends one message to the desk');
     const d1 = hsAll().pop();
-    ok(d1.by === 'Matthew Sharpe' && d1.id === '' && /^\[DECISION\] sixfold-followup-email-off\n/.test(d1.text) && /APPROVED/.test(d1.text) && /His note: turn it off today/.test(d1.text) && /this one item only/.test(d1.text) && /waiting drop sixfold-followup-email-off/.test(d1.text), 'Waiting on you: the desk gets the item, APPROVED, his note, the one-item rule and how to take it off');
-    ok(await nodeUntil(() => /h20261118120000eeee/.test(fs.readFileSync(path.join(DATA, 'jarvis', 'decisions.json'), 'utf8'))), 'Waiting on you: the decision is kept on the server with the desk ticket it went in');
+    ok(d1.by === 'Matthew Sharpe' && !deskMsgs().slice(0, -1).some(m => m.id === d1.id) && /^\[DECISION\] sixfold-followup-email-off\n/.test(d1.text) && /APPROVED/.test(d1.text) && /His note: turn it off today/.test(d1.text) && /this one item only/.test(d1.text) && /waiting drop sixfold-followup-email-off/.test(d1.text), 'Waiting on you: the desk gets the item, APPROVED, his note, the one-item rule and how to take it off');
+    ok(await nodeUntil(() => fs.readFileSync(path.join(DATA, 'jarvis', 'decisions.json'), 'utf8').includes('"ticket":"' + d1.id + '"')), 'Waiting on you: the decision is kept on the server with the desk thread it went in');
     ok(await until('/Approved/.test(document.querySelector("[data-wait=\\"sixfold-followup-email-off\\"]").innerText) && /sent to the desk/.test(document.querySelector("[data-wait=\\"sixfold-followup-email-off\\"]").innerText) && !document.querySelector("[data-wait=\\"sixfold-followup-email-off\\"] [data-act]")'), 'Waiting on you: the item shows Approved, sent to the desk, with no buttons left');
     const r4 = await apiPost('jvdecide', { id: 'sixfold-followup-email-off', at: now - 4000, decision: 'decline' });
     ok(!r4.ok && /Already decided/.test(r4.error), 'Waiting on you: a second tap on the same item is refused'); }
@@ -513,6 +545,126 @@ try {
     await click('#voiceswitch'); }
   ok(errs.length === 0, 'no script errors in the eight new parts (' + errs.join(' | ') + ')');
 
+  /* ================================================================ 14. J.A.R.V.I.S. on its own (19 Nov): desk store, alerts, app */
+  { /* top bar: Posts and the Sixfold app beside Outbox, Peak, inbox, groceries, settings */
+    const vw = await ev('[...document.querySelectorAll(".top .vw button")].map(b=>b.title).join("|")');
+    ok(/Full inbox/.test(vw) && /Groceries/.test(vw) && /Outbox/.test(vw) && /Peak desk/.test(vw) && /Posts/.test(vw) && /Sixfold app/.test(vw) && /Settings/.test(vw) && /Phone alerts/.test(vw), 'P-9 top bar: Posts and the Sixfold app beside Outbox, Peak, inbox, groceries, settings; and the alerts bell (' + vw + ')');
+    await click('.top .vw button[data-view=posts]'); await sleep(900);
+    ok(await ev('(()=>{const f=document.querySelector("#view iframe");return !!f && /\\/posts-ab8c57\\/$/.test(new URL(f.src).pathname)})()'), 'Posts opens inside J.A.R.V.I.S.');
+    await click('#vclose'); await sleep(200);
+    await click('.top .vw button[data-view=leaf]'); await sleep(900);
+    ok(await ev('(()=>{const f=document.querySelector("#view iframe");return !!f && /\\/summit-de59ae83\\/$/.test(new URL(f.src).pathname)})()'), 'the Sixfold app opens inside J.A.R.V.I.S. (its own sign-in)');
+    await click('#vclose'); await sleep(200);
+    /* the manifest */
+    const [ms, mt] = await hget('/a-e018bb82/jarvis/manifest.json'); const mj = JSON.parse(mt);
+    ok(ms === 200 && mj.name === 'J.A.R.V.I.S.' && mj.scope === '/a-e018bb82/jarvis/' && mj.start_url === '/a-e018bb82/jarvis/' && mj.display === 'standalone' && mj.icons.length === 3, 'manifest: J.A.R.V.I.S., scoped and starting at /a-e018bb82/jarvis/, standalone, three icons');
+    for (const ic of mj.icons.map(i => i.src).concat(['apple-touch-icon.png', 'badge-96.png', 'sw.js'])) { const [is] = await hget('/a-e018bb82/jarvis/' + ic); ok(is === 200, 'served: ' + ic); }
+    /* the alerts sheet */
+    await click('#notifybtn'); await until('!!document.getElementById("notify")');
+    const nt = await ev('document.getElementById("notify").innerText');
+    ok(/Alerts are off on this device/.test(nt) && !!(await ev('!!document.getElementById("pushon")')) && /own app/i.test(nt), 'alerts sheet: off here, Turn on alerts, and how to install it');
+    ok(/old way/.test(await ev('new Promise(r=>setTimeout(()=>r(document.getElementById("notify").innerText),600))')), 'alerts sheet: says the old route still runs until a phone has alerts on');
+    await click('#shclose'); await sleep(200);
+    /* the key: made once, public half only */
+    const k1 = JSON.parse(await ev('fetch("../api.php?action=jvpushkey").then(r=>r.text())')), k2 = JSON.parse(await ev('fetch("../api.php?action=jvpushkey").then(r=>r.text())'));
+    ok(k1.ok && /^[A-Za-z0-9_-]{80,90}$/.test(k1.publicKey) && k1.publicKey === k2.publicKey && !JSON.stringify(k1).includes('PRIVATE'), 'alerts: the server makes its own key once and gives out only the public half');
+    const [us] = await hget('/a-e018bb82/api.php?action=jvpushkey'); ok(us === 401, 'alerts: the key needs his sign-in');
+    /* a phone subscribes (a made-up device with real keys); the next alert is Web Push only, end to end */
+    const ec = crypto.createECDH('prime256v1'); ec.generateKeys(); const auth = crypto.randomBytes(16);
+    const b64 = b => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const sub = { endpoint: 'http://127.0.0.1:' + GPORT + '/push/phone1', keys: { p256dh: b64(ec.getPublicKey()), auth: b64(auth) } };
+    const bad = await apiPost('jvpushsub', { subscription: { endpoint: 'ftp://x', keys: {} }, device: 'x' });
+    ok(!bad.ok, 'alerts: a broken subscription is refused');
+    /* the push service check wants https; the test copy allows its own 127.0.0.1 listener only (JARVIS_PUSH_ALLOW_HTTP), so store it by hand */
+    const subsF = path.join(DATA, 'jarvis', 'push-subs.json');
+    fs.writeFileSync(subsF, JSON.stringify({ aaaaaaaaaaaaaaaa: { sub, device: 'iPhone app', phone: true, at: now, seen: now }, bbbbbbbbbbbbbbbb: { sub: { endpoint: 'http://127.0.0.1:' + GPORT + '/push/gone', keys: sub.keys }, device: 'old laptop', phone: false, at: now, seen: now } }));
+    const ps = JSON.parse(await ev('fetch("../api.php?action=jvpushstate").then(r=>r.text())'));
+    ok(ps.ok && ps.phone && !ps.fallback && ps.devices.length === 2 && !JSON.stringify(ps).includes(sub.keys.auth) && !JSON.stringify(ps).includes('endpoint'), 'alerts: the devices show by name only; with a phone on, no fallback');
+    const pushLines = () => fs.existsSync(PUSHLOG) ? fs.readFileSync(PUSHLOG, 'utf8').trim().split(String.fromCharCode(10)).filter(Boolean).length : 0;
+    const old0 = pushLines();
+    const nx2 = JSON.parse((await cli(['next'])).out || '{}');
+    const tid = nx2.id || deskMsgs().pop().id;
+    PUSHES.length = 0;
+    const rp2 = await cli(['reply', tid, 'answered'], 'Denver: 880 lots, live too.');
+    ok(rp2.code === 0 && /pushed to his phone/.test(rp2.out), 'a desk answer pushes (' + rp2.out.trim() + ')');
+    const ph = PUSHES.find(x => x.path === 'push/phone1');
+    ok(!!ph && /^vapid t=[\w-]+\.[\w-]+\.[\w-]+, k=/.test(ph.headers.authorization || '') && ph.headers['content-encoding'] === 'aes128gcm' && ph.headers.urgency === 'high', 'Web Push: signed with its own key (VAPID), encrypted (aes128gcm), urgent');
+    /* decrypt it the way the phone does (RFC 8291) */
+    let pj = null;
+    try { const body = ph.body, salt = body.subarray(0, 16), idl = body[20], asPub = body.subarray(21, 21 + idl), ct = body.subarray(21 + idl);
+      const ecdh = ec.computeSecret(asPub), ikm = Buffer.from(crypto.hkdfSync('sha256', ecdh, auth, Buffer.concat([Buffer.from('WebPush: info\0'), ec.getPublicKey(), asPub]), 32));
+      const cek = Buffer.from(crypto.hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: aes128gcm\0'), 16)), nonce = Buffer.from(crypto.hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: nonce\0'), 12));
+      const d = crypto.createDecipheriv('aes-128-gcm', cek, nonce); d.setAuthTag(ct.subarray(ct.length - 16)); const pt = Buffer.concat([d.update(ct.subarray(0, ct.length - 16)), d.final()]);
+      pj = JSON.parse(pt.subarray(0, pt.lastIndexOf(2)).toString()); } catch (e) { console.log('decrypt:', e.message); }
+    ok(pj && pj.title === 'J.A.R.V.I.S.' && /Denver: 880 lots/.test(pj.body) && pj.url === '/a-e018bb82/jarvis/?desk=' + tid && pj.tag === 'jv-desk-' + tid, 'Web Push: the phone reads the answer and a tap opens J.A.R.V.I.S. at that thread (' + JSON.stringify(pj) + ')');
+    ok(pushLines() === old0, 'with a phone on, the old route (through the Field app) is not used');
+    ok(!JSON.parse(fs.readFileSync(subsF, 'utf8')).bbbbbbbbbbbbbbbb, 'a device the push service says is gone is dropped');
+    const wp = await cli(['reply', tid, 'working'], 'Still looking.'); PUSHES.length = 0; await sleep(100);
+    ok(wp.code === 0 && PUSHES.length === 0, 'a progress note (working) does not push');
+    /* reminders take the same road */
+    const dn2 = denver(Date.now() - 5 * 60000);
+    if (dn2.date === denver().date) { await apiPost('jvremind', { text: 'Push road test', date: dn2.date, time: dn2.time }); PUSHES.length = 0; await cronReminders();
+      ok(PUSHES.some(x => x.path === 'push/phone1') && pushLines() === old0, 'a due reminder goes by J.A.R.V.I.S.\'s own Web Push now, not the Field app'); } else ok(true, 'skipped near midnight');
+    /* a deep link (what a tap on the alert opens) shows the thread */
+    await cdp('Page.navigate', { url: PAGE + '?desk=' + tid }); await until('!!document.getElementById("deskthread")', 9000);
+    ok(/Denver: 880 lots/.test(await ev('document.getElementById("deskmsgs").innerText')), 'J.A.R.V.I.S. opened from an alert (?desk=) shows that thread');
+    await click('#shclose'); await sleep(200); await ev('document.dispatchEvent(new Event("click"))');
+    /* photos, a voice note and a PDF, all shown inside J.A.R.V.I.S. */
+    const PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const AUD = Buffer.concat([Buffer.from([0x1a, 0x45, 0xdf, 0xa3]), Buffer.alloc(400, 1)]).toString('base64');
+    const sp = await apiPost('jvdesksend', { text: 'The sign at the Peak entrance', photos: [PNG], audio: { data: AUD, mime: 'audio/webm', secs: 4 } });
+    ok(sp.ok && sp.thread.msgs[0].photos.length === 1 && sp.thread.msgs[0].audio.length === 1, 'a desk message with a photo and a voice note is kept (' + (sp.error || '') + ')');
+    const bad2 = await apiPost('jvdesksend', { text: 'x', photos: [Buffer.from('not a picture at all').toString('base64')] });
+    ok(!bad2.ok && /could not be read/.test(bad2.error), 'a file that is not really a picture is refused');
+    const pid = sp.thread.id, an = sp.thread.msgs[0].audio[0].n;
+    await cli(['transcript', pid, an], 'Here is the sign at the entrance.');
+    ok((await cli(['attach', pid, 'Sign-Quote.pdf'], '%PDF-1.4 test pdf')).code === 0 && (await cli(['attach', pid, 'evil.pdf'], 'not a pdf')).code !== 0, 'attach: a PDF is stored, anything else refused');
+    await cli(['reply', pid, 'answered', 'file=Sign-Quote.pdf'], 'Quote attached.');
+    await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr") && /your desk chats \\([1-9]/.test((document.getElementById("mydesk")||{}).textContent||"")', 9000); await sleep(300);
+    await click('#mydesk'); await sleep(300);
+    ok(await ev('!!document.querySelector("[data-desk=' + pid + ']")') && await ev('!!document.getElementById("newdesk")'), 'Team requests: your desk chats are J.A.R.V.I.S. conversations, with New desk chat');
+    await click('[data-desk="' + pid + '"]'); await until('!!document.getElementById("deskthread")');
+    ok(await until('(()=>{const i=document.querySelector("#deskmsgs img");return !!i && i.complete && i.naturalWidth===1})()'), 'the photo shows inside J.A.R.V.I.S.');
+    ok(await ev('(()=>{const a=document.querySelector("#deskmsgs audio");return !!a && /action=jvdeskfile/.test(a.src)})()') && /Voice note: Here is the sign/.test(await ev('document.getElementById("deskmsgs").innerText')), 'the voice note plays here, with its words under it');
+    ok(await ev('(()=>{const a=document.querySelector("#deskmsgs a.pdf");return !!a && /Sign Quote/.test(a.textContent) && /action=jvdeskfile.*Sign-Quote\\.pdf/.test(a.href)})()'), 'the PDF opens from here');
+    const [fs1] = await hget('/a-e018bb82/api.php?action=jvdeskfile&id=' + pid + '&f=Sign-Quote.pdf'); ok(fs1 === 401, 'a desk file needs his sign-in');
+    ok(await ev('fetch("../api.php?action=jvdeskfile&id=' + pid + '&f=Sign-Quote.pdf").then(r=>r.status===200 && r.headers.get("content-type")==="application/pdf")'), 'signed in, the PDF comes back as a PDF');
+    ok(await ev('fetch("../api.php?action=jvdeskfile&id=' + pid + '&f=../../config.json").then(r=>r.status)') === 404, 'a file name that tries to leave the folder gets nothing');
+    await click('#shclose'); await sleep(200);
+    /* the laptop's HTTPS door: only with its key */
+    const [p0, b0] = await hget('/a-e018bb82/api.php?action=jvdpending');
+    ok(p0 === 403 && !/^\d+$/.test(b0), 'the laptop door: no key, nothing');
+    const LKEY = crypto.randomBytes(32).toString('hex');
+    ok((await cli(['setkey'], crypto.createHash('sha256').update(LKEY).digest('hex'))).code === 0, 'setkey: the server keeps only the key\'s hash');
+    ok(!fs.readFileSync(path.join(DATA, 'jarvis', 'desk', 'laptop-key.json'), 'utf8').includes(LKEY), 'the key itself is not on the server');
+    const kget = async (k) => { const r = await fetch(BASE + '/a-e018bb82/api.php?action=jvdpending', { headers: { 'X-Jarvis-Key': k } }); return [r.status, await r.text()]; };
+    ok((await kget('x'.repeat(64)))[0] === 403, 'the laptop door: a wrong key, nothing');
+    const [k200, kb] = await kget(LKEY); ok(k200 === 200 && /^\d+$/.test(kb.trim()), 'the laptop door: the right key, the count (' + kb + ')');
+    /* jarvis-reply.sh over HTTPS with the key (as the laptop runs it); no SSH */
+    const kf = path.join(R, 'jarvis-desk-key.txt'); fs.writeFileSync(kf, LKEY);
+    const jr = spawnSync('bash', [path.join(REPO, 'assistant', 'jarvis', 'tools', 'jarvis-reply.sh'), pid, 'answered'], { input: 'Sent from the laptop script.', env: { ...process.env, JARVIS_DESK_URL: BASE + '/a-e018bb82/api.php', JARVIS_DESK_KEYFILE: kf, JARVIS_SG: 'false' } });
+    ok(jr.status === 0 && deskRows().some(r => r.t === 'reply' && r.id === pid && r.text === 'Sent from the laptop script.'), 'jarvis-reply.sh: the answer lands over HTTPS with the key (' + String(jr.stdout).trim() + String(jr.stderr).trim() + ')');
+    ok(!String(jr.stdout).includes(LKEY) && !String(jr.stderr).includes(LKEY), 'jarvis-reply.sh never prints the key');
+    const jr2 = spawnSync('bash', [path.join(REPO, 'assistant', 'jarvis', 'tools', 'jarvis-reply.sh'), 'h20990101000000ffff', 'answered'], { input: 'x', env: { ...process.env, JARVIS_DESK_URL: BASE + '/a-e018bb82/api.php', JARVIS_DESK_KEYFILE: kf, JARVIS_SG: 'false' } });
+    ok(jr2.status !== 0, 'jarvis-reply.sh: a thread that is not there fails, and says so');
+    /* his history from the Sixfold app: moved once, left answered (never answered twice), files kept */
+    const MID = 'h202611181123486ccb';
+    const rows = [{ t: 'msg', id: MID, from: 'Matthew Sharpe', text: 'Main thread, first message', ctx: null, at: now - 90000 }, { t: 'reply', id: MID, from: 'J.A.R.V.I.S.', text: 'Main thread, answered', status: 'answered', at: now - 89000 },
+      { t: 'msg', id: MID, from: 'Matthew Sharpe', text: 'A later one', ctx: null, at: now - 1000 }, { t: 'status', id: MID, status: 'working', at: now - 900 }];
+    const im1 = JSON.parse((await cli(['import'], rows.map(r => JSON.stringify(r)).join('\n'))).out), im2 = JSON.parse((await cli(['import'], rows.map(r => JSON.stringify(r)).join('\n'))).out);
+    ok(im1.added === 4 && im1.threads === 1 && im2.added === 0, 'history move: each row once (' + JSON.stringify(im1) + ' then ' + JSON.stringify(im2) + ')');
+    const st = JSON.parse(fs.readFileSync(path.join(DATA, 'jarvis', 'desk', 'state.json'), 'utf8'));
+    ok(st[MID] && st[MID].status === 'answered' && st[MID].n === 3 && !(await cli(['next', '--peek'])).out.includes(MID), 'history move: a thread caught mid-answer is left answered, so the laptop does not answer it twice');
+    /* help-reply.sh: a reply to a moved thread goes on to J.A.R.V.I.S. (builders still using the old script) */
+    const moved = path.join(REPO, 'assistant', 'jarvis', 'tools', 'desk-moved.txt');
+    ok(fs.existsSync(moved) && fs.readFileSync(moved, 'utf8').split(/\r?\n/).includes(MID), 'desk-moved.txt lists his main thread');
+    const hr = spawnSync('bash', [path.join(REPO, 'traverse', 'ops', 'help-reply.sh'), MID, 'answered'], { input: 'Builder: the roof data is live.', env: { ...process.env, JARVIS_DESK_URL: BASE + '/a-e018bb82/api.php', JARVIS_DESK_KEYFILE: kf, JARVIS_SG: 'false', HELP_REPLY_SIXFOLD: '' } });
+    ok(hr.status === 0 && deskRows().some(r => r.t === 'reply' && r.id === MID && /roof data is live/.test(r.text)), 'help-reply.sh on his moved thread lands in J.A.R.V.I.S., not the Sixfold app (' + String(hr.stdout).trim() + ')');
+    const js2 = spawnSync('bash', [path.join(REPO, 'assistant', 'jarvis', 'tools', 'jarvis-status.sh'), 'alert', 'Overnight: 2 problems'], { env: { ...process.env, JARVIS_DESK_URL: BASE + '/a-e018bb82/api.php', JARVIS_DESK_KEYFILE: kf, JARVIS_SG: 'false' } });
+    ok(js2.status === 0 && deskRows().some(r => r.t === 'reply' && r.id === MID && r.text === 'Overnight: 2 problems'), 'jarvis-status.sh alert: a message in his main thread (' + String(js2.stdout).trim() + String(js2.stderr).trim() + ')');
+  }
+  ok(errs.length === 0, 'no script errors in the standalone parts (' + errs.join(' | ') + ')');
+
   /* ---- desktop idle shot: a fresh load */
   await cdp('Page.reload'); await until('document.querySelectorAll(".msg.ai").length>0', 9000); await sleep(1200);
   await shot('jarvis-desktop-idle');
@@ -543,6 +695,7 @@ try {
   ok(await ev('["today","remind","cal","builds","money"].every(k=>!!document.getElementById("p-"+k)) && !document.getElementById("p-brief")'), 'phone Today tab: Today, Reminders, Calendar, Builds, Money; no brief panel unless asked (19 Nov)');
   await click('.tabs button[data-tab=more]'); await sleep(300);
   ok(/Full inbox/.test(await ev('document.querySelector(".pscroll").innerText')) && /Groceries/.test(await ev('document.querySelector(".pscroll").innerText')) && /Settings/.test(await ev('document.querySelector(".pscroll").innerText')), 'phone More: the Assistant\'s own pages are reachable');
+  ok(/Posts/.test(await ev('document.querySelector(".pscroll").innerText')) && /Sixfold app/.test(await ev('document.querySelector(".pscroll").innerText')) && /Phone alerts and the app/.test(await ev('document.querySelector(".pscroll").innerText')), 'P-9 phone More: Posts, the Sixfold app, and Phone alerts and the app');
   await ev('[...document.querySelectorAll(".vlist button")].find(b=>/Full inbox/.test(b.textContent)).click()'); await sleep(1500);
   ok(await ev('(()=>{const f=document.querySelector("#view iframe");try{return f && /a-e018bb82\\/$/.test(f.contentWindow.location.pathname)}catch(e){return false}})()'), 'the full inbox opens inside, as a view');
   ok(errs.length === 0, 'no script errors on the phone (' + errs.join(' | ') + ')');
@@ -563,6 +716,12 @@ try {
   ok(/PHP_SAPI !== 'cli'/.test(jp) && /helpAlertMatthew\(/.test(jp) && !/help-reply|helpsend|appendLine|helpFile\(|pushName|mail\(|curl_/.test(jp), 'jvpush.php: command line only, Matthew\'s own alert, no chat thread, no email');
   const lib = fs.readFileSync(path.join(REPO, 'assistant', 'server', 'private', 'lib', 'jarvis.php'), 'utf8');
   ok(!/sixfold-data|sixfold-private|help\.log|c-houston|outbox-data|peak-desk-data/.test(lib), 'the Assistant\'s J.A.R.V.I.S. code reads no other app\'s files');
+  /* 19 Nov: the desk store, its command-line side and the push code touch nothing of the Sixfold app */
+  for (const fn of ['lib/desk.php', 'lib/webpush.php', 'jvdesk.php']) { const t = fs.readFileSync(path.join(REPO, 'assistant', 'server', 'private', fn), 'utf8'); ok(!/sixfold-data|sixfold-private|sixfold-tools|public_html\/api|rounds\.php|help\.log|helpAlertMatthew/.test(t.replace(/\/\*[\s\S]*?\*\//g, '')), fn + ': no Sixfold app files or code'); }
+  const pg = fs.readFileSync(path.join(REPO, 'assistant', 'jarvis', 'index.html'), 'utf8');
+  ok((pg.match(/action=helpsend/g) || []).length === 1 && /function openThread[\s\S]{0,3000}action=helpsend/.test(pg), 'the page writes to the Sixfold app only from a staff thread (Team requests), never for his desk');
+  const wt = fs.readFileSync(path.join(REPO, 'traverse', 'ops', 'help-watch.sh'), 'utf8');
+  ok(/one_ticket jarvis/.test(wt) && /jarvis-reply\.sh/.test(wt) && /sixfold-tools\/help-next\.php' </.test(wt) && /one_practice/.test(wt) && /one_install/.test(wt), 'help-watch.sh: his desk from J.A.R.V.I.S., staff, practice and Houston exactly as before');
 }
 console.log('\n' + pass + ' passed, ' + failN + ' failed' + (fs.existsSync(SHOTS) ? '  (screenshots in ' + SHOTS + ')' : ''));
 process.exit(failN ? 1 : 0);

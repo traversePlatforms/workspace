@@ -1,0 +1,2 @@
+# Matthew's own desk chats moved from the Sixfold app into J.A.R.V.I.S. on 19 Nov 2026 (one thread id a line). traverse/ops/help-reply.sh
+# sends a reply to any of these on to assistant/jarvis/tools/jarvis-reply.sh. Staff tickets are never listed here.

@@ -24,6 +24,9 @@
 #       19 Nov (P-8): "Waiting on you", the decisions only Matthew can make, kept in assistant/jarvis/waiting.json and pushed straight away.
 #       Each of his taps (Approve or Decline, with a note) covers that one item. Never a social post (the post calendar approves those;
 #       Sixfold posts are Jen's) and never an email or text to send: those are refused here and dropped by the server.
+#   bash assistant/jarvis/tools/jarvis-status.sh alert "<text>"
+#       19 Nov: tell Matthew something now: a message in his main J.A.R.V.I.S. desk thread, pushed to his phone (J.A.R.V.I.S.'s own alerts,
+#       nothing through the Sixfold app). Same as: bash assistant/jarvis/tools/jarvis-reply.sh main answered <<< "<text>"
 #   Money (19 Nov): every push also sends the money summary that jarvis-money.mjs keeps (the Spend Ledger's totals, Traverse's Stripe read
 #       only, refreshed at most every 25 minutes). Totals only.
 # Never prints or sends a code, key or token: the overnight report has none (its own rule), and only its counts and PROBLEM lines go.
@@ -117,6 +120,8 @@ wedit() {   # waiting add|drop: assistant/jarvis/waiting.json, by node
 case "${1:-}" in
   push) push ;;
   beat) beat ;;
+  alert) shift; [ -n "${1:-}" ] || { echo 'usage: jarvis-status.sh alert "<text>"'; exit 1; }
+    exec 0<&-; printf '%s' "$*" | bash "$REPO/assistant/jarvis/tools/jarvis-reply.sh" main answered ;;
   waiting)
     shift; op="${1:-}"
     case "$op" in
@@ -132,5 +137,5 @@ case "${1:-}" in
         shift; edit "$op" "$@" && push ;;
       *) echo "usage: jarvis-status.sh build start|step|pct|done|fail|drop|list <id> ..."; exit 1 ;;
     esac ;;
-  *) echo "usage: jarvis-status.sh push | beat | build ... | waiting ..."; exit 1 ;;
+  *) echo "usage: jarvis-status.sh push | beat | alert \"<text>\" | build ... | waiting ..."; exit 1 ;;
 esac
