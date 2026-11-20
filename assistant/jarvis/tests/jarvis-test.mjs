@@ -1,4 +1,4 @@
-// J.A.R.V.I.S., the merged page (2026-11-18): end-to-end on a throwaway copy of the server's layout, in headless Chrome.
+// J.A.R.V.I.S., the merged page (2026-11-18): end-to-end (19 Nov: section 15, talk without Siri: the voice API, its keys, the setup page, hands-free) on a throwaway copy of the server's layout, in headless Chrome.
 // NOTHING here reaches Google, Anthropic or the live site: Gmail is a mock on 127.0.0.1 (every call it gets is counted), the Assistant
 // has no Anthropic key, and the Field app, the Houston install, Outbox and the Peak desk are small stub files that answer like them.
 //   node assistant/jarvis/tests/jarvis-test.mjs            (SHOTS=<folder> to also save screenshots; default assistant/jarvis/shots)
@@ -664,6 +664,164 @@ try {
     ok(js2.status === 0 && deskRows().some(r => r.t === 'reply' && r.id === MID && r.text === 'Overnight: 2 problems'), 'jarvis-status.sh alert: a message in his main thread (' + String(js2.stdout).trim() + String(js2.stderr).trim() + ')');
   }
   ok(errs.length === 0, 'no script errors in the standalone parts (' + errs.join(' | ') + ')');
+
+  /* ================================================================ 15. talk without Siri (19 Nov): the voice API, its keys, the setup page, hands-free */
+  {
+    const VAPI = BASE + '/a-e018bb82/api.php';
+    const si = await fetch(VAPI + '?action=signin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: PASSWORD }) });
+    const sc = (si.headers.get('set-cookie') || '').split(';')[0];
+    ok(si.status === 200 && /^asst=/.test(sc), 'voice: a signed-in session for the key tests');
+    const sj = async (a, b) => { const r = await fetch(VAPI + '?action=' + a, { method: b ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', Cookie: sc }, body: b ? JSON.stringify(b) : undefined }); return r.json(); };
+    /* what the Shortcut does: POST, the key in X-Voice-Key, JSON {text} (or a form); ?format=json for these checks, plain text otherwise */
+    const vo = async (text, key, o = {}) => { const r = await fetch(VAPI + '?action=voice' + (o.json === false ? '' : '&format=json'), { method: o.method || 'POST',
+      headers: { 'Content-Type': o.form ? 'application/x-www-form-urlencoded' : 'application/json', ...(key ? { 'X-Voice-Key': key } : {}) },
+      body: o.method === 'GET' ? undefined : (o.form ? new URLSearchParams({ text }).toString() : JSON.stringify({ text })) });
+      const t = await r.text(); let j = null; try { j = JSON.parse(t); } catch {} return { s: r.status, t, j: j || {}, ct: r.headers.get('content-type') || '' }; };
+    const triesN = () => { try { return Object.values(JSON.parse(fs.readFileSync(path.join(DATA, 'tries.json'), 'utf8'))).flat().length; } catch { return 0; } };
+    const t0 = triesN();
+    let r = await vo("what's building", '');
+    ok(r.s === 401 && /voice key is not right/.test(r.j.say || ''), 'voice: no key, refused, in words the phone can say');
+    r = await vo("what's building", 'jvk_' + 'x'.repeat(32));
+    ok(r.s === 401 && triesN() === t0 + 2, 'voice: a wrong key is refused and counts as a wrong sign-in try');
+    ok((await vo('x', '', { method: 'GET' })).s === 405, 'voice: POST only');
+    ok((await hpost('/a-e018bb82/api.php?action=jvvoicekeynew', { name: 'x' }))[0] === 401 && (await hget('/a-e018bb82/api.php?action=jvvoicekeys'))[0] === 401 && (await hpost('/a-e018bb82/api.php?action=voicetry', { text: 'brief me' }))[0] === 401, 'voice: making keys, the list and Try it all need his sign-in');
+    const nk = await sj('jvvoicekeynew', { name: 'iPhone 12' }); const KEY = nk.key || '';
+    ok(nk.ok && /^jvk_[A-Za-z0-9_-]{32}$/.test(KEY) && nk.name === 'iPhone 12', 'voice: a key for the iPhone is made and shown once');
+    const kfile = fs.readFileSync(path.join(DATA, 'jarvis', 'voice-keys.json'), 'utf8');
+    ok(KEY !== '' && !kfile.includes(KEY) && kfile.includes(crypto.createHash('sha256').update(KEY).digest('hex')), 'voice: the server keeps only the key\'s hash');
+    const kl = await sj('jvvoicekeys');
+    ok(kl.ok && kl.keys.length === 1 && kl.keys[0].name === 'iPhone 12' && !JSON.stringify(kl).includes(KEY) && !/sha256/.test(JSON.stringify(kl)) && /\/a-e018bb82\/api\.php\?action=voice$/.test(kl.url), 'voice: the list shows names and use only, plus the address');
+    const sends0 = G.sends.length, hs0 = helpsends().length;
+    /* quick ones, at once, no model */
+    r = await vo('Hey Jarvis, remind me tomorrow at 9am to call the tire shop', KEY);
+    ok(r.s === 200 && r.j.intent === 'remind' && /tomorrow at 9 am: Call the tire shop\./.test(r.j.say), 'voice: "remind me tomorrow at 9am…" is set at once (' + r.j.say + ')');
+    ok(rems().some(x => x.text === 'Call the tire shop' && x.date === tomorrow && x.time === '09:00' && x.by === 'voice'), 'voice: the reminder is saved, marked by voice');
+    r = await vo('remind me to send the invoice on Friday', KEY);
+    ok(r.j.intent === 'remind' && /Send the invoice/.test(r.j.say), 'voice: "remind me to send…" is a reminder, not a send');
+    r = await vo('remind me in 20 minutes to check the trailer', KEY);
+    ok(r.j.intent === 'remind' && rems().some(x => x.text === 'Check the trailer' && x.time !== ''), 'voice: "in 20 minutes" works');
+    r = await vo("what's on today", KEY);
+    ok(r.j.intent === 'today' && /Peak meeting with Tyler/.test(r.j.say) && /2:30 pm/.test(r.j.say), 'voice: what\'s on today reads the calendar (' + r.j.say + ')');
+    r = await vo('brief me', KEY);
+    ok(r.j.intent === 'brief' && /^Good (morning|afternoon|evening), Matthew\./.test(r.j.say) && /reply/.test(r.j.say) && !r.t.includes(SECRETS[4]), 'voice: brief me, spoken: the day and what needs him (' + r.j.say.slice(0, 160) + ')');
+    r = await vo("what's new", KEY);
+    ok(r.j.intent === 'new' && r.j.say.length > 10, 'voice: what\'s new (' + r.j.say.slice(0, 120) + ')');
+    r = await vo("what's building", KEY, { json: false });
+    ok(r.s === 200 && /^text\/plain/.test(r.ct) && /Roof material/.test(r.t) && !/[{}]/.test(r.t), 'voice: plain text by default, which Speak Text reads (' + r.t + ')');
+    r = await vo("what's building", KEY, { form: true });
+    ok(r.j.intent === 'builds', 'voice: a form body works too');
+    r = await vo('add oat milk and coffee beans to groceries', KEY);
+    const gro = JSON.parse(fs.readFileSync(path.join(DATA, 'groceries.json'), 'utf8')).items.map(i => i.text);
+    ok(r.j.intent === 'groceries' && gro.includes('oat milk') && gro.includes('coffee beans'), 'voice: add … to groceries (' + r.j.say + ')');
+    /* the calendar: read only, so a reminder (said plainly); with write access, the event itself */
+    const AF = path.join(DATA, 'accounts.json'), a0 = fs.readFileSync(AF, 'utf8'), acW = w => { const a = JSON.parse(a0); a['m.sharpe@traverse.example.test'].calWrite = w; fs.writeFileSync(AF, JSON.stringify(a)); };
+    acW(false); r = await vo('add lunch with Nolan to my calendar Friday at noon', KEY);
+    ok(r.j.intent === 'calendar-reminder' && /read only/.test(r.j.say) && /reminder/.test(r.j.say) && rems().some(x => x.text === 'Lunch with Nolan' && x.time === '12:00'), 'voice: calendar without write access: saved as a reminder, and it says to reconnect (' + r.j.say + ')');
+    { acW(true); const e0 = (G.events || []).length;
+      r = await vo('put dentist on my calendar December 3 at 2:30 pm', KEY);
+      fs.writeFileSync(AF, a0);
+      const en = (G.events || []).slice(e0);
+      ok(r.j.intent === 'calendar' && en.length === 1 && en[0].summary === 'Dentist' && /T14:30:00/.test(en[0].start.dateTime || '') && /Dentist, (Thursday|[A-Z][a-z]+day) 3 December at 2:30 pm/.test(r.j.say), 'voice: with write access, the event goes on the calendar (' + r.j.say + ')'); }
+    /* anything that would send or post: a draft, only ever */
+    r = await vo("Email Jen that I'm running late", KEY); let last = deskMsgs().pop();
+    ok(r.j.intent === 'draft' && /Nothing gets sent/.test(r.j.say) && /^\[VOICE · DRAFT ONLY\] Email Jen/.test(last.text) && /never send, post, schedule or queue/.test(last.text) && last.ctx && last.ctx.screen === 'voice', 'voice: "email Jen…" only asks the desk for a draft');
+    for (const s of ['post the Friday photo to Facebook', 'can you schedule the Instagram post for Monday', 'text Brad the gate code', 'tell Jen that the route moved', 'reply to Dana saying yes']) { r = await vo(s, KEY); ok(r.j.intent === 'draft', 'voice: "' + s + '" is a draft only'); }
+    ok(G.sends.length === sends0 && helpsends().length === hs0, 'voice: nothing was sent by any of it (no Gmail send, nothing into the Sixfold app)');
+    /* the desk: laptop work, remember, and a question the Assistant cannot take (no key here) */
+    r = await vo('look into why the Peak emails bounced', KEY); last = deskMsgs().pop();
+    ok(r.j.intent === 'desk' && /^Sent to the desk; I’ll alert you when it’s done\./.test(r.j.say) && /^\[VOICE\] look into why the Peak emails bounced/.test(last.text) && r.j.thread === last.id, 'voice: laptop work goes to the desk as a new thread: "Sent to the desk; I\'ll alert you when it\'s done."');
+    r = await vo('remember that the shop gate code changed', KEY); last = deskMsgs().pop();
+    ok(r.j.intent === 'remember' && /^\[REMEMBER THIS\]\nthe shop gate code changed/.test(last.text), 'voice: "remember that…" goes to the desk to save');
+    r = await vo('Anything from Jen this week?', KEY);
+    ok(r.j.intent === 'ask-desk' && /couldn’t answer just now, so I sent it to the desk/.test(r.j.say), 'voice: a question goes to the Assistant; here, with no Anthropic key, to the desk instead, and it says so');
+    r = await vo('', KEY); ok(r.j.intent === 'empty' && /did not catch/.test(r.j.say), 'voice: nothing heard: "I did not catch that"');
+    r = await vo('thanks Jarvis', KEY); ok(r.j.intent === 'bye', 'voice: "thanks Jarvis"');
+    const lg = fs.readFileSync(path.join(DATA, 'assistant.log'), 'utf8').split('\n').filter(l => /"what":"voice"/.test(l));
+    ok(lg.length >= 15 && lg.some(l => /"intent":"remind"/.test(l) && /"key":"iPhone 12"/.test(l)) && !lg.some(l => l.includes(KEY) || /tire shop|running late|gate code/.test(l)), 'voice: each request is logged by key name and kind, never the words or the key');
+    const tr = await sj('voicetry', { text: "what's building" });
+    ok(tr.ok && tr.intent === 'builds' && /Roof material/.test(tr.say), 'voice: Try it here (signed in) takes the same road');
+    /* the rate limit: 20 in 10 minutes for one key, then words to say */
+    const codes = []; for (let i = 0; i < 35 && !codes.includes(429); i++) codes.push((await vo('thanks', KEY)).s);
+    r = await vo('thanks', KEY);
+    ok(codes.includes(429) && r.s === 429 && /a few minutes/.test(r.j.say || ''), 'voice: 30 requests in 10 minutes per key, then "give it a few minutes"');
+    const kl2 = await sj('jvvoicekeys'); ok(kl2.keys[0].uses >= 15 && kl2.keys[0].last > 0, 'voice: the list says when a key was last used');
+    ok((await sj('jvvoicekeydrop', { id: nk.id })).ok && (await vo('brief me', KEY)).s === 401, 'voice: a revoked key stops at once');
+    const tests = fs.readFileSync(path.join(REPO, 'assistant', 'jarvis', 'tests', 'jarvis-test.mjs'), 'utf8');
+    ok(!/console\.log\([^)]*KEY/.test(tests), 'voice: the test never prints a key');
+
+    /* ---- the setup page */
+    await ev('document.dispatchEvent(new Event("click"))');
+    await click('#voicebtn'); ok(await until('!!document.getElementById("voicesetup")'), 'Talk without Siri opens from the top bar');
+    const vt = await ev('document.getElementById("voicesetup").innerText');
+    const want = ['Dictate Text', 'After Pause', 'Get Contents of URL', 'POST', 'X-Voice-Key', 'Dictated Text', 'Speak Text', 'Show Result', 'Vocal Shortcuts', 'Hey Jarvis', 'three times', 'Back Tap', 'Double Tap', 'Always Allow', 'Enable Dictation', 'ringer switch', 'Hey Jarvis on-off', 'Hands-free', '?listen=1'];
+    ok(want.every(w => vt.includes(w)), 'setup page: the Shortcut steps, Vocal Shortcuts, Back Tap, the laptop and troubleshooting (' + want.filter(w => !vt.includes(w)).join(', ') + ')');
+    ok(/\/a-e018bb82\/api\.php\?action=voice$/.test(await ev('document.getElementById("vkurl").value')) && await ev('!!document.getElementById("vkurlcopy")'), 'setup page: the address, with Copy');
+    await ev('document.getElementById("vkname").value="Test phone"'); await click('#vkmake');
+    ok(await until('/^jvk_[A-Za-z0-9_-]{32}$/.test((document.getElementById("vkkey")||{}).value||"")') && await ev('!!document.getElementById("vkkeycopy")'), 'setup page: Make a voice key shows it once, with Copy');
+    ok(await until('[...document.querySelectorAll(".vkrow .lt")].some(x=>x.textContent==="Test phone")'), 'setup page: the new key is listed by name');
+    await click('#vkkeycopy'); await sleep(300);
+    await shot('jarvis-voice-setup');
+    await ev('[...document.querySelectorAll(".vkrow")].find(r=>/Test phone/.test(r.innerText)).querySelector(".vkrevoke").click()'); await sleep(250);
+    ok(/Revoke the voice key for Test phone/.test(await ev('(document.getElementById("confirm")||{}).innerText||""')), 'setup page: Revoke asks first');
+    await click('#cfyes');
+    ok(await until('![...document.querySelectorAll(".vkrow .lt")].some(x=>x.textContent==="Test phone")'), 'setup page: Revoke takes it off');
+    await ev('document.getElementById("vtry").value="what\'s building"'); await click('#vtrybtn');
+    ok(await until('/Roof material/.test(document.getElementById("vtryout").textContent)'), 'setup page: Try it here answers');
+    await click('#shclose'); await sleep(200);
+    ok(/Hands-free/.test(await ev('document.getElementById("handsswitch").textContent')) && await ev('document.getElementById("handsswitch").getAttribute("aria-pressed")') === 'false' && await ev('document.getElementById("handsswitch").classList.contains("off")'), 'Hands-free: a switch on the bar, off (grey) by default');
+
+    /* ---- hands-free: a speech stand-in that ends by itself and takes its words from a queue; a voice that finishes */
+    await cdp('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__jvFollowMs=1500;window.__srStarts=0;try{window.__srQ=JSON.parse(localStorage.getItem("test.srq")||"[]");localStorage.removeItem("test.srq");}catch(e){window.__srQ=[];}' +
+      'window.SpeechRecognition=window.webkitSpeechRecognition=function(){var s=this,ended=false;var end=function(){if(!ended){ended=true;s.onend&&s.onend();}};s.start=function(){window.__srStarts++;window.__srStop=end;var t=window.__srQ.length?window.__srQ.shift():"";setTimeout(function(){if(t){s.onresult&&s.onresult({results:[[{transcript:t}]]});setTimeout(end,80);}},300);};s.stop=end;};' +
+      'window.speechSynthesis.speak=function(u){if(u.text&&u.text.trim())window.__said.push(u.text);setTimeout(function(){u.onend&&u.onend();},60);};' });
+    const F13 = async () => { await cdp('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'F13', code: 'F13', windowsVirtualKeyCode: 124, nativeVirtualKeyCode: 124 }); await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'F13', code: 'F13', windowsVirtualKeyCode: 124, nativeVirtualKeyCode: 124 }); };
+    /* the wake word opening a new window: ?listen=1, then its F13 */
+    await ev('localStorage.setItem("test.srq",JSON.stringify(["remind me tomorrow at 7am to water the plants"]))');
+    await cdp('Page.navigate', { url: PAGE + '?listen=1' }); await until('document.readyState==="complete" && typeof window.__srStarts==="number"', 6000); await F13();
+    ok(await until('window.__srStarts>=1', 9000), '?listen=1: the page listens on load (desktop Chrome)');
+    ok(await nodeUntil(() => rems().some(x => x.text === 'Water the plants' && x.time === '07:00'), 8000), '?listen=1: what he says goes by itself (a reminder, with no model call)');
+    ok(await until('window.__said.some(s=>/Reminder set/.test(s))'), '?listen=1: the answer is read aloud');
+    ok(await ev('location.search===""') && await ev('![...document.querySelectorAll(".msg.ai")].some(m=>/Good (morning|afternoon|evening), Matthew/.test(m.innerText))'), '?listen=1: the address is cleaned, and no hello talks over it');
+    await sleep(1200);
+    ok(await ev('window.__srStarts') === 1, 'Hands-free off: the mic does not open again after the answer');
+    /* Hands-free on, the wake word on a window already open (F13 only): answer, follow-up, quiet ends it */
+    await click('#handsswitch'); await sleep(100);
+    ok(await ev('document.getElementById("handsswitch").getAttribute("aria-pressed")') === 'true' && await ev('localStorage.getItem("jarvis.hands")') === 'true', 'Hands-free: on (lit), kept on this device');
+    await ev('window.__srQ=["what\'s building",""];window.__srStarts=0;window.__said.length=0');
+    await F13();
+    ok(await until('window.__said.some(s=>/build/i.test(s))', 6000), 'F13 (the wake word on an open window): it listens, answers, and the answer card is read aloud');
+    ok(await until('window.__srStarts===2', 5000), 'Hands-free: after the spoken answer the mic opens again for a follow-up');
+    await sleep(2600);
+    ok(await ev('window.__srStarts') === 2 && await ev('document.getElementById("app").classList.contains("s-idle")'), 'Hands-free: about 8 seconds of quiet (1.5 here) ends it: standing by, no third listen');
+    /* "that's all" ends it too */
+    await ev('window.__srQ=["what\'s waiting","that\'s all"];window.__srStarts=0;window.__said.length=0');
+    await F13();
+    ok(await until('window.__srStarts===2', 6000) && await until('window.__said[window.__said.length-1]==="Okay."', 4000), 'Hands-free: "that\'s all" ends the conversation with a short okay');
+    await sleep(1200); ok(await ev('window.__srStarts') === 2, 'Hands-free: nothing more after "that\'s all"');
+    /* the mic button with Hands-free on is the same conversation */
+    await ev('window.__srQ=["what\'s building",""];window.__srStarts=0');
+    await click('.cmdbar .mic'); ok(await until('window.__srStarts===2', 6000), 'Hands-free: the mic button starts a conversation that follows up');
+    await sleep(2200);
+    /* Driving mode with Hands-free: the same follow-up */
+    await click('#drivebtn'); await sleep(300);
+    await ev('window.__srQ=["what\'s new",""];window.__srStarts=0'); await click('#drivetalk');
+    ok(await until('window.__srStarts===2', 6000), 'Driving mode with Hands-free: the mic opens again after the answer');
+    await sleep(2200); await click('#driveexit'); await sleep(300);
+    await click('#handsswitch'); await sleep(100);
+    /* a phone: one big Tap to talk (a gesture first) */
+    const UA0 = await ev('navigator.userAgent');
+    await cdp('Emulation.setUserAgentOverride', { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.2 Mobile/15E148 Safari/604.1' });
+    await ev('localStorage.setItem("test.srq",JSON.stringify(["what\'s building"]))');
+    await cdp('Page.navigate', { url: PAGE + '?listen=1' });
+    ok(await until('!!document.getElementById("taptalkbtn")', 9000) && await ev('window.__srStarts') === 0, 'iPhone ?listen=1: a big Tap to talk, and no listening before the tap');
+    await shot('jarvis-taptalk');
+    await click('#taptalkbtn');
+    ok(await until('window.__srStarts===1') && await ev('!document.getElementById("taptalk")'), 'Tap to talk: one tap and it listens');
+    await sleep(1200);
+    await cdp('Emulation.setUserAgentOverride', { userAgent: UA0 });
+    await cdp('Page.navigate', { url: PAGE }); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(600);
+  }
+  ok(errs.length === 0, 'no script errors in talk without Siri (' + errs.join(' | ') + ')');
 
   /* ---- desktop idle shot: a fresh load */
   await cdp('Page.reload'); await until('document.querySelectorAll(".msg.ai").length>0', 9000); await sleep(1200);

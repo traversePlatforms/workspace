@@ -109,8 +109,12 @@ function chatTool(string $name, array $in): array {
     }
     return ['No such tool.', null];
 }
-/** one message from Matthew: the tool loop to an answer. Returns ['ok', 'reply', 'actions']. */
-function chatTurn(string $text): array {
+/** one message from Matthew: the tool loop to an answer. Returns ['ok', 'reply', 'actions'].
+    19 Nov: $o['voice'] (lib/voice.php, the Jarvis Shortcut): the answer is read aloud, so it is told to keep it short and spoken; low effort,
+    for speed. The turn joins the same conversation (marked via voice), so a spoken follow-up has the context. */
+const CHAT_VOICE = "This message was spoken (speech to text from his phone or laptop, so a word may be misheard) and your answer will be read aloud to him, maybe while he drives. Answer in plain spoken sentences, under 60 words. No lists, no markdown, no links, no ids, no email addresses spelled out. If the full answer needs more, give the short version and say the detail is in J.A.R.V.I.S. You cannot send, post or schedule anything: if he asks you to reply to someone, write it with write_reply (a Gmail draft) and say it is saved as a draft and nothing was sent.";
+function chatTurn(string $text, array $o = []): array {
+    $voice = !empty($o['voice']);
     $c = claude(); if (!$c) return ['ok' => false, 'error' => 'Add the Anthropic key in Settings first.'];
     $log = jget('chat.json')['turns'] ?? [];
     $msgs = [];
@@ -120,10 +124,11 @@ function chatTurn(string $text): array {
     $msgs[] = ['role' => 'user', 'content' => '[' . (new DateTime('now', $tz))->format('l j F Y, g:ia') . ' Denver] ' . $text];
     $accts = []; foreach (jget('accounts.json') as $e => $a) $accts[] = $a['label'] . ': ' . $e . ' (' . ($a['about'] ?? '') . ')';
     $system = [['type' => 'text', 'text' => CHAT_SYSTEM, 'cacheControl' => ['type' => 'ephemeral']], ['type' => 'text', 'text' => "Inboxes:\n" . implode("\n", $accts)]];
+    if ($voice) $system[] = ['type' => 'text', 'text' => CHAT_VOICE];
     $actions = []; $reply = '';
     try {
         for ($step = 0; $step < 8; $step++) {
-            $r = $c->beta->messages->create(model: C_MODEL, maxTokens: 16000, system: $system, tools: chatTools(), messages: $msgs, outputConfig: ['effort' => 'medium'], fallbacks: 'default', betas: C_BETAS);
+            $r = $c->beta->messages->create(model: C_MODEL, maxTokens: $voice ? 4000 : 16000, system: $system, tools: chatTools(), messages: $msgs, outputConfig: ['effort' => $voice ? 'low' : 'medium'], fallbacks: 'default', betas: C_BETAS);
             trackUsage('chat', $r);
             if ($r->stopReason === 'refusal') { $reply = 'I can\'t help with that one.'; break; }
             $uses = []; $reply = '';
@@ -140,9 +145,9 @@ function chatTurn(string $text): array {
         }
     } catch (\Throwable $e) { alog('chat failed', ['error' => mb_substr($e->getMessage(), 0, 300)]); return ['ok' => false, 'error' => 'The assistant could not answer just now. Try again in a minute.']; }
     $reply = trim($reply) !== '' ? trim($reply) : ($actions ? 'Done.' : 'I did not get an answer back. Try asking again.');
-    jedit('chat.json', function ($c) use ($text, $reply, $actions) {
+    jedit('chat.json', function ($c) use ($text, $reply, $actions, $voice) {
         $t = $c['turns'] ?? [];
-        $t[] = ['role' => 'user', 'text' => $text, 'at' => time()];
+        $t[] = ['role' => 'user', 'text' => $text, 'at' => time()] + ($voice ? ['via' => 'voice'] : []);
         $t[] = ['role' => 'assistant', 'text' => $reply, 'actions' => $actions, 'at' => time()];
         $c['turns'] = array_slice($t, -40); return $c;
     });

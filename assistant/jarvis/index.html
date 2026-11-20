@@ -144,7 +144,7 @@ button.li:hover .lt{color:#fff}
 .brain.bdesk .bl i{background:var(--warn);box-shadow:0 0 8px var(--warn)}
 .brain .sw{margin-left:auto;color:var(--c);white-space:nowrap;flex:none;border:1px solid #3ee8ff33;border-radius:999px;padding:3px 10px}
 .brain .sw:hover{background:#3ee8ff10}
-.brain .vo{margin-left:auto}.brain .vo+.sw{margin-left:0}.brain .vo.off{color:var(--mut);border-color:#ffffff22}
+.brain .vo{margin-left:auto}.brain .vo+.sw{margin-left:0}.brain .hf+.sw{margin-left:0}.phone .brain .hf{display:none}.brain .vo.off,.brain .hf.off{color:var(--mut);border-color:#ffffff22}
 .cmdbar{display:flex;align-items:center;gap:10px;border:1px solid #3ee8ff40;background:#04111bcc;border-radius:14px;padding:8px 8px 8px 16px;box-shadow:0 0 0 4px #3ee8ff08,0 0 40px #3ee8ff12}
 .brain.bdesk+.cmdbar{border-color:#ffb64855}
 .cmdbar input{flex:1;min-width:0;font-size:14px;color:var(--ink);outline:none;padding:6px 0}
@@ -295,6 +295,14 @@ button.li:hover .lt{color:#fff}
 .acard .ah .rmb{margin:0 0 0 8px;flex:none}
 .acard .ah .bdg+.rmb{margin-left:8px}
 .fld{display:grid;gap:6px}
+/* 19 Nov: Talk without Siri, and Tap to talk */
+.copyrow{display:flex;gap:8px;align-items:center}.copyrow input{flex:1;min-width:0;border:1px solid #3ee8ff40;background:#04111b;border-radius:8px;padding:9px 11px;font:12.5px "JetBrains Mono",monospace;color:var(--ink);outline:none}
+.vkout:empty{display:none}.vkout{display:grid;gap:8px;border:1px dashed #3ee8ff66;border-radius:8px;padding:10px 12px;background:#3ee8ff08}
+.vkeys{display:grid;gap:6px}.vkrow{display:flex;align-items:center;gap:10px;border:1px solid #3ee8ff1a;padding:8px 10px;background:#3ee8ff06}
+ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px;line-height:1.5;color:#cfeef7}ol.steps b,ul.steps b{color:var(--ink)}ul.says{color:var(--mut)}
+.taptalk{position:fixed;inset:0;z-index:80;background:#020a12f2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center}
+.taptalk .tt{width:min(70vw,260px);height:min(70vw,260px);border-radius:50%;border:2px solid var(--c);color:var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font:600 20px Inter,sans-serif;box-shadow:0 0 40px #3ee8ff55,inset 0 0 30px #3ee8ff22;background:#04111b}
+.taptalk .tt svg.i{width:48px;height:48px}
 .fld input,.fld select{border:1px solid #3ee8ff40;background:#04111b;border-radius:8px;padding:9px 11px;font-size:14px;color:var(--ink);outline:none;color-scheme:dark}
 .fld input:focus{border-color:var(--c)}
 .frow{display:flex;gap:10px;flex-wrap:wrap}.frow>.fld{flex:1;min-width:140px}
@@ -391,7 +399,8 @@ button.li:hover .lt{color:#fff}
     posts: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M7 13h4M7 17h7"/>',
     leaf: '<path d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15z"/><path d="M5 19l8-8"/>',
     cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
-    app: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>'
+    app: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+    wave: '<path d="M3 11v2M7 8v8M11 4v16M15 7v10M19 10v4"/>'
   };
   function ic(n) { var s = document.createElement('span'); s.style.display = 'contents'; s.innerHTML = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">' + P[n] + '</svg>'; return s.firstChild; }
   function el(t, cls, txt) { var e = document.createElement(t); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
@@ -801,6 +810,7 @@ button.li:hover .lt{color:#fff}
     var vw = el('div', 'vw');
     [['inbox', 'Full inbox'], ['cart', 'Groceries'], ['out', 'Outbox'], ['peak', 'Peak desk'], ['posts', 'Posts'], ['leaf', 'Sixfold app'], ['cog', 'Settings']].forEach(function (v) { var b = btn(null, v[0], null, function () { openView({ inbox: 'inbox', cart: 'groceries', out: 'outbox', peak: 'peak', posts: 'posts', leaf: 'sixfold', cog: 'settings' }[v[0]]); }); b.title = v[1]; b.setAttribute('aria-label', v[1]); b.setAttribute('data-view', v[0]); vw.appendChild(b); });
     var nb = btn(null, 'bell', null, function () { notifySheet(); }); nb.id = 'notifybtn'; nb.title = 'Phone alerts and the app'; nb.setAttribute('aria-label', 'Phone alerts and the app'); if (!S.pushOn) nb.style.color = 'var(--warn)'; vw.insertBefore(nb, vw.firstChild);
+    var vs = btn(null, 'wave', null, function () { voiceSheet(); }); vs.id = 'voicebtn'; vs.title = 'Talk without Siri'; vs.setAttribute('aria-label', 'Talk without Siri'); vw.insertBefore(vs, vw.firstChild);
     var dv = btn(null, 'car', null, function () { setDrive(true); }); dv.id = 'drivebtn'; dv.title = 'Driving mode: big buttons, read aloud'; dv.setAttribute('aria-label', 'Driving mode'); vw.insertBefore(dv, vw.firstChild);
     add(t, vw, el('span', 'clock mono', nowLine()));
     return t;
@@ -832,7 +842,7 @@ button.li:hover .lt{color:#fff}
     lpLine = el('div', 'lpline'); lpLine.id = 'lpline';
     var bar = el('form', 'cmdbar'); bar.setAttribute('autocomplete', 'off');
     field = el('input'); field.type = 'text'; field.id = 'ask'; field.setAttribute('aria-label', 'Ask J.A.R.V.I.S.'); field.setAttribute('enterkeyhint', 'send');
-    micB = btn(null, 'mic', 'ib mic', voice); micB.setAttribute('aria-label', 'Talk (speech to text)'); micB.title = 'Talk: tap, speak, tap again';
+    micB = btn(null, 'mic', 'ib mic', function (e) { if (S.hands && !rec) listenNow(); else voice(e); }); micB.setAttribute('aria-label', 'Talk (speech to text)'); micB.title = 'Talk: tap, speak, tap again';
     sendB = btn(null, 'send', 'ib snd'); sendB.type = 'submit'; sendB.setAttribute('aria-label', 'Send');
     add(bar, field, micB, sendB);
     bar.addEventListener('submit', function (e) { e.preventDefault(); submit(); });
@@ -854,7 +864,10 @@ button.li:hover .lt{color:#fff}
     sw.id = 'brainswitch';
     var vo = btn(S.speak ? 'Voice on' : 'Voice off', null, 'sw vo' + (S.speak ? '' : ' off'), function () { S.speak = !S.speak; store('jarvis.speak', S.speak); if (!S.speak) hush(); paintBrain(); });
     vo.id = 'voiceswitch'; vo.title = S.speak ? 'Replies are read aloud. Tap to stop.' : 'Tap to have replies read aloud'; vo.setAttribute('aria-pressed', String(S.speak));
-    add(brainBar, l, vo, sw);
+    /* 19 Nov: Hands-free: the mic opens again after each spoken answer, for a follow-up (kept per device) */
+    var hf = btn('Hands-free', null, 'sw hf' + (S.hands ? '' : ' off'), function () { S.hands = !S.hands; store('jarvis.hands', S.hands); if (!S.hands) { S.convo = false; clearTimeout(followUp.t); } toast(S.hands ? 'Hands-free: after each answer the mic opens again. Say “that’s all” or stay quiet to stop.' : 'Hands-free off.'); paintBrain(); });
+    hf.id = 'handsswitch'; hf.title = S.hands ? 'Hands-free is on: after each spoken answer the mic opens again. Tap to turn off.' : 'Hands-free is off. Tap so the mic opens again after each spoken answer, for a follow-up.'; hf.setAttribute('aria-pressed', String(S.hands));
+    add(brainBar, l, vo, hf, sw);
     if (field) field.placeholder = S.brain === 'desk' ? (isPhone ? 'For the desk on your laptop' : 'Write it for J.A.R.V.I.S. desk on your laptop (answers in a few minutes)') : (isPhone ? 'Ask, or tap the mic' : 'Ask J.A.R.V.I.S., or tap the mic to talk');
   }
   function setBrain(b) { S.brain = b; store('jarvis.brain', b); paintBrain(); }
@@ -881,7 +894,7 @@ button.li:hover .lt{color:#fff}
     add(app, coreBox, stateLbl);
     app.appendChild(chatLog);
     var g = el('div', 'dgrid');
-    var talk = btn('Talk', 'mic', rec ? 'on' : null, function () { if (rec) { try { rec.stop(); } catch (e) {} return; } voice({ auto: true }); });
+    var talk = btn('Talk', 'mic', rec ? 'on' : null, function () { if (rec) { try { rec.stop(); } catch (e) {} return; } if (S.hands) listenNow(); else voice({ auto: true }); });
     [['Brief me', 'brief', function () { localBrief(); }], ['What’s new', 'bell', function () { localNew(); }], ['Remind me', 'pin', function () { field.value = 'Remind me '; voice({ auto: true, keep: true }); }]].forEach(function (b) { var x = btn(b[0], b[1], null, b[2]); x.setAttribute('data-drive', b[0]); g.appendChild(x); });
     talk.setAttribute('data-drive', 'Talk'); talk.id = 'drivetalk'; g.appendChild(talk); app.appendChild(g);
     var o = el('div', 'dopts'), rl = btn(S.relisten ? 'Listen again after replies: on' : 'Listen again after replies: off', null, 'sw' + (S.relisten ? '' : ' off'), function () { S.relisten = !S.relisten; store('jarvis.relisten', S.relisten); draw(); });
@@ -961,7 +974,8 @@ button.li:hover .lt{color:#fff}
      ['out', 'outbox', 'Outbox', 'Every automatic email, by business'], ['peak', 'peak', 'Peak desk', 'Sponsors and expo leads'], ['posts', 'posts', 'Posts', 'The post calendar'], ['leaf', 'sixfold', 'Sixfold app', 'The Field app, with its own sign-in'], ['cog', 'settings', 'Settings', 'Inboxes, keys, spending']].forEach(function (v) {
       var b = btn(null, v[0], null, function () { openView(v[1]); }), x = el('span'); add(x, v[2], el('small', null, v[3])); b.appendChild(x); w.appendChild(b);
     });
-    var al = btn(null, 'bell', null, function () { notifySheet(); }), ax = el('span'); add(ax, 'Phone alerts and the app', el('small', null, S.pushOn ? 'On for this device' : 'Off on this device: tap to turn on')); al.appendChild(ax); al.id = 'morealerts'; w.insertBefore(al, w.firstChild);
+    var vb = btn(null, 'wave', null, function () { voiceSheet(); }), vx = el('span'); add(vx, 'Talk without Siri', el('small', null, '“Hey Jarvis”: the Shortcut, Back Tap and voice keys')); vb.appendChild(vx); vb.id = 'morevoice';
+    var al = btn(null, 'bell', null, function () { notifySheet(); }), ax = el('span'); add(ax, 'Phone alerts and the app', el('small', null, S.pushOn ? 'On for this device' : 'Off on this device: tap to turn on')); al.appendChild(ax); al.id = 'morealerts'; w.insertBefore(al, w.firstChild); w.insertBefore(vb, w.firstChild);
     var nc = btn(null, 'plus', null, function () { apost('chatclear', {}).then(function () { toast('The Assistant starts a new conversation.'); }); }), nx = el('span'); add(nx, 'New Ask conversation', el('small', null, 'The Assistant forgets this chat (your email is untouched)')); nc.appendChild(nx); w.appendChild(nc);
     return w;
   }
@@ -999,15 +1013,57 @@ button.li:hover .lt{color:#fff}
   }
   /* force: Brief me and driving mode read aloud even with Voice off. In driving mode, with "Listen again" on, the mic opens when it ends. */
   function say(t, force) {
-    if (!(S.speak || force || S.drive) || !SY || !touched) return; var s = speakable(t); if (!s) return;
-    try { if (SY.speaking || SY.pending) SY.cancel(); var u = new SpeechSynthesisUtterance(s); sayVoice = sayVoice || pickVoice(); if (sayVoice) { u.voice = sayVoice; u.lang = sayVoice.lang; } else u.lang = 'en-GB'; u.rate = 1.02; u.pitch = 0.95;
-      u.onend = function () { if (S.drive && S.relisten && !rec && S.lastReply && Date.now() - S.lastReply < 120000) { S.lastReply = 0; setTimeout(function () { if (!rec) voice({ auto: true }); }, 450); } };
+    var s = speakable(t);
+    if (!(S.speak || force || S.drive || S.convo) || !SY || !touched || !s) { if (S.convo && S.hands) followUp(1200); return; }   /* hands-free, but it cannot talk here: still listen again */
+    try { if (!S.convo && (SY.speaking || SY.pending)) SY.cancel(); var u = new SpeechSynthesisUtterance(s);   /* in a voice conversation, answers queue rather than cut each other off */ sayVoice = sayVoice || pickVoice(); if (sayVoice) { u.voice = sayVoice; u.lang = sayVoice.lang; } else u.lang = 'en-GB'; u.rate = 1.02; u.pitch = 0.95;
+      u.onend = function () {
+        if ((S.drive && S.relisten && S.lastReply && Date.now() - S.lastReply < 120000) || (S.convo && S.hands)) { S.lastReply = 0; followUp(450); }
+        else if (S.convo && !rec) S.convo = false;
+      };
       SY.speak(u); } catch (e) {}
   }
+  /* 19 Nov (talk without Siri): hands-free. After a spoken answer the mic opens again for a follow-up (Hands-free on, or Listen again in
+     driving mode); it stops after about 8 seconds of quiet, or "that's all" / "thanks Jarvis". S.convo: this turn started by voice, so its
+     answer is read aloud even with Voice off. */
+  S.hands = store('jarvis.hands') === true; S.convo = false;
+  var BYE = /^(that'?s all|that is all|that'?ll be all|thanks?,? jarvis|thank you,? jarvis|thanks?|thank you|stop|never ?mind|no thanks?|nothing( else)?|goodbye|bye|i'?m good|all good)\W*$/i;
+  function followUp(ms) {
+    clearTimeout(followUp.t);
+    followUp.t = setTimeout(function () { if (SY && (SY.speaking || SY.pending)) { followUp(400); return; } if (!rec && !document.getElementById('sheet') && !document.getElementById('confirm')) voice({ auto: true, hands: true, follow: true }); }, ms || 450);
+  }
+  function endConvo(why) {
+    S.convo = false; clearTimeout(followUp.t); setState('idle');
+    if (why === 'bye') say('Okay.', true);
+  }
+  /* a short rising tone when the mic opens by itself (a follow-up, the wake word): no words, so it is never mistaken for an answer */
+  var actx = null;
+  function blip() {
+    if (!touched) return; try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); var o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime;
+      o.type = 'sine'; o.frequency.setValueAtTime(660, t0); o.frequency.linearRampToValueAtTime(990, t0 + 0.12); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.18, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.2);
+      o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + 0.22); } catch (e) {}
+  }
+  /* the wake word on the laptop (assistant/jarvis/wakeword/: it focuses this window and presses F13), ?listen=1, Tap to talk, or the mic
+     with Hands-free on: listen now and answer by voice. Already listening: nothing more. */
+  function listenNow() {
+    var tt = document.getElementById('taptalk'); if (tt) tt.remove();
+    if (!field) { S.wantListen = true; return; }
+    if (rec) return;
+    field.value = ''; S.convo = true; S.convoCards = 0;
+    if (!voice({ auto: true, hands: true })) S.convo = false;
+  }
+  function tapToTalk() {
+    if (document.getElementById('taptalk')) return;
+    var o = el('div', 'taptalk'); o.id = 'taptalk'; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Tap to talk');
+    var b = btn('Tap to talk', 'mic', 'tt', function () { touched = true; listenNow(); }); b.id = 'taptalkbtn';
+    var no = btn('Not now', null, 'btn gh', function () { o.remove(); });
+    add(o, b, el('div', 'hint', 'This browser needs one tap before it can listen and talk back.'), no); document.body.appendChild(o);
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'F13' || e.code === 'F13') { e.preventDefault(); touched = true; listenNow(); } }, true);
   function hush() { if (SY) try { SY.cancel(); } catch (e) {} }
   function pushChat(n) { chatLog.appendChild(n); chatLog.scrollTop = chatLog.scrollHeight; return n; }
   function card(o) {
     var c = el('div', 'acard'); if (o.id) c.id = o.id;
+    if (S.convo && !o.noSpeak && (S.convoCards = (S.convoCards || 0) + 1) <= 3) say(o.title + (o.quote ? '. ' + o.quote : ''), true);   /* 19 Nov: a voice conversation hears its answer cards (the first three) */
     var h = el('div', 'ah'); add(h, o.icon ? ic(o.icon) : null, el('span', 't', o.title), o.badge ? el('span', 'bdg ' + (o.badge[1] || 'dr'), o.badge[0]) : null, o.quote && !o.noRemember ? rmbBtn(o.title + ': ' + o.quote) : null); var cx = btn(null, 'close', 'cx', function () { c.remove(); }); cx.title = 'Dismiss'; cx.setAttribute('aria-label', 'Dismiss'); h.appendChild(cx); c.appendChild(h);
     if (o.quote) c.appendChild(said(el('div', 'q' + (o.warn ? ' w' : '')), o.quote));
     if (o.rows) { var rw = el('div', 'rows'); add(rw, o.rows); c.appendChild(rw); }
@@ -1250,9 +1306,9 @@ button.li:hover .lt{color:#fff}
       if (r._status === 401) { signin(); return null; }
       if (!r.ok || !r.thread) { msgAi(r.error || 'The desk did not take it. Try again.', 'J.A.R.V.I.S. desk').classList.add('bad'); setState('idle'); return null; }
       var tk = r.thread; S.pending[tk.id] = { seen: (tk.msgs || []).length, at: Date.now() }; jdPut(tk);
-      card({ id: 'dk-' + tk.id, icon: 'help', title: o.title || 'Sent to J.A.R.V.I.S. desk', badge: ['On your laptop', 'nm'], noRemember: true, warn: !lp.on, quote: (lp.on ? 'It usually answers in a few minutes.' : lp.desk + '.') + ' The answer appears here and in your desk chats.',
+      card({ id: 'dk-' + tk.id, icon: 'help', title: o.title || 'Sent to J.A.R.V.I.S. desk', badge: ['On your laptop', 'nm'], noRemember: true, noSpeak: true, warn: !lp.on, quote: (lp.on ? 'It usually answers in a few minutes.' : lp.desk + '.') + ' The answer appears here and in your desk chats.',
         meta: 'J.A.R.V.I.S. desk · sent to your laptop, a few minutes', acts: [['Open the thread', 'help', 'sec', function () { openDesk(tk.id); }]] });
-      if (S.drive) say(lp.on ? 'Sent to the desk.' : 'Sent. Your laptop is asleep, so the desk answers when it wakes.', true);
+      if (S.drive || S.convo) say(lp.on ? 'Sent to the desk; I’ll alert you when it’s done.' : 'Sent. Your laptop is asleep, so the desk answers when it wakes.', true);
       setState('idle'); pollDesk(); return tk;
     }, function () { msgAi('No connection: the desk did not get it. Try again.', 'J.A.R.V.I.S. desk').classList.add('bad'); setState('idle'); return null; });
   }
@@ -1283,22 +1339,34 @@ button.li:hover .lt{color:#fff}
   /* voice: the browser's own speech recognition where it has one; typing always works */
   var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null;
   /* o.auto (driving mode): what he said is sent by itself when he stops talking */
+  /* 19 Nov: o.hands (hands-free, the wake word, ?listen=1): sent by itself too, and quiet or "that's all" ends the conversation; o.follow:
+     a follow-up, which gives up after about 8 seconds with nothing heard. Returns whether the mic started. */
+  var FOLLOW_MS = +window.__jvFollowMs || 8000;
   function voice(o) {
     o = o && o.type === undefined ? o : {};
-    if (!SR) { toast('Voice isn’t available in this browser. Typing always works.'); return; }
-    if (rec) { try { rec.stop(); } catch (e) {} return; }
-    try { rec = new SR(); } catch (e) { toast('Voice could not start here. Typing always works.'); return; }
+    if (!SR) { toast('Voice isn’t available in this browser. Typing always works.'); return false; }
+    if (rec) { try { rec.stop(); } catch (e) {} return false; }
+    try { rec = new SR(); } catch (e) { toast('Voice could not start here. Typing always works.'); return false; }
     rec.lang = 'en-US'; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
-    var base = field.value ? field.value.replace(/\s*$/, ' ') : '';
-    rec.onresult = function (e) { var s = ''; for (var i = 0; i < e.results.length; i++) s += e.results[i][0].transcript; field.value = base + s; };
-    rec.onerror = function (e) { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('The microphone is blocked for this page. Allow it in the browser, or type.'); else if (e.error !== 'no-speech' && e.error !== 'aborted') toast('Voice stopped (' + e.error + '). Typing always works.'); };
+    var base = field.value ? field.value.replace(/\s*$/, ' ') : '', heard = false, quiet = null, me = rec;
+    rec.onresult = function (e) { heard = true; clearTimeout(quiet); var s = ''; for (var i = 0; i < e.results.length; i++) s += e.results[i][0].transcript; field.value = base + s; };
+    rec.onerror = function (e) { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') { toast('The microphone is blocked for this page. Allow it in the browser, or type.'); if (o.hands) S.convo = false; } else if (e.error !== 'no-speech' && e.error !== 'aborted') toast('Voice stopped (' + e.error + '). Typing always works.'); };
     rec.onend = function () {
-      rec = null; micB.classList.remove('on'); if (S.state === 'listen') setState('idle');
-      if (o.auto && S.drive) { var said1 = field.value.trim(); if (said1 && !/^remind me$/i.test(said1)) submit(); else { field.value = ''; } draw(); return; }
+      clearTimeout(quiet); if (rec === me) rec = null; micB.classList.remove('on'); if (S.state === 'listen') setState('idle');
+      if (o.auto && (S.drive || o.hands)) {
+        var said1 = field.value.trim();
+        if (o.hands && (!said1 || BYE.test(said1))) { field.value = ''; endConvo(said1 ? 'bye' : 'quiet'); if (S.drive) draw(); return; }
+        if (o.hands) S.convoCards = 0;
+        if (said1 && !/^remind me$/i.test(said1)) submit(); else { field.value = ''; }
+        if (S.drive) draw(); return;
+      }
       field.focus();
     };
     hush();   /* stop talking before listening, or it hears itself */
-    try { rec.start(); micB.classList.add('on'); setState('listen'); var dt = document.getElementById('drivetalk'); if (dt) dt.classList.add('on'); } catch (e) { rec = null; toast('Voice could not start here. Typing always works.'); }
+    try { rec.start(); micB.classList.add('on'); setState('listen'); var dt = document.getElementById('drivetalk'); if (dt) dt.classList.add('on'); if (o.follow || o.hands) blip(); }
+    catch (e) { rec = null; toast('Voice could not start here. Typing always works.'); return false; }
+    if (o.follow) quiet = setTimeout(function () { if (!heard && rec === me) try { me.stop(); } catch (e) {} }, FOLLOW_MS);
+    return true;
   }
 
   /* ------------------------------------------------------------ the confirm: the only way a Send goes ahead */
@@ -1546,6 +1614,110 @@ button.li:hover .lt{color:#fff}
     }
     paint();
   }
+  /* ------------------------------------------------------------ 19 Nov: Talk without Siri (Matthew: "build out all the voice actions we can
+     use to allow me to talk to jarvis easily. id rather not use siri to contact jarvis"). The setup page: a voice key per device (shown
+     once), the address, the exact steps for ONE iPhone Shortcut named Jarvis (iOS will not take a ready-made one from here), Vocal
+     Shortcuts "Hey Jarvis", Back Tap, the laptop's wake word, and Try it here. The Shortcut's door is ../api.php?action=voice
+     (lib/voice.php): nothing it hears can send, post or schedule; that only ever becomes a draft. */
+  function copyText(t, what) {
+    var done = function () { toast((what || 'It') + ' is copied. Paste it into the Shortcut.'); };
+    var old = function () { var x = el('textarea'); x.value = t; x.setAttribute('readonly', ''); x.style.cssText = 'position:fixed;left:-9999px;top:0'; document.body.appendChild(x); x.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('Copy did not work here: press and hold the text to copy it.'); } x.remove(); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, old); else old();
+  }
+  function copyRow(id, value, what) {
+    var r = el('div', 'copyrow'), i = el('input'); i.id = id; i.value = value; i.readOnly = true; i.setAttribute('aria-label', what); i.addEventListener('focus', function () { i.select(); });
+    var b = btn('Copy', null, 'btn sec', function () { copyText(i.value, what); }); b.id = id + 'copy'; add(r, i, b); return r;
+  }
+  function steps(list) { var o = el('ol', 'steps'); list.forEach(function (x) { var li = el('li'); said(li, x); o.appendChild(li); }); return o; }
+  var VOICE_SAYS = ['Remind me Friday at 9 to call Tyler', 'Remind me in 20 minutes to check the trailer', 'Add lunch with Nolan to my calendar Friday at noon', 'What’s on today?', 'Brief me', 'What’s new?', 'What’s building?', 'Add eggs and milk to groceries', 'Remember that the shop gate code changed', 'Look into why the Peak emails bounced', 'Email Jen that I’m running late', 'Anything from Jen this week?'];
+  var VOICE_NOTE = { 9: ' (goes to the desk)', 10: ' (a draft only: nothing is sent)', 11: ' (the Assistant answers)' };
+  function voiceSheet() {
+    var sh = sheet('Talk without Siri', 'Say “Hey Jarvis” on your iPhone or near the laptop'); sh.body.id = 'voicesetup';
+    var url = location.origin + location.pathname.replace(/jarvis\/[^/]*$/, '') + 'api.php?action=voice';
+    var list = el('div', 'vkeys'), out = el('div', 'vkout'); out.id = 'vkout';
+    function paintKeys() {
+      aget('jvvoicekeys').then(function (j) {
+        list.textContent = ''; if (!j.ok) { list.appendChild(el('div', 'warnline', j.error || 'Could not read the keys.')); return; }
+        if (j.url) { url = j.url; var u = document.getElementById('vkurl'); if (u) u.value = url; }
+        if (!(j.keys || []).length) { list.appendChild(el('div', 'empty', 'No voice keys yet.')); return; }
+        j.keys.forEach(function (k) {
+          var r = el('div', 'vkrow'), x = el('div', 'lx'); r.setAttribute('data-vk', k.id);
+          add(x, el('div', 'lt', k.name), el('div', 'ls', 'Made ' + ago(k.made) + ' ago · ' + (k.last ? 'last used ' + ago(k.last) + ' ago · ' + plural(k.uses, 'use') : 'not used yet')));
+          var rv = btn('Revoke', null, 'btn gh vkrevoke', function () { confirmBox('Revoke the voice key for ' + k.name + '? Its Shortcut stops working at once.', 'Revoke it').then(function (y) { if (!y) return; apost('jvvoicekeydrop', { id: k.id }).then(function (z) { toast(z.ok ? 'Revoked: ' + k.name + '.' : (z.error || 'Not revoked.')); paintKeys(); }); }); });
+          add(r, x, rv); list.appendChild(r);
+        });
+      }, function () { list.textContent = ''; list.appendChild(el('div', 'warnline', 'No connection.')); });
+    }
+    /* 1. the key */
+    sh.body.appendChild(el('div', 'sub', '1 · A voice key for this device'));
+    sh.body.appendChild(el('div', 'hint', 'Make it on the iPhone itself, so you can paste it. It is shown once and never again. One key per device; revoke it here if the phone is lost.'));
+    var nm = el('input'); nm.id = 'vkname'; nm.maxLength = 30; nm.value = isIos() ? 'iPhone' : 'This device';
+    var mk = btn('Make a voice key', 'plus', 'btn pri', function () {
+      mk.disabled = true;
+      apost('jvvoicekeynew', { name: nm.value }).then(function (j) {
+        mk.disabled = false; out.textContent = '';
+        if (!j.ok) { out.appendChild(el('div', 'warnline', j.error || 'No key made.')); return; }
+        add(out, el('div', 'ok', 'Voice key for ' + j.name + ': copy it now. It will not be shown again.'), copyRow('vkkey', j.key, 'The voice key'),
+          el('div', 'hint', 'It goes in the Shortcut’s header X-Voice-Key (step 3). Keep it out of messages and notes.'));
+        paintKeys();
+      }, function () { mk.disabled = false; toast('No connection: no key made.'); });
+    }); mk.id = 'vkmake';
+    var row = el('div', 'frow'); add(row, fld('Name this device', nm)); var rr = el('div', 'racts'); add(rr, mk); add(sh.body, row, rr, out, list);
+    /* 2. the address */
+    sh.body.appendChild(el('div', 'sub', '2 · The address'));
+    sh.body.appendChild(copyRow('vkurl', url, 'The address'));
+    /* 3. the Shortcut */
+    sh.body.appendChild(el('div', 'sub', '3 · Make the Shortcut “Jarvis” (once, about 3 minutes)'));
+    sh.body.appendChild(steps([
+      'Open the **Shortcuts** app and tap **+** (top right). Tap the name at the top, **Rename**, and type **Jarvis**.',
+      'Tap **Add Action**, search **Dictate Text** and tap it. Tap the arrow on it: **Stop Listening: After Pause**, **Language: English (US)**.',
+      'Search **Get Contents of URL** and tap it. Tap **URL** and paste the address from step 2.',
+      'Tap the arrow on Get Contents of URL. **Method: POST**. Under **Headers** tap **Add new header**: key **X-Voice-Key**, text: paste your voice key from step 1.',
+      '**Request Body: JSON**. Tap **Add new field**, choose **Text**. Key: **text**. In its value, tap **Select Variable** and pick **Dictated Text**.',
+      'Search **Speak Text** and tap it. It should read **Speak Contents of URL** (if not, tap the blue word and pick Contents of URL).',
+      'Optional: search **Show Result** and add it, so the answer stays on screen too.',
+      'Tap **Done**. Tap the Jarvis tile once to try it: allow the microphone, and when it asks about traverseplatforms.com choose **Always Allow**.'
+    ]));
+    /* 4. Hey Jarvis */
+    sh.body.appendChild(el('div', 'sub', '4 · “Hey Jarvis”, with no Siri'));
+    sh.body.appendChild(steps([
+      'Settings › **Accessibility** › **Vocal Shortcuts** › **Set Up Vocal Shortcut**.',
+      'Choose **Shortcut**, then **Jarvis**.',
+      'Type the phrase **Hey Jarvis**, then say it three times when asked. Done.',
+      'Now say “Hey Jarvis”, wait for the dictation sound, and say what you need. The answer is spoken back.'
+    ]));
+    /* 5. Back Tap */
+    sh.body.appendChild(el('div', 'sub', '5 · Double tap the back of the phone'));
+    sh.body.appendChild(steps(['Settings › **Accessibility** › **Touch** › **Back Tap** › **Double Tap**.', 'Scroll to Shortcuts and pick **Jarvis**. Two taps on the back of the iPhone now start it, even with Hey Jarvis off.']));
+    sh.body.appendChild(el('div', 'hint', 'Also one tap: in the Shortcuts app, press and hold Jarvis › Share › Add to Home Screen. On iOS 18 and later you can add it to Control Center too (Add a Control › Shortcuts).'));
+    /* what to say */
+    sh.body.appendChild(el('div', 'sub', 'What you can say'));
+    var ul = el('ul', 'steps says'); VOICE_SAYS.forEach(function (x, i) { ul.appendChild(el('li', null, '“' + x + '”' + (VOICE_NOTE[i] || ''))); }); sh.body.appendChild(ul);
+    sh.body.appendChild(el('div', 'hint', 'Quick ones (reminders, calendar, groceries, brief, what’s new) answer at once. Questions go to the Assistant (a few seconds). Work for the laptop goes to the desk: “Sent to the desk; I’ll alert you when it’s done.” Anything that would email, text or post someone is only ever a draft for you to review.'));
+    /* try it */
+    sh.body.appendChild(el('div', 'sub', 'Try it here'));
+    var ti = el('input'), tb = btn('Try', 'send', 'btn sec'), tout = el('div', 'said'); ti.id = 'vtry'; ti.placeholder = 'Type what you would say'; tb.id = 'vtrybtn'; tout.id = 'vtryout'; tb.type = 'submit';
+    var tf = el('form', 'copyrow'); tf.setAttribute('autocomplete', 'off'); add(tf, ti, tb);
+    tf.addEventListener('submit', function (e) { e.preventDefault(); var t = ti.value.trim(); if (!t) return; tb.disabled = true; tout.textContent = 'Working…';
+      apost('voicetry', { text: t }).then(function (j) { tb.disabled = false; tout.textContent = j.ok ? j.say : (j.error || 'No answer.'); if (j.ok) say(j.say, true); }, function () { tb.disabled = false; tout.textContent = 'No connection.'; }); });
+    add(sh.body, tf, tout);
+    /* the laptop */
+    sh.body.appendChild(el('div', 'sub', 'On the laptop'));
+    sh.body.appendChild(el('div', 'hint', 'Say “Hey Jarvis” near the laptop: a chime, and the J.A.R.V.I.S. window comes up already listening. It listens on the laptop only; nothing leaves until it hears the phrase. The Desktop shortcut “Hey Jarvis on-off” turns it off and on; it also rests when the battery is under 20%.'));
+    sh.body.appendChild(el('div', 'hint', 'Hands-free (the switch beside Voice on; lit when on): after each spoken answer the mic opens again for a follow-up. Say “that’s all” or stay quiet for 8 seconds to stop. Driving mode’s Listen again works the same way.'));
+    sh.body.appendChild(el('div', 'hint', 'Opening ' + location.origin + location.pathname.replace(/[^/]*$/, '') + '?listen=1 starts J.A.R.V.I.S. listening (an iPhone shows one big Tap to talk first).'));
+    /* troubleshooting */
+    sh.body.appendChild(el('div', 'sub', 'If it does not work'));
+    sh.body.appendChild(steps([
+      '**Hey Jarvis does nothing:** Vocal Shortcuts listens best with the screen awake. Set it up again under Settings › Accessibility › Vocal Shortcuts, or use Back Tap.',
+      '**It does not hear you:** Settings › General › Keyboard › Enable Dictation must be on. Run the Shortcut from its tile once and allow the microphone.',
+      '**You hear nothing:** turn the volume up. With the ringer switch on silent, Speak Text can be quiet; in the car it plays over Bluetooth.',
+      '**“That voice key is not right”:** make a new key above and paste it into the X-Voice-Key header (and revoke the old one).',
+      '**“Your laptop is asleep”:** desk work starts when the laptop wakes; an alert comes when it is done.',
+      '**It never sends:** asking it to email, text or post someone makes a draft for you to review.'
+    ]));
+    paintKeys();
+  }
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open') openFromUrl(String(e.data.url || '')); });
   /* a tap on an alert, or a link: ?desk=<id> opens that desk chat */
   function openFromUrl(u) { var m = /[?&]desk=(h[0-9]{14}[0-9a-f]{4})/.exec(u); if (!m) return; if (u === location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }   /* a reload does not open it again */ var go = function () { openDesk(m[1]); }; if (myDesk().some(function (x) { return x.id === m[1]; })) go(); else loadDesk().then(go); }
@@ -1591,12 +1763,24 @@ button.li:hover .lt{color:#fff}
     first.then(function (ok) {
       if (!ok) return;
       var t = new Promise(function (res) { setTimeout(res, 2500); });
-      Promise.race([Promise.all([Promise.all(DESKS.map(loadTeam)), loadDesk(), loadSlow()]), t]).then(function () { draw(); if (!S.briefed) { S.briefed = true; greet(); } openFromUrl(location.search); });
+      Promise.race([Promise.all([Promise.all(DESKS.map(loadTeam)), loadDesk(), loadSlow()]), t]).then(function () {
+        var q = location.search, lis = /[?&]listen=1\b/.test(q) || S.wantListen; S.wantListen = false;
+        draw(); if (!S.briefed) { S.briefed = true; if (!lis) greet(); } openFromUrl(q);
+        if (/[?&](voice=setup|setup=voice)\b/.test(q)) { try { history.replaceState(null, '', location.pathname); } catch (e) {} voiceSheet(); }
+        if (lis) listenFromUrl(q);
+      });
       pushCheck().then(draw);
       setInterval(function () { if (!document.hidden && !document.getElementById('view')) refresh(); }, 60000);
       setInterval(function () { if (!document.hidden) loadSlow().then(draw); }, 300000);
       setInterval(function () { var c = document.querySelector('.top .clock'); if (c) c.textContent = nowLine(); }, 20000);
     });
+  }
+  /* 19 Nov: ?listen=1 (the wake word's window, a Home Screen link): listen at once; a phone, or a browser that will not, gets one big Tap to talk */
+  function listenFromUrl(q) {
+    if (/[?&]listen=1\b/.test(q || '')) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+    if (!SR) { toast('Voice isn’t available in this browser. Typing always works.'); return; }
+    if (isPhoneUa() && !(navigator.userActivation && navigator.userActivation.isActive)) { tapToTalk(); return; }
+    listenNow(); if (!rec) tapToTalk();
   }
   function signin() {
     app.className = 'jv s-idle'; app.textContent = ''; app.style.gridTemplateColumns = '';

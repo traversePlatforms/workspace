@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendor)) require $vendor;
-foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk', 'voice'] as $f) require __DIR__ . '/lib/' . $f . '.php';
 
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -49,7 +49,15 @@ if ($action === 'jvdpending' || $action === 'jvdreply') {
     $fl = array_values(array_filter((array) ($body['files'] ?? []), 'is_string'));
     out(jdReply((string) ($body['id'] ?? ''), (string) ($body['status'] ?? 'answered'), (string) ($body['text'] ?? ''), !empty($body['refresh']), $fl));
 }
+/* 19 Nov: talk without Siri (lib/voice.php): the iPhone Shortcut's door, with that device's voice key in an X-Voice-Key header. Plain text
+   back, made to be heard; anything that would send or post only ever becomes a draft. */
+if ($action === 'voice') { @set_time_limit(90); voiceHttp($body, $isPost); }
 if (!signedIn()) out(['ok' => false, 'error' => 'Signed out.'], 401);
+/* 19 Nov: the voice keys (one per device, shown once, only their hash kept) and the setup page's "Try it here" */
+if ($action === 'jvvoicekeys') out(['ok' => true, 'keys' => voKeyList(), 'url' => voUrl()]);
+if ($action === 'jvvoicekeynew') { if (!$isPost) out(['ok' => false], 405); out(voKeyNew((string) ($body['name'] ?? ''))); }
+if ($action === 'jvvoicekeydrop') { if (!$isPost) out(['ok' => false], 405); out(voKeyDrop((string) ($body['id'] ?? ''))); }
+if ($action === 'voicetry') { if (!$isPost) out(['ok' => false], 405); @set_time_limit(90); out(voiceTry((string) ($body['text'] ?? ''))); }
 
 if ($action === 'signout') { $_SESSION = []; session_destroy(); out(['ok' => true]); }
 if ($action === 'home') {
