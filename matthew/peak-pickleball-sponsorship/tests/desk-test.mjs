@@ -737,6 +737,18 @@ try {
     ok(r.state === 'sent' && /book\.php\?px=dm[0-9a-f]{10}-[0-9a-f]{12}$/.test(px.replace(/&amp;/g, '&')), 'expo leads too; with the setting on, the HTML ends in a 1x1 image');
     const gif = await fetch(px.replace(/&amp;/g, '&')); ok(/image\/gif/.test(gif.headers.get('content-type') || ''), 'the image answers a GIF');
     D = await b('data'); ok(find('expo', XE.id).dmails[0].opens === 1 && find('expo', XE.id).touches.some((x) => x.dm === r.ref && x.by === 'Second Seller'), 'and the card shows the email opened once');
+    /* 2026-11-20: a tour confirmation gets the same open image while that setting is on; the tour shows "opened"; Outbox counts it from book-events.log */
+    r = await c2('tour', { world: 'expo', id: XE.id, date: later(9), time: '11:30', who: 'Lee Expo', email: 'lee@example.com', mail: true });
+    m = mimeParts(GM.sent[GM.sent.length - 1]); const tpx = ((m.html.match(/<img src="([^"]+)"/) || [])[1] || '').replace(/&amp;/g, '&');
+    const tref = 'tc-' + String(r.tid).replace(/[^a-z0-9]/g, '') + '-0-r';
+    ok(r.mail && r.mail.state === 'sent' && tpx.endsWith('book.php?px=' + tref + '-' + (tpx.split('-').pop())) && /-[0-9a-f]{12}$/.test(tpx) && lines('book-events.log').some((l) => { const j = JSON.parse(l); return j.t === 'pxsent' && j.ref === tref; }), 'a tour confirmation (setting on): the desk’s 1x1 image on the email, and a "sent with the image" row for Outbox');
+    D = await b('data'); let TT = D.expo.tours.find((x) => x.tid === r.tid);
+    ok(TT.tms.s === 'sent' && TT.tms.opened === false && !/opened/.test(TT.tms.text), 'not opened yet: the tour says only that it went');
+    ok(/image\/gif/.test((await fetch(tpx)).headers.get('content-type') || '') && (await fetch(tpx.replace(/-[0-9a-f]{12}$/, '-000000000000'))).status === 200, 'its image answers a GIF (a forged one too, but only the signed one counts)');
+    D = await b('data'); TT = D.expo.tours.find((x) => x.tid === r.tid);
+    ok(TT.tms.opened === true && /; opened$/.test(TT.tms.text) && lines('book-events.log').filter((l) => { const j = JSON.parse(l); return j.t === 'open' && j.ref === tref; }).length === 1, 'opened: the tour says so; the forged image was not counted');
+    const tst = await a('tourmailtest', { email: 'matthew-test@example.com' }); m = mimeParts(GM.sent[GM.sent.length - 1]);
+    ok(tst.ok && !/<img /.test(m.html), 'the Settings test never carries the image');
     ok((await a('dmset', { pixel: false })).deskmail.pixel === false, 'the open image off again (its default)');
     /* Peak Partnerships (2026-11-19): who it goes out as, read only; their replies on the card for everyone, with Reply in the same thread */
     D = await b('data');

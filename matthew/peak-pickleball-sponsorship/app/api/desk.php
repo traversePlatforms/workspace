@@ -49,7 +49,7 @@
  * a Reply button that answers in the same thread (desk-email.php). The page never gets a message's id or mailbox, only the touch's key. */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-20.1';
+const BUILD = '2026-11-20.2';
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';

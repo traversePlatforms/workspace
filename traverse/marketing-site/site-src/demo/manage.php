@@ -19,9 +19,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $r = with_bookings(function (array &$all) use ($id) { foreach ($all as &$b) if ($b['id'] === $id && $b['status'] === 'booked') { $b['status'] = 'cancelled'; $b['cancelled_at'] = time(); $b['cancelled_by'] = 'Traverse'; return ['ok' => true, 'b' => $b]; } return ['ok' => false]; });
         if ($r['ok']) {
             $b = $r['b']; $when = when_text($c, $b);
-            $mr = send_mail($c, $b['email'], 'Your Traverse demo on ' . $when . ' is cancelled',
+            $mr = send_mail_counted($c, 'demo-confirm', 'cancelled', $b['email'], 'Your Traverse demo on ' . $when . ' is cancelled',
                 "Hi {$b['name']},\n\nWe need to move your demo on $when. Sorry about that. Please pick another time at https://traverseplatforms.com/demo/ or reply to this email.\n\nThanks,\n{$c['organizer_name']}\n{$c['phone']}",
-                ['Reply-To: ' . $c['notify_to']], ics($c, $b, 'CANCEL'));
+                ['Reply-To: ' . $c['notify_to']], ics($c, $b, 'CANCEL'), fn(string $u) => function_exists('mtSitePage') && mtSitePage($u));   /* the link to book again is counted (2026-11-20) */
             log_mail($c, 'manage-cancel ' . $b['id'], $mr);
             $msg = 'Cancelled. ' . ($mr['ok'] ? 'They were emailed.' : 'The email to them did not send (' . $mr['stage'] . '); let them know yourself.');
         }

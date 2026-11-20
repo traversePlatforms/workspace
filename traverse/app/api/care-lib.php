@@ -261,6 +261,17 @@ function careSend(string $to, array $m): array {
     if ($mock) { @file_put_contents($mock, json_encode(['to' => $to, 'subject' => $m[0], 'text' => $m[1], 'html' => $m[2], 'headers' => $m[3] ?? []]) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'sent', 'error' => '']; }
     return sendMail($to, $m[0], $m[1], $m[2], $m[3] ?? []);
 }
+/** a real send from the hourly run, counted (2026-11-20, Matthew: "I want to track everything we can data is key"): the same opens and clicks
+    Sixfold's customer emails have (mailtrack-lib.php), kept in this install's own mail-sends.log, for a client install only (mtInstallOn:
+    never the showcase editions, the practice copy or a test). Every https link is counted but the unsubscribe; a test send (caretest,
+    carenewstest) and the payment-link email never come here. $kind followup | aftercare | newsletter; $v the newsletter issue */
+function careSendCounted(string $kind, string $v, string $to, array $m): array {
+    if (!mailCfg() || !function_exists('mtInstallOn') || !mtInstallOn()) return careSend($to, $m);
+    $T = mtTrack(DATA_DIR, $kind, (string) $m[1], (string) $m[2], ['src' => COOKIE, 'v' => $v, 'wrap' => fn(string $u) => true]);
+    $r = careSend($to, [$m[0], $T['text'], $T['html']] + $m);
+    if (empty($r['ok']) && $T['id'] !== '') mtFail(DATA_DIR, $T['id'], (string) ($r['stage'] ?? ''));
+    return $r;
+}
 function careLog(array $row): void { appendLine(DATA_DIR . '/care-mail.log', ['id' => 'm' . bin2hex(random_bytes(5))] + $row + ['at' => time()]); }
 function careSentToday(?int $now = null): int {
     $t0 = (new DateTime(careToday($now) . ' 00:00', new DateTimeZone(appTz())))->getTimestamp(); $n = 0;
@@ -365,7 +376,7 @@ function careSweep(?int $now = null): array {
             if ($n >= $max || $now < $qat + $days * 86400 + $n * $gap * 86400) continue;
             $lastAt = 0; foreach ($sent[(string) $l['id']] ?? [] as $r) $lastAt = max($lastAt, (int) $r['at']); if ($lastAt && $now - $lastAt < $gap * 86400) continue;
             $t = $tpls[min($n, count($tpls) - 1)] ?? null; if (!$t) break;
-            $r = careSend($to, careRender($t, careFuVals($l), $to));
+            $r = careSendCounted('followup', '', $to, careRender($t, careFuVals($l), $to));
             careLog(['kind' => 'fu', 'lead' => (string) $l['id'], 'qat' => $qat, 'n' => $n + 1, 'to' => $to, 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 200)]);
             appendLine(leadsDir() . '/leadst.log', ['id' => (string) $l['id'], 'note' => $r['ok'] ? 'Follow-up ' . ($n + 1) . ' emailed to ' . $to . '.' : 'Follow-up ' . ($n + 1) . ' NOT emailed (' . $r['stage'] . ').', 'by' => 'Follow-up email', 'at' => time()]);
             if ($r['ok']) { $out['fu']++; $left--; }
@@ -386,7 +397,7 @@ function careSweep(?int $now = null): array {
             $at = (int) ($dn['at'] ?? 0); if ($at < (int) $cfg['ac']['onAt'] || $at < $now - 7 * 86400 || $now < $at + $hours * 3600) continue;
             $l = $leads[(string) $j['lead']] ?? null; if (!$l) continue; $to = careEmailOf($l); if ($to === '' || isset($un[$to])) continue;
             $t = careAcPick($cfg, $j, $l); $line = !empty($cfg['ac']['review']['on']) && $review !== '' ? (string) $cfg['ac']['review']['line'] : '';
-            $r = careSend($to, careRender($t, careAcVals($j, $l, $review), $to, $line));
+            $r = careSendCounted('aftercare', '', $to, careRender($t, careAcVals($j, $l, $review), $to, $line));
             careLog(['kind' => 'ac', 'job' => (string) $j['id'], 'lead' => (string) $j['lead'], 'tpl' => (string) ($t['name'] ?? ''), 'to' => $to, 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => mb_substr((string) $r['error'], 0, 200)]);
             appendLine(leadsDir() . '/leadst.log', ['id' => (string) $j['lead'], 'note' => $r['ok'] ? 'Aftercare emailed to ' . $to . '.' : 'Aftercare NOT emailed (' . $r['stage'] . ').', 'by' => 'Aftercare email', 'at' => time()]);
             if ($r['ok']) { $out['ac']++; $left--; }
@@ -406,7 +417,7 @@ function careSweep(?int $now = null): array {
         foreach ((array) $s['queue'] as $em) {
             if (isset($have[$em])) continue; if ($left <= 0) break;
             if (isset($un[$em]) || !isset($optE[$em])) { appendLine($logf, ['id' => $em, 'ok' => false, 'stage' => isset($un[$em]) ? 'unsubscribed' : 'no longer opted in', 'at' => time()]); $have[$em] = true; continue; }
-            $r = careSend($em, careNlRender($is, $em, (string) ($names[$em] ?? '')));
+            $r = careSendCounted('newsletter', $id, $em, careNlRender($is, $em, (string) ($names[$em] ?? '')));
             appendLine($logf, ['id' => $em, 'ok' => $r['ok'], 'stage' => $r['stage'], 'at' => time()]); $have[$em] = true;
             careLog(['kind' => 'nl', 'issue' => $id, 'to' => $em, 'ok' => $r['ok'], 'stage' => $r['stage']]);
             if ($r['ok']) { $out['nl']++; $left--; }

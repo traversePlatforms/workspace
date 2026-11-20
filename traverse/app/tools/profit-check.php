@@ -153,7 +153,13 @@ if (in_array('--monthly', $args, true)) {
         . "
 " . $text;
     $cfg = require $api . '/config.php'; require_once $api . '/smtp.php';
-    $res = smtp_send((array) ($cfg['smtp'] ?? []), (string) $cfg['to'], '[Sixfold 365] ' . $subj, $body, ['X-Mailer: sixfold-profit']);
+    /* counted (2026-11-20, Matthew: "I want to track everything we can data is key"): an open image on an HTML copy of the same words (fixed-width,
+       so the table keeps its columns), noted in Sixfold's mail-sends.log as 'profit' (api/mailtrack-lib.php) */
+    $pTD = $site . '/sixfold-data/rounds'; $pT = ['id' => '']; $pBody = $body; $pHead = ['X-Mailer: sixfold-profit'];
+    if (is_dir($pTD) && is_file($api . '/mailtrack-lib.php')) { require_once $api . '/mailtrack-lib.php'; $pT = mtTrack($pTD, 'profit', $body, '', ['mono' => true]); }
+    if ($pT['id'] !== '') { [$pBody, $pCt] = mtMime($pT['text'], $pT['html']); $pHead[] = $pCt; }
+    $res = smtp_send((array) ($cfg['smtp'] ?? []), (string) $cfg['to'], '[Sixfold 365] ' . $subj, $pBody, $pHead);
+    if (empty($res['ok']) && $pT['id'] !== '') mtFail($pTD, $pT['id'], (string) ($res['stage'] ?? ''));
     if (!empty($res['ok'])) { file_put_contents($mark, $ld['m']); echo "profit: " . $ld['m'] . " monthly email sent
 "; } else { echo 'profit: monthly email NOT sent (' . ($res['stage'] ?? '?') . ")
 "; exit(1); }

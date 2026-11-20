@@ -276,6 +276,16 @@ function pcMail(string $subject, string $text): array {
     if (is_array($own['smtp'] ?? null)) foreach (['host', 'port', 'user', 'pass', 'ehlo'] as $k) if (isset($own['smtp'][$k])) $c[$k] = $own['smtp'][$k];
     $c['pass'] = (string) preg_replace('/\s+/', '', (string) $c['pass']);
     if ($c['pass'] === '') return ['ok' => false, 'stage' => 'config', 'error' => 'no mail password in traverse-site-private/site-config.php'];
+    /* counted (2026-11-20, Matthew: "I want to track everything we can data is key"): an open image on an HTML copy of the same words, in
+       Traverse's store as 'posts' (public_html/api/mailtrack-lib.php); its link is not counted */
+    $T = ['text' => $text, 'html' => '', 'id' => '']; $lib = PC_SITE . '/public_html/api/mailtrack-lib.php';
+    if (is_file($lib)) { require_once $lib; $T = mtTrack(mtTraverseDir(), 'posts', $text, ''); }
+    $r = pcMailSmtp($c, $subject, $T['text'], $T['id'] !== '' ? $T['html'] : '');
+    if (!$r['ok'] && $T['id'] !== '') mtFail(mtTraverseDir(), $T['id'], (string) $r['stage']);
+    return $r;
+}
+/** the SMTP part of pcMail: plain text, or text + HTML when $html is given (the open image, 2026-11-20) */
+function pcMailSmtp(array $c, string $subject, string $text, string $html): array {
     $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => $e];
     $fp = @stream_socket_client(((int) $c['port'] === 465 ? 'ssl://' : 'tcp://') . $c['host'] . ':' . (int) $c['port'], $errno, $errstr, 20); if (!$fp) return $fail('connect', trim($errno . ' ' . $errstr));
     stream_set_timeout($fp, 20);
@@ -296,12 +306,18 @@ function pcMail(string $subject, string $text): array {
     $w('MAIL FROM:<' . $c['user'] . '>'); [$code, $rep] = $read(); if ($code !== 250) { $quit(); return $fail('from', $rep); }
     $w('RCPT TO:<' . PC_NOTE_TO . '>'); [$code, $rep] = $read(); if ($code !== 250 && $code !== 251) { $quit(); return $fail('to', $rep); }
     $w('DATA'); [$code, $rep] = $read(); if ($code !== 354) { $quit(); return $fail('data', $rep); }
-    $h = fn(string $s) => preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s;
-    $msg = implode("\r\n", ['Date: ' . date('r'), 'From: ' . $h((string) $c['from_name']) . ' <' . $c['user'] . '>', 'To: ' . PC_NOTE_TO, 'Subject: ' . $h($subject),
-        'Message-ID: <' . bin2hex(random_bytes(12)) . '@traverseplatforms.com>', 'MIME-Version: 1.0', 'Content-Type: text/plain; charset=UTF-8', 'Content-Transfer-Encoding: base64'])
-        . "\r\n\r\n" . chunk_split(base64_encode($text), 76, "\r\n");
+    $msg = pcMailMsg($c, $subject, $text, $html);
     @fwrite($fp, $msg . "\r\n.\r\n"); [$code, $rep] = $read(); $quit();
     return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
+}
+/** the failure email itself (headers and body, CRLF): plain text, or text + HTML (split out on 2026-11-20 so a test can read it) */
+function pcMailMsg(array $c, string $subject, string $text, string $html): string {
+    $h = fn(string $s) => preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s;
+    $msg = implode("\r\n", ['Date: ' . date('r'), 'From: ' . $h((string) $c['from_name']) . ' <' . $c['user'] . '>', 'To: ' . PC_NOTE_TO, 'Subject: ' . $h($subject),
+        'Message-ID: <' . bin2hex(random_bytes(12)) . '@traverseplatforms.com>', 'MIME-Version: 1.0']) . "\r\n";
+    if ($html === '') $msg .= 'Content-Type: text/plain; charset=UTF-8' . "\r\n" . 'Content-Transfer-Encoding: base64' . "\r\n\r\n" . chunk_split(base64_encode($text), 76, "\r\n");
+    else { [$mb, $ct] = mtMime($text, $html); $msg .= $ct . "\r\n\r\n" . $mb; }
+    return $msg;
 }
 
 /* ---- accounts: a code per person, kept hashed.

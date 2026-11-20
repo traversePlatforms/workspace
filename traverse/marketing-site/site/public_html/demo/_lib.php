@@ -143,28 +143,42 @@ function notify_booking(array $c, array $b): bool {
     $mine = "New demo booked.\n\nWhen: $when (" . (int) $b['minutes'] . " minutes)\nHow: $how\n\nName: {$b['name']}\nCompany: {$b['company']}\nTrade: {$b['trade']}\n"
           . "Team size: {$b['team']}\nTowns or areas: {$b['towns']}\nEmail: {$b['email']}\nPhone: {$b['phone']}\n\nNotes:\n" . ($b['notes'] !== '' ? $b['notes'] : '(none)') . "\n\n"
           . "Reply to this email to write to them. The invite is attached for your calendar.";
-    $r1 = send_mail($c, $c['notify_to'], 'Demo booked: ' . $b['company'] . ' · ' . $when, $mine, ['Reply-To: ' . $b['email']], ics($c, $b, 'PUBLISH'));
+    $r1 = send_mail_counted($c, 'demo-notify', 'booked', $c['notify_to'], 'Demo booked: ' . $b['company'] . ' · ' . $when, $mine, ['Reply-To: ' . $b['email']], ics($c, $b, 'PUBLISH'));
     log_mail($c, 'book-notify ' . $b['id'], $r1);
     $cancel = 'https://traverseplatforms.com/demo/api.php?action=cancel&id=' . rawurlencode($b['id']) . '&k=' . $b['key'];
     $theirs = "Hi {$b['name']},\n\nYour Traverse demo is booked for $when.\n\n"
             . ($b['meet'] === 'phone' ? "We'll call you at {$b['phone']}." : "We'll email you a video call link before the demo.") . "\n\n"
             . "We'll show you a full day in your trade's edition: at the door, on the phone and in the office. If there's a town or area you'd like to see, reply and tell us.\n\n"
             . "Need a different time? Cancel here and book again: $cancel\n\nThanks,\n" . $c['organizer_name'] . "\n" . $c['phone'] . "\nhello@traverseplatforms.com";
-    $r2 = send_mail($c, $b['email'], 'Your Traverse demo · ' . $when, $theirs, ['Reply-To: ' . $c['notify_to']], ics($c, $b, 'REQUEST'));
+    $r2 = send_mail_counted($c, 'demo-confirm', 'booked', $b['email'], 'Your Traverse demo · ' . $when, $theirs, ['Reply-To: ' . $c['notify_to']], ics($c, $b, 'REQUEST'));
     log_mail($c, 'book-confirm ' . $b['id'], $r2);
     return $r1['ok'];
 }
 function notify_cancel(array $c, array $b): void {
     $when = when_text($c, $b);
-    $r = send_mail($c, $c['notify_to'], 'Demo cancelled: ' . $b['company'] . ' · ' . $when, "{$b['name']} ({$b['company']}) cancelled the demo on $when.\nEmail: {$b['email']}\nPhone: {$b['phone']}", ['Reply-To: ' . $b['email']], ics($c, $b, 'CANCEL'));
+    $r = send_mail_counted($c, 'demo-notify', 'cancelled', $c['notify_to'], 'Demo cancelled: ' . $b['company'] . ' · ' . $when, "{$b['name']} ({$b['company']}) cancelled the demo on $when.\nEmail: {$b['email']}\nPhone: {$b['phone']}", ['Reply-To: ' . $b['email']], ics($c, $b, 'CANCEL'));
     log_mail($c, 'cancel ' . $b['id'], $r);
 }
 function log_mail(array $c, string $what, array $r): void { append_line($c['dir'] . '/mail.log', ['at' => time(), 'what' => $what, 'ok' => $r['ok'], 'stage' => $r['stage'], 'error' => $r['error']]); }
 
 function mime_h(string $s): string { return preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s; }
 
-/** one message through Gmail, logged in as the mailbox; a calendar invite rides along when $ics is given. Never throws. */
-function send_mail(array $c, string $to, string $subject, string $body, array $extra = [], ?string $ics = null): array {
+/** one message, counted (2026-11-20, Matthew: "I want to track everything we can data is key"): an open image on an HTML copy of the same words
+    (api/mailtrack-lib.php, Traverse's store traverse-shared/mailtrack, $kind and $v as Outbox shows them). No link is counted unless $wrap
+    says so: the cancel link carries the booking's key, the sign-up emails' links are setup and sign-in links. Without the library (a local
+    copy) it is the plain send it always was. */
+function send_mail_counted(array $c, string $kind, string $v, string $to, string $subject, string $body, array $extra = [], ?string $ics = null, ?callable $wrap = null): array {
+    $lib = dirname(__DIR__) . '/api/mailtrack-lib.php';
+    if ($c['smtp']['pass'] === '' || !is_file($lib)) return send_mail($c, $to, $subject, $body, $extra, $ics);
+    require_once $lib;
+    $T = mtTrack(mtTraverseDir(), $kind, $body, '', ['v' => $v, 'wrap' => $wrap]);
+    $r = send_mail($c, $to, $subject, $T['text'], $extra, $ics, $T['id'] !== '' ? $T['html'] : null);
+    if (!$r['ok'] && $T['id'] !== '') mtFail(mtTraverseDir(), $T['id'], (string) $r['stage']);
+    return $r;
+}
+/** one message through Gmail, logged in as the mailbox; a calendar invite rides along when $ics is given; $html: the same words as HTML
+    (2026-11-20, for the open image), sent as a text + HTML alternative. Never throws. */
+function send_mail(array $c, string $to, string $subject, string $body, array $extra = [], ?string $ics = null, ?string $html = null): array {
     $s = $c['smtp']; $fail = fn($st, $e) => ['ok' => false, 'stage' => $st, 'error' => $e];
     if ($s['pass'] === '') return $fail('config', 'no Gmail app password in traverse-site-private/site-config.php yet');
     $fp = @stream_socket_client('tcp://' . $s['host'] . ':' . (int) $s['port'], $errno, $errstr, (int) $s['timeout']);
@@ -185,11 +199,26 @@ function send_mail(array $c, string $to, string $subject, string $body, array $e
     $w('MAIL FROM:<' . $s['user'] . '>'); [$code, $rep] = $read(); if ($code !== 250) { $quit(); return $fail('from', $rep); }
     $w('RCPT TO:<' . $to . '>'); [$code, $rep] = $read(); if ($code !== 250 && $code !== 251) { $quit(); return $fail('to', $rep); }
     $w('DATA'); [$code, $rep] = $read(); if ($code !== 354) { $quit(); return $fail('data', $rep); }
+    $payload = mail_payload($s, $to, $subject, $body, $extra, $ics, $html); $eol = "\r\n";
+    $payload = preg_replace('/^\./m', '..', $payload);
+    @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
+    return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
+}
+
+/** the message itself (headers and body, CRLF, before dot-stuffing): text, text + HTML when $html is given, and the invite parts when $ics is
+    given. Split out of send_mail on 2026-11-20 so a test can read it without a mail server. */
+function mail_payload(array $s, string $to, string $subject, string $body, array $extra, ?string $ics, ?string $html): string {
     $eol = "\r\n"; $dom = 'traverseplatforms.com';
     $h = ['Date: ' . date('r'), 'From: ' . mime_h($s['from_name']) . ' <' . $s['user'] . '>', 'To: ' . $to, 'Subject: ' . mime_h($subject),
           'Message-ID: <' . bin2hex(random_bytes(12)) . '@' . $dom . '>', 'MIME-Version: 1.0'];
     foreach ($extra as $x) { $x = trim(preg_replace('/[\r\n]+/', ' ', (string) $x)); if ($x !== '') $h[] = $x; }
     $text = 'Content-Type: text/plain; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($body), 76, $eol);
+    if ($html !== null && $html !== '') {   /* the text part becomes text + HTML, everything else as before */
+        $ab = 'ta' . bin2hex(random_bytes(8));
+        $text = 'Content-Type: multipart/alternative; boundary="' . $ab . '"' . $eol . $eol . '--' . $ab . $eol . $text
+              . '--' . $ab . $eol . 'Content-Type: text/html; charset=UTF-8' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($html), 76, $eol)
+              . '--' . $ab . '--' . $eol;
+    }
     if ($ics === null) { $payload = implode($eol, $h) . $eol . $text; }
     else {
         preg_match('/^METHOD:(\w+)/m', $ics, $mm); $method = $mm[1] ?? 'PUBLISH'; $bd = 'tv' . bin2hex(random_bytes(8));
@@ -199,9 +228,7 @@ function send_mail(array $c, string $to, string $subject, string $body, array $e
                  . '--' . $bd . $eol . 'Content-Type: application/ics; name="invite.ics"' . $eol . 'Content-Disposition: attachment; filename="invite.ics"' . $eol . 'Content-Transfer-Encoding: base64' . $eol . $eol . chunk_split(base64_encode($ics), 76, $eol)
                  . '--' . $bd . '--' . $eol;
     }
-    $payload = preg_replace('/^\./m', '..', $payload);
-    @fwrite($fp, $payload . $eol . '.' . $eol); [$code, $rep] = $read(); $quit();
-    return $code === 250 ? ['ok' => true, 'stage' => 'sent', 'error' => ''] : $fail('data', $rep);
+    return $payload;
 }
 
 function page_msg(string $title, string $text): string {

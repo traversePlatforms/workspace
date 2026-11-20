@@ -97,8 +97,23 @@ mk('traverse-yards-data/rounds/company.json', '{}');
 mk('sixfold-data/digest/setup-trial-sweep.log', '2026-11-17 04:00 traverse-yards-rounds.php: {"ok":true,"did":""}\n');
 mk('post-calendar-data/events.log', jl([{ t: 'post', id: 'x', client: 'c', by: 'runner', what: 'Emailed Matthew about the failure', at: NOW - 3 * DAY }]));
 
+/* opens and clicks for every other automatic email (2026-11-20, api/mailtrack-lib.php): Sixfold's internal ones in its own log, Traverse's
+   store, a client install's own data folder, and the Peak desk's tour opens. Ids are made up (20 hex each). */
+const id = (c) => c.repeat(20);
+mk('sixfold-data/rounds/mail-sends.log', jl([{ t: 'send', id: id('1'), k: 'morning', at: NOW - 3600, links: [] },
+  ...['2', '3', '4'].map((c) => ({ t: 'send', id: id(c), k: 'eod', at: NOW - 7200, links: [] })), { t: 'send', id: id('5'), k: 'week', at: NOW - DAY, links: [] }, { t: 'fail', id: id('5'), at: NOW - DAY, stage: 'auth' }]));
+mk('sixfold-data/rounds/mail-events.log', jl([{ t: 'open', id: id('1'), k: 'morning', at: NOW - 3000 }, { t: 'open', id: id('2'), k: 'eod', at: NOW - 7000 }, { t: 'open', id: id('2'), k: 'eod', at: NOW - 6000 }, { t: 'open', id: id('5'), k: 'week', at: NOW - 6000 }]));
+mk('traverse-shared/mailtrack/mail-sends.log', jl([{ t: 'send', id: id('a'), k: 'demo-confirm', v: 'booked', at: NOW - 3 * DAY, links: [] }, { t: 'send', id: id('b'), k: 'signup', v: 'ready', at: NOW - 2 * DAY, links: [] },
+  { t: 'send', id: id('c'), k: 'signup', v: 'waiting', at: NOW - DAY, links: [] }, { t: 'send', id: id('d'), k: 'notes', src: 'tvy', at: NOW - DAY, links: [] }, { t: 'send', id: id('e'), k: 'posts', at: NOW - DAY, links: [] }]));
+mk('traverse-shared/mailtrack/mail-events.log', jl([{ t: 'open', id: id('a'), k: 'demo-confirm', at: NOW - 3 * DAY + 60 }, { t: 'open', id: id('c'), k: 'signup', at: NOW - DAY + 60 }, { t: 'open', id: id('d'), k: 'notes', src: 'tvy', at: NOW - DAY + 60 }]));
+mk('traverse-shared/installs.json', JSON.stringify({ installs: [{ id: 'tvy', name: 'Traverse Yards', url: 'https://traverseplatforms.com/ty-25604fff/' }] }));
+mk('c-acme-data/rounds/mail-sends.log', jl([{ t: 'send', id: id('6'), k: 'followup', src: 'c1111', at: NOW - 2 * DAY, links: ['https://acme.example/tips', 'https://traverseplatforms.com/x/q.html?k=secretquote'] },
+  { t: 'send', id: id('7'), k: 'aftercare', src: 'c1111', at: NOW - DAY, links: [] }, { t: 'send', id: id('8'), k: 'newsletter', v: 'n1', src: 'c1111', at: NOW - DAY, links: [] }, { t: 'send', id: id('9'), k: 'eod', src: 'c1111', at: NOW - DAY, links: [] }]));
+mk('c-acme-data/rounds/mail-events.log', jl([{ t: 'open', id: id('6'), k: 'followup', at: NOW - DAY }, { t: 'click', id: id('6'), k: 'followup', n: 0, at: NOW - DAY }, { t: 'scan', id: id('7'), k: 'aftercare', n: 0, at: NOW - DAY }, { t: 'open', id: id('9'), k: 'eod', at: NOW - DAY }]));
+mk('peak-desk-data/book-events.log', jl([{ t: 'pxsent', ref: 'tc-a1-0-r', at: NOW - 600 }, { t: 'open', ref: 'tc-a1-0-r', proxy: 0, at: NOW - 500 }, { t: 'open', ref: 'tc-zz-0-r', proxy: 0, at: NOW - 500 }, { t: 'view', ref: '', at: NOW - 400 }]));
+
 /* every file the read-only sections read: their bytes must not change */
-const watched = ['sixfold-data', 'sixfold-private', 'traverse-prospects-data', 'traverse-site-private', 'traverse-shared', 'traverse-yards-data', 'post-calendar-data', 'peak-desk-data'];
+const watched = ['sixfold-data', 'sixfold-private', 'traverse-prospects-data', 'traverse-site-private', 'traverse-shared', 'traverse-yards-data', 'post-calendar-data', 'peak-desk-data', 'c-acme-data'];
 const snap = () => { const h = crypto.createHash('sha256'); for (const w of watched) for (const f of fs.readdirSync(path.join(R, w), { recursive: true }).sort()) { const p = path.join(R, w, f); if (fs.statSync(p).isFile()) h.update(f + fs.readFileSync(p)); } return h.digest('hex'); };
 const before = snap();
 
@@ -156,6 +171,20 @@ try {
   ok(X('signup').d30 === 1 && X('notes').d30 === 1 && X('signup').on === true, 'sign-up mail split: customer vs note to you');
   ok(X('client-eod').on === false && X('client-care').on === false, 'client apps: off when nothing is switched on');
   ok(X('posts').d7 === 1, 'post calendar alert counted');
+  /* 2b. opens and clicks of every other email (2026-11-20) */
+  const MO = S('morning').track, EO = S('eod').track;
+  ok(MO && MO.opensOnly && MO.sentAll === 1 && MO.openedAll === 1 && /^1 of 1 emails opened in 30 days \(100%\)/.test(S('morning').opens) && /Rough: Apple Mail/.test(S('morning').opens) && /^not counted: an internal email/.test(S('morning').clicks), 'morning email: opens counted (labelled rough), clicks not counted, said plainly');
+  ok(EO.sentAll === 3 && EO.openedAll === 1 && /^1 of 3 copies opened/.test(S('eod').opens), 'end of day: counted per copy; two opens of one copy count once');
+  ok(S('week').track.sentAll === 0 && /not counted yet/.test(S('week').opens), 'Saturday week: a failed send is left out of the counts');
+  ok(!S('aftercare').track.sentAll && !('opensOnly' in S('aftercare').track), 'Sixfold customer emails: their own counts, untouched by the internal kinds');
+  ok(X('demo-confirm').track.openedAll === 1 && /cancel link/.test(X('demo-confirm').clicks), 'demo confirmation: opens; the cancel link (booking key) not counted, said why');
+  const SU = X('signup').track; ok(SU.sentAll === 2 && SU.openedAll === 1 && SU.byVersion.map((b) => b.label).sort().join('|') === 'Is waiting for you (reminder)|Your Traverse is ready' && /not counted on purpose/.test(X('signup').clicks), 'sign-up emails: by which email, setup and sign-in links never counted');
+  ok(X('notes').track.byVersion[0].label === 'Traverse Yards' && X('notes').track.openedAll === 1, 'notes to you: by the install that sent them');
+  ok(X('posts').track.sentAll === 1 && X('posts').track.openedAll === 0, 'post calendar alert: counted');
+  const CC = X('client-care').track;
+  ok(CC.sentAll === 3 && CC.clickedAll === 1 && CC.openedAll === 1 && !CC.opensOnly && CC.scans30 === 1 && /^1 of 3 clicked in 30 days/.test(X('client-care').clicks) && /1 mail-scanner visit left out/.test(X('client-care').clicks), 'client apps\' care emails: opens and clicks, scanners apart');
+  ok(CC.byVersion.map((b) => b.label).sort().join('|') === 'client install acme: aftercare|client install acme: follow-up|client install acme: newsletter' && CC.links30[0].what === 'acme.example' && !JSON.stringify(CC).includes('secretquote') && !JSON.stringify(CC).includes('/tips'), 'per client and email, counts only: links by site, never the address');
+  ok(X('client-eod').track.sentAll === 1 && X('client-eod').track.openedAll === 1 && X('client-eod').track.opensOnly, 'client apps\' end of day: opens per copy');
 
   /* 3. the summary */
   const s = V.summary; ok(s.sent.sixfold === 3 && s.sent.traverse === 5 && s.sent.peak === 0, 'sent today per business (Sixfold: aftercare + morning + ... )');
@@ -175,6 +204,7 @@ try {
     { t: 'tourmail', ref: 'tc-b2-0-r', to: 'sam@example.com', method: 'REQUEST', seq: 0, w: 'expo', org: 'x2', company: 'Show Co', tid: 'b2', by: 'Lance', ok: false, kind: 'server', why: 'no answer', at: NOW - 300 },
     { t: 'tourmail', ref: 'test-1', to: 'm@example.com', method: 'REQUEST', seq: 0, w: 'sponsor', tid: 't', by: 'Matthew', ok: true, test: 1, at: NOW - 200 }]));
   r = await api('state'); const VT = r.json.peak.tours;
+  ok(VT.sentAll === 1 && VT.openedAll === 1 && VT.sent30 === 1 && VT.openRate30 === 100, 'tour confirmations: opens from the desk\'s own image (out of those sent with it; an unknown ref left out)');
   ok(VT.today === 1 && VT.d30 === 1 && VT.tests === 1 && VT.open.length === 1 && VT.open[0].company === 'Show Co' && r.json.summary.sent.peak === 1, 'tour confirmations: 1 sent today (the test apart), 1 not sent; Peak’s sent today includes it');
   ok(/Peak desk: 1 tour confirmation not sent\. Retry is on the tour in the Peak desk/.test(r.json.summary.attention.map(a => a.text).join('\n')) && /peak-desk-28d38d\/#sponsor\/deals\/tours/.test(VT.desk), 'the one not sent is flagged, with the desk’s Tours as the place to retry');
 

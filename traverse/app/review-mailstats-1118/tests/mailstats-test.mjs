@@ -161,7 +161,7 @@ try {
   t(it('signed').track.sentAll === 1, 'signed copy card: 1 sent (the failed one is not counted)');
   t(it('followup').track.sentAll === 1 && it('followup').track.openedAll === 0, 'follow-up card: 1 sent, not opened');
   const nl = it('newsletter'); t(nl.track.sentAll === nlS.length && nl.track.byVersion[0].label === '"Test lawn notes"', 'newsletter card: counted per issue, by its subject');
-  t(af.editable === true && it('newsletter').editable === false && it('morning').track === undefined, 'the four customer emails can be reworded here; the newsletter (its own screen) and internal reports cannot');
+  t(af.editable === true && it('newsletter').editable === false && !it('morning').editable && (it('morning').track || {}).opensOnly === true, 'the four customer emails can be reworded here; the newsletter (its own screen) and internal reports cannot (since 20 Nov an internal report shows its opens only)');
   const trackJson = JSON.stringify(SX.items.map((x) => x.track || null));
   t(!/example\.com|Alpha|Bravo|Echo|square\.link|\/sign\//.test(trackJson), 'the numbers name no customer and show no address');
 

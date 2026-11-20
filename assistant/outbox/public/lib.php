@@ -199,6 +199,71 @@ function obTrackWords(array $t, string $k): array {
     return [$op . '; ' . $t['openedAll'] . ' of ' . $t['sentAll'] . $since . '. May include Apple Mail\'s automatic opens, so read it as high.',
             $cl . '; ' . $t['clickedAll'] . ' of ' . $t['sentAll'] . $since . '.' . ($t['scans30'] ? ' ' . $t['scans30'] . ' mail-scanner ' . ($t['scans30'] === 1 ? 'visit' : 'visits') . ' left out.' : '')];
 }
+/* ---- every other automatic email (2026-11-20, Matthew: "I want to track everything we can data is key"). The senders note each real send the
+   same way (traverse/app/api/mailtrack-lib.php) in one of three stores, and m/index.php writes the opens, clicks and scanner visits beside it:
+   Sixfold's own log (OB_SX: morning, eod, week, weblead, profit), Traverse's (traverse-shared/mailtrack: demo-confirm, demo-notify, signup,
+   notes, posts) and each client install's (c-<slug>-data/rounds: followup, aftercare, newsletter, eod). Read here, never written. A row has no
+   address or name: kind (k), the email within the kind or the newsletter issue (v), which install or sender (src), time, its links by number. */
+const OB_MT = 'traverse-shared/mailtrack';
+/** one store's sends (failed ones left out) and each send's events: [sends, events]; $keep(row) picks the sends wanted */
+function obMtRead(string $rel, ?callable $keep = null): array {
+    $sends = []; $failed = [];
+    foreach (obLines($rel . '/mail-sends.log') as $r) {
+        $t = (string) ($r['t'] ?? ''); $id = (string) ($r['id'] ?? ''); if ($id === '') continue;
+        if ($t === 'send' && (!$keep || $keep($r))) $sends[$id] = ['k' => (string) ($r['k'] ?? ''), 'at' => (int) ($r['at'] ?? 0), 'v' => (string) ($r['v'] ?? ''), 'src' => (string) ($r['src'] ?? ''), 'links' => (array) ($r['links'] ?? [])];
+        elseif ($t === 'fail') $failed[$id] = true;
+    }
+    foreach ($failed as $id => $_) unset($sends[$id]);
+    $ev = [];
+    if ($sends) foreach (obLines($rel . '/mail-events.log') as $r) {
+        $id = (string) ($r['id'] ?? ''); if (!isset($sends[$id])) continue; $t = (string) ($r['t'] ?? '');
+        $ev[$id] ??= ['open' => 0, 'click' => 0, 'scan' => 0, 'links' => []];
+        if ($t === 'open') $ev[$id]['open']++;
+        elseif ($t === 'click') { $ev[$id]['click']++; $n = (int) ($r['n'] ?? -1); $ev[$id]['links'][$n] = ($ev[$id]['links'][$n] ?? 0) + 1; }
+        elseif ($t === 'scan') $ev[$id]['scan']++;
+    }
+    return [$sends, $ev];
+}
+/** the numbers for one card, in the shape the page's trackHtml draws (as obSxTrack's): $sends already picked for the card, $label(send) names
+    the row of the breakdown ($by is that column's heading). $opensOnly: no link in these emails is counted, so there are no click columns. */
+function obMtSum(array $sends, array $ev, callable $label, string $by, bool $opensOnly, string $rowNote): array {
+    $n = obNow();
+    $o = ['since' => 0, 'sent7' => 0, 'sent30' => 0, 'opened30' => 0, 'clicked30' => 0, 'scans30' => 0, 'sentAll' => 0, 'openedAll' => 0, 'clickedAll' => 0,
+        'active' => '', 'byVersion' => [], 'links30' => [], 'recent' => [], 'by' => $by, 'opensOnly' => $opensOnly, 'rowNote' => $rowNote];
+    uasort($sends, fn($a, $b) => $a['at'] <=> $b['at']);
+    foreach ($sends as $id => $s) {
+        $e = $ev[$id] ?? ['open' => 0, 'click' => 0, 'scan' => 0, 'links' => []]; $op = $e['open'] > 0; $cl = $e['click'] > 0; $lb = (string) $label($s);
+        if (!$o['since']) $o['since'] = $s['at'];
+        $o['sentAll']++; $o['openedAll'] += (int) $op; $o['clickedAll'] += (int) $cl;
+        if ($s['at'] >= $n - 7 * OB_DAY) $o['sent7']++;
+        if ($s['at'] >= $n - 30 * OB_DAY) { $o['sent30']++; $o['opened30'] += (int) $op; $o['clicked30'] += (int) $cl; $o['scans30'] += $e['scan'];
+            foreach ($e['links'] as $ln => $c) { $w = obLinkWhat((string) ($s['links'][$ln] ?? '')); $o['links30'][$w] = ($o['links30'][$w] ?? 0) + $c; } }
+        $o['byVersion'][$lb] ??= ['v' => $lb, 'label' => $lb, 'sent' => 0, 'opened' => 0, 'clicked' => 0, 'first' => $s['at'], 'last' => 0, 'active' => false];
+        $b = &$o['byVersion'][$lb]; $b['sent']++; $b['opened'] += (int) $op; $b['clicked'] += (int) $cl; $b['last'] = $s['at']; unset($b);
+        $o['recent'][] = ['at' => $s['at'], 'v' => $lb, 'opened' => $op, 'clicked' => $cl];
+    }
+    $o['openRate30'] = obPct($o['opened30'], $o['sent30']); $o['clickRate30'] = obPct($o['clicked30'], $o['sent30']);
+    $o['openRateAll'] = obPct($o['openedAll'], $o['sentAll']); $o['clickRateAll'] = obPct($o['clickedAll'], $o['sentAll']);
+    foreach ($o['byVersion'] as &$b) { $b['openRate'] = obPct($b['opened'], $b['sent']); $b['clickRate'] = obPct($b['clicked'], $b['sent']); } unset($b);
+    $o['byVersion'] = array_values($o['byVersion']); usort($o['byVersion'], fn($a, $b) => $b['sent'] <=> $a['sent']);
+    arsort($o['links30']); $o['links30'] = array_map(fn($w, $c) => ['what' => $w, 'clicks' => $c], array_keys($o['links30']), array_values($o['links30']));
+    $o['recent'] = array_slice(array_reverse($o['recent']), 0, 10);
+    return $o;
+}
+/** the Opens and Clicks lines for such a card; $unit 'emails' or 'copies' (a report to three people is three copies); $noClicks says why
+    no click is counted */
+function obMtWords(array $t, string $unit, string $noClicks): array {
+    if (!$t['sentAll']) return ['not counted yet: counting starts with the next one sent (from 20 Nov 2026)', $t['opensOnly'] ? $noClicks : 'not counted yet: counting starts with the next one sent'];
+    $since = ' since ' . date('M j', $t['since']);
+    $op = ($t['sent30'] ? $t['opened30'] . ' of ' . $t['sent30'] . ' ' . $unit . ' opened in 30 days (' . $t['openRate30'] . '%)' : 'none sent in 30 days') . '; ' . $t['openedAll'] . ' of ' . $t['sentAll'] . $since
+        . '. Rough: Apple Mail opens every image as the email arrives (high), Outlook often blocks images (low).';
+    if ($t['opensOnly']) return [$op, $noClicks];
+    $cl = ($t['sent30'] ? $t['clicked30'] . ' of ' . $t['sent30'] . ' clicked in 30 days (' . $t['clickRate30'] . '%)' : 'none sent in 30 days') . '; ' . $t['clickedAll'] . ' of ' . $t['sentAll'] . $since . '.'
+        . ($t['scans30'] ? ' ' . $t['scans30'] . ' mail-scanner ' . ($t['scans30'] === 1 ? 'visit' : 'visits') . ' left out.' : '');
+    return [$op, $cl];
+}
+/** put a card's numbers on it */
+function obMtPut(array &$it, array $t, string $unit, string $noClicks): void { [$it['opens'], $it['clicks']] = obMtWords($t, $unit, $noClicks); $it['track'] = $t; }
 /** a call to the Sixfold app for the email words (server to server, with the key both read from the private folder): the answer, or ['ok' => false, 'error'] */
 function obApp(string $action, ?array $body = null): array {
     $key = trim((string) @file_get_contents(obRoot() . '/sixfold-private/outbox-key.txt'));
@@ -297,6 +362,16 @@ function obSixfold(): array {
     /* opens, clicks, versions and the last sends under each customer email (2026-11-18) */
     $TR = obSxTrack();
     foreach ($items as &$it) if (isset($TR[$it['id']])) { [$it['opens'], $it['clicks']] = obTrackWords($TR[$it['id']], $it['id']); $it['track'] = $TR[$it['id']]; $it['editable'] = in_array($it['id'], OB_SX_EDITABLE, true); }
+    unset($it);
+    /* the internal ones (2026-11-20): an open image only, one count per copy; their links (the app) are not counted */
+    $IN = ['weblead' => 'weblead', 'morning' => 'morning', 'eod' => 'eod', 'week' => 'week', 'profit' => 'profit'];
+    [$is, $ie] = obMtRead(OB_SX, fn($r) => isset($IN[(string) ($r['k'] ?? '')]));
+    foreach ($items as &$it) if (isset($IN[$it['id']])) {
+        $mine = array_filter($is, fn($s) => $s['k'] === $IN[$it['id']]);
+        $multi = in_array($it['id'], ['eod', 'week'], true);
+        obMtPut($it, obMtSum($mine, $ie, fn($s) => $multi ? 'One copy (one per person)' : $it['name'], 'Email', true, $multi ? 'Each row is one person\'s copy; who it went to is not kept.' : 'Each row is one email.'),
+            $multi ? 'copies' : 'emails', 'not counted: an internal email, so only opens are counted (its app link is left as it is)');
+    }
     unset($it);
     foreach ($items as &$it) {
         if ($boxText !== '' && in_array($it['id'], ['aftercare', 'followup', 'deposit', 'signed', 'newsletter'], true)) $it['attention'][] = ['bad', 'Sixfold ' . $it['name'] . ': ' . $boxText . '.'];
@@ -438,6 +513,28 @@ function obTraverse(): array {
         'trigger' => 'The 5-minute post runner, when a post fails.', 'on' => $mailOk, 'state' => $mailOk ? 'on' : 'off (no mailbox password)', 'switch' => 'No switch. Log: post-calendar-data/events.log.']
         + obCount($ps) + obFailCounts($pf) + ['fails' => obFails($pf)]);
 
+    /* opens and clicks (2026-11-20): Traverse's own store, and each client install's own (counts only: no customer, no address) */
+    [$ts, $te] = obMtRead(OB_MT);
+    $inst = obInstalls(); $hop = [];   /* an install's cookie name (src) -> its name, from the installs list every app shares */
+    foreach ((array) (obRead('traverse-shared/installs.json', [])['installs'] ?? []) as $i) if (is_array($i) && !empty($i['id'])) $hop[(string) $i['id']] = (string) ($i['name'] ?? $i['id']);
+    $instName = fn(string $src): string => $src === '' ? 'the website' : ($hop[$src] ?? ($src === 'sfr' ? 'Sixfold 365' : 'a client app'));
+    $pick = fn(string $k) => array_filter($ts, fn($s) => $s['k'] === $k);
+    $W = ['booked' => 'Booking confirmation', 'cancelled' => 'Cancelled by you (manage page)', 'linkhelp' => 'App-link request',
+        'finish' => 'Finish setting up your Traverse', 'ready' => 'Your Traverse is ready', 'waiting' => 'Is waiting for you (reminder)', 'signin' => 'Your Traverse sign-in link', 'other' => 'Other', 'site' => 'From the website and sign-up'];
+    $CS = [];   /* client installs' own stores: customer care and end of day */
+    foreach ($inst as $dir => $label) if (str_starts_with($dir, 'c-')) { [$cs1, $ce1] = obMtRead($dir . '/rounds'); foreach ($cs1 as $id => $s) $CS[$id] = $s + ['inst' => $label]; $te += $ce1; }
+    $careK = ['followup' => 'follow-up', 'aftercare' => 'aftercare', 'newsletter' => 'newsletter'];
+    foreach ($items as &$it) switch ($it['id']) {
+        case 'demo-confirm': obMtPut($it, obMtSum($pick('demo-confirm'), $te, fn($s) => $W[$s['v']] ?? $s['v'], 'Email', true, 'Each row is one email to one person who booked.'), 'emails', 'not counted: its one link is the cancel link, which carries the booking\'s own key, so it is left as it is'); break;
+        case 'demo-notify': obMtPut($it, obMtSum($pick('demo-notify'), $te, fn($s) => ['booked' => 'Demo booked', 'cancelled' => 'Demo cancelled', 'linkhelp' => 'App-link request'][$s['v']] ?? $s['v'], 'Email', true, 'Each row is one note to you.'), 'emails', 'not counted: a note to you'); break;
+        case 'signup': obMtPut($it, obMtSum($pick('signup'), $te, fn($s) => $W[$s['v']] ?? $s['v'], 'Email', true, 'Each row is one email to one buyer.'), 'emails', 'not counted on purpose: their links are the setup link (with its key) and the app\'s sign-in address; only an ordinary page of the website would be counted, and these carry none'); break;
+        case 'notes': obMtPut($it, obMtSum($pick('notes'), $te, fn($s) => $s['v'] === 'site' ? $W['site'] : $instName($s['src']), 'From', true, 'Each row is one note to you.'), 'emails', 'not counted: a note to you'); break;
+        case 'posts': obMtPut($it, obMtSum($pick('posts'), $te, fn($s) => 'Failed-post alert', 'Email', true, 'Each row is one alert to you.'), 'emails', 'not counted: an alert to you'); break;
+        case 'client-eod': obMtPut($it, obMtSum(array_filter($CS, fn($s) => $s['k'] === 'eod'), $te, fn($s) => $s['inst'], 'Client app', true, 'Each row is one person\'s copy; who it went to is not kept.'), 'copies', 'not counted: an internal report, so only opens'); break;
+        case 'client-care': obMtPut($it, obMtSum(array_filter($CS, fn($s) => isset($careK[$s['k']])), $te, fn($s) => $s['inst'] . ': ' . $careK[$s['k']], 'Client app and email', false, 'No names here on purpose: each row is one email to one of a client company\'s customers.'), 'emails', ''); break;
+    }
+    unset($it);
+
     $att = [];
     if (!$mailOk) $att[] = ['bad', 'Traverse\'s mailbox password is missing: website, sign-up and alert emails cannot send.'];
     foreach ($items as &$it) if ($it['id'] !== 'desk' && $it['fail7']) $it['attention'][] = ['bad', 'Traverse ' . $it['name'] . ': ' . $it['fail7'] . ' failed in the last 7 days.'];
@@ -487,6 +584,15 @@ function obPeak(): array {
     $tc = function_exists('pmTourStats') ? pmTourStats() : ['sent' => [], 'open' => [], 'tests' => 0];
     $ds = json_decode((string) @file_get_contents(obRoot() . '/peak-desk-data/desk-settings.json'), true);
     $tours = obCount($tc['sent']) + ['on' => !empty($ds['tourmail']['on']), 'open' => $tc['open'], 'tests' => (int) $tc['tests'], 'desk' => OB_ORIGIN . '/peak-desk-28d38d/#sponsor/deals/tours'];
+    /* their opens (2026-11-20): the desk's own open image (book.php ?px=), on real sends while the desk's "Count opens with a 1x1 image" setting
+       is on. peak-desk-data/book-events.log has a 'pxsent' row for each tour email that went with the image and an 'open' row per fetch, by the
+       email's ref (tc-...). No link in them to count. */
+    $tref = []; $topen = [];
+    foreach (obLines('peak-desk-data/book-events.log', '"tc-') as $r) { $ref = (string) ($r['ref'] ?? ''); if (!str_starts_with($ref, 'tc-')) continue;
+        if (($r['t'] ?? '') === 'pxsent') $tref[$ref] = (int) ($r['at'] ?? 0); elseif (($r['t'] ?? '') === 'open') $topen[$ref] = true; }
+    $topen = array_intersect_key($topen, $tref);
+    $t30 = array_filter($tref, fn($at) => $at >= obNow() - 30 * OB_DAY); $o30 = count(array_intersect_key($topen, $t30));
+    $tours += ['pixel' => !empty($ds['deskmail']['pixel']), 'sent30' => count($t30), 'opened30' => $o30, 'openRate30' => obPct($o30, count($t30)), 'sentAll' => count($tref), 'openedAll' => count($topen)];
     if ($tc['open']) $att[] = ['bad', 'Peak desk: ' . count($tc['open']) . ' tour confirmation' . (count($tc['open']) === 1 ? '' : 's') . ' not sent. Retry is on the tour in the Peak desk (Tours).'];
     /* desk emails (2026-11-19): written on a card and sent from the Peak desk; the ones whose last try failed (Retry is on the card) */
     $dc = function_exists('pmDeskMailStats') ? pmDeskMailStats() : ['sent' => [], 'open' => []];

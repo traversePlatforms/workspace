@@ -22,7 +22,10 @@
  *   - Who gives the tour (2026-11-20, Matthew: he and Cai book tours but never give them): "You'll meet" and the invite name the desk's
  *     "Who meets visitors" setting ({meet}, Booking links in Settings), never the seller. Empty: that line and the name are left out.
  *     The email is still signed by whoever booked it ({me}). Older saved wording's "You'll meet: {me}" line reads as {meet}.
- * Plain text plus the same words as simple HTML; no open image and no tracked links on this email. */
+ * Plain text plus the same words as simple HTML; no tracked links (it carries none). Opens (2026-11-20, Matthew: "I want to track everything we
+ * can data is key"): a real send (never the Settings test) gets the desk's own 1x1 image (book.php ?px=<ref>-<sig>, the same image and
+ * book-events.log row as a desk email) while the desk's "Count opens with a 1x1 image" setting is on (desk-settings.json deskmail.pixel).
+ * The tour shows "opened" on the desk; Outbox's Peak section counts them. Opens are rough (Apple Mail high, Outlook low). */
 declare(strict_types=1);
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
 
@@ -148,7 +151,16 @@ function tmCompose(string $w, array $R, array $t, string $me, bool $cancel, stri
     return ['subject' => clean($subject, 200), 'text' => $text, 'html' => tmHtml($text), 'ics' => tmIcs($w, $R, $t, $cancel, $organizer, $ctx),
         'method' => $cancel ? 'CANCEL' : 'REQUEST', 'ref' => 'tc-' . preg_replace('/[^a-z0-9]/', '', (string) $t['tid']) . '-' . $seq . '-' . ($cancel ? 'c' : 'r'), 'seq' => $seq, 'moved' => $moved];
 }
-/** the same words as simple HTML: no images, no tracked links */
+/** the desk's open image goes on real tour emails while the desk's open-image setting is on (2026-11-20) */
+function tmPixelOn(): bool { return function_exists('bkPixelUrl') && !empty((jread('desk-settings.json', [])['deskmail'] ?? [])['pixel']); }
+function tmWithPixel(string $html, string $ref): string {
+    $img = '<img src="' . htmlspecialchars(bkPixelUrl($ref), ENT_QUOTES, 'UTF-8') . '" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">';
+    $p = strripos($html, '</body>'); return $p === false ? $html . $img : substr($html, 0, $p) . $img . substr($html, $p);
+}
+/** the ref of a tour version's email (tmCompose's), and whether the desk counted an open of it */
+function tmRef(array $t, bool $cancel): string { return 'tc-' . preg_replace('/[^a-z0-9]/', '', (string) ($t['tid'] ?? '')) . '-' . (int) ($t['seq'] ?? 0) . '-' . ($cancel ? 'c' : 'r'); }
+function tmOpened(string $ref): bool { return function_exists('bkStats') && (int) (bkStats()['ref'][$ref]['opens'] ?? 0) > 0; }
+/** the same words as simple HTML: no images (the open image is added by tmSend for a real send), no tracked links */
 function tmHtml(string $text): string {
     return '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.45;color:#111">'
         . str_replace("\n", "<br>\n", htmlspecialchars($text, ENT_QUOTES, 'UTF-8')) . '</div></body></html>';
@@ -192,7 +204,8 @@ function tmState(array $t): array {
     $tm = $t['tm'] ?? null; $seq = (int) ($t['seq'] ?? 0); $off = !empty($t['off']); $em = (string) ($t['email'] ?? '');
     $cur = is_array($tm) && (int) ($tm['seq'] ?? -1) === $seq && ($tm['method'] ?? '') === ($off ? 'CANCEL' : 'REQUEST');
     $day = fn(int $at) => date('M j, g:i a', $at);
-    if ($cur && !empty($tm['ok'])) return ['s' => 'sent', 'text' => ($off ? 'Cancellation sent to ' : ($seq > 0 ? 'Updated invite sent to ' : 'Confirmation sent to ')) . $tm['to'] . ', ' . $day((int) $tm['at']) . ' (' . $tm['by'] . ')'];
+    if ($cur && !empty($tm['ok'])) { $op = tmOpened(tmRef($t, $off));   /* opened (2026-11-20): the desk's open image was fetched; rough */
+        return ['s' => 'sent', 'opened' => $op, 'text' => ($off ? 'Cancellation sent to ' : ($seq > 0 ? 'Updated invite sent to ' : 'Confirmation sent to ')) . $tm['to'] . ', ' . $day((int) $tm['at']) . ' (' . $tm['by'] . ')' . ($op ? '; opened' : '')]; }
     if ($cur) return ['s' => in_array($tm['kind'] ?? '', ['dnc', 'noemail'], true) ? 'blocked' : 'failed', 'text' => ($off ? 'Cancellation' : 'Confirmation') . ' not sent: ' . $tm['why']];
     if ($off) return isset($t['tmSent']) ? ['s' => 'failed', 'text' => 'Cancellation not sent yet'] : ['s' => 'none', 'text' => ''];
     if (isset($t['tmSent'])) return ['s' => 'stale', 'text' => 'Moved since the invite went out: the new time has not been sent to ' . $em];
@@ -217,6 +230,7 @@ function tmSend(string $w, string $tid, string $me, bool $cancel): array {
         $mb = tmMailbox();
         if (!$mb['ok']) { withLock(fn() => commit($w, [$row(['ok' => false, 'kind' => 'mailer', 'why' => $mb['why']])])); return ['state' => 'failed', 'why' => $mb['why'], 'to' => $to]; }
         $signer = tmMeet($w, $t, $me); $m = tmCompose($w, $R, $t, $signer, $cancel, $mb['email'], $conf['words']);
+        $px = tmPixelOn(); if ($px) $m['html'] = tmWithPixel($m['html'], $m['ref']);
         $x = pmTourSend(['ref' => $m['ref'], 'to' => $to, 'name' => tmFirst((string) ($t['who'] ?? ''), $to) !== 'there' ? trim((string) preg_replace('/[<(].*$/', '', (string) $t['who'])) : '',
             'subject' => $m['subject'], 'text' => $m['text'], 'html' => $m['html'], 'ics' => $m['ics'], 'method' => $method,
             'w' => $w, 'org' => (string) $R['id'], 'company' => (string) $R['name'], 'tid' => $tid, 'seq' => $seq, 'by' => $me]);
@@ -230,6 +244,7 @@ function tmSend(string $w, string $tid, string $me, bool $cancel): array {
             if (!$seen) $rows[] = rowTouch($w, (string) $R['id'], newKey(), ['m' => 'email', 'out' => 'sent', 'note' => 'Emailed: ' . $what . ' to ' . $to, 'when' => $now, 'auto' => 1, 'tc' => 1, 'to' => $to, 'ref' => $m['ref'], 'tid' => $tid], $me . ' (via Peak email)', $now);
             commit($w, $rows);
         });
+        if ($px && empty($x['dup']) && function_exists('bkLog')) bkLog(['t' => 'pxsent', 'ref' => $m['ref']]);   /* sent with the open image: what its opens are out of (Outbox) */
         return ['state' => !empty($x['dup']) ? 'dup' : 'sent', 'why' => '', 'to' => $to];
     } catch (Throwable $e) {
         error_log('peak desk tour mail: ' . $e->getMessage() . ' @' . $e->getLine());

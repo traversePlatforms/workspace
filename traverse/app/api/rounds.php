@@ -1284,6 +1284,13 @@ require_once __DIR__ . '/billing.php';   /* billing (2026-10-10): Stripe, keys i
 if (is_file(__DIR__ . '/mail-oauth-lib.php')) require_once __DIR__ . '/mail-oauth-lib.php';   /* Sign in with Google / Microsoft for Setup › Email (2026-10-30): one shared file beside every install's API */
 if (is_file(__DIR__ . '/care-lib.php')) require_once __DIR__ . '/care-lib.php';   /* plans and customer emails for the editions (2026-10-30): one shared file beside every install's API */
 if (is_file(__DIR__ . '/eod-lib.php')) require_once __DIR__ . '/eod-lib.php';   /* the editions' end-of-day email (2026-10-30): one shared file beside every install's API */
+if (is_file(__DIR__ . '/mailtrack-lib.php')) require_once __DIR__ . '/mailtrack-lib.php';   /* opens and clicks for every automatic email (2026-11-20): one shared file beside every install's API */
+/** a client install's real emails are counted (2026-11-20): an install made for a paying company (its data folder c-<slug>-data), never
+    Sixfold (its own a365Track), the practice copy or the five showcase editions with their made-up companies. MAILTRACK_INSTALL=1: the test copy */
+function mtInstallOn(): bool {
+    if (PRACTICE || !function_exists('mtTrack') || !edition()) return false;
+    return str_starts_with(basename(dirname(DATA_DIR)), 'c-') || ((PHP_SAPI === 'cli' || PHP_SAPI === 'cli-server') && getenv('MAILTRACK_INSTALL') === '1');
+}
 if (is_file(__DIR__ . '/fb-leads-lib.php')) require_once __DIR__ . '/fb-leads-lib.php';   /* Facebook lead ads into the Pipeline, editions and client installs (2026-10-30): one shared file beside every install's API */
 if (is_file(__DIR__ . '/jobber-lib.php')) require_once __DIR__ . '/jobber-lib.php';   /* Jobber for Sync from another system (TR-46, 2026-10-31): one shared file beside every install's API */
 
@@ -3110,7 +3117,12 @@ function a365WebMailFlush(): int {
         $cfg = require $cf; require_once __DIR__ . '/smtp.php';
         $rows = jsonLines($q); if (!$rows) { flock($lk, LOCK_UN); fclose($lk); return 0; }   /* jsonLines, not readLines: these rows have no id (fixed 2026-10-23) */
         foreach ($rows as $m) {
-            $res = smtp_send((array) ($cfg['smtp'] ?? []), (string) ($cfg['to'] ?? ''), (string) ($m['subject'] ?? 'Website lead'), (string) ($m['body'] ?? ''), ['X-Mailer: sixfold-app']);
+            /* an open image on an HTML copy of the same words (2026-11-20, Sixfold's log, 'weblead'); the app link is not counted */
+            $wb = (string) ($m['body'] ?? ''); $wh = ['X-Mailer: sixfold-app'];
+            $T = a365TrackOn() && function_exists('mtTrack') ? mtTrack(DATA_DIR, 'weblead', $wb, '') : ['id' => ''];
+            if ($T['id'] !== '') { [$wb, $ct] = mtMime($T['text'], $T['html']); $wh[] = $ct; }   /* smtp_send takes a body with its own Content-Type */
+            $res = smtp_send((array) ($cfg['smtp'] ?? []), (string) ($cfg['to'] ?? ''), (string) ($m['subject'] ?? 'Website lead'), $wb, $wh);
+            if (empty($res['ok']) && $T['id'] !== '') mtFail(DATA_DIR, $T['id'], (string) ($res['stage'] ?? ''));
             @file_put_contents(DATA_DIR . '/weblead-mail.log', json_encode(['at' => time(), 'ok' => !empty($res['ok']), 'stage' => $res['stage'] ?? null, 'queued' => (int) ($m['at'] ?? 0)]) . "\n", FILE_APPEND | LOCK_EX);
             if (!empty($res['ok'])) { $sent++; continue; }
             $m['tries'] = (int) ($m['tries'] ?? 0) + 1; if ($m['tries'] < 288) $keep[] = $m;   /* every 5 minutes for about a day */
@@ -4924,8 +4936,13 @@ function travMail(string $to, string $subject, string $text): array {
     if ($mock) { @file_put_contents($mock, json_encode(['at' => time(), 'to' => $to, 'subject' => $subject, 'body' => $text], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'mock', 'error' => '']; }
     $s = travMailCfg();
     if ($s['pass'] === '') return ['ok' => false, 'stage' => 'config', 'error' => 'no mail password in traverse-site-private/site-config.php'];
-    /* the one SMTP client (smtpSend, review 2026-10-30: this was a second copy of it); plain text, EHLO and Message-ID as traverseplatforms.com */
-    return smtpSend(['host' => (string) $s['host'], 'port' => (int) $s['port'], 'user' => (string) $s['user'], 'pass' => (string) $s['pass'], 'from_name' => (string) $s['from_name'], 'domain' => (string) $s['ehlo']], $to, $subject, $text, '');
+    /* the one SMTP client (smtpSend, review 2026-10-30: this was a second copy of it); plain text, EHLO and Message-ID as traverseplatforms.com.
+       Every one is a note to Matthew (seatNoteTo): counted since 2026-11-20 with an open image on an HTML copy of the same words (mailtrack-lib.php,
+       Traverse's store, 'notes'); no link in them is counted. The practice copy never: smtpSend only logs there. */
+    $T = !PRACTICE && function_exists('mtTrack') ? mtTrack(mtTraverseDir(), 'notes', $text, '', ['src' => COOKIE]) : ['text' => $text, 'html' => '', 'id' => ''];
+    $r = smtpSend(['host' => (string) $s['host'], 'port' => (int) $s['port'], 'user' => (string) $s['user'], 'pass' => (string) $s['pass'], 'from_name' => (string) $s['from_name'], 'domain' => (string) $s['ehlo']], $to, $subject, $T['text'], $T['html']);
+    if (empty($r['ok']) && $T['id'] !== '') mtFail(mtTraverseDir(), $T['id'], (string) ($r['stage'] ?? ''));
+    return $r;
 }
 /** the refusal when one more person would go over the plan's seats ('' = fine). $after: the account rows as they would be.
     Matthew 2026-10-30: block it, and say they must remove someone (or move to a bigger plan). Never for Sixfold, an exempt install, or a plan not active. */
@@ -12181,7 +12198,11 @@ if ($action === 'eodcron') {
     $ppl = eodPeople(); $to = array_values(array_filter($c['to'], fn($t) => isset($ppl[$t['id']])));
     if (!$to) { eodLog(['what' => 'send', 'ok' => false, 'n' => 0, 'stage' => 'nobody']); out(['ok' => true, 'sent' => 0, 'why' => 'nobody to send to']); }
     $m = eodBuild($c['sections']); $sent = 0; $fails = [];
-    foreach ($to as $t) { $r = eodSend($t['email'], $m, $c['via']); if (!empty($r['ok'])) $sent++; else $fails[] = (string) ($r['stage'] ?? '?'); }
+    foreach ($to as $t) {
+        /* each copy counted on its own (2026-11-20): an open image per person, a client install only (never a test, an edition or the practice copy) */
+        $T = mtInstallOn() ? mtTrack(DATA_DIR, 'eod', $m[1], $m[2], ['src' => COOKIE]) : ['text' => $m[1], 'html' => $m[2], 'id' => ''];
+        $r = eodSend($t['email'], [$m[0], $T['text'], $T['html']] + $m, $c['via']); if (!empty($r['ok'])) $sent++; else { $fails[] = (string) ($r['stage'] ?? '?'); if ($T['id'] !== '') mtFail(DATA_DIR, $T['id'], (string) ($r['stage'] ?? '')); }
+    }
     eodLog(['what' => 'send', 'ok' => $sent > 0, 'n' => $sent, 'failed' => count($fails), 'stage' => implode(',', array_unique($fails)), 'subject' => $m[0]]);
     if ($sent > 0) @file_put_contents($sf, $now->format('Y-m-d'));   /* one got through: no resend to the others at the next hour */
     out(['ok' => true, 'sent' => $sent, 'failed' => count($fails), 'subject' => $m[0]]);

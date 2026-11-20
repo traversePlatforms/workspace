@@ -118,15 +118,15 @@ function card(it){
 }
 const pc=x=>x===null||x===undefined?'-':x+'%', yn=b=>b?'<span class="yes">yes</span>':'<span class="no">no</span>';
 function trackHtml(it){
-  const t=it.track; if(!t.sentAll)return '<div class="trk note">Opens and clicks are counted from the next '+esc(it.name.toLowerCase())+' sent. Nothing counted yet.</div>';
-  let h='<div class="trk"><div class="nums">'+[['sent, 7 days',t.sent7],['sent, 30 days',t.sent30],['opened, 30 days',t.opened30+(t.sent30?' ('+pc(t.openRate30)+')':'')],['clicked, 30 days',t.clicked30+(t.sent30?' ('+pc(t.clickRate30)+')':'')]].map(x=>'<div><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>';
-  h+='<p class="note tiny">Opened may include Apple Mail\'s automatic opens (it loads every email as it arrives), so read opens as high. Clicks are the reliable number.</p>';
+  const t=it.track, oo=!!t.opensOnly; if(!t.sentAll)return '<div class="trk note">'+(oo?'Opens are':'Opens and clicks are')+' counted from the next '+esc(it.name.toLowerCase())+' sent. Nothing counted yet.</div>';
+  let h='<div class="trk"><div class="nums">'+[['sent, 7 days',t.sent7],['sent, 30 days',t.sent30],['opened, 30 days',t.opened30+(t.sent30?' ('+pc(t.openRate30)+')':'')]].concat(oo?[]:[['clicked, 30 days',t.clicked30+(t.sent30?' ('+pc(t.clickRate30)+')':'')]]).map(x=>'<div><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>';
+  h+=oo?'<p class="note tiny">Opens only (no link in it is counted). Opens are rough: Apple Mail loads every image as the email arrives (high), Outlook often blocks images (low).</p>':'<p class="note tiny">Opened may include Apple Mail\'s automatic opens (it loads every email as it arrives), so read opens as high. Clicks are the reliable number.</p>';
   if(t.links30.length)h+='<p class="note">Links clicked, 30 days: '+t.links30.map(l=>esc(l.what)+' '+l.clicks).join(' · ')+'</p>';
-  const vh=it.id==='newsletter'?'Issue':'Wording';
-  h+='<details'+(t.byVersion.length>1?' open':'')+'><summary>By '+vh.toLowerCase()+' ('+t.byVersion.length+')</summary><table class="t"><tr><th>'+vh+'</th><th>Sent</th><th>Opened</th><th>Clicked</th></tr>'
-    +t.byVersion.map(b=>'<tr><td>'+esc(b.label)+(b.active?'<span class="tag">in use</span>':'')+'<br><span class="note tiny">'+esc(when(b.first))+(b.last!==b.first?' to '+esc(when(b.last)):'')+'</span></td><td>'+b.sent+'</td><td>'+b.opened+' ('+pc(b.openRate)+')</td><td>'+b.clicked+' ('+pc(b.clickRate)+')</td></tr>').join('')+'</table></details>';
-  h+='<details><summary>Last '+t.recent.length+' sent</summary><table class="t"><tr><th>Sent</th><th>'+vh+'</th><th>Opened</th><th>Clicked</th></tr>'
-    +t.recent.map(r=>'<tr><td>'+esc(when(r.at))+'</td><td>'+esc(r.v)+'</td><td>'+yn(r.opened)+'</td><td>'+yn(r.clicked)+'</td></tr>').join('')+'</table><p class="note tiny">No names here on purpose: each row is one email to one customer.</p></details>';
+  const vh=t.by||(it.id==='newsletter'?'Issue':'Wording'), ck=x=>oo?'':'<td>'+x+'</td>';
+  h+='<details'+(t.byVersion.length>1?' open':'')+'><summary>By '+vh.toLowerCase()+' ('+t.byVersion.length+')</summary><table class="t"><tr><th>'+esc(vh)+'</th><th>Sent</th><th>Opened</th>'+(oo?'':'<th>Clicked</th>')+'</tr>'
+    +t.byVersion.map(b=>'<tr><td>'+esc(b.label)+(b.active?'<span class="tag">in use</span>':'')+'<br><span class="note tiny">'+esc(when(b.first))+(b.last!==b.first?' to '+esc(when(b.last)):'')+'</span></td><td>'+b.sent+'</td><td>'+b.opened+' ('+pc(b.openRate)+')</td>'+ck(b.clicked+' ('+pc(b.clickRate)+')')+'</tr>').join('')+'</table></details>';
+  h+='<details><summary>Last '+t.recent.length+' sent</summary><table class="t"><tr><th>Sent</th><th>'+esc(vh)+'</th><th>Opened</th>'+(oo?'':'<th>Clicked</th>')+'</tr>'
+    +t.recent.map(r=>'<tr><td>'+esc(when(r.at))+'</td><td>'+esc(r.v)+'</td><td>'+yn(r.opened)+'</td>'+ck(yn(r.clicked))+'</tr>').join('')+'</table><p class="note tiny">'+esc(t.rowNote||'No names here on purpose: each row is one email to one customer.')+'</p></details>';
   return h+'</div>';
 }
 function drawPeak(){
@@ -138,7 +138,7 @@ function drawPeak(){
       +(l.sent?'. Opened '+r.open+'%, clicked '+r.click+'%, replied '+r.reply+'%, booked '+r.booked+'%, bounced '+r.bounce+'%':'')+'.'
       +(l.skips&&l.skips.length?' Skipped: '+l.skips.map(x=>esc(x[0])+', '+x[1]).join(' · ')+'.':'')+'</p>'}).join('');
     const TC=P.tours||{open:[]};
-    h+='<p class="note" data-tours><b>Tour confirmations</b> (from the Peak desk; '+(TC.on?'on':'off until you approve the wording in the desk, More, Settings')+'): '+TC.today+' today, '+TC.d7+' in 7 days, '+TC.d30+' in 30 days'+(TC.tests?' (plus '+TC.tests+' test'+(TC.tests===1?'':'s')+')':'')+'. No open image and no tracked links on these.'
+    h+='<p class="note" data-tours><b>Tour confirmations</b> (from the Peak desk; '+(TC.on?'on':'off until you approve the wording in the desk, More, Settings')+'): '+TC.today+' today, '+TC.d7+' in 7 days, '+TC.d30+' in 30 days'+(TC.tests?' (plus '+TC.tests+' test'+(TC.tests===1?'':'s')+')':'')+'. '+(TC.sentAll?'Opened (rough, the desk\'s 1x1 image): '+TC.opened30+' of '+TC.sent30+' in 30 days'+(TC.sent30?' ('+pc(TC.openRate30)+')':'')+', '+TC.openedAll+' of '+TC.sentAll+' since 20 Nov. ':'Opens counted from the next one sent'+(TC.pixel?'':' once the desk\'s "Count opens with a 1x1 image" setting is on')+'. ')+'No links in them to count.'
       +(TC.open.length?' <b>Not sent: '+TC.open.length+'</b>. '+TC.open.map(x=>esc((x.method==='CANCEL'?'Cancellation, ':'')+x.company+' ('+x.to+'), '+when(x.at)+': '+x.why)).join(' · ')+'. <a href="'+esc(TC.desk)+'" target="_blank" rel="noopener">Retry on the Peak desk</a>.':'')+'</p>';
     const DM=P.deskmails||{open:[]};
     h+='<p class="note" data-deskmails><b>Desk emails</b> (written on a card in the Peak desk, one person at a time; '+(DM.on?'on':'off until you turn them on in the desk, More, Settings')+'; booking links '+(DM.book?'on':'off')+'): '+DM.today+' today, '+DM.d7+' in 7 days, '+DM.d30+' in 30 days. No tracked links but the booking link; no open image unless that setting is on.'

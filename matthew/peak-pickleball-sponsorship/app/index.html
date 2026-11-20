@@ -372,7 +372,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-20.1';
+  var BUILD = '2026-11-20.2';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -2044,7 +2044,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     c.appendChild(seg); paint();
     c.appendChild(el('small', null, (C.on ? 'On.' : 'Off.') + (C.by ? ' Last changed by ' + C.by + (C.at ? ', ' + ago(C.at) : '') + '.' : '') + (C.ready === false ? ' Peak email can’t send right now: ' + (C.why || 'not connected') + '.' : '')));
     var lb = el('label', 'chk'), cb = el('input'); cb.type = 'checkbox'; cb.checked = st.px; cb.setAttribute('data-dm', 'pixel'); cb.addEventListener('change', function () { st.px = cb.checked; }); lb.appendChild(cb);
-    lb.appendChild(document.createTextNode(' Count opens with a 1x1 image (off: opens are rough and the image can hurt inbox placement; the booking link’s visits are counted either way)')); lb.style.cssText = 'display:block;margin-top:10px;font-size:13.5px'; c.appendChild(lb);
+    lb.appendChild(document.createTextNode(' Count opens with a 1x1 image, on desk emails and tour confirmations (off: opens are rough and the image can hurt inbox placement; the booking link’s visits are counted either way)')); lb.style.cssText = 'display:block;margin-top:10px;font-size:13.5px'; c.appendChild(lb);
     var sv = el('button', 'btn small', 'Save'); sv.type = 'button'; sv.setAttribute('data-act', 'dmsave'); sv.style.marginTop = '10px';
     sv.addEventListener('click', function () { if (st.on && !C.on && !confirm('Turn on desk emails? From now on Send on a card emails that person as ' + FROML() + '.')) return; save('dmset', { on: st.on, pixel: st.px }, st.on ? 'Desk emails are on' : 'Desk emails are off'); });
     c.appendChild(el('div')).appendChild(sv);

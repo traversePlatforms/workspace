@@ -326,17 +326,23 @@ $html = '<!doctype html><html><body style="margin:0;padding:0;background:#ffffff
       . '<img src="cid:' . $cid . '" width="600" alt="' . htmlspecialchars($alt, ENT_QUOTES) . '" style="display:block;width:100%;max-width:600px;height:auto;border:0">'
       . '</div></body></html>';
 $e = "\r\n"; $b64 = fn(string $s) => chunk_split(base64_encode($s), 76, "\r\n");
-$mime = '--' . $b1 . $e . 'Content-Type: text/plain; charset=UTF-8' . $e . 'Content-Transfer-Encoding: base64' . $e . $e . $b64($body)
+$eMime = fn(string $body, string $html) => '--' . $b1 . $e . 'Content-Type: text/plain; charset=UTF-8' . $e . 'Content-Transfer-Encoding: base64' . $e . $e . $b64($body)
       . '--' . $b1 . $e . 'Content-Type: multipart/related; boundary="' . $b2 . '"' . $e . $e
       . '--' . $b2 . $e . 'Content-Type: text/html; charset=UTF-8' . $e . 'Content-Transfer-Encoding: base64' . $e . $e . $b64($html)
       . '--' . $b2 . $e . 'Content-Type: image/png; name="end-of-day.png"' . $e . 'Content-Transfer-Encoding: base64' . $e . 'Content-ID: <' . $cid . '>' . $e . 'Content-Disposition: inline; filename="end-of-day.png"' . $e . $e . $b64($png)
       . '--' . $b2 . '--' . $e . '--' . $b1 . '--' . $e;
+/* each copy counted on its own (2026-11-20, Matthew: "I want to track everything we can data is key"): an open image per person, noted in
+   Sixfold's mail-sends.log as 'eod' or 'week' (api/mailtrack-lib.php). Never the --test copy. No link in it is counted. */
+$eTD = dirname($eState) . '/rounds'; $eTrack = !$eTest && is_dir($eTD) && is_file($eApi . '/mailtrack-lib.php');
+if ($eTrack) require_once $eApi . '/mailtrack-lib.php';
 $eCfg = require $eApi . '/config.php';
 require_once $eApi . '/smtp.php';
 $to = $eTest ? [(string) $eCfg['to']] : (in_array('--brandon', $eArgs, true) ? [EOD_BRANDON] : [EOD_BRANDON, EOD_JEN, (string) $eCfg['to']]);   /* --brandon: his copy only (a resend) */
 $fails = 0;
 foreach ($to as $addr) {
-    $eRes = smtp_send((array) ($eCfg['smtp'] ?? []), $addr, '[Sixfold 365] ' . $subject, $mime, ['X-Mailer: sixfold-app', 'Content-Type: multipart/alternative; boundary="' . $b1 . '"']);
+    $eT = $eTrack ? mtTrack($eTD, $W ? 'week' : 'eod', $body, $html) : ['text' => $body, 'html' => $html, 'id' => ''];
+    $eRes = smtp_send((array) ($eCfg['smtp'] ?? []), $addr, '[Sixfold 365] ' . $subject, $eMime($eT['text'], $eT['html']), ['X-Mailer: sixfold-app', 'Content-Type: multipart/alternative; boundary="' . $b1 . '"']);
+    if (empty($eRes['ok']) && $eT['id'] !== '') mtFail($eTD, $eT['id'], (string) ($eRes['stage'] ?? ''));
     $ok = !empty($eRes['ok']); if (!$ok) $fails++;
     @file_put_contents($eState . '/eod.log', json_encode(['at' => time(), 'to' => $addr, 'ok' => $ok, 'stage' => $eRes['stage'] ?? null, 'subject' => $subject]) . "\n", FILE_APPEND | LOCK_EX);
     echo $ok ? "eod: sent to $addr\n" : 'eod: NOT sent to ' . $addr . ' (' . ($eRes['stage'] ?? '?') . ")\n";

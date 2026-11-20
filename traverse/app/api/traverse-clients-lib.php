@@ -645,7 +645,13 @@ function tcMail(string $to, string $subject, string $body): bool {
     $lib = tcPub() . '/demo/_lib.php';
     if (!is_file($lib)) { tcLog(['what' => 'mail', 'to' => $to, 'ok' => false, 'why' => 'no demo/_lib.php']); return false; }
     require_once $lib;
-    $r = send_mail(site_config(), $to, $subject, $body);
+    /* counted (2026-11-20): an open image on an HTML copy of the same words, Traverse's store (mailtrack-lib.php). "Traverse: ..." is a note to
+       Matthew ('notes'); the rest go to the buyer ('signup', v = which one). Their links are setup and sign-in links (the welcome link's key, the
+       app's address), so none is counted; only an ordinary page of the website would be (mtSitePage). Older demo/_lib.php: sent plain. */
+    $v = str_starts_with($subject, 'Finish setting up') ? 'finish' : (str_starts_with($subject, 'Your Traverse is ready') ? 'ready' : (str_contains($subject, 'is waiting for you') ? 'waiting' : (str_contains($subject, 'sign-in link') ? 'signin' : 'other')));
+    $r = function_exists('send_mail_counted')
+        ? send_mail_counted(site_config(), str_starts_with($subject, 'Traverse:') ? 'notes' : 'signup', str_starts_with($subject, 'Traverse:') ? 'site' : $v, $to, $subject, $body, [], null, fn(string $u) => function_exists('mtSitePage') && mtSitePage($u))
+        : send_mail(site_config(), $to, $subject, $body);
     tcLog(['what' => 'mail', 'subject' => $subject, 'ok' => $r['ok'], 'stage' => $r['stage']]);
     return (bool) $r['ok'];
 }

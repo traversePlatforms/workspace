@@ -12,9 +12,9 @@ header('Cache-Control: no-store'); header('X-Robots-Tag: noindex'); header('Refe
 $h = fn($s) => htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
 $q = $_GET; $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
 
-/* a desk email's open image */
+/* a desk email's open image, and a tour confirmation's (tc-<tour>-<version>-<r|c>, 2026-11-20) */
 if (isset($q['px'])) {
-    if (preg_match('/^(dm[0-9a-f]{10})-([0-9a-f]{12})$/', (string) $q['px'], $m) && hash_equals(bkSig('px|' . $m[1], 12), $m[2])) bkLog(['t' => 'open', 'ref' => $m[1], 'proxy' => preg_match('/GoogleImageProxy|YahooMailProxy/i', $ua) ? 1 : 0]);
+    if (preg_match('/^(dm[0-9a-f]{10}|tc-[a-z0-9]{1,24}-[0-9]{1,5}-[rc])-([0-9a-f]{12})$/', (string) $q['px'], $m) && hash_equals(bkSig('px|' . $m[1], 12), $m[2])) bkLog(['t' => 'open', 'ref' => $m[1], 'proxy' => preg_match('/GoogleImageProxy|YahooMailProxy/i', $ua) ? 1 : 0]);
     header('Content-Type: image/gif'); echo base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'); exit;
 }
 /* the visit as a calendar file (the "Add it to my calendar" button after booking) */

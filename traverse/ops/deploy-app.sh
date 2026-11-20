@@ -32,12 +32,17 @@ for b in "$R/app/dist/summit-de59ae83/index.html" "$D/tr-cb2e8587/index.html"; d
 for f in index.html version.txt; do cp_if "$R/app/dist/summit-de59ae83/$f" summit-de59ae83; done
 for f in sw.js es.json; do cp_if "$R/app/summit-de59ae83/$f" summit-de59ae83; done
 for f in rounds.php billing.php square-oauth.php webpush.php; do cp_if "$R/app/api/$f" api; done
-# Sixfold 365 customer emails' opens and clicks (2026-11-18): the tracker, public_html/m/index.php (source app/mailtrack/), standalone, read by no install but Sixfold
+# Sixfold 365 customer emails' opens and clicks (2026-11-18): the tracker, public_html/m/index.php (source app/mailtrack/), standalone; since 2026-11-20 it
+# finds a send in Sixfold's log, Traverse's (traverse-shared/mailtrack) or a client install's own. + Sixfold's eod-report.php and profit-check.php
+# go with the other sixfold-tools now (2026-11-20: their emails are counted too; the server copies were the committed ones)
 cp_if "$R/app/mailtrack/index.php" m
 # Sign in with Google / Microsoft for Setup › Email (2026-10-30): the one callback and the library every install's rounds.php loads beside it
 for f in mail-oauth.php mail-oauth-lib.php care-lib.php; do cp_if "$R/app/api/$f" api; done   # + plans and customer emails (care-lib.php, 2026-10-30), loaded the same way
 # the editions' end-of-day email (2026-10-30): the shared drawing every install's rounds.php loads beside it
 cp_if "$R/app/api/eod-lib.php" api
+# opens and clicks for every other automatic email (2026-11-20): the one library every install's API, the website's demo/_lib.php, sixfold-tools
+# and the post calendar load beside public_html/api; the tracker m/index.php (above) counts them all
+cp_if "$R/app/api/mailtrack-lib.php" api
 # the aerial photo tile cache (TR-52, 2026-10-31): one endpoint every install's page asks (../api/satcache.php), tiles kept in traverse-shared/satcache
 cp_if "$R/app/api/satcache.php" api
 # Facebook lead ads for the editions and client installs (2026-10-30): the one Connect Facebook callback and the library every install loads
@@ -62,7 +67,7 @@ mkdir -p "$SH/traverse-shared" "$SH/traverse-tools"; cp -r "$TPL" "$SH/traverse-
 # Sync from another system never pulled on schedule). Everything the built traverse-tools folder holds goes up together now.
 cp "$R/editions/dist/traverse-tools/crm-sync.php" "$R/editions/dist/traverse-tools/push-alerts.php" "$R/editions/dist/traverse-tools/storm-update.php" "$SH/traverse-tools/"
 cp "$R/ops/billing-mark-live.php" "$SH/traverse-tools/"   # the command-line Release to client (ops/ is its source; the server copy was the 27 Oct one)
-mkdir -p "$SH/sixfold-tools"; cp "$R/app/tools/nightly-backup.php" "$R/app/tools/regions-warm.php" "$R/app/tools/fuel-prices.php" "$R/app/tools/morning-email.php" "$R/app/tools/edition-eod.php" "$R/app/tools/care-sweep.php" "$R/app/tools/setup-trial-sweep.php" "$R/app/tools/prospect-bounce-scan.php" "$R/app/tools/prospect-bounce-log.php" "$R/app/tools/push-alerts.php" "$SH/sixfold-tools/"   # + Sixfold's push-alerts.php (9 Nov 2026: the server ran the 5 Oct copy; same behaviour with no --api, now the one file)   # + plans and customer emails (care-sweep.php) + the free-trial setup sweep (setup-trial-sweep.php, 2026-11-06) + the editions' end-of-day emails (2026-10-30); backups and the towns warm-up include client installs; + the weekly EIA fuel prices (2026-10-30)
+mkdir -p "$SH/sixfold-tools"; cp "$R/app/tools/nightly-backup.php" "$R/app/tools/regions-warm.php" "$R/app/tools/fuel-prices.php" "$R/app/tools/morning-email.php" "$R/app/tools/edition-eod.php" "$R/app/tools/care-sweep.php" "$R/app/tools/setup-trial-sweep.php" "$R/app/tools/prospect-bounce-scan.php" "$R/app/tools/prospect-bounce-log.php" "$R/app/tools/push-alerts.php" "$R/app/tools/eod-report.php" "$R/app/tools/profit-check.php" "$SH/sixfold-tools/"   # + Sixfold's push-alerts.php (9 Nov 2026: the server ran the 5 Oct copy; same behaviour with no --api, now the one file)   # + plans and customer emails (care-sweep.php) + the free-trial setup sweep (setup-trial-sweep.php, 2026-11-06) + the editions' end-of-day emails (2026-10-30); backups and the towns warm-up include client installs; + the weekly EIA fuel prices (2026-10-30)
 for f in $(find "$SH" -name '*.php'); do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done
 cd "$ST" || exit 1
 for f in $(find api -name '*.php'); do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done

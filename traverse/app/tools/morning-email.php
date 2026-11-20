@@ -125,7 +125,13 @@ if ($mxDry) { echo "Subject: $mxSubject\n\n$mxBody\n"; exit(0); }
 /* send through the website form's own mail setup */
 $mxCfg = require $mxApi . '/config.php';
 require_once $mxApi . '/smtp.php';
-$mxRes = smtp_send((array) ($mxCfg['smtp'] ?? []), (string) $mxCfg['to'], '[' . ($mxCo['short'] ?? 'Door') . ' app] ' . $mxSubject, $mxBody, ['X-Mailer: sixfold-app']);
+/* counted (2026-11-20, Matthew: "I want to track everything we can data is key"): an open image on an HTML copy of the same words, noted in
+   Sixfold's mail-sends.log as 'morning' (api/mailtrack-lib.php). The app link is not counted. Not for --now (a test of the cron job). */
+$mxSend = $mxBody; $mxHead = ['X-Mailer: sixfold-app']; $mxT = ['id' => '']; $mxTD = dirname($mxState) . '/rounds';
+if (!$mxNow && is_file($mxApi . '/mailtrack-lib.php')) { require_once $mxApi . '/mailtrack-lib.php'; if (is_dir($mxTD)) $mxT = mtTrack($mxTD, 'morning', $mxBody, ''); }
+if ($mxT['id'] !== '') { [$mxSend, $mxCt] = mtMime($mxT['text'], $mxT['html']); $mxHead[] = $mxCt; }
+$mxRes = smtp_send((array) ($mxCfg['smtp'] ?? []), (string) $mxCfg['to'], '[' . ($mxCo['short'] ?? 'Door') . ' app] ' . $mxSubject, $mxSend, $mxHead);
+if (empty($mxRes['ok']) && $mxT['id'] !== '') mtFail($mxTD, $mxT['id'], (string) ($mxRes['stage'] ?? ''));
 $mxOk = !empty($mxRes['ok']);
 @file_put_contents($mxState . '/digest.log', json_encode(['at' => time(), 'ok' => $mxOk, 'stage' => $mxRes['stage'] ?? null, 'subject' => $mxSubject]) . "\n", FILE_APPEND | LOCK_EX);
 if (!$mxOk) { fwrite(STDERR, 'sixfold morning: not sent (' . ($mxRes['stage'] ?? '?') . ': ' . ($mxRes['error'] ?? '') . ")\n"); exit(1); }

@@ -85,7 +85,7 @@ if ($action === 'linkhelp') {
     append_line($cfg['dir'] . '/requests.log', ['what' => 'linkhelp', 'at' => time(), 'ip' => client_ip()] + $f);
     $body = "Someone asked for their Traverse app link.\n\nName: {$f['name']}\nCompany: {$f['company']}\nEmail: {$f['email']}\nPhone: {$f['phone']}\n\n"
           . "Check they are on that company's account before sending the address. Reply to this email to answer them.";
-    $r = send_mail($cfg, $cfg['notify_to'], 'App link request: ' . $f['company'], $body, ['Reply-To: ' . $f['email']]);
+    $r = send_mail_counted($cfg, 'demo-notify', 'linkhelp', $cfg['notify_to'], 'App link request: ' . $f['company'], $body, ['Reply-To: ' . $f['email']]);
     log_mail($cfg, 'linkhelp', $r);
     out(['ok' => true]);
 }
