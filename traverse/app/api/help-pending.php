@@ -7,6 +7,13 @@ header('Content-Type: text/plain; charset=utf-8'); header('Cache-Control: no-sto
 $base = dirname(__DIR__, 2);
 $key = trim((string) @file_get_contents($base . '/sixfold-private/help-poll.key'));
 if ($key === '' || !hash_equals($key, (string) ($_GET['k'] ?? ''))) { http_response_code(404); exit; }
+/* b=1 (2026-11-19, the cloud J.A.R.V.I.S., TASKS X-15): the cloud watcher's beat, for the laptop's watcher: "<seconds since> <mode> <ready>"
+   (mode live|shadow|practice|off, ready 1|0), or "none". The beat is jarvis-cloud/beat.txt beside public_html, written by the cloud each minute. */
+if (($_GET['b'] ?? '') === '1') {
+    $b = (string) @file_get_contents($base . '/jarvis-cloud/beat.txt');
+    echo preg_match('/^(\d{10}) (live|shadow|practice|off) ([01])\s*$/D', $b, $m) ? (max(0, time() - (int) $m[1]) . ' ' . $m[2] . ' ' . $m[3]) : 'none';
+    exit;
+}
 $st = [];
 $inst = (string) ($_GET['i'] ?? '');   /* i=c-<slug>: a client install's own chat (2026-11-18, the Houston test install) */
 if ($inst !== '' && !preg_match('/^c-[a-z0-9-]{1,40}$/D', $inst)) { http_response_code(404); exit; }

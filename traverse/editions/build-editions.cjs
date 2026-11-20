@@ -468,6 +468,8 @@ function clientTemplate(key) {
     cookie: E.cookie, placeholders: TPL, built: new Date().toISOString() }, null, 2) + '\n');
 }
 const CODE_ONLY = process.env.TRAVERSE_CODE_ONLY === '1';   /* pages, APIs and client templates only: no door data, codes, icons or packs (tests, quick deploys) */
+/* the zip maker: Windows' own bsdtar; elsewhere (the cloud J.A.R.V.I.S. machine, 2026-11-19) bsdtar from libarchive-tools. GNU tar cannot write zips. */
+function zipTar() { return process.platform === 'win32' ? path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe') : 'bsdtar'; }
 
 /* ------------------------------------------------------------------ one edition */
 async function build(key) {
@@ -633,7 +635,7 @@ return [
   // upload packs, one per destination (bsdtar writes forward-slash zips; Compress-Archive's backslash paths don't extract on the host)
   const up = path.join(OUT, 'upload', key);
   fs.rmSync(up, { recursive: true, force: true }); fs.mkdirSync(up, { recursive: true });
-  const tar = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe');
+  const tar = zipTar();
   execFileSync(tar, ['-a', '-c', '-f', path.join(up, '1-extract-in-HOME-beside-public_html--' + E.data + '.zip'), '-C', OUT, E.data]);
   execFileSync(tar, ['-a', '-c', '-f', path.join(up, '4-extract-in-public_html--app-' + E.folder + '.zip'), '-C', path.join(OUT, 'public_html'), E.folder]);
   console.log(key + ': built ' + E.folder + ' - data files ' + copied + ', ' + (bytes / 1048576).toFixed(1) + ' MB; packs in ' + path.relative(REPO, up));
@@ -737,6 +739,7 @@ async function buildPractice() {
     + '<script>var a=+(new URLSearchParams(location.search).get("amt")||0);if(a)document.getElementById("amt").textContent="Amount: $"+(a/100).toFixed(2);</script></body></html>\n');
   write(path.join(app, '.htaccess'), fs.readFileSync(path.join(APP, '.htaccess'), 'utf8').replace('<IfModule mod_headers.c>', '<IfModule mod_headers.c>\nHeader set X-Robots-Tag "noindex, nofollow"'));
   for (const [k, s] of Object.entries(practiceApi(E))) write(path.join(base, 'public_html', 'api', E.api + '-' + k + '.php'), s);
+  if (CODE_ONLY) { console.log('practice: page and API only (TRAVERSE_CODE_ONLY)'); return; }   /* 2026-11-19: no settings or sign-in codes made (the cloud machine has neither) */
   /* its settings: Sixfold's own (editions/practice-company.json, taken from live 2026-11-02 with a made-up phone and email), at its own address;
      emails2.json on, so the follow-up and deposit reminders run (and are logged) */
   const co = JSON.parse(fs.readFileSync(path.join(__dirname, 'practice-company.json'), 'utf8')); delete co._about;
@@ -806,7 +809,7 @@ function tools() {
   fs.writeFileSync(path.join(dir, 'push-alerts.sh'), sh);
   const up = path.join(OUT, 'upload', 'tools');
   fs.rmSync(up, { recursive: true, force: true }); fs.mkdirSync(up, { recursive: true });
-  const tar = path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'tar.exe');
+  const tar = zipTar();
   execFileSync(tar, ['-a', '-c', '-f', path.join(up, '1-extract-in-HOME-beside-public_html--traverse-tools.zip'), '-C', OUT, 'traverse-tools']);
   console.log('tools: traverse-tools (push-alerts.sh for ' + apis.length + ' editions, storm-update.php); pack in ' + path.relative(REPO, up));
 }

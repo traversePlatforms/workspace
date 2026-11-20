@@ -16,13 +16,14 @@ set -u
 exec < /dev/null
 ID="${1:?usage: deploy-client.sh c-<slug> [--first | --data [regex]]}"; MODE="${2:-}"; ONLY="${3:-}"
 case "$ID" in c-[a-z0-9]*) ;; *) echo "the install id is c-<slug>, as build-editions.cjs names it"; exit 1;; esac
-R="/c/Users/Surge Inc/Desktop/claude test 2/traverse"; D="$R/editions/dist"; SLUG="${ID#c-}"
+R="${JARVIS_REPO:-/c/Users/Surge Inc/Desktop/claude test 2}/traverse"; D="$R/editions/dist"; SLUG="${ID#c-}"
 CF="$R/editions/clients/$SLUG.json"; [ -s "$CF" ] || { echo "no client file editions/clients/$SLUG.json"; exit 1; }
 F=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).folder||'')" "$CF")
 [[ "$F" =~ ^[a-z]{1,3}-[0-9a-f]{6}$ ]] || { echo "the client file has no folder yet: build it first"; exit 1; }
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; SITE='~/www/traverseplatforms.com'
+SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"; SITE='~/www/traverseplatforms.com'
 ST="$(mktemp -d)"; trap 'rm -rf "$ST"' EXIT
 STAMP=$(date +%Y%m%d-%H%M%S)
+. "$R/ops/cloud-guard.sh"; cloud_guard_before "$ID" || exit 1   # two places can deploy since 19 Nov (the cloud J.A.R.V.I.S.): never older code over newer
 [ -s "$D/public_html/$F/index.html" ] && [ -s "$D/public_html/api/$ID-rounds.php" ] || { echo "build it first: node ../editions/build-editions.cjs $ID"; exit 1; }
 
 if [ "$MODE" = "--data" ]; then   # data only: the changed files, by push-edition.sh (backup, md5, index merge)
@@ -102,3 +103,4 @@ c=$(chk p); [ "$c" = 200 ] && echo "  page: 200" || { echo "  page answered $c";
 W=$($SG "cd $SITE && for r in admin crew; do php -d memory_limit=1024M sixfold-tools/regions-warm.php $SITE/public_html/api/$ID-rounds.php \$r 2>&1 | head -c 120; echo; done" 2>/dev/null)
 printf '%s\n' "$W" | sed 's/^/  warm: /'
 [ $bad = 0 ] && echo "deploy $ID: all checks passed" || { echo "deploy $ID: CHECK FAILED"; exit 1; }
+cloud_guard_after "$ID"

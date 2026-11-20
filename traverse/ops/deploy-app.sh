@@ -14,10 +14,11 @@
 # "clients.php regen" remakes every client install's page and API from the new templates.
 set -u
 LABEL="${1:?usage: deploy-app.sh <label>}"
-R="/c/Users/Surge Inc/Desktop/claude test 2/traverse"; D="$R/editions/dist/public_html"
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+R="${JARVIS_REPO:-/c/Users/Surge Inc/Desktop/claude test 2}/traverse"; D="$R/editions/dist/public_html"
+SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"
 ST="$(mktemp -d)"; trap 'rm -rf "$ST"' EXIT
 STAMP=$(date +%Y%m%d-%H%M%S)
+. "$R/ops/cloud-guard.sh"; cloud_guard_before "$LABEL" || exit 1   # two places can deploy since 19 Nov (the cloud J.A.R.V.I.S.): never older code over newer
 cp_if() { [ -f "$1" ] && { mkdir -p "$ST/$2"; cp "$1" "$ST/$2/"; }; return 0; }
 # the Spanish dictionary lives beside each page since 2026-10-27: without it a Spanish phone shows English, so it must be there
 for p in summit tr-cb2e8587 ty-25604fff ts-016064fc tq-9cf8d9de tg-3b0b89e7; do
@@ -106,6 +107,7 @@ c=$(printf '%s\n' "$CHK" | awk '$1=="m"{print $2" "$3}'); [ "$c" = "404 200:imag
 c=$(printf '%s\n' "$CHK" | awk '$1=="j"{print $2}'); [ "$c" = 400 ] || { echo "  api/jobber-oauth.php answered $c"; bad=1; }
 c=$(printf '%s\n' "$CHK" | awk '$1=="h"{print $2}'); [ "$c" = 405 ] || { echo "  api/jobber-hook.php answered $c"; bad=1; }
 [ $bad = 0 ] && echo "deploy $LABEL: all checks passed (backup before-$LABEL-$STAMP.tgz)" || { echo "deploy $LABEL: CHECK FAILED"; exit 1; }
+cloud_guard_after "$LABEL"
 # the towns answer rebuilt now, in the background on the server, so the first phone after a deploy doesn't wait 7-16 s (2026-10-29)
 $SG "f=~/www/traverseplatforms.com/sixfold-tools/regions-warm.php; [ -f \$f ] && (nohup php \$f >> ~/www/traverseplatforms.com/sixfold-data/digest/regions-warm.log 2>&1 &) ; echo '  towns answer: warming in the background'" < /dev/null
 echo "  next: bash traverse/ops/deploy-practice.sh$(cd "$R/editions/clients" 2>/dev/null && for f in *.json; do [ -f "$f" ] && printf ', bash traverse/ops/deploy-client.sh c-%s' "${f%.json}"; done)"

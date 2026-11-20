@@ -1,190 +1,235 @@
-# J.A.R.V.I.S. in the cloud — trial run 1 (practice copy only)
+# J.A.R.V.I.S. in the cloud (TASKS X-15)
 
-Started 12 Nov 2026 (11 Nov Mountain time) on Matthew's ask to "run 1": try the always-on J.A.R.V.I.S. on the Azure machine while it
-is on free trial credit (ends ~23 Nov), so the move to a small paid machine is proven first. Plan: TASKS.md **X-15**.
+Matthew, 19 Nov 2026: go ahead with the always-on J.A.R.V.I.S. on the Azure machine `yardtest` while its free credit lasts (~23 Nov),
+then move to a small B2s ("can we keep it in the big one while we got it? then switch"). It answers his own J.A.R.V.I.S. desk and the
+staff desks (Jen and Brad in the Sixfold app, the Houston test install), so answers do not depend on the laptop being awake. And (his
+priority, ~10 pm): when Jen asks for an app change while the laptop is closed, the cloud does **the whole job**: code, build, deploy,
+commit, reply.
 
-**The trial answers PRACTICE tickets only.** The laptop watcher (`help-watch.sh`, Task Scheduler "Sixfold Help watcher") is unchanged
-and still owns every live ticket.
+History: 12 Nov trial run 1 answered the practice copy only. 19 Nov: the full watcher, the two-way sync and the deploy guards were built
+and the cloud went into **shadow mode**. **Live needs Matthew's go** (below).
 
-## What runs where
+## Where it stands (19 Nov, night)
 
-| | Laptop (Hal_9000) | Azure VM `yardtest` (yard@20.91.198.101) |
+| | |
+|---|---|
+| Mode | **shadow**: reads the live queues, logs what it would do, runs the read-only quick pass on his messages, answers nothing live. The practice copy it answers for real (as the trial did). |
+| Machine | `yardtest`, Standard_D4as_v5, Sweden Central, `yard@20.91.198.101`, key `~/.ssh/azure_yard` |
+| Done by Matthew | SiteGround key `jarvis-cloud` imported; Claude Code on the VM signed in to his plan (claude.ai, Max) |
+| Not needed | the GitHub deploy key (the laptop sends the repo straight to the VM; see "Repo copy") |
+| Laptop | `help-watch.sh` unchanged in behaviour: it stands back only when the cloud says **live** |
+
+## Design (chosen 19 Nov)
+
+**One writer at a time; the laptop's history stays the truth; the cloud's work comes back as commits, never as files copied over.**
+
+Rejected: (a) "cloud answers, laptop does all repo work" (Matthew: queueing staff app changes for a closed laptop is not acceptable);
+(b) the VM as the only home of the repo right now (the laptop holds data, Windows jobs and Tier 1 notes the VM does not; that is the
+target, below, not tonight); (c) file sync with last-writer-wins (loses work, and MEMORY.md is written by both sides).
+
+### Repo copy
+
+- `jarvis-cloud-sync.sh push` (laptop) clones the laptop repo, strips Surge's Tier 1 paths exactly as `github-sync.sh` does (`git
+  filter-repo`, deterministic, ~30 s at nice 19), and `git push`es it over SSH to `~/jarvis/repo.git` on the VM, with the
+  laptop-commit to filtered-commit map (`~/jarvis/incoming/commit-map`; a commit the filter emptied maps to its nearest kept ancestor).
+  Runs from the laptop watcher's 2-minute cycle, at most every 10 minutes, only when HEAD changed. No GitHub in the loop.
+- `~/workspace` on the VM is a clone of that, on branch **`cloud`** = the laptop's newest copy + the cloud's own commits the laptop has
+  not merged yet. Before every session the watcher refreshes it: fetch, rebuild `cloud` from `origin/main`, cherry-pick the unmerged
+  cloud commits back on top (by Cloud-Id), clean. A cloud commit that no longer applies is kept as a `stuck-*` branch, writes stop
+  (`~/jarvis/state/stuck`) and Matthew is told; nothing is lost.
+- `node_modules` by `npm ci` on the VM (Linux sharp). The VM has no door data (3.4 GB, personal data) and no codes files.
+
+### The write turn: who may change the repo
+
+The laptop's 5-minute beat (in `help-watch.sh`) writes `<time> <HEAD>` to `~/www/traverseplatforms.com/jarvis-cloud/laptop.txt` on the
+server. Before each live session the cloud decides:
+
+- **Laptop away** (beat over 15 minutes old) **and** the cloud's copy already holds that HEAD (commit map) **and** nothing stuck: the
+  cloud holds the write turn (`~/jarvis/state/write-ok` for that session). The session may edit, build, commit, deploy.
+- Otherwise (laptop on, or its last commit never reached the VM): the session answers and does server-only work (the office's leads,
+  jobs, payments through the app's own server code) and queues repo work for the laptop (`~/jarvis/bin/laptop-job.sh`), which runs it
+  within minutes because it is on.
+
+Enforced in code, not just the prompt: the repo copy's `pre-commit` hook refuses without the write turn (and refuses Surge's restricted
+paths); the deploy scripts refuse (below); `jarvis-status.sh` refuses everything but `alert` on the VM (its builds and Waiting lists are
+the laptop's).
+
+### The cloud's commits back to the laptop
+
+Every cloud commit carries `Cloud-Id: c<time>-<4 hex>` (the repo copy's `commit-msg` hook). After each session the watcher captures what
+the session left in `~/jarvis/outbox/changes/<time>-<ticket>/`: each new commit as a patch, uncommitted repo files and memory files as
+base + cloud copies. The laptop's 2-minute cycle (`jarvis-cloud-sync.sh pull`) applies them **in order**:
+
+- commits: `git am -3`, each Cloud-Id once; it waits (and retries every 2 min) while the index has staged changes, a `git am` is in
+  progress, or a file it touches is mid-edit here; if it keeps failing, Matthew gets one alert. Nothing is ever dropped.
+- `jarvis-learned*.md` and memory notes: `git merge-file --union` (line by line: both sides' lines kept; nothing overwritten). Memory
+  deletions are not repeated (archive, never delete). Learned notes are committed unless the file was already being edited here.
+- `TASKS.md`: a normal 3-way merge, applied only when clean; otherwise kept for review.
+- any other file the session changed but did **not** commit: never applied; kept in `ProjectBackup/cloud-sync/review/` with an alert.
+
+Then the laptop pushes its repo and memory back, and the bundle moves to `~/jarvis/outbox/merged/` on the VM (dropped there after 14 days).
+Until the laptop merges, the VM lays its own unmerged notes back over each fresh copy (same union merge), so later cloud sessions see them.
+
+**Memory** goes to the VM as Claude Code's own memory folder for `~/workspace` (`~/.claude/projects/-home-yard-workspace/memory/`, so it
+loads by itself), minus `matthew-pay-review.md` and `story-tier1-restricted.md` (kept off the VM, like Tier 1 on GitHub).
+
+### Deploys from two places (traverse/ops/cloud-guard.sh)
+
+Sourced by `deploy-app.sh`, `deploy-practice.sh`, `deploy-client.sh`. Records on the server in `jarvis-cloud/` (beside public_html):
+`deploy-cloud.txt` (every Cloud-Id the cloud deployed) and `deploy-laptop.json` (the laptop's last deploy: commit, label, and the git
+blob of every build input that was **not committed** at that moment).
+
+- **Laptop deploy refused** while the cloud has deployed commits the laptop has not merged ("run jarvis-cloud-sync.sh pull"). An unreachable
+  server or no record never blocks the laptop.
+- **Cloud deploy refused** unless: it holds the write turn; its tree is committed (build, commit, then deploy); its copy holds the laptop's
+  last deployed commit; and each input the laptop deployed uncommitted is in the cloud's copy byte for byte, or changed by a later commit.
+  ⚑ The laptop deploys with uncommitted data today (company.json, index.json, town-county.json, shared-towns.json,
+  town-surveys-extra.json were dirty on 19 Nov): **the cloud cannot deploy until those are committed** (or the laptop redeploys clean).
+- The 18 Nov stale-build check (source page newer than the built page) stays as it was.
+- `JARVIS_GUARD_OFF=1` skips the guard: Matthew by hand only; the cloud's prompt forbids it.
+
+### The build on Linux
+
+`(cd traverse/app && node i18n/sync-es.cjs && TRAVERSE_CODE_ONLY=1 node ../editions/build-editions.cjs && node ../editions/minify-page.cjs)`.
+Code-only (pages, APIs, client templates, tools) is all `deploy-app.sh`, `deploy-practice.sh` and `deploy-client.sh` (without `--first`
+/ `--data`) send. `build-editions.cjs` now uses `bsdtar` off Windows (libarchive-tools; GNU tar cannot write zips) and, in code-only, no
+longer makes practice sign-in codes. `php -l` needs php-cli (installed). The deploy scripts take `JARVIS_REPO` and `JARVIS_SG`.
+
+### What cannot run on the VM (and what it would take)
+
+| Job | Why | What it would take |
 |---|---|---|
-| Watcher | `traverse/ops/help-watch.sh`, every 2 min via Task Scheduler, ~58-min loop | `~/jarvis/ops/help-watch-cloud.sh`, systemd **user** service `jarvis-cloud` (linger on: runs without a login, starts at boot, restarts 20 s after any exit) |
-| Tickets | live (Jen, Matthew, office) **and** practice | **practice only** (guard in code, below) |
-| Claude Code | VS Code extension's claude.exe, Matthew's plan | `~/.local/bin/claude` 2.1.322 (native installer, auto-updates), **not signed in until Matthew does it** |
-| Server access | `~/.ssh/sg.sh trav` (laptop key `traverse_sg`) | its own key `~/jarvis/secrets/traverse_sg_cloud` (RSA 4096, made on the VM, **not yet added in SiteGround**) |
-| Poll | `help-pending.php` live + practice counts every 5 s | `help-pending.php?...&p=1` (practice count only) every 5 s; checked from Azure 12 Nov: answers `200 0`, no captcha |
-| Voice notes | whisper.cpp large-v3-turbo, 8 threads | whisper.cpp (built 12 Nov from ggml-org master d2c6f05) + **small.en-q5_1** by default, 4 threads; turbo also installed (`WHISPER_MODEL=large-v3-turbo-q5_0`) |
-| Repo | full working copy | **no clone yet**: only `help-watch-cloud.sh` and `help-practice-prompt.md` were copied (the practice path needs nothing else) |
+| Sixfold's website / email (`six`), Surge (`surge`), 365 Aeration (`a365`) | no SiteGround keys for those accounts on the VM | a VM key per account (Matthew imports each in SiteGround), kept per bot |
+| Full data builds, door-data pushes (`push-edition.sh`, `deploy-client --data/--first`), new editions | the 3.4 GB door data and the codes files are not on the VM | copy `traverse/app/data/rounds` (personal data) + the 7 codes files + `~/.ssh/practice-codes.txt`; 64 GB disk |
+| Desktop files, Drive letters, Windows tasks, opening things on his screen | Windows only | Tailscale + a laptop job runner (design below); or the VM-as-home move |
+| Surge drafts that need RESTRICTED.md | Tier 1 notes kept off the VM | his decision to put them there |
+| Deploys while the laptop's last deploy had uncommitted inputs | the cloud cannot rebuild what was never committed | commit data before deploying (habit) |
+| Sending email/texts through the Outbox/Peak sender | those run on the server already; nothing needed | — |
 
-The VM's data-pipeline jobs under `~/run` (the idle `fill1031` queue) were left alone. No ports were opened: the VM still listens on 22 only,
-and the watcher only makes outgoing connections (HTTPS to traverseplatforms.com, SSH to the SiteGround host, Claude's own sign-in/API).
+### Two watchers
 
-### Files
+- **Claims**: both queues already take under a server-side lock: `help-next.php` (Sixfold, practice, installs) and `jvdesk.php next`
+  (`jdNext`, `desk.lock`) mark the thread `working`; one ticket goes to one watcher. Nothing to add.
+- **Beat**: the cloud writes `<time> <mode> <ready>` to `jarvis-cloud/beat.txt` every 60 s from its own background loop (a long session
+  never stops it). `help-pending.php?b=1` returns `<age> <mode> <ready>` (deployed 19 Nov, key-protected).
+- **Standing back**: the laptop reads it every 60 s (HTTPS, else SSH) and stands back only while mode=live, ready=1 and age < 4 min;
+  otherwise it answers as before. `ProjectBackup/help/no-defer` = never stand back. It always runs jobs the cloud queued for it first.
+- Edge kept from the 12 Nov review: a follow-up message during a hand-over can be taken by the other side (the take lock covers a
+  ticket, not a conversation). With one side standing back that only happens in the minute around a beat going stale.
 
-- `traverse/ops/help-watch-cloud.sh` — the cloud watcher (copied to `~/jarvis/ops/` on the VM).
-- `traverse/ops/jarvis-cloud.service` — the systemd unit (`~/.config/systemd/user/jarvis-cloud.service`).
-- `traverse/ops/jarvis-cloud.sh` — run on the laptop in Git Bash: `signin`, `status`, `deploy`, `stop`, `start`, `log`, `pubkey`.
-- On the VM: `~/jarvis/secrets/` (700): `help-poll-key.txt`, `traverse_sg_cloud` (+ `.pub`), `known_hosts` (only the Traverse host's
-  ED25519 key, matched against the laptop's), `github_deploy` (+ `.pub`, for the later clone). `~/jarvis/state/`: log, lock, pause,
-  replies, audio. `~/jarvis/tools/whisper.cpp/`. `~/jarvis/practice-cwd/` (empty folder the practice session runs in: no CLAUDE.md).
-- The two public halves are on the laptop for pasting: `C:\Users\Surge Inc\.ssh\jarvis-cloud-traverse_sg.pub` and
-  `C:\Users\Surge Inc\.ssh\jarvis-cloud-github-deploy.pub` (public keys; nothing secret in them).
+### Shadow mode
 
-## The guard (why the trial cannot touch live tickets)
+Each new ticket version (queue, id, message count) gets a row in `~/jarvis/state/shadow/shadow.tsv`: when the cloud saw it, who wrote
+(matthew / office / install), what it would run, and whether it would hold the write turn (and why not). For his own messages it also
+runs the quick pass (Sonnet, Read/Grep/Glob only) and keeps the answer in `shadow/<id>-<n>.quick`, never sent.
+`bash traverse/ops/jarvis-cloud.sh shadow-report [hours]` lines that up with the laptop's own log (when the laptop started each session,
+its quick-pass answer) and lists anything one side saw and the other did not.
 
-In `help-watch-cloud.sh`, not in config:
+## Switch-over (Matthew's go only)
 
-1. **Every server command goes through `srv()`, which runs only what `allowed()` lists:** `help-next.php [--peek] --practice`,
-   `help-reply.php <id> answered --practice`, `help-transcript.php <id> <note> [--failed] --practice`, and `cat` of a voice note under
-   `sixfold-practice-data/rounds/help-files/`. Anything else (no `--practice`, chained commands, `..`, `$(`, redirects, other tools such
-   as help-attach) is refused and logged as `GUARD:`. `--guard-test` checks 26 live/hostile commands are refused and 6 practice ones
-   pass; `deploy` uploads the new watcher beside the old one and swaps it in only if it prints "all PASS" (a failed test leaves the
-   old watcher in place and running).
-2. **A taken ticket must carry the practice copy's own files folder** (`.../sixfold-practice-data/rounds/help-files/<id>`), or it is
-   dropped untouched.
-3. The HTTPS check only asks for the practice count, and there is **no live code path in the file at all** (no Matthew mode, no
-   help-desk prompt, no tools in the session). Live tickets need a new version of the script (switch-over below), not a setting.
-4. **No ticket is taken unless Claude Code is signed in** (`claude auth status`); `ANTHROPIC_API_KEY` and the other provider/token
-   variables are cleared before every session, so it can only ever run on Matthew's plan. A Console sign-in (billed per use) counts as
-   not signed in: the check needs the sign-in method to be the Claude plan (review 12 Nov).
+1. Read the shadow report (`jarvis-cloud.sh shadow-report 24`).
+2. Commit the laptop's dirty data files (else the cloud can answer and do server work but not deploy).
+3. `bash traverse/ops/jarvis-cloud.sh mode live --matthew-said-go`. Within a minute the laptop logs "stands back".
+4. Back to the laptop at any moment: `jarvis-cloud.sh mode shadow` (or `touch ProjectBackup/help/no-defer` on the laptop).
 
-**What the guard does not cover (review 12 Nov).** The guard is in the watcher script. The SSH key itself is an ordinary SiteGround
-key: once it is added (step 1 below) it can open the whole Traverse site account, live data included, for anything on the VM that
-runs as `yard` (the data jobs under `~/run`, anyone holding the laptop's `azure_yard` key). The watcher will not use it that way,
-but the key could be used that way. So adding the key means trusting the VM with the server, the same as the laptop. To close it
-later: have the server run only a fixed practice-only script for this key (a `command=` restriction on its `authorized_keys` line),
-if SiteGround's key manager keeps such a line. Not built.
+## Modes, files, commands
 
-During the trial **both** watchers answer practice tickets: whichever takes one first. That is safe: `help-next.php` marks a ticket
-"working" under a file lock, so one ticket goes to one watcher only. No double replies to the same message. One edge: if the tester sends a second message while
-a reply is being written, the conversation is new again and the other watcher can take it, so two replies can arrive close together
-(the first written without seeing the second message). Practice only; it matters for the switch-over (below).
+`~/jarvis/config`: `MODE=shadow|live|practice|off`. Laptop: `traverse/ops/jarvis-cloud.sh signin|status|init|deploy|mode|sync|test|
+shadow-report|stop|start|log|pubkey`; `traverse/ops/jarvis-cloud-sync.sh push|pull|cycle|done|status`; `traverse/ops/jarvis-cloud-move.sh`.
 
-Kept in check on the VM (review 12 Nov): an empty look waits 5 s longer each time, up to a minute, instead of going straight round
-again; the log is cut to its last 2,000 lines past 5 MB; voice notes and reply copies are dropped after 14 days; under 500 MB of
-free disk it stops taking tickets and says so in the log (the laptop still answers).
+| File | What |
+|---|---|
+| `traverse/ops/help-watch-cloud.sh` | the cloud watcher (`--check`, `--guard-test`, `--peek`, `--mode`) |
+| `traverse/ops/jarvis-cloud-prompt.md` | appended last to every live session on the VM (paths, write turn, queueing) |
+| `traverse/ops/cloud-bin/sg.sh`, `laptop-job.sh` | `~/jarvis/bin/` on the VM |
+| `traverse/ops/cloud-guard.sh` | the two-place deploy guard |
+| `traverse/ops/jarvis-cloud-sync.sh` | laptop side of the copies |
+| `traverse/ops/tests/cloud-test.sh` | stand-in tests on the VM (`jarvis-cloud.sh test`) |
+| `traverse/ops/jarvis-cloud.service` | systemd user unit |
+| VM `~/jarvis/` | `secrets/` (700/600), `state/` (log, shadow, ready, write-ok), `outbox/` (changes, jobs, merged), `incoming/`, `repo.git`, `tools/whisper.cpp` |
 
-## Start, stop, look
+## The guard and what it does not cover
 
-From the laptop (Git Bash, repo root):
+Every server command the watcher itself sends goes through `srv()`/`allowed()`, per mode: practice = the practice copy's commands;
+shadow = plus peeks, counts, the beat, the laptop's beat; live = plus take, reply, transcripts, the final-reply check, a ticket's own
+files. `--guard-test` checks 40 hostile commands in every mode, every look in shadow, every live command refused outside live, and the
+queue-folder checks (a ticket must come from its own queue's folder; a desk thread must be `desk: jarvis` and written only by Matthew).
 
-```
-bash traverse/ops/jarvis-cloud.sh status     # readiness + service + last log lines
-bash traverse/ops/jarvis-cloud.sh stop       # or start
-bash traverse/ops/jarvis-cloud.sh log
-bash traverse/ops/jarvis-cloud.sh deploy     # after editing help-watch-cloud.sh or help-practice-prompt.md
-```
+Not covered: once live, sessions use `~/jarvis/bin/sg.sh` with the VM's key, which opens the whole Traverse account (same as the laptop's
+key). Anyone with `azure_yard` (the laptop) can reach it. Closing it needs per-bot keys with `command=` restrictions (target design).
 
-On the VM: `systemctl --user status|stop|start jarvis-cloud`; pause without stopping: `touch ~/jarvis/state/pause`;
-dry runs: `bash ~/jarvis/ops/help-watch-cloud.sh --peek` (next practice ticket, posts nothing) or
-`--test-ticket ~/jarvis/test/practice-ticket.json --run` (no server at all; prints the reply it would send).
+## Moving to the B2s (before ~23 Nov)
 
-## What Matthew must do (each sign-in)
+**Matthew, in the Azure portal (needs his card):**
 
-Do 1, then 2, then 3. Nothing is taken until both 1 and 2 are done. Read "What the guard does not cover" above before step 1.
+1. portal.azure.com → **Subscriptions** → the free trial → **Upgrade** → choose **Pay-As-You-Go**, card, confirm. (Without this,
+   everything stops when the credit ends; the laptop watcher is not affected.)
+2. **Virtual machines** → **+ Create** → **Azure virtual machine**.
+3. **Basics**: Subscription: the upgraded one. Resource group: the same as `yardtest` (shown on yardtest's Overview). Name `jarvis`.
+   Region **(Europe) Sweden Central**. Availability options: *No infrastructure redundancy required*. Security type: *Standard*.
+   Image **Ubuntu Server 24.04 LTS - x64 Gen2**. Size: **See all sizes** → search `B2s` → **Standard_B2s** → Select.
+   Authentication: **SSH public key**; Username `yard`; SSH public key source: **Use existing public key**; paste the one line from
+   `C:\Users\Matthew sharpe\.ssh\azure_yard.pub` (Notepad). Public inbound ports: **Allow selected ports**, **SSH (22)**.
+4. **Disks**: OS disk size **64 GiB**, type **Standard SSD (locally-redundant storage)**, *Delete with VM* ticked.
+5. **Networking**: leave the new virtual network and new public IP. **Management**: Auto-shutdown **off**.
+6. **Review + create** → **Create**. When it says *Deployment is complete*: **Go to resource** → copy the **Public IP address**.
+7. Give the IP to a session; it runs, from the laptop:
+   `jarvis-cloud-move.sh check <ip>` → `prep <ip>` → `bash traverse/ops/jarvis-cloud-sync.sh push` is not needed (copy brings the repo)
+   → `copy <ip>` → `switch <ip>` → Matthew: `bash traverse/ops/jarvis-cloud.sh signin` → `jarvis-cloud.sh status` and `test`.
+   The same SiteGround key moves with `~/jarvis/secrets`, so no new import.
+8. After a day or two on the new machine, and once the `~/run` data below is saved: **yardtest** → **Stop** (deallocate). Delete it later
+   only when nothing on it is wanted (its disk costs while it exists).
 
-1. **Add the VM's server key in SiteGround (Traverse account).** Site Tools for traverseplatforms.com → **Devs → SSH Keys Manager** →
-   **Import** tab. Key name `jarvis-cloud`. Public key: open `C:\Users\Surge Inc\.ssh\jarvis-cloud-traverse_sg.pub` in Notepad, copy the
-   one line (starts `ssh-rsa`, ends `jarvis-cloud-yardtest-2026-11-12`), paste, **Import**. No passphrase to set (it has none).
-2. **Sign Claude Code on the VM in to your Claude plan.** In the VS Code terminal (Git Bash), from the repo:
-   `bash traverse/ops/jarvis-cloud.sh signin`. It prints a link: open it in Chrome, sign in with the Claude account that has the plan
-   (choose the Claude subscription, not the Console/API), click Authorize, copy the code it shows, paste it into the terminal, Enter.
-   It shows `"loggedIn": true` and restarts the service.
-3. **Check:** `bash traverse/ops/jarvis-cloud.sh status` should show `SSH to the server: OK`, `Claude Code: signed in`, `guard: all PASS`.
-   If SSH says `NOT YET`, the key in step 1 did not take (paste it again as one line). If Claude Code says `NOT signed in`, run step 2
-   again. To turn the trial off at any point: `bash traverse/ops/jarvis-cloud.sh stop` (the laptop keeps answering everything).
-4. **Test:** send a message (and one voice note) in the **practice** copy's chat. The log shows `practice h...: session started (cloud)`
-   if the VM took it (the laptop may take some: either is fine).
-5. **Later, for the repo clone (switch-over only):** GitHub → `traversePlatforms/workspace` → Settings → **Deploy keys** → Add deploy
-   key, title `jarvis-cloud`, paste `C:\Users\Surge Inc\.ssh\jarvis-cloud-github-deploy.pub`, leave **Allow write access UNCHECKED**.
+Cost after the trial (prices.azure.com, Sweden Central, checked 12 Nov): B2s $0.0432/h = $31.54/mo; 64 GB Standard SSD (E6) $4.80/mo;
+static IPv4 $3.65/mo; outbound under 100 GB free: **≈ $40/mo**. Claude runs on his plan (no API cost). 64 GB rather than 32 GB ($2.40)
+because the VM is meant to become the main home (data and builds later).
 
-Untested until 1 and 2 are done: taking a real practice ticket from the server, posting the reply and transcript back, and a real
-Claude session on the VM (timing).
+### `~/run` on yardtest (42 GB; disk 81% full). Inventory 19 Nov, nothing deleted
 
-## Switch-over plan (cloud takes live tickets, laptop becomes the fallback) — needs Matthew's go
+| Item | Size | Proposal |
+|---|---|---|
+| `tree-zones/lidar-cache` | 25 GB | leave behind: LiDAR downloads, re-downloadable; the laptop has the subsets it uses |
+| `lawn-trial` (`drcog-turf` cache, yard v2/v3) | 7.3 GB | leave behind: yard v3 live 15 Nov; caches re-creatable |
+| `tv` (an old repo copy), `fill1031` (vm-backup, inputs; every stage's result already on the laptop and live) | 6.2 GB | leave behind |
+| **`hailfill/out` + `result.tgz` + `wind-storms.json`** | **~0.85 GB** | **copy to the laptop**: the 18 Nov hailwind rerun finished on the VM (13:07 MT) after the laptop's `finish-hailnew` had stopped (12:11 MT, "no hail/wind report"); then re-run that finisher |
+| `~/prospects/places.db` + CSVs | 125 MB | **ask Matthew**: not found on the laptop; if the Prospect Desk's 9,019 companies came from it, copy to Drive (Traverse) |
+| `gap1108` (El Paso, PO boxes, rented homes) | 342 MB | unsure whether every output was merged: copy (small) unless a session confirms |
+| `hou`, `every1115`, groups 1-3, layers, trees-ovt, ovn1031, hail trials, old tgzs, logs | ~2 GB | leave behind (merged and live) |
 
-1. **Repo on the VM:** read-only clone over the deploy key (step 5) to `~/workspace`; `git pull --ff-only` from GitHub before each
-   session (the GitHub copy lags the laptop until the 6 PM `github-sync.sh`, so after a laptop change run the sync, never `git push`).
-   Gitignored data the sessions need (app data copies, door data) is synced only where a ticket needs it, or read from the server.
-   Not solved yet (review 12 Nov): live sessions change code and upload it. A read-only clone that lags the laptop could upload an
-   older copy of the app over newer laptop work, and nothing a cloud session writes (code fixes, `jarvis-learned*.md`) gets back to
-   the laptop. Until there is a two-way answer, cloud live sessions should answer and look things up only, and pass anything that
-   needs a code change or an upload to the laptop.
-2. **One owner at a time, decided on the server:** a one-word file, e.g. `sixfold-private/jarvis-owner` = `laptop` or `cloud`. Each
-   watcher takes LIVE tickets only while that file names it; flipping it is the switch. The laptop watcher then needs a two-line check
-   (its only change), and keeps running as the fallback: if the cloud watcher's heartbeat (a timestamp it writes each minute) is older
-   than ~5 minutes, the laptop takes over until it is fresh again. The ticket-take lock in `help-next.php` already prevents two
-   watchers taking the same ticket.
-   Two gaps to close before this is built (review 12 Nov): (a) the watcher loop is busy for the whole of a session, so the heartbeat
-   must be written by its own small background loop, or a long session looks like a dead cloud and the laptop takes over while the
-   cloud is still working; (b) the take lock stops two watchers taking the same ticket, not the same conversation twice: a follow-up
-   message makes it new again, so the fallback must not take a conversation that is still marked working by the other side (record
-   who took it in the status line, and have the fallback skip it until the 90-minute requeue).
-3. **A live `help-watch-cloud.sh`** = the laptop's `one_ticket` ported to Linux, from the **fixed** `help-watch.sh` (the 11 Nov review;
-   carry over all five): Matthew mode only when **every** person-written message in the conversation is from "Matthew Sharpe" (not just
-   the ticket's `by`); "no final reply" decided by a reply row (answered/matthew) written **after the session started**, not the last
-   help.log line; office tickets read `jarvis-learned-office.md`, never `jarvis-learned.md`; after a quick-pass ANSWER, confirm the reply
-   row landed before skipping the full session; any open-SSH stream waits at least 10 s before reopening. Plus photos (`get_photos`),
-   PDFs (`help-reply.sh --pdf` on Linux), Chrome headless for PDFs, memory folder access (sync the memory dir or read it from GitHub).
-4. **Server key scope:** the live path needs the server tools and `deploy-app.sh`, so the VM key then has the same reach as the laptop
-   key. Keep it a separate key so it can be revoked alone.
-5. **What stays laptop-only** (needs Tailscale, below): Desktop files, G:/H:/I: Drive letters, Notepad/Windows jobs, Task Scheduler.
+Total worth keeping ≈ 1.3 GB; rclone is **not** installed on the VM (the Drive design below was never set up), so copy to the laptop
+over SSH (`scp -r`; check the hotspot first: SSID "iPhone" = no heavy downloads), then into the weekly Drive backup if wanted.
+
+## Target design (Matthew, 19 Nov ~10:15 pm; not built yet)
+
+1. **The VM as the main home.** He does not want to be online around the clock. Next step: VS Code Remote-SSH into the VM, one main repo
+   there, the laptop a client. This design gets there without rework: the VM already holds the history (filtered), a bare repo and a
+   working copy with hooks; the switch is (a) the VM's repo becomes `origin` and the laptop clones it, (b) the write turn becomes "the
+   VM always" (VS Code sessions run on the VM, in the same `~/workspace` or a sibling worktree), (c) memory lives on the VM (Claude Code
+   there uses it natively), (d) the laptop keeps Windows-only jobs via Tailscale, (e) GitHub mirrors the VM. Open decisions: Tier 1
+   notes and door data on the VM (personal data), and the laptop's Drive backup becoming a VM backup.
+2. **A bot registry, so a new bot is config, not code.** `~/jarvis/bots.d/<bot>.conf`, one per bot: who (the writers that count as
+   its owner), queue (Sixfold staff chat, his desk, an install's chat, the Peak desk), prompt files, working folder, allowed folders,
+   allowed server commands (its `allowed()` list), tools and permission mode, model, daily cap, write turn (yes/no), and credentials.
+   Bots: his own; Jen and Brad (Sixfold); Houston (restricted, read-only); a Peak desk bot for Cai and Nneka (Peak data only, never
+   Sixfold or Surge). The watcher's loop already has the shape (one queue, one take function, one session builder); the per-queue
+   branches in `help-watch-cloud.sh` become rows. Isolation: a Unix user per bot (own home, own `~/.claude`, own working copy or none,
+   own SiteGround key with a `command=` restriction where SiteGround allows it), no sudo.
+3. **Credentials per bot.** His bot on his Claude plan (as now). Staff bots probably on an Anthropic API key with a budget per bot later
+   (not now). Today the watcher clears every API-key variable and requires a claude.ai sign-in; in the registry that becomes the bot's
+   `credentials=plan|apikey:<file>` (and a monthly cap), checked the same way before each session.
 
 ## Laptop reach (design only; nothing installed)
 
-**Tailscale** (free Personal plan; check the limits at sign-up; outbound-only, so no ports open on the VM or the laptop):
-
-- Matthew: make a Tailscale account (sign in with Google as m.sharpe@traverseplatforms.com or his personal Google — his pick), install
-  Tailscale for Windows on the laptop and sign in; then on the VM run `curl -fsSL https://tailscale.com/install.sh | sh` and
-  `sudo tailscale up --ssh=false`, open the link it prints and approve the VM in the same account. In the admin console: disable key
-  expiry for the VM only, and an ACL that lets `yardtest` reach the laptop on one port only.
-- The laptop runs **Windows OpenSSH Server** (Settings → Optional features) bound to the tailnet address, with one key from the VM
-  allowed for one command: a small "laptop job runner" script (`file-get <path under Desktop>`, `notepad-job <text>`, run a named
-  scheduled task). The VM never gets a general shell on the laptop.
-- **When the laptop is off**, the cloud J.A.R.V.I.S. writes the job to a queue (`~/jarvis/laptop-queue/<time>.json`) and replies "queued
-  for when the laptop is on"; a laptop task at logon (and every 10 min) pulls and runs the queue over Tailscale, then posts a follow-up.
-
-**rclone for Google Drive** (read-only):
-
-- On the VM: `sudo apt install rclone` (or the static binary), `rclone config` → new remote `traverse-drive`, type `drive`, scope
-  `drive.readonly`, "Use auto config? n" (headless). It prints an `rclone authorize "drive"` line: Matthew runs that on the laptop
-  (`winget install Rclone.Rclone`), signs in to the right Google account in the browser, and pastes the token back. One remote per
-  company account (Traverse, Surge, Sixfold), never copying between them (memory: Google Drives per company).
-- The token lives in `~/.config/rclone/rclone.conf` (chmod 600). Revoke at myaccount.google.com → Security → Third-party access → rclone.
-
-## Monthly cost after the trial
-
-From the Azure retail price list (prices.azure.com, Sweden Central, checked 12 Nov 2026), pay-as-you-go:
-
-| Item | Price | Month (730 h) |
-|---|---|---|
-| B2s Linux (2 vCPU, 4 GB) | $0.0432 / h | **$31.54** |
-| OS disk: current 64 GB Standard SSD (E6) | $4.80 / mo | $4.80 (a new 32 GB E4 disk would be $2.40) |
-| Public IPv4 (Standard, static) | $0.005 / h | $3.65 |
-| Outbound data | first 100 GB/mo free | $0 |
-| **Total** | | **≈ $40 / mo** (≈ $37.60 on a fresh VM with a 32 GB disk; disk transactions add cents) |
-
-The $0.0432/h, $4.80, $2.40 and $0.005/h figures were checked again against prices.azure.com on 12 Nov (review). When the free
-credit ends (~23 Nov) the VM stops unless the subscription is moved to pay-as-you-go; the laptop watcher is not affected, but the
-data job output under `~/run` lives only on that VM, so decide before then.
-
-Claude usage is on Matthew's plan (no API cost). B2s is a burstable size: it builds CPU credits at idle (the watcher is idle almost all
-the time), so whisper and session bursts run at full speed. Measured on this VM: small.en transcribes the test note in 7–8 s with
-2 or 4 threads; large-v3-turbo takes 37–38 s, which is why the cloud default is small.en. Resizing this VM to B2s keeps everything
-(Azure portal → VM → Size), but the data-pipeline work under `~/run` needs the 4-core size, so decide that first; a fresh B2s VM plus a
-copy of `~/jarvis` is the cleaner split.
+Tailscale (free Personal plan) between the VM and the laptop, outbound only; the laptop runs Windows OpenSSH bound to the tailnet with one
+VM key allowed one command (a small job runner: fetch a Desktop file, run a named task). When the laptop is off, jobs queue (as now).
+rclone for the Drives (read-only, one remote per company account, never copying between them): `rclone config` on the VM with
+`drive.readonly`, `rclone authorize "drive"` on the laptop. Not installed.
 
 ## Security notes
 
-- **Secrets on the VM** (all in `~/jarvis/secrets/`, folder 700, files 600, user `yard` only): the help-poll key (copied; it only
-  answers counts), the VM's own Traverse SSH key (made on the VM; the laptop's private keys were **not** copied), the GitHub deploy key
-  (read-only once added), and, after sign-in, Claude Code's OAuth credentials in `~/.claude/.credentials.json` (600, written by Claude
-  Code). No API key; the watcher clears API-key variables before each session.
-- Who can get in: SSH to the VM is key-only for `yard` with `azure_yard` (laptop). Anyone with that key can reach everything above.
-- **Revoke:** SiteGround SSH Keys Manager → delete `jarvis-cloud` (server access ends at once). GitHub Deploy keys → delete `jarvis-cloud`.
-  Claude: on the VM `~/.local/bin/claude auth logout`, and/or claude.ai → Settings → sign out of other sessions. Help-poll key: replace
-  `sixfold-private/help-poll.key` on the server (then update the laptop's `~/.ssh/help-poll-key.txt`). Stop everything:
-  `systemctl --user disable --now jarvis-cloud`. Or delete the VM.
-- Practice sessions run with no tools, no MCP servers and no user settings, from an empty folder; their only output is the chat text.
+- VM secrets in `~/jarvis/secrets/` (700, files 600): help-poll key, the VM's own Traverse SSH key (`jarvis-cloud` in SiteGround),
+  `known_hosts`, the unused GitHub deploy key. Claude's sign-in in `~/.claude/.credentials.json`. No API key. No laptop private keys,
+  no desk key (the desk is read over SSH), no codes files, no door data.
+- Revoke: SiteGround → SSH Keys Manager → delete `jarvis-cloud`. Claude: `~/.local/bin/claude auth logout` on the VM, or claude.ai →
+  Settings → sign out other sessions. Stop: `jarvis-cloud.sh mode off` or `systemctl --user disable --now jarvis-cloud`.
+- The VM listens on SSH (22) only.

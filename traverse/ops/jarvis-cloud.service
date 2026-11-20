@@ -1,8 +1,9 @@
-# J.A.R.V.I.S. cloud watcher (TRIAL: practice copy only). systemd USER service on the Azure VM; installed by jarvis-cloud.sh deploy
+# J.A.R.V.I.S. cloud watcher (TASKS X-15; JARVIS-CLOUD.md). systemd USER service on the Azure VM; installed by jarvis-cloud.sh deploy
 # to ~/.config/systemd/user/jarvis-cloud.service. Runs without a login because linger is on for yard (sudo loginctl enable-linger yard).
+# The mode (shadow, live, practice, off) is in ~/jarvis/config, set by `jarvis-cloud.sh mode <m>` on the laptop.
 #   systemctl --user status|stop|start|restart jarvis-cloud      journalctl --user -u jarvis-cloud      log: ~/jarvis/state/help-watch.log
 [Unit]
-Description=J.A.R.V.I.S. cloud watcher (TRIAL: practice copy only)
+Description=J.A.R.V.I.S. cloud watcher (mode in ~/jarvis/config)
 Wants=network-online.target
 After=network-online.target
 

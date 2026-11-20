@@ -971,6 +971,17 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **12 Nov: TRIAL RUN 1 on the Azure VM (practice copy only)** — traverse/ops/JARVIS-CLOUD.md. Service jarvis-cloud running, guard in
       code (practice commands only), whisper.cpp small.en (7-8 s). Waiting on Matthew: (1) SiteGround SSH key `jarvis-cloud` (Import the
       .pub), (2) `bash traverse/ops/jarvis-cloud.sh signin`. B2s after the trial ≈ $40/mo all in. Switch-over (live tickets) needs his go.
+      **19 Nov night: SHADOW MODE on yardtest** (Matthew 19 Nov: go; "keep it in the big one while we got it? then switch"; ~10 pm: the
+      cloud must do Jen's app changes end to end while the laptop is closed). Both his steps done (SiteGround key, Claude signed in, Max).
+      Built: full cloud watcher (shadow/live/practice/off; staff, his desk, Houston restricted, practice), laptop-to-VM repo + memory
+      sync (filtered like GitHub, no deploy key needed), the write turn (cloud edits/builds/deploys/commits only while the laptop is away
+      and its copy is current; else queues for the laptop), cloud commits back to the laptop by Cloud-Id (git am -3), notes/memory merged
+      line by line, two-place deploy guard (cloud-guard.sh in all three deploy scripts), laptop stands back only while the cloud is live
+      (help-pending.php ?b=1, deployed), Linux code-only build (bsdtar, php-cli, npm ci). JARVIS-CLOUD.md has the design, what can't run on
+      the VM, the B2s clicks and the ~/run data plan; target design (VM as main home, bot registry, per-bot credentials) written, not built.
+      **Next:** shadow report after ~24 h (`jarvis-cloud.sh shadow-report`) → Matthew's go → `jarvis-cloud.sh mode live --matthew-said-go`.
+      Before the cloud can deploy: commit the laptop's dirty data files. **Matthew by ~22 Nov:** upgrade to pay-as-you-go + create the
+      B2s (numbered clicks in JARVIS-CLOUD.md), then jarvis-cloud-move.sh. Decide: copy hailfill/out (~0.85 GB) + prospects/places.db.
 
 - [ ] **X-14 — One big nightly overview of everything Matthew works on** (Matthew, 11 Nov 2026: "we need to have a big daily summary thing that has sixfold, jarvis, surge, peak, donny etc all the stuf i work on in so for a big overview of tonight but thats something we can discuss what needs to go in. So add that to my to-do list.")
       To DISCUSS with him first: what goes in per company (Sixfold leads/jobs/money, J.A.R.V.I.S. tickets and what it changed, Surge site/ADA/posts,

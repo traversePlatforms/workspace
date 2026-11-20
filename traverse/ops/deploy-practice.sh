@@ -8,10 +8,11 @@
 # --first (once): also its data and private folders beside public_html: settings, the made-up customers, the sign-in codes (never over an
 # existing codes or accounts file), and the towns copied from sixfold-data on the server (traverse/ops/practice-towns.php, read-only there).
 set -u
-R="/c/Users/Surge Inc/Desktop/claude test 2/traverse"; D="$R/editions/dist/practice"; F=practice-5dbe8f
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; SITE='~/www/traverseplatforms.com'
+R="${JARVIS_REPO:-/c/Users/Surge Inc/Desktop/claude test 2}/traverse"; D="$R/editions/dist/practice"; F=practice-5dbe8f
+SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"; SITE='~/www/traverseplatforms.com'
 ST="$(mktemp -d)"; trap 'rm -rf "$ST"' EXIT
 STAMP=$(date +%Y%m%d-%H%M%S)
+. "$R/ops/cloud-guard.sh"; cloud_guard_before practice || exit 1   # two places can deploy since 19 Nov (the cloud J.A.R.V.I.S.): never older code over newer
 [ -s "$D/public_html/$F/index.html" ] && [ -s "$D/public_html/api/sixfold-practice-rounds.php" ] || { echo "build it first: node ../editions/build-editions.cjs practice"; exit 1; }
 grep -q "const PRACTICE = true;" "$D/public_html/api/sixfold-practice-rounds.php" || { echo "the practice switch is not on in the built API"; exit 1; }
 for f in "$D"/public_html/api/*.php; do php -l "$f" > /dev/null 2>&1 || { echo "LINT FAIL $f"; exit 1; }; done
@@ -45,3 +46,4 @@ c=$(chk a); [ "$c" = 401 ] && echo "  api signed out: 401" || { echo "  api answ
 [ "$(chk c)" = 1 ] && echo "  company: practice" || { echo "  company does not say practice"; bad=1; }
 c=$(chk p); [ "$c" = 200 ] && echo "  page: 200" || { echo "  page answered $c"; bad=1; }
 [ $bad = 0 ] && echo "deploy practice: all checks passed" || { echo "deploy practice: CHECK FAILED"; exit 1; }
+cloud_guard_after practice

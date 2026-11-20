@@ -32,6 +32,9 @@
 # Never prints or sends a code, key or token: the overnight report has none (its own rule), and only its counts and PROBLEM lines go.
 set -u
 exec < /dev/null
+# 19 Nov: on the cloud J.A.R.V.I.S. machine (JARVIS_CLOUD=1) only alert works: its builds list and Waiting list are not the laptop's, and a push
+# from there would replace his. Everything else is refused (the laptop keeps them).
+if [ "${JARVIS_CLOUD:-}" = 1 ] && [ "${1:-}" != alert ]; then echo "jarvis-status.sh: only alert works on the cloud machine (builds, Waiting on you and beats are the laptop's)"; exit 3; fi
 DIR="$(cygpath -u "$LOCALAPPDATA" 2>/dev/null || echo "$LOCALAPPDATA")/ProjectBackup/jarvis"; mkdir -p "$DIR"
 BUILDS="$DIR/builds.json"; LATEST="$(cygpath -u "$LOCALAPPDATA" 2>/dev/null || echo "$LOCALAPPDATA")/ProjectBackup/overnight-latest.txt"
 SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"

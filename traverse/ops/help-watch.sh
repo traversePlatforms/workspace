@@ -26,6 +26,44 @@ JD_HDR=""; if [ -s /c/Users/SURGEI~1/.ssh/jarvis-desk-key.txt ]; then
   JD_HDR=$(mktemp); chmod 600 "$JD_HDR"; printf 'X-Jarvis-Key: %s\n' "$(tr -d '\r\n' < /c/Users/SURGEI~1/.ssh/jarvis-desk-key.txt)" > "$JD_HDR"
   trap 'rm -f "$JD_HDR"' EXIT; JD_HDRW=$(cygpath -w "$JD_HDR" 2>/dev/null || echo "$JD_HDR"); fi
 log() { echo "$(date '+%F %T') $*" >> "$LOG"; }
+# 19 Nov (TASKS X-15, the cloud J.A.R.V.I.S. on the Azure machine; traverse/ops/JARVIS-CLOUD.md): this laptop stays the fallback.
+#  - Every 60 s it reads the cloud's beat (api/help-pending.php?b=1: "<age s> <mode> <ready>", or over SSH when HTTPS is blocked) and STANDS
+#    BACK only while the cloud says live, ready and has beaten in the last 4 minutes; otherwise it takes tickets as before. $ST/no-defer = never
+#    stand back. (In shadow mode the cloud only watches, so nothing here changes.)
+#  - Every 2 minutes (in the background, nice 19) jarvis-cloud-sync.sh cycle: the cloud's commits and notes onto this repo and memory, this
+#    repo and memory to the cloud, and any job the cloud queued for the laptop into $ST/cloud-jobs/, which this loop runs first (one_job).
+#  - The 5-minute beat also writes "<time> <HEAD>" to the server (jarvis-cloud/laptop.txt): the cloud changes the repo only when this is
+#    over 15 minutes old (the laptop away) and it already holds that HEAD.
+CSYNC="$REPO/traverse/ops/jarvis-cloud-sync.sh"; DEFER=0; CLOUD_AT=0; SYNC_AT=0
+PBD="$(cygpath -u "$LOCALAPPDATA" 2>/dev/null || echo "$LOCALAPPDATA")/ProjectBackup"
+cloud_tick() {
+  local now R old=$DEFER; now=$(date +%s)
+  if [ $(( now - CLOUD_AT )) -ge 60 ]; then CLOUD_AT=$now; DEFER=0
+    R=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&b=1" 2>/dev/null)
+    if ! [[ "$R" =~ ^[0-9]+\ [a-z]+\ [01]$ ]]; then   # HTTPS blocked or old server file: the beat file itself over SSH
+      R=$($SG 'cat ~/www/traverseplatforms.com/jarvis-cloud/beat.txt 2>/dev/null' < /dev/null 2>/dev/null | head -1)
+      [[ "$R" =~ ^([0-9]{10})\ ([a-z]+)\ ([01])$ ]] && R="$(( now - BASH_REMATCH[1] )) ${BASH_REMATCH[2]} ${BASH_REMATCH[3]}" || R=""
+    fi
+    [[ "$R" =~ ^([0-9]+)\ live\ 1$ ]] && [ "${BASH_REMATCH[1]}" -lt 240 ] && [ ! -f "$ST/no-defer" ] && DEFER=1
+    if [ "$DEFER" != "$old" ]; then
+      if [ "$DEFER" = 1 ]; then log "the cloud J.A.R.V.I.S. is live and well: this laptop stands back (it still runs jobs the cloud queues for it)"
+      else log "taking tickets here again (the cloud's beat: ${R:-none})"; fi
+    fi
+  fi
+  if [ $(( now - SYNC_AT )) -ge 120 ] && [ -f "$CSYNC" ] && [ ! -f "$PBD/cloud-sync/off" ]; then SYNC_AT=$now
+    ( nice -n 19 bash "$CSYNC" cycle > /dev/null 2>&1 & ) < /dev/null
+  fi
+}
+one_job() {   # the oldest job the cloud queued for this laptop: a full session on it, then marked done (once, even if it fails)
+  local F K AT; F=$(ls -tr "$ST"/cloud-jobs/h*.json 2>/dev/null | head -1); [ -n "$F" ] || return 1
+  K=$(node -e "try{const j=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));console.log((j.kind==='jarvis'?'jarvis':'staff')+' '+(j.at|0))}catch(e){console.log('bad 0')}" "$F")
+  AT="${K#* }"; K="${K%% *}"
+  if [ "$K" = bad ]; then log "cloud job $(basename "$F"): unreadable, set aside"; mv "$F" "$F.bad"; return 0; fi
+  log "cloud job $(basename "$F" .json): queued by the cloud, running here"
+  if [ "$K" = jarvis ]; then one_ticket jarvis "$F"; else one_ticket "" "$F"; fi
+  bash "$CSYNC" done "$(basename "$F" .json)" "$AT" >> "$LOG" 2>&1 || log "cloud job: could not mark done on the cloud"
+  rm -f "$F"; return 0
+}
 claude_bin() { ls -d "/c/Users/Surge Inc/.vscode/extensions"/anthropic.claude-code-*-win32-*/resources/native-binary/claude.exe 2>/dev/null | sort -V | tail -1; }
 
 # photos sent in the chat (3 Nov, Matthew: "build a photo button for everyone that uses jarvis include jen"): copied from the server's
@@ -103,10 +141,14 @@ final_since() {
 # one_ticket [jarvis]: the next Sixfold/Field app ticket, or (jarvis) the next thread in Matthew's own J.A.R.V.I.S. desk (19 Nov). The two
 # differ only in where the thread comes from, how the answer goes back (help-reply.sh / jarvis-reply.sh) and the prompt's first line.
 one_ticket() {
-  local T ID PROMPT RC LAST CLAUDE PICS AUD DK="${1:-}" RPL="$REPO/traverse/ops/help-reply.sh" AX=""
+  local T ID PROMPT RC LAST CLAUDE PICS AUD DK="${1:-}" RPL="$REPO/traverse/ops/help-reply.sh" AX="" JOBF="${2:-}" JOBNOTE=""
   local -x HELP_REPLY_SIXFOLD=1; [ "$DK" = jarvis ] && HELP_REPLY_SIXFOLD=0   # help-reply.sh: a Sixfold-app message is answered in the Sixfold app
   CLAUDE=$(claude_bin); [ -n "$CLAUDE" ] && [ -f "$CLAUDE" ] || { log "no claude.exe found"; return 1; }
-  if [ "$DK" = jarvis ]; then
+  if [ -n "$JOBF" ]; then   # a job the cloud J.A.R.V.I.S. queued for this laptop (19 Nov): the thread as it was then, and its note
+    [ "$DK" = jarvis ] && { RPL="$REPO/assistant/jarvis/tools/jarvis-reply.sh"; AX="--jarvis"; }
+    T=$(node -e "const j=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));console.log(JSON.stringify(j.thread,null,2))" "$JOBF" 2>>"$LOG") || { log "cloud job: unreadable"; return 1; }
+    JOBNOTE=$(node -e "const j=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));console.log('queued '+new Date((j.at|0)*1000).toLocaleString('en-US',{timeZone:'America/Denver'})+' MT: '+String(j.note||'').slice(0,3000))" "$JOBF" 2>/dev/null)
+  elif [ "$DK" = jarvis ]; then
     RPL="$REPO/assistant/jarvis/tools/jarvis-reply.sh"; AX="--jarvis"
     T=$($SG "php $JD_TOOL next" < /dev/null 2>>"$LOG") || { log "jarvis desk: server not reachable"; return 0; }
   else
@@ -139,6 +181,11 @@ $T"
 
 Photos sent in this conversation, copied to this laptop. Look at each one with the Read tool before you answer:
 $PICS"
+  [ -n "$JOBNOTE" ] && PROMPT="$PROMPT
+
+(The cloud J.A.R.V.I.S. queued this job for the laptop, $JOBNOTE
+The person has been told it is queued for the laptop. The thread above is as it was then; newer messages may have come since (they reach
+the cloud, not this session). Do the job here, then reply in the same chat as usual, with the final status.)"
   [ -n "$AUD" ] && PROMPT="$PROMPT
 
 Voice notes sent in this conversation, turned into text on this laptop (whisper.cpp; a word here and there may be off). Treat each as if they had typed it:
@@ -160,7 +207,7 @@ $(tail -n 150 "$LF")"
   # 11 Nov (Matthew: "respond fast ... answer questions based on data"): a quick first pass for his messages, read-only (memory, TASKS,
   # jarvis-learned, the repo), no photos. ANSWER = it replies in seconds and the full session never starts; HANDOFF = an instant
   # "on it" note, then the full session as before. Any failure of the quick pass just falls through to the full session.
-  if [ "$MM" = 1 ] && [ -z "$PICS" ] && [ -f "$REPO/traverse/ops/jarvis-quick-prompt.md" ] && [ "${JARVIS_QUICK:-1}" = 1 ]; then
+  if [ "$MM" = 1 ] && [ -z "$PICS" ] && [ -z "$JOBF" ] && [ -f "$REPO/traverse/ops/jarvis-quick-prompt.md" ] && [ "${JARVIS_QUICK:-1}" = 1 ]; then
     local Q QH QT QS; QS=$(date +%s)
     Q=$(cd "$REPO" && printf '%s' "$PROMPT" | timeout 90 "$CLAUDE" -p --model "${HELP_MODEL_QUICK:-sonnet}" --tools "Read,Grep,Glob" --permission-mode auto \
         --add-dir "/c/Users/Matthew sharpe/.claude/projects/c--Users-Matthew-sharpe-Desktop-claude-test-2/memory" \
@@ -298,10 +345,14 @@ END=$(( $(date +%s) + 3480 ))
 # background loop, so a long session never stops it; it ends with this copy (a sleeping laptop sends nothing, which is the point).
 ( while kill -0 $$ 2>/dev/null; do
     [ -f "$ST/pause" ] || bash "$REPO/assistant/jarvis/tools/jarvis-status.sh" beat > /dev/null 2>&1
+    printf '%s %s\n' "$(date +%s)" "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)" | $SG 'mkdir -p ~/www/traverseplatforms.com/jarvis-cloud && chmod 700 ~/www/traverseplatforms.com/jarvis-cloud && cat > ~/www/traverseplatforms.com/jarvis-cloud/laptop.txt' > /dev/null 2>&1   # the cloud's write turn (19 Nov)
     for _b in $(seq 60); do kill -0 $$ 2>/dev/null || exit 0; sleep 5; done   # gone within 5 s of this copy, so the next one starts on time
   done ) < /dev/null > /dev/null 2>&1 &
 while [ "$(date +%s)" -lt "$END" ]; do
   if [ ! -f "$ST/pause" ]; then
+    cloud_tick
+    one_job && continue                                    # a job the cloud queued for the laptop (19 Nov)
+    if [ "$DEFER" = 1 ]; then sleep 5; continue; fi        # the cloud is live and well: stand back
     N=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK" 2>/dev/null)
     if [[ "$N" =~ ^[0-9]+$ ]]; then
       BAD=0; [ "$VIA" = ssh ] && { log "https check answers again: back to the 5 s poll"; VIA=https; stream_close; SFAIL=0; }
