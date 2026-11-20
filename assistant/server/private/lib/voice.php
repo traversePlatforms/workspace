@@ -2,7 +2,7 @@
 /* Talk to J.A.R.V.I.S. without Siri (2026-11-19, Matthew: "build out all the voice actions we can use to allow me to talk to jarvis easily.
    id rather not use siri to contact jarvis"). One door for spoken words from outside the page: the iPhone Shortcut "Jarvis" (Dictate Text,
    then a POST here with that phone's voice key in an X-Voice-Key header, then Speak Text of the answer). Vocal Shortcuts ("Hey Jarvis") and
-   Back Tap run that Shortcut. The answer is short plain text, made to be heard (?format=json gives {ok, intent, say}).
+   Back Tap run that Shortcut. The answer is short plain text, made to be heard (?format=json gives {ok, intent, say}; 20 Nov, P-11: &audio=1 adds audio, a link to the answer in the ElevenLabs voice, lib/tts.php).
    How a sentence is answered:
      quick ones, here and at once, with no model call: remind me…, add … to my calendar…, add … to groceries, brief me, what's on today,
        what's new / what's waiting, what's building, remember / note … (that one goes to the desk, which keeps his memory);
@@ -87,7 +87,14 @@ function voiceHttp(array $body, bool $isPost): never {
     $r = voRoute((string) $text, $k);
     voTouch($k['id']);
     alog('voice', ['key' => $k['name'], 'intent' => $r['intent'], 'chars' => mb_strlen((string) $text)]);
-    $reply(200, $r['say'], ['intent' => $r['intent']] + (isset($r['thread']) ? ['thread' => $r['thread']] : []));
+    /* 20 Nov (P-11): &audio=1 with format=json: the answer in the natural voice too, as a 15-minute link (only when it could be made;
+       otherwise no audio field, and the Shortcut speaks the words with Speak Text as before) */
+    $extra = ['intent' => $r['intent']] + (isset($r['thread']) ? ['thread' => $r['thread']] : []);
+    if ($json && (string) ($_GET['audio'] ?? ($body['audio'] ?? '')) === '1' && function_exists('ttsForVoice')) {
+        $link = ttsForVoice((string) $r['say'], (string) preg_replace('/\?.*$/', '', voUrl()));
+        if ($link !== null) $extra['audio'] = $link;
+    }
+    $reply(200, $r['say'], $extra);
 }
 /** the setup page's "Try it here", signed in: the same routing, as JSON */
 function voiceTry(string $text): array {

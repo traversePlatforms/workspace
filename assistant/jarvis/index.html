@@ -974,7 +974,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
      ['out', 'outbox', 'Outbox', 'Every automatic email, by business'], ['peak', 'peak', 'Peak desk', 'Sponsors and expo leads'], ['posts', 'posts', 'Posts', 'The post calendar'], ['leaf', 'sixfold', 'Sixfold app', 'The Field app, with its own sign-in'], ['cog', 'settings', 'Settings', 'Inboxes, keys, spending']].forEach(function (v) {
       var b = btn(null, v[0], null, function () { openView(v[1]); }), x = el('span'); add(x, v[2], el('small', null, v[3])); b.appendChild(x); w.appendChild(b);
     });
-    var vb = btn(null, 'wave', null, function () { voiceSheet(); }), vx = el('span'); add(vx, 'Talk without Siri', el('small', null, '“Hey Jarvis”: the Shortcut, Back Tap and voice keys')); vb.appendChild(vx); vb.id = 'morevoice';
+    var vb = btn(null, 'wave', null, function () { voiceSheet(); }), vx = el('span'); add(vx, 'Talk without Siri', el('small', null, '“Hey Jarvis”, the Shortcut, voice keys and the natural voice')); vb.appendChild(vx); vb.id = 'morevoice';
     var al = btn(null, 'bell', null, function () { notifySheet(); }), ax = el('span'); add(ax, 'Phone alerts and the app', el('small', null, S.pushOn ? 'On for this device' : 'Off on this device: tap to turn on')); al.appendChild(ax); al.id = 'morealerts'; w.insertBefore(al, w.firstChild); w.insertBefore(vb, w.firstChild);
     var nc = btn(null, 'plus', null, function () { apost('chatclear', {}).then(function () { toast('The Assistant starts a new conversation.'); }); }), nx = el('span'); add(nx, 'New Ask conversation', el('small', null, 'The Assistant forgets this chat (your email is untouched)')); nc.appendChild(nx); w.appendChild(nc);
     return w;
@@ -995,9 +995,70 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
      tap itself, tried on the first few taps until one actually plays (a scroll's touchend doesn't count). */
   var unlocked = false, tries = 0;
   ['pointerdown', 'touchend', 'click', 'keydown'].forEach(function (ev) { document.addEventListener(ev, function () {
-    touched = true; if (!SY || unlocked || ev === 'pointerdown' || tries >= 4) return; tries++;
+    touched = true; if (ev !== 'pointerdown') auUnlock();
+    if (!SY || unlocked || ev === 'pointerdown' || tries >= 4) return; tries++;
     try { var u = new SpeechSynthesisUtterance(' '); u.volume = 0; u.onstart = u.onend = function () { unlocked = true; }; SY.speak(u); } catch (e) {}
   }, true); });
+  /* 20 Nov (P-11; Matthew: "connect jarvis to eleven labs voice ai so that I can get a more natural feeling AI"): the natural voice.
+     ElevenLabs "Daniel" through the Assistant's own door (lib/tts.php: the key stays on the server, a monthly character cap, a cache), on by
+     default per device (Natural voice switch on the Talk without Siri page). Whenever it is off, capped, slow or failing, the device's own
+     voice says it instead, at once: J.A.R.V.I.S. never goes silent. One audio element for every answer: iPhone Safari only lets a page play
+     sound from an element first played in a tap, so the first taps play a moment of silence through it (auUnlock) and every answer after
+     that reuses it. Desktop and Android play the stream as it arrives; iPhone gets the whole clip first (a blob), which Safari always plays. */
+  S.natural = store('jarvis.natural') !== false;
+  var AU = null, auOk = false, auTries = 0, natQ = [], natBusy = false, natGen = 0, natDog = null;
+  function silentWav() {
+    var n = 400, b = new Uint8Array(44 + n), d = new DataView(b.buffer), w = function (o, t) { for (var i = 0; i < t.length; i++) b[o + i] = t.charCodeAt(i); };
+    w(0, 'RIFF'); d.setUint32(4, 36 + n, true); w(8, 'WAVEfmt '); d.setUint32(16, 16, true); d.setUint16(20, 1, true); d.setUint16(22, 1, true); d.setUint32(24, 8000, true); d.setUint32(28, 8000, true); d.setUint16(32, 1, true); d.setUint16(34, 8, true); w(36, 'data'); d.setUint32(40, n, true);
+    for (var i = 0; i < n; i++) b[44 + i] = 128;
+    var str = ''; for (var j = 0; j < b.length; j++) str += String.fromCharCode(b[j]); return 'data:audio/wav;base64,' + btoa(str);
+  }
+  function auEl() { if (!AU && typeof Audio === 'function') { AU = new Audio(); AU.preload = 'auto'; AU.setAttribute('playsinline', ''); } return AU; }
+  function auUnlock() {
+    if (auOk || natBusy || auTries >= 4) return; var a = auEl(); if (!a) return; auTries++;
+    try { a.src = silentWav(); var p = a.play(); if (p && p.then) p.then(function () { auOk = true; }, function () {}); else auOk = true; } catch (e) {}
+  }
+  function ttsSt() { return (S.home && S.home.tts) || null; }
+  function natOk() { var t = ttsSt(); return !!(S.natural && t && t.avail && auEl()); }
+  function ttsRefresh() { return aget('ttsstate').then(function (j) { if (j.ok && S.home) { S.home.tts = j.tts; paintNat(); } }, function () {}); }
+  function talking() { return natBusy || !!(SY && (SY.speaking || SY.pending)); }
+  /* the device's own voice (the fallback, and the voice when the natural one is off) */
+  function sySay(s, done) {
+    if (!SY) { done(); return; }
+    try { var u = new SpeechSynthesisUtterance(s); sayVoice = sayVoice || pickVoice(); if (sayVoice) { u.voice = sayVoice; u.lang = sayVoice.lang; } else u.lang = 'en-GB'; u.rate = 1.02; u.pitch = 0.95;
+      u.onend = done; SY.speak(u); } catch (e) {}
+  }
+  /* the natural voice: answers queue in a voice conversation; each one asks the server first (ttsprep: may it, and where to play it) */
+  function natSay(s, done) { natQ.push({ s: s, done: done }); if (!natBusy) natNext(); }
+  function natStop() { var was = natBusy; natGen++; natQ = []; natBusy = false; clearTimeout(natDog); if (AU && was) { try { AU.pause(); } catch (e) {} } }   /* the element stays (it is the unlocked one) */
+  function natNext() {
+    var it = natQ.shift(); clearTimeout(natDog); if (!it) { natBusy = false; return; }
+    natBusy = true; var gen = ++natGen, started = false, over = false, startT = null;
+    var next = function () { if (gen !== natGen) return; clearTimeout(natDog); it.done(); natNext(); };
+    var finish = function () { if (over) return; over = true; clearTimeout(startT); next(); };
+    var fallback = function (why) { if (over || gen !== natGen) return; over = true; clearTimeout(startT); if (AU) try { AU.pause(); } catch (e) {} S.natLast = why || 'failed'; if (why !== 'off') ttsRefresh(); sySay(it.s, next); };
+    natDog = setTimeout(function () { if (gen === natGen && !over) fallback('slow'); }, 20000 + it.s.length * 120);   /* never stuck */
+    var prep = new Promise(function (res) { var t = setTimeout(function () { res({ ok: false, why: 'slow' }); }, 3500); apost('ttsprep', { text: it.s }).then(function (j) { clearTimeout(t); res(j); }, function () { clearTimeout(t); res({ ok: false, why: 'offline' }); }); });
+    prep.then(function (j) {
+      if (gen !== natGen || over) return;
+      if (!j.ok) { if (j.state && S.home) { S.home.tts = j.state; paintNat(); } fallback(j.why); return; }
+      var url = API.replace(/api.php$/, '') + j.url, a = auEl();
+      var go = function (src) {
+        if (gen !== natGen || over) return;
+        a.onplaying = function () { started = true; clearTimeout(startT); };
+        a.onended = function () { if (gen === natGen) finish(); };
+        a.onerror = function () { if (gen !== natGen) return; if (started) finish(); else fallback('audio'); };
+        startT = setTimeout(function () { if (!started) fallback('slow'); }, 8000);
+        a.src = src; S.natLast = '';
+        try { var p = a.play(); if (p && p.catch) p.catch(function () { if (!started) fallback('blocked'); }); } catch (e) { fallback('blocked'); }
+      };
+      if (!isIos()) { go(url); return; }
+      fetch(url, { credentials: 'same-origin', cache: 'no-store' }).then(function (r) {
+        if (!r.ok || !/audio/.test(r.headers.get('content-type') || '')) { fallback('failed'); return; }
+        return r.blob().then(function (b) { if (AU && AU._blob) try { URL.revokeObjectURL(AU._blob); } catch (e) {} a._blob = URL.createObjectURL(b); go(a._blob); });
+      }, function () { fallback('offline'); });
+    });
+  }
   function pickVoice() {
     if (!SY) return null; var v = SY.getVoices() || []; if (!v.length) return null;
     var gb = v.filter(function (x) { return /^en[-_]GB/i.test(x.lang); }), en = v.filter(function (x) { return /^en/i.test(x.lang); });
@@ -1008,19 +1069,20 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   if (SY && SY.addEventListener) SY.addEventListener('voiceschanged', function () { sayVoice = pickVoice(); });
   function speakable(t) {
     t = String(t || '').replace(/https?:\/\/\S+/g, 'the link').replace(/[*_`#>]+/g, '').replace(/\s*\n+\s*[-•]\s*/g, '. ').replace(/\s+/g, ' ').trim();
-    if (t.length > 700) { var cut = t.slice(0, 700), k = cut.lastIndexOf('. '); t = (k > 300 ? cut.slice(0, k + 1) : cut) + ' The rest is on screen.'; }
+    var mx = natOk() ? 570 : 700;   /* 20 Nov: the natural voice takes about 600 characters an answer */
+    if (t.length > mx) { var cut = t.slice(0, mx), k = cut.lastIndexOf('. '); t = (k > 250 ? cut.slice(0, k + 1) : cut) + ' The rest is on screen.'; }
     return t;
   }
   /* force: Brief me and driving mode read aloud even with Voice off. In driving mode, with "Listen again" on, the mic opens when it ends. */
   function say(t, force) {
-    var s = speakable(t);
-    if (!(S.speak || force || S.drive || S.convo) || !SY || !touched || !s) { if (S.convo && S.hands) followUp(1200); return; }   /* hands-free, but it cannot talk here: still listen again */
-    try { if (!S.convo && (SY.speaking || SY.pending)) SY.cancel(); var u = new SpeechSynthesisUtterance(s);   /* in a voice conversation, answers queue rather than cut each other off */ sayVoice = sayVoice || pickVoice(); if (sayVoice) { u.voice = sayVoice; u.lang = sayVoice.lang; } else u.lang = 'en-GB'; u.rate = 1.02; u.pitch = 0.95;
-      u.onend = function () {
-        if ((S.drive && S.relisten && S.lastReply && Date.now() - S.lastReply < 120000) || (S.convo && S.hands)) { S.lastReply = 0; followUp(450); }
-        else if (S.convo && !rec) S.convo = false;
-      };
-      SY.speak(u); } catch (e) {}
+    var s = speakable(t), nat = natOk();
+    if (!(S.speak || force || S.drive || S.convo) || !(SY || nat) || !touched || !s) { if (S.convo && S.hands) followUp(1200); return; }   /* hands-free, but it cannot talk here: still listen again */
+    if (!S.convo) hush();   /* in a voice conversation, answers queue rather than cut each other off */
+    var done = function () {
+      if ((S.drive && S.relisten && S.lastReply && Date.now() - S.lastReply < 120000) || (S.convo && S.hands)) { S.lastReply = 0; followUp(450); }
+      else if (S.convo && !rec) S.convo = false;
+    };
+    if (nat) natSay(s, done); else sySay(s, done);
   }
   /* 19 Nov (talk without Siri): hands-free. After a spoken answer the mic opens again for a follow-up (Hands-free on, or Listen again in
      driving mode); it stops after about 8 seconds of quiet, or "that's all" / "thanks Jarvis". S.convo: this turn started by voice, so its
@@ -1029,7 +1091,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   var BYE = /^(that'?s all|that is all|that'?ll be all|thanks?,? jarvis|thank you,? jarvis|thanks?|thank you|stop|never ?mind|no thanks?|nothing( else)?|goodbye|bye|i'?m good|all good)\W*$/i;
   function followUp(ms) {
     clearTimeout(followUp.t);
-    followUp.t = setTimeout(function () { if (SY && (SY.speaking || SY.pending)) { followUp(400); return; } if (!rec && !document.getElementById('sheet') && !document.getElementById('confirm')) voice({ auto: true, hands: true, follow: true }); }, ms || 450);
+    followUp.t = setTimeout(function () { if (talking()) { followUp(400); return; } if (!rec && !document.getElementById('sheet') && !document.getElementById('confirm')) voice({ auto: true, hands: true, follow: true }); }, ms || 450);
   }
   function endConvo(why) {
     S.convo = false; clearTimeout(followUp.t); setState('idle');
@@ -1059,7 +1121,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     add(o, b, el('div', 'hint', 'This browser needs one tap before it can listen and talk back.'), no); document.body.appendChild(o);
   }
   document.addEventListener('keydown', function (e) { if (e.key === 'F13' || e.code === 'F13') { e.preventDefault(); touched = true; listenNow(); } }, true);
-  function hush() { if (SY) try { SY.cancel(); } catch (e) {} }
+  function hush() { natStop(); if (SY) try { SY.cancel(); } catch (e) {} }
   function pushChat(n) { chatLog.appendChild(n); chatLog.scrollTop = chatLog.scrollHeight; return n; }
   function card(o) {
     var c = el('div', 'acard'); if (o.id) c.id = o.id;
@@ -1628,6 +1690,25 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var r = el('div', 'copyrow'), i = el('input'); i.id = id; i.value = value; i.readOnly = true; i.setAttribute('aria-label', what); i.addEventListener('focus', function () { i.select(); });
     var b = btn('Copy', null, 'btn sec', function () { copyText(i.value, what); }); b.id = id + 'copy'; add(r, i, b); return r;
   }
+  /* the Natural voice box on the Talk without Siri page: the switch for this device, this month's use, and why it is resting if it is */
+  function paintNat() {
+    var nb = document.getElementById('natbox'); if (!nb) return; nb.textContent = '';
+    var t = ttsSt(), fmt = function (n) { return Number(n || 0).toLocaleString('en-US'); }, day = function (d) { var x = new Date(d + 'T12:00:00'); return isNaN(x) ? d : x.getDate() + ' ' + ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][x.getMonth()]; };
+    var sw = btn('Natural voice (ElevenLabs): ' + (S.natural ? 'on' : 'off'), null, 'btn ' + (S.natural ? 'sec' : 'gh'), function () { S.natural = !S.natural; store('jarvis.natural', S.natural); if (!S.natural) natStop(); paintNat(); });
+    sw.id = 'natswitch'; sw.setAttribute('aria-pressed', String(S.natural));
+    var hear = btn('Hear it', 'wave', 'btn gh', function () { touched = true; say('Good to meet you, Matthew. This is J.A.R.V.I.S.', true); }); hear.id = 'nathear';
+    var r = el('div', 'racts'); add(r, sw, hear); nb.appendChild(r);
+    var line = el('div', 'hint'); line.id = 'natread'; line.style.marginTop = '8px';
+    if (!t) line.textContent = 'Reading this month’s use…';
+    else {
+      var use = fmt(t.used) + ' of ' + fmt(t.cap) + ' characters used this month (since ' + day(t.since) + '; it starts again ' + day(t.resets) + '). Phrases said before are free.';
+      var why = { off: 'The natural voice is off on the server, so the device’s own voice speaks.', cap: 'This month’s characters are used up, so the device’s own voice speaks until ' + day(t.resets) + '.',
+        stopped: 'ElevenLabs stopped taking requests this month' + (t.stopNote ? ' (' + t.stopNote + ')' : '') + ', so the device’s own voice speaks until ' + day(t.resets) + '.' }[t.why] || '';
+      line.textContent = (t.why === 'off' ? '' : use + ' ') + (why || (S.natural ? 'Answers are spoken in the ElevenLabs voice “Daniel”. If it is slow or down, the device’s own voice takes over.' : 'Off on this device: the device’s own voice speaks.'));
+    }
+    nb.appendChild(line);
+    if (isIos()) nb.appendChild(el('div', 'hint', 'iPhone: tap anywhere on the page once after opening J.A.R.V.I.S., so it may play sound. If you hear nothing, check the ringer switch and the volume.'));
+  }
   function steps(list) { var o = el('ol', 'steps'); list.forEach(function (x) { var li = el('li'); said(li, x); o.appendChild(li); }); return o; }
   var VOICE_SAYS = ['Remind me Friday at 9 to call Tyler', 'Remind me in 20 minutes to check the trailer', 'Add lunch with Nolan to my calendar Friday at noon', 'What’s on today?', 'Brief me', 'What’s new?', 'What’s building?', 'Add eggs and milk to groceries', 'Remember that the shop gate code changed', 'Look into why the Peak emails bounced', 'Email Jen that I’m running late', 'Anything from Jen this week?'];
   var VOICE_NOTE = { 9: ' (goes to the desk)', 10: ' (a draft only: nothing is sent)', 11: ' (the Assistant answers)' };
@@ -1635,6 +1716,9 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var sh = sheet('Talk without Siri', 'Say “Hey Jarvis” on your iPhone or near the laptop'); sh.body.id = 'voicesetup';
     var url = location.origin + location.pathname.replace(/jarvis\/[^/]*$/, '') + 'api.php?action=voice';
     var list = el('div', 'vkeys'), out = el('div', 'vkout'); out.id = 'vkout';
+    /* 20 Nov (P-11): the natural voice, its switch (this device) and this month's characters */
+    sh.body.appendChild(el('div', 'sub', 'Natural voice (ElevenLabs)'));
+    var nb = el('div', 'natbox'); nb.id = 'natbox'; sh.body.appendChild(nb); paintNat(); ttsRefresh();
     function paintKeys() {
       aget('jvvoicekeys').then(function (j) {
         list.textContent = ''; if (!j.ok) { list.appendChild(el('div', 'warnline', j.error || 'Could not read the keys.')); return; }
@@ -1677,6 +1761,17 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       'Search **Speak Text** and tap it. It should read **Speak Contents of URL** (if not, tap the blue word and pick Contents of URL).',
       'Optional: search **Show Result** and add it, so the answer stays on screen too.',
       'Tap **Done**. Tap the Jarvis tile once to try it: allow the microphone, and when it asks about traverseplatforms.com choose **Always Allow**.'
+    ]));
+    /* 3b. optional: the natural voice in the Shortcut */
+    sh.body.appendChild(el('div', 'sub', 'Optional · the natural voice in the Shortcut'));
+    sh.body.appendChild(el('div', 'hint', 'The Shortcut above keeps working as it is, with the iPhone’s own voice. To hear the ElevenLabs voice instead, change it like this (about 2 minutes). When the natural voice is off or used up for the month there is no audio, and it falls back to Speak Text.'));
+    sh.body.appendChild(steps([
+      'Open the Jarvis Shortcut. In **Get Contents of URL**, add **&format=json&audio=1** to the end of the address.',
+      'Delete **Speak Text** (and Show Result). Add **Get Dictionary Value**: Get **Value** for **audio** in **Contents of URL**.',
+      'Add **If**: **Dictionary Value** **has any value**.',
+      'Inside If: add **Get Contents of URL** with the **Dictionary Value** as its address (method GET, nothing else), then **Play Sound** with **Contents of URL**.',
+      'Under **Otherwise**: add **Get Dictionary Value**: Get **Value** for **say** in the first **Contents of URL**, then **Speak Text** of that Dictionary Value.',
+      'Tap **Done** and try it. The audio link works for 15 minutes and plays only that one answer.'
     ]));
     /* 4. Hey Jarvis */
     sh.body.appendChild(el('div', 'sub', '4 · “Hey Jarvis”, with no Siri'));

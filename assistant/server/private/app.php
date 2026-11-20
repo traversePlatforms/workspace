@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendor)) require $vendor;
-foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk', 'voice'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk', 'voice', 'tts'] as $f) require __DIR__ . '/lib/' . $f . '.php';
 
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -52,11 +52,27 @@ if ($action === 'jvdpending' || $action === 'jvdreply') {
 /* 19 Nov: talk without Siri (lib/voice.php): the iPhone Shortcut's door, with that device's voice key in an X-Voice-Key header. Plain text
    back, made to be heard; anything that would send or post only ever becomes a draft. */
 if ($action === 'voice') { @set_time_limit(90); voiceHttp($body, $isPost); }
+/* 20 Nov (P-11): the natural voice (lib/tts.php). ttsget: a signed 15-minute link to audio already made (the Shortcut's optional audio);
+   tts with a voice key: the words as audio/mpeg. Anything else about the voice needs his sign-in, below. */
+if ($action === 'ttsget') ttsGet((string) ($_GET['id'] ?? ''), (int) ($_GET['e'] ?? 0), (string) ($_GET['s'] ?? ''));
+if ($action === 'tts' && isset($_SERVER['HTTP_X_VOICE_KEY'])) {
+    if (!$isPost) out(['ok' => false], 405);
+    if (tooManyTries()) out(['ok' => false, 'error' => 'Too many tries.'], 429);
+    $k = voKeyCheck((string) $_SERVER['HTTP_X_VOICE_KEY']);
+    if (!$k) { noteTry(); alog('voice key refused', ['ip' => ip(), 'for' => 'tts']); out(['ok' => false, 'error' => 'Not allowed.'], 401); }
+    if (!voRateOk($k['id'])) out(['ok' => false, 'fallback' => true, 'why' => 'rate'], 429);
+    @set_time_limit(60); ttsDirect((string) ($body['text'] ?? ($_POST['text'] ?? '')));
+}
 if (!signedIn()) out(['ok' => false, 'error' => 'Signed out.'], 401);
 /* 19 Nov: the voice keys (one per device, shown once, only their hash kept) and the setup page's "Try it here" */
 if ($action === 'jvvoicekeys') out(['ok' => true, 'keys' => voKeyList(), 'url' => voUrl()]);
 if ($action === 'jvvoicekeynew') { if (!$isPost) out(['ok' => false], 405); out(voKeyNew((string) ($body['name'] ?? ''))); }
 if ($action === 'jvvoicekeydrop') { if (!$isPost) out(['ok' => false], 405); out(voKeyDrop((string) ($body['id'] ?? ''))); }
+/* 20 Nov (P-11): the natural voice for the page: its state, step 1 (the words, kept privately), step 2 (play, streamed), or all in one */
+if ($action === 'ttsstate') out(['ok' => true, 'tts' => ttsState()]);
+if ($action === 'ttsprep') { if (!$isPost) out(['ok' => false], 405); out(ttsPrep((string) ($body['text'] ?? ''))); }
+if ($action === 'ttsplay') { session_write_close(); @set_time_limit(60); ttsPlay((string) ($_GET['id'] ?? '')); }
+if ($action === 'tts') { if (!$isPost) out(['ok' => false], 405); session_write_close(); @set_time_limit(60); ttsDirect((string) ($body['text'] ?? '')); }
 if ($action === 'voicetry') { if (!$isPost) out(['ok' => false], 405); @set_time_limit(90); out(voiceTry((string) ($body['text'] ?? ''))); }
 
 if ($action === 'signout') { $_SESSION = []; session_destroy(); out(['ok' => true]); }
@@ -67,7 +83,7 @@ if ($action === 'home') {
     $items = array_values(array_filter(jget('items.json'), fn($i) => ($i['status'] ?? 'open') === 'open'));
     usort($items, fn($a, $b) => $b['date'] <=> $a['date']);
     $c = cfg();
-    out(['ok' => true, 'accounts' => $accts, 'items' => $items, 'settings' => settings(), 'spend' => spendSummary(),
+    out(['ok' => true, 'accounts' => $accts, 'items' => $items, 'settings' => settings(), 'spend' => spendSummary(), 'tts' => ttsState(),
         'setup' => ['anthropic' => !empty($c['anthropicKey']), 'google' => !empty($c['googleClientId']) && !empty($c['googleClientSecret']), 'redirect' => gRedirect()]]);
 }
 /* J.A.R.V.I.S., the merged page (2026-11-18): the laptop's pushed status (overnight check, builds) and the calendar placeholder; lib/jarvis.php */

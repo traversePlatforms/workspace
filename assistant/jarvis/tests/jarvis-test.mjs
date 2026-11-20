@@ -1,4 +1,4 @@
-// J.A.R.V.I.S., the merged page (2026-11-18): end-to-end (19 Nov: section 15, talk without Siri: the voice API, its keys, the setup page, hands-free) on a throwaway copy of the server's layout, in headless Chrome.
+// J.A.R.V.I.S., the merged page (2026-11-18): end-to-end (19 Nov: section 15, talk without Siri: the voice API, its keys, the setup page, hands-free; 20 Nov: section 16, the natural voice, with an ElevenLabs mock) on a throwaway copy of the server's layout, in headless Chrome.
 // NOTHING here reaches Google, Anthropic or the live site: Gmail is a mock on 127.0.0.1 (every call it gets is counted), the Assistant
 // has no Anthropic key, and the Field app, the Houston install, Outbox and the Peak desk are small stub files that answer like them.
 //   node assistant/jarvis/tests/jarvis-test.mjs            (SHOTS=<folder> to also save screenshots; default assistant/jarvis/shots)
@@ -109,6 +109,7 @@ for (const p of ['summit-de59ae83', 'hl-f98938', 'outbox-092b0f', 'peak-desk-28d
 
 /* ---- the Gmail mock: answers like Gmail, counts every call; a send is anything that would send ---- */
 const G = { calls: [], sends: [] }; const PUSHES = [];
+const EL_KEY = 'sk_' + 'mockelevenlabskey'.padEnd(48, 'q'), EL = { calls: [], mode: 'ok' };   /* 20 Nov (P-11): the ElevenLabs mock's key: 51 characters, like his */
 const b64u = s => Buffer.from(s).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const gsrv = http.createServer((req, res) => {
   const chunks = []; req.on('data', c => chunks.push(c)); req.on('end', () => {
@@ -116,6 +117,12 @@ const gsrv = http.createServer((req, res) => {
     const u = new URL(req.url, 'http://x'), p = u.pathname.replace(/^\/+/, ''), auth = req.headers.authorization || '';
     /* 19 Nov: a Web Push service (J.A.R.V.I.S.'s own alerts): keeps what came, answers 201; /push/gone answers 410 */
     if (p.startsWith('push/')) { PUSHES.push({ path: p, headers: req.headers, body: raw }); res.writeHead(p === 'push/gone' ? 410 : 201); res.end(); return; }
+    /* 20 Nov (P-11): ElevenLabs text to speech (ELEVENLABS_MOCK): keeps each call; EL.mode says how it answers */
+    if (p.startsWith('eleven/')) { let jb = {}; try { jb = JSON.parse(body); } catch {} EL.calls.push({ p, q: u.search, key: req.headers['xi-api-key'] || '', body: jb });
+      const E = (c, st) => { res.writeHead(c, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ detail: { status: st, message: 'mock ' + st } })); };
+      if (req.headers['xi-api-key'] !== EL_KEY) return E(401, 'invalid_api_key');
+      if (EL.mode === '402') return E(402, 'payment_required'); if (EL.mode === '429quota') return E(429, 'quota_exceeded'); if (EL.mode === '429busy') return E(429, 'too_many_concurrent_requests'); if (EL.mode === '500') return E(500, 'internal');
+      res.writeHead(200, { 'Content-Type': 'audio/mpeg' }); res.write('ID3' + 'A'.repeat(400)); setTimeout(() => res.end('FAKE-MP3:' + (jb.text || '')), 30); return; }
     G.calls.push(req.method + ' ' + p);
     const J = (o, c = 200) => { res.writeHead(c, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
     if (auth !== 'Bearer ' + SECRETS[2]) return J({ error: { message: 'bad token' } }, 401);
@@ -138,7 +145,7 @@ await new Promise(r => gsrv.listen(GPORT, '127.0.0.1', r));
 /* 19 Nov: the phone alert a due reminder makes, as a stub that logs what it was given (the real one is jvpush.php, the Field app's alert) */
 const PUSHLOG = path.join(R, 'push.log');
 mk(path.join(R, 'push-stub.php'), `<?php file_put_contents(${JSON.stringify(PUSHLOG.replace(/\\/g, '/'))}, stream_get_contents(STDIN) . "\\n", FILE_APPEND); echo "pushed\\n";`);
-const ENVX = { JARVIS_PUSH_ALLOW_HTTP: '1', ASSISTANT_PRIVATE: PRIV, ASSISTANT_GMAIL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_CAL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_PUSH_CMD: 'php ' + JSON.stringify(path.join(R, 'push-stub.php').replace(/\\/g, '/')) };
+const ENVX = { JARVIS_PUSH_ALLOW_HTTP: '1', ASSISTANT_PRIVATE: PRIV, ASSISTANT_GMAIL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_CAL_MOCK: 'http://127.0.0.1:' + GPORT + '/', ELEVENLABS_MOCK: 'http://127.0.0.1:' + GPORT + '/eleven/', JARVIS_PUSH_CMD: 'php ' + JSON.stringify(path.join(R, 'push-stub.php').replace(/\\/g, '/')) };
 const srv = spawn('php', ['-S', '127.0.0.1:' + PORT, '-t', PUB], { stdio: 'ignore', env: { ...process.env, ...ENVX } });
 /* async: the calendar mock lives in this same process, so a blocking spawn would starve it */
 const cronReminders = () => new Promise(res => { let o = ''; const p = spawn('php', [path.join(PRIV, 'cron.php'), '--reminders'], { env: { ...process.env, ...ENVX } }); p.stdout.on('data', d => o += d); p.on('close', () => { try { res(JSON.parse(o.trim().split('\n').pop() || '{}')); } catch { res({}); } }); });
@@ -822,6 +829,136 @@ try {
     await cdp('Page.navigate', { url: PAGE }); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(600);
   }
   ok(errs.length === 0, 'no script errors in talk without Siri (' + errs.join(' | ') + ')');
+
+  /* ================================================================ 16. the natural voice (20 Nov, P-11): ElevenLabs through lib/tts.php, a mock here */
+  {
+    const VAPI = BASE + '/a-e018bb82/api.php', ELF = path.join(DATA, 'elevenlabs.json'), USEF = path.join(DATA, 'jarvis', 'tts-usage.json');
+    const SEEN = [];   /* every response body here, to check the key never comes back */
+    const raw = async (a, o = {}) => { const r = await fetch(VAPI + '?action=' + a, { method: o.body !== undefined ? 'POST' : 'GET', headers: { 'Content-Type': 'application/json', ...(o.cookie ? { Cookie: o.cookie } : {}), ...(o.headers || {}) }, body: o.body !== undefined ? JSON.stringify(o.body) : undefined });
+      const buf = Buffer.from(await r.arrayBuffer()), t = buf.toString(); SEEN.push(t + JSON.stringify([...r.headers])); let j = {}; try { j = JSON.parse(t); } catch {} return { s: r.status, ct: r.headers.get('content-type') || '', x: r.headers.get('x-tts') || '', t, j, n: buf.length }; };
+    const si = await fetch(VAPI + '?action=signin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: PASSWORD }) });
+    const sc = (si.headers.get('set-cookie') || '').split(';')[0];
+    const rel = u => u.replace(/^api\.php/, '');
+    const elSet = o => fs.writeFileSync(ELF, JSON.stringify({ key: EL_KEY, ...o }));
+    const unstop = () => { const u = JSON.parse(fs.readFileSync(USEF, 'utf8')); for (const k of Object.keys(u)) u[k].stop = null; fs.writeFileSync(USEF, JSON.stringify(u)); };
+    /* signed out, or a wrong voice key: nothing */
+    let r = await raw('tts', { body: { text: 'hello' } }); ok(r.s === 401, 'natural voice: tts signed out answers 401 (got ' + r.s + ')');
+    ok((await raw('ttsprep', { body: { text: 'hello' } })).s === 401 && (await raw('ttsplay&id=' + 'a'.repeat(64))).s === 401 && (await raw('ttsstate')).s === 401, 'natural voice: ttsprep, ttsplay and ttsstate need his sign-in');
+    r = await raw('tts', { body: { text: 'hello' }, headers: { 'X-Voice-Key': 'jvk_' + 'z'.repeat(32) } }); ok(r.s === 401, 'natural voice: a wrong voice key is refused');
+    ok((await raw('ttsget&id=' + 'a'.repeat(64) + '&e=' + (now + 600) + '&s=' + '0'.repeat(32))).s === 403, 'natural voice: an unsigned audio link is refused');
+    /* no key on the server: off, and the page is told so (the built-in voice speaks) */
+    r = await raw('ttsprep', { cookie: sc, body: { text: 'Hello Matthew.' } });
+    ok(r.s === 200 && r.j.ok === false && r.j.fallback === true && r.j.why === 'off' && EL.calls.length === 0, 'natural voice: with no key it is off, a fallback, and ElevenLabs is never called');
+    /* the key in place */
+    elSet({});
+    const home = await raw('home', { cookie: sc });
+    ok(home.j.tts && home.j.tts.avail === true && home.j.tts.cap === 9000 && home.j.tts.used === 0 && !home.t.includes(EL_KEY) && !/"key"/.test(JSON.stringify(home.j.tts)), 'natural voice: home says it is on, 0 of 9,000 characters, and never shows the key');
+    r = await raw('ttsprep', { cookie: sc, body: { text: 'Sent to the desk; I’ll alert you when it’s done.' } });
+    ok(r.j.ok && r.j.cached === false && /^api\.php\?action=ttsplay&id=[0-9a-f]{64}$/.test(r.j.url) && EL.calls.length === 0, 'natural voice: step 1 keeps the words and gives the play address (the words are not in it)');
+    const id1 = r.j.id; let p = await raw(rel(r.j.url).replace(/^\?action=/, ''), { cookie: sc });
+    ok(p.s === 200 && /^audio\/mpeg/.test(p.ct) && p.x === 'made' && /FAKE-MP3:Sent to the desk/.test(p.t), 'natural voice: step 2 streams the ElevenLabs audio');
+    const c1 = EL.calls[0] || {};
+    ok(EL.calls.length === 1 && c1.key === EL_KEY && c1.p === 'eleven/v1/text-to-speech/onwK4e9ZLuTAKqWW03F9/stream' && /output_format=mp3_44100_64/.test(c1.q) && c1.body.model_id === 'eleven_flash_v2_5', 'natural voice: Daniel, eleven_flash_v2_5, mp3, the key in xi-api-key');
+    ok(fs.existsSync(path.join(DATA, 'jarvis', 'tts-cache', id1 + '.mp3')) && !fs.existsSync(path.join(DATA, 'jarvis', 'tts-cache', id1 + '.txt')), 'natural voice: the audio is cached and the waiting words are gone');
+    ok((await raw('ttsstate', { cookie: sc })).j.tts.used === 'Sent to the desk; I’ll alert you when it’s done.'.length, 'natural voice: the characters are counted');
+    /* the same words again: the cache, nothing from ElevenLabs */
+    r = await raw('ttsprep', { cookie: sc, body: { text: 'Sent to the desk;  I’ll alert you when it’s done.' } });
+    p = await raw(rel(r.j.url).replace(/^\?action=/, ''), { cookie: sc });
+    ok(r.j.cached === true && r.j.id === id1 && p.x === 'cache' && /^audio\/mpeg/.test(p.ct) && EL.calls.length === 1, 'natural voice: a repeated phrase comes from the cache and costs nothing');
+    { const rg = await fetch(VAPI + '?action=ttsplay&id=' + id1, { headers: { Cookie: sc, Range: 'bytes=0-9' } }); ok(rg.status === 206 && (await rg.arrayBuffer()).byteLength === 10 && /^bytes 0-9\//.test(rg.headers.get('content-range') || ''), 'natural voice: the cached file answers byte ranges (what iPhone Safari asks for)'); }
+    ok((await raw('ttsstate', { cookie: sc })).j.tts.hits >= 2, 'natural voice: cache hits are counted');
+    /* all in one: POST tts, signed in or with a voice key */
+    r = await raw('tts', { cookie: sc, body: { text: 'Good morning, Matthew.' } });
+    ok(r.s === 200 && /^audio\/mpeg/.test(r.ct) && /FAKE-MP3:Good morning, Matthew\./.test(r.t), 'natural voice: POST tts signed in gives the audio');
+    const vk = await (await fetch(VAPI + '?action=jvvoicekeynew', { method: 'POST', headers: { 'Content-Type': 'application/json', Cookie: sc }, body: JSON.stringify({ name: 'Speaker test' }) })).json(); const VK = vk.key || '';
+    r = await raw('tts', { body: { text: 'Good morning, Matthew.' }, headers: { 'X-Voice-Key': VK } });
+    ok(r.s === 200 && r.x === 'cache' && EL.calls.length === 2, 'natural voice: POST tts with a voice key works, from the cache');
+    /* a long answer: at most about 600 characters go to ElevenLabs */
+    r = await raw('ttsprep', { cookie: sc, body: { text: ('This sentence is about the long answer. ').repeat(60) } }); p = await raw(rel(r.j.url).replace(/^\?action=/, ''), { cookie: sc });
+    const lt = (EL.calls[EL.calls.length - 1].body.text || '');
+    ok(p.s === 200 && lt.length <= 600 && /The rest is on screen\.$/.test(lt), 'natural voice: a long answer is cut at a sentence, at most 600 characters (' + lt.length + ')');
+    /* a busy 429 or a 500: that answer falls back, the voice stays on */
+    for (const m of ['429busy', '500']) {
+      EL.mode = m; r = await raw('ttsprep', { cookie: sc, body: { text: 'A fresh phrase for ' + m + '.' } }); p = await raw(rel(r.j.url).replace(/^\?action=/, ''), { cookie: sc });
+      ok(p.s === 503 && p.j.fallback === true && p.j.why === 'failed' && p.j.state.avail === true, 'natural voice: ElevenLabs ' + m + ': this answer falls back, and the voice stays on');
+    }
+    /* 402, or a 429 for the quota: stop for the rest of the month */
+    for (const m of ['402', '429quota']) {
+      EL.mode = m; r = await raw('ttsprep', { cookie: sc, body: { text: 'Another phrase for ' + m + '.' } }); p = await raw(rel(r.j.url).replace(/^\?action=/, ''), { cookie: sc });
+      const n0 = EL.calls.length; const r2 = await raw('ttsprep', { cookie: sc, body: { text: 'And one more after ' + m + '.' } });
+      ok(p.s === 503 && p.j.why === 'stopped' && r2.j.ok === false && r2.j.why === 'stopped' && EL.calls.length === n0 && /ElevenLabs said (402|429)/.test(r2.j.state.stopNote), 'natural voice: ElevenLabs ' + m + ' stops it for the month, with no more calls (' + r2.j.state.stopNote + ')');
+      const r3 = await raw('ttsprep', { cookie: sc, body: { text: 'Good morning, Matthew.' } });
+      ok(r3.j.ok === true && r3.j.cached === true, 'natural voice: stopped, a cached phrase still plays (it costs nothing)');
+      unstop();
+    }
+    EL.mode = 'ok';
+    /* the cap: past it, the built-in voice */
+    { const u = (await raw('ttsstate', { cookie: sc })).j.tts.used; elSet({ cap: u + 10 }); const n0 = EL.calls.length;
+      r = await raw('ttsprep', { cookie: sc, body: { text: 'This one is over the monthly cap.' } });
+      ok(r.j.ok === false && r.j.why === 'cap' && EL.calls.length === n0, 'natural voice: over the monthly cap: a fallback, ElevenLabs not called');
+      elSet({ cap: u + 5 }); ok((await raw('ttsstate', { cookie: sc })).j.tts.avail === true, 'natural voice: under the cap it stays on');
+      elSet({ cap: u }); ok((await raw('ttsstate', { cookie: sc })).j.tts.why === 'cap', 'natural voice: at the cap it says so');
+      elSet({}); }
+    /* the voice door's optional audio link */
+    const vo = async (text, q) => { const x = await fetch(VAPI + '?action=voice' + q, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Voice-Key': VK }, body: JSON.stringify({ text }) }); const t = await x.text(); SEEN.push(t); let j = {}; try { j = JSON.parse(t); } catch {} return { s: x.status, t, j }; };
+    let v = await vo("what's building", '&format=json');
+    ok(v.j.intent === 'builds' && !('audio' in v.j), 'voice door: format=json alone has no audio (the old Shortcut is unchanged)');
+    v = await vo("what's building", '');
+    ok(v.s === 200 && /Roof material/.test(v.t) && !/[{}]/.test(v.t), 'voice door: plain text still, for Speak Text');
+    v = await vo("what's building", '&format=json&audio=1');
+    ok(v.j.ok && /Roof material/.test(v.j.say) && /\/a-e018bb82\/api\.php\?action=ttsget&id=[0-9a-f]{64}&e=\d+&s=[0-9a-f]{32}$/.test(v.j.audio || ''), 'voice door: &audio=1 adds a link to the answer in the natural voice');
+    { const a = await fetch(v.j.audio.replace(/^https?:\/\/[^/]+/, BASE)); const t = await a.text(); ok(a.status === 200 && /^audio\/mpeg/.test(a.headers.get('content-type') || '') && /FAKE-MP3:.*Roof material/.test(t), 'voice door: the link plays with nothing else (what a Shortcut can do)');
+      const bad = await fetch(v.j.audio.replace(/^https?:\/\/[^/]+/, BASE).replace(/s=[0-9a-f]{4}/, 's=0000')); ok(bad.status === 403, 'voice door: a changed link is refused');
+      const old = await fetch(v.j.audio.replace(/^https?:\/\/[^/]+/, BASE).replace(/e=\d+/, 'e=' + (now - 10))); ok(old.status === 403, 'voice door: an expired link is refused'); }
+    EL.mode = '402'; v = await vo("what's on tomorrow", '&format=json&audio=1'); EL.mode = 'ok';
+    ok(v.s === 200 && typeof v.j.say === 'string' && v.j.say.length > 0 && !('audio' in v.j), 'voice door: when ElevenLabs refuses, no audio field and the words still come (Speak Text says them)');
+    unstop();
+    /* the key: never in a response, a log or any other data file */
+    const files = []; const walk = d => fs.readdirSync(d, { withFileTypes: true }).forEach(e => { const fp = path.join(d, e.name); if (e.isDirectory()) walk(fp); else if (fp !== ELF) files.push(fp); }); walk(DATA);
+    const leak = files.filter(fp => fs.readFileSync(fp).includes(EL_KEY)).map(fp => path.basename(fp));
+    ok(!SEEN.some(t => t.includes(EL_KEY)) && leak.length === 0, 'natural voice: the ElevenLabs key is in no response, log or data file (' + leak.join(', ') + ')');
+    ok(/"what":"tts failed","status":402,"code":"payment_required"/.test(fs.readFileSync(path.join(DATA, 'assistant.log'), 'utf8')), 'natural voice: a failure is logged by its code only');
+    ok(!/Another phrase for|And one more/.test(fs.readFileSync(path.join(DATA, 'assistant.log'), 'utf8')), 'natural voice: the log never holds the words');
+
+    /* ---- the page: the natural voice first, the device's voice when it can't */
+    await cdp('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__played=[];window.__auSrcs=[];window.Audio=function(){var a=this;a.setAttribute=function(){};a.removeAttribute=function(){};a.load=function(){};a.pause=function(){};' +
+      'a.play=function(){var src=a.src||"";window.__auSrcs.push(src);if(/^data:/.test(src))return Promise.resolve();return fetch(src,{credentials:"same-origin"}).then(function(r){var ct=r.headers.get("content-type")||"";return r.text().then(function(t){if(!r.ok||!/audio\\/mpeg/.test(ct)){a.onerror&&a.onerror();return;}window.__played.push({src:src,body:t.slice(-200),tts:r.headers.get("x-tts")});a.onplaying&&a.onplaying();setTimeout(function(){a.onended&&a.onended();},60);});},function(){a.onerror&&a.onerror();});};};' });
+    await cdp('Page.navigate', { url: PAGE }); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(800);
+    await ev('document.body.dispatchEvent(new MouseEvent("click",{bubbles:true}))');
+    ok(await ev('window.__auSrcs.some(s=>/^data:audio\\/wav/.test(s))'), 'page: the first tap plays a moment of silence through the audio element (the iPhone unlock)');
+    await click('#voicebtn'); ok(await until('!!document.getElementById("natswitch")'), 'page: Natural voice (ElevenLabs) is on the Talk without Siri page');
+    ok(await until('/of 9,000 characters used this month/.test((document.getElementById("natread")||{}).textContent||"")') && /Natural voice \(ElevenLabs\): on/.test(await ev('document.getElementById("natswitch").textContent')), 'page: on by default, with this month\'s characters of the cap (' + await ev('(document.getElementById("natread")||{}).textContent') + ')');
+    await shot('jarvis-natural-voice');
+    const said0 = await ev('window.__said.length'), n0 = EL.calls.length;
+    await click('#nathear');
+    ok(await until('window.__played.some(p=>/FAKE-MP3:Good to meet you, Matthew/.test(p.body) && p.tts==="made")', 6000) && await ev('window.__said.length') === said0 && EL.calls.length === n0 + 1, 'page: an answer plays in the ElevenLabs voice, not the device voice');
+    await sleep(300); await click('#nathear');
+    ok(await until('window.__played.filter(p=>/Good to meet you/.test(p.body)).length===2', 6000) && await ev('window.__played[window.__played.length-1].tts') === 'cache' && EL.calls.length === n0 + 1, 'page: said again, from the cache');
+    ok(await ev('window.__played.every(p=>!/Good to meet/.test(decodeURIComponent(p.src)))'), 'page: the words never go in an address');
+    /* ElevenLabs down: that answer in the device voice, at once */
+    EL.mode = '500'; await ev('document.getElementById("vtry").value="what\'s waiting"'); await click('#vtrybtn');
+    ok(await until('window.__said.length>' + said0, 6000), 'page: ElevenLabs failing: the device voice says it instead (never silent)');
+    EL.mode = 'ok';
+    /* the switch off: the device voice */
+    await click('#natswitch'); await sleep(150);
+    ok(/: off/.test(await ev('document.getElementById("natswitch").textContent')) && await ev('localStorage.getItem("jarvis.natural")') === 'false', 'page: the switch turns it off on this device');
+    const p0 = await ev('window.__played.length'), s1 = await ev('window.__said.length'); await click('#nathear');
+    ok(await until('window.__said.length===' + (s1 + 1), 4000) && await ev('window.__played.length') === p0, 'page: switched off, the device voice speaks');
+    await click('#natswitch'); await sleep(150);
+    /* capped: the page knows, and says it with the device voice straight away */
+    { const u = (await raw('ttsstate', { cookie: sc })).j.tts.used; elSet({ cap: u });
+      await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(600); await ev('document.body.dispatchEvent(new MouseEvent("click",{bubbles:true}))');
+      await click('#voicebtn'); await until('!!document.getElementById("natswitch")');
+      ok(await until('/used up/.test((document.getElementById("natread")||{}).textContent||"")'), 'page: at the cap it says the device voice speaks until the month starts again');
+      const s2 = await ev('window.__said.length'), n1 = EL.calls.length; await click('#nathear');
+      ok(await until('window.__said.length===' + (s2 + 1), 4000) && EL.calls.length === n1, 'page: capped: straight to the device voice, ElevenLabs not asked');
+      elSet({}); }
+    await click('#shclose'); await sleep(200);
+    ok(!JSON.stringify(await ev('Object.keys(localStorage).map(k=>localStorage.getItem(k))')).includes(EL_KEY), 'page: the key never reaches the browser');
+    fs.rmSync(ELF);   /* the rest of the run: off, as before */
+    await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(600);
+  }
+  ok(errs.length === 0, 'no script errors with the natural voice (' + errs.join(' | ') + ')');
 
   /* ---- desktop idle shot: a fresh load */
   await cdp('Page.reload'); await until('document.querySelectorAll(".msg.ai").length>0', 9000); await sleep(1200);
