@@ -12,7 +12,8 @@
 #   bash traverse/ops/jarvis-cloud.sh stop|start|log|pubkey
 # JARVIS_VM=yard@<ip> for another machine (the B2s move: jarvis-cloud-move.sh).
 set -u
-VM="${JARVIS_VM:-$(cat "$(cygpath -u "$LOCALAPPDATA" 2>/dev/null)/ProjectBackup/cloud-sync/vm.txt" 2>/dev/null || echo yard@20.91.198.101)}"   # vm.txt: written by jarvis-cloud-move.sh switch; VK="/c/Users/SURGEI~1/.ssh/azure_yard"
+VM="${JARVIS_VM:-$(cat "$(cygpath -u "$LOCALAPPDATA" 2>/dev/null)/ProjectBackup/cloud-sync/vm.txt" 2>/dev/null || echo yard@20.91.198.101)}"   # vm.txt: written by jarvis-cloud-move.sh switch
+VK="${JARVIS_VK:-$HOME/.ssh/azure_yard}"
 OPS="$(cd "$(dirname "$0")" && pwd)"; REPO="$(cd "$OPS/../.." && pwd)"
 v() { ssh -o BatchMode=yes -o ConnectTimeout=20 -i "$VK" "$VM" "$@"; }
 up() { scp -q -o BatchMode=yes -i "$VK" "$@"; }
