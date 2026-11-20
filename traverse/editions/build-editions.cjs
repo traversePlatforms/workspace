@@ -671,7 +671,7 @@ function syncSixfoldTowns() {
 const PRACTICE_ED = { name: 'Sixfold 365 Practice', short: 'Practice', folder: 'practice-5dbe8f',
   api: 'sixfold-practice', data: 'sixfold-practice-data', priv: 'sixfold-practice-private', cookie: 'sfp',
   store: 'sfpractice.', storeApp: 'sfpractice.app.', idb: 'sfpractice-rounds', cache: 'sfpractice-' };
-const PRACTICE_LIBS = ['mail-oauth-lib', 'care-lib', 'eod-lib', 'fb-leads-lib', 'jobber-lib'];   /* its own copies, so the shared ones are never its */
+const PRACTICE_LIBS = ['mail-oauth-lib', 'care-lib', 'eod-lib', 'fb-leads-lib', 'jobber-lib', 'mailtrack-lib'];   /* its own copies, so the shared ones are never its */
 const PRACTICE_STRIP = '<div style="position:sticky;top:0;z-index:99;padding:7px 12px;background:#7a3c00;color:#fff;font:700 13px/1.3 system-ui,sans-serif;text-align:center">Practice copy: nothing here is real and nothing is sent.</div>';
 function practicePage(E) {
   let html = fs.readFileSync(path.join(APP, 'index.html'), 'utf8');
