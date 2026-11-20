@@ -49,7 +49,7 @@
  * a Reply button that answers in the same thread (desk-email.php). The page never gets a message's id or mailbox, only the touch's key. */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-19.3';
+const BUILD = '2026-11-20.1';
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
@@ -254,7 +254,7 @@ function handle(string $action, bool $isPost, array $body): array {
     if ($action === 'dmset' || $action === 'bookset') {
         if ($ROLE !== 'admin') fail('Only an admin changes the settings.', 403);
         $key = $action === 'dmset' ? 'deskmail' : 'book'; $s = jread('desk-settings.json', []); $cur = is_array($s[$key] ?? null) ? $s[$key] : []; $now = time();
-        if ($action === 'bookset') { $c = bkConfIn($body, bkConf()); if (isset($c['error'])) fail($c['error']); foreach (['week', 'mins', 'notice', 'ahead', 'blocked'] as $k) $cur[$k] = $c[$k]; }
+        if ($action === 'bookset') { $c = bkConfIn($body, bkConf()); if (isset($c['error'])) fail($c['error']); foreach (['week', 'mins', 'notice', 'ahead', 'blocked', 'meet'] as $k) $cur[$k] = $c[$k]; }
         if ($action === 'dmset' && array_key_exists('pixel', $body)) $cur['pixel'] = !empty($body['pixel']);
         if (array_key_exists('on', $body)) {
             $on = !empty($body['on']);
@@ -315,6 +315,8 @@ function handle(string $action, bool $isPost, array $body): array {
         return $res;
     }
     if ($op === 'templates' && $ROLE !== 'admin') fail('Only an admin changes the templates.', 403);
+    /* Packages and Profit & loss are admins only (2026-11-20, Matthew: More shows sellers only My email & booking link, My calendar, Look) */
+    if (in_array($op, ['packages', 'pl'], true) && $ROLE !== 'admin') fail('Only an admin changes ' . ($op === 'pl' ? 'profit and loss' : 'the packages') . '.', 403);
     return withLock(fn() => act($op, $w, $body, $ME, $legacy));
 }
 
@@ -390,7 +392,10 @@ function dataOut(string $ME, string $ROLE): array {
     $X += ['questions' => $xs['questions'] ?? [], 'venues' => $xs['venues'] ?? [], 'venueNote' => $xs['venueNote'] ?? '', 'built' => $xs['built'] ?? '', 'from' => $xs['from'] ?? ''];
     if ($ROLE === 'expo') return $base + ['expo' => $X];   /* the expo account: the Expo leads and nothing of the sponsors' */
     $S = worldOut('sponsor'); $sd = jread('seed.json', []);
-    $S += ['proposals' => propsOf('sponsor'), 'packages' => settingOf('sponsor', 'packages', []), 'pl' => settingOf('sponsor', 'pl', null), 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? [], 'hunterLeft' => hunterLeft()];
+    /* the packages go to everyone: a seller's Make a proposal and Mark signed pick from them. Profit & loss, What Peak offers and What we could
+       offer are admins only (2026-11-20, Matthew): a seller's page never gets them. The Report is worked out on the page from the cards. */
+    $S += ['proposals' => propsOf('sponsor'), 'packages' => settingOf('sponsor', 'packages', []), 'hunterLeft' => hunterLeft()];
+    if ($ROLE === 'admin') $S += ['pl' => settingOf('sponsor', 'pl', null), 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? []];
     return $base + ['sponsor' => $S, 'expo' => $X];
 }
 

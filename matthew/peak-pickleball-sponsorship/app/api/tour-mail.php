@@ -19,6 +19,9 @@
  *   - Each send is a touch on the company's Activity ("Emailed: tour confirmation", by "<booker> (via Peak email)"; it moves no stage and is
  *     not counted as the booker's own email). A failure is kept on the tour ("Confirmation not sent: ...") with a Retry, and counted in
  *     Outbox's Peak section.
+ *   - Who gives the tour (2026-11-20, Matthew: he and Cai book tours but never give them): "You'll meet" and the invite name the desk's
+ *     "Who meets visitors" setting ({meet}, Booking links in Settings), never the seller. Empty: that line and the name are left out.
+ *     The email is still signed by whoever booked it ({me}). Older saved wording's "You'll meet: {me}" line reads as {meet}.
  * Plain text plus the same words as simple HTML; no open image and no tracked links on this email. */
 declare(strict_types=1);
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
@@ -28,7 +31,7 @@ const TM_ADDRESS = 'Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 8
 const TM_PHONE = '(719) 377-4725';
 const TM_ORGANIZER = 'partnerships@peakpickleball.us';   /* Peak Partnerships (2026-11-19); the Peak email sender's own answer is used when it can be read */
 const TM_FROM_NAME = 'Peak Partnerships';
-const TM_FIELDS = ['first', 'company', 'date', 'time', 'length', 'address', 'me', 'phone'];
+const TM_FIELDS = ['first', 'company', 'date', 'time', 'length', 'address', 'me', 'meet', 'phone'];   /* {me} who booked it (signs it), {meet} who meets visitors (2026-11-20) */
 const TM_MUST = ['date', 'time', 'address'];               /* the confirmation can't lose these */
 const TM_MUST_CANCEL = ['date', 'time'];
 const TM_MINS = [15, 30, 45, 60, 90, 120];
@@ -38,15 +41,22 @@ function tmDefaults(): array {
         'subject' => 'Confirmed: your visit to Peak Pickleball, {date} at {time}',
         'body' => "Hi {first},\n\nThis confirms your visit to Peak Pickleball.\n\nWhen: {date}, {time} Mountain time ({length})\nWhere: {address}\n"
             . "Entrance: from the parking lot off Jamboree Drive. We're connected to Chapel Hills Mall, but there is no way in from inside the mall.\n"
-            . "You'll meet: {me}\n\nA calendar invite is attached so you can add it to your calendar. If you need to change the time, reply to this email or call Peak at {phone}.\n\nThanks,\n{me}\nPeak Pickleball",
+            . "You'll meet: {meet}\n\nA calendar invite is attached so you can add it to your calendar. If you need to change the time, reply to this email or call Peak at {phone}.\n\nThanks,\n{me}\nPeak Pickleball",
         'csubject' => 'Cancelled: your visit to Peak Pickleball, {date} at {time}',
         'cbody' => "Hi {first},\n\nYour visit to Peak Pickleball on {date} at {time} Mountain time is cancelled, and the calendar invite is withdrawn.\n\n"
             . "If you'd like to find another time, reply to this email or call Peak at {phone}.\n\nThanks,\n{me}\nPeak Pickleball",
     ];
 }
+/** wording saved before {meet} existed said "You'll meet: {me}" (the seller): that line means who meets visitors now (2026-11-20) */
+function tmWordsFix(array $w): array { foreach ($w as $k => $v) if (is_string($v)) $w[$k] = (string) preg_replace('/^([ \t]*You(?:\'|’)ll meet:[ \t]*)\{me\}([ \t.]*)$/mui', '$1{meet}$2', $v); return $w; }
+/** who meets visitors: the desk's setting (More, Settings, Booking links; book.meet), '' when nobody is named. Never the seller. */
+function tmVisitHost(): string {
+    if (function_exists('bkMeet')) return bkMeet();
+    $m = jread('desk-settings.json', [])['book']['meet'] ?? ''; return is_string($m) ? clean($m, 60) : '';
+}
 /** the switch and the wording, as saved (the defaults until an admin changes them) */
 function tmConf(): array {
-    $s = jread('desk-settings.json', [])['tourmail'] ?? []; $d = tmDefaults(); $wd = is_array($s['words'] ?? null) ? $s['words'] : [];
+    $s = jread('desk-settings.json', [])['tourmail'] ?? []; $d = tmDefaults(); $wd = is_array($s['words'] ?? null) ? tmWordsFix($s['words']) : [];
     $words = []; foreach ($d as $k => $v) $words[$k] = is_string($wd[$k] ?? null) && $wd[$k] !== '' ? $wd[$k] : $v;
     return ['on' => !empty($s['on']), 'words' => $words, 'custom' => $words !== $d, 'by' => (string) ($s['by'] ?? ''), 'at' => (int) ($s['at'] ?? 0),
         'wby' => (string) ($s['wby'] ?? ''), 'wat' => (int) ($s['wat'] ?? 0)];
@@ -97,38 +107,45 @@ function tmOut(bool $admin): array {
     $c = tmConf(); $o = ['on' => $c['on'], 'mins' => TM_MINS]; $mb = tmMailbox();
     $o['from'] = $mb['email'] ?: TM_ORGANIZER; $o['fromName'] = $mb['name'] ?: TM_FROM_NAME; $o['fromWarn'] = $mb['warn'];
     if ($c['on'] || $admin) { $o['ready'] = $mb['ok']; $o['why'] = $mb['why']; }
-    if ($admin) $o += ['words' => $c['words'], 'defaults' => tmDefaults(), 'custom' => $c['custom'], 'fields' => TM_FIELDS, 'must' => TM_MUST, 'by' => $c['by'], 'at' => $c['at'], 'wby' => $c['wby'], 'wat' => $c['wat']];
+    if ($admin) $o += ['words' => $c['words'], 'defaults' => tmDefaults(), 'custom' => $c['custom'], 'fields' => TM_FIELDS, 'must' => TM_MUST, 'meet' => tmVisitHost(), 'by' => $c['by'], 'at' => $c['at'], 'wby' => $c['wby'], 'wat' => $c['wat']];
     return $o;
 }
 
 /* ---- the words ---- */
-function tmFill(string $s, array $ctx): string { return (string) preg_replace_callback('/\{(' . implode('|', TM_FIELDS) . ')\}/', fn($m) => (string) ($ctx[$m[1]] ?? ''), $s); }
+/** the fields filled in; with nobody named to meet visitors, a line with {meet} in it is left out whole ("You'll meet: {meet}") */
+function tmFill(string $s, array $ctx): string {
+    if ((string) ($ctx['meet'] ?? '') === '') $s = (string) preg_replace('/^[^\n]*\{meet\}[^\n]*(?:\n|$)/m', '', $s);
+    return tmFillRaw($s, $ctx);
+}
+function tmFillRaw(string $s, array $ctx): string { return (string) preg_replace_callback('/\{(' . implode('|', TM_FIELDS) . ')\}/', fn($m) => (string) ($ctx[$m[1]] ?? ''), $s); }
 function tmLen(int $mins): string { $h = intdiv($mins, 60); $m = $mins % 60; return trim(($h ? $h . ' hour' . ($h > 1 ? 's' : '') : '') . ($h && $m ? ' ' : '') . ($m ? $m . ' minutes' : '')); }
 function tmMins($v): int { $n = (int) $v; return in_array($n, TM_MINS, true) ? $n : 30; }
-/** who they meet: the person who booked it (a seller or admin), else the person doing this now */
+/** who signs it ({me}): the person who booked it (a seller or admin), else the person doing this now. Not who gives the tour: that is
+    tmVisitHost() ({meet}), since 2026-11-20 */
 function tmMeet(string $w, array $t, string $me): string { $b = (string) ($t['by'] ?? ''); return $b !== '' && in_array($b, owners($w), true) ? $b : $me; }
 function tmFirst(string $who, string $email): string {
     $n = trim(preg_replace('/\s+/', ' ', (string) preg_replace('/[<(].*$/', '', $who)) ?? '');
     if ($n !== '' && !str_contains($n, '@') && preg_match('/^[\p{L}][\p{L}\'’.-]*/u', $n, $m) && mb_strlen($m[0]) > 1) return $m[0];
     return 'there';
 }
-function tmCtx(array $R, array $t, string $meet): array {
+function tmCtx(array $R, array $t, string $me): array {
     $ts = (int) strtotime($t['date'] . ' ' . $t['time']); $mins = tmMins($t['mins'] ?? 30);
     return ['first' => tmFirst((string) ($t['who'] ?? ''), (string) ($t['email'] ?? '')), 'company' => (string) ($R['name'] ?? ''),
         'date' => date('l, F j', $ts) . (date('Y', $ts) !== date('Y') ? ', ' . date('Y', $ts) : ''), 'time' => date('g:i a', $ts), 'length' => tmLen($mins),
-        'address' => TM_ADDRESS, 'me' => $meet, 'phone' => TM_PHONE];
+        'address' => TM_ADDRESS, 'me' => $me, 'meet' => tmVisitHost(), 'phone' => TM_PHONE];
 }
 /** the email for one version of a tour: subject, text, html, ics, method, ref */
-function tmCompose(string $w, array $R, array $t, string $meet, bool $cancel, string $organizer, array $words): array {
-    $ctx = tmCtx($R, $t, $meet); $seq = (int) ($t['seq'] ?? 0); $moved = !$cancel && $seq > 0;
-    $subject = tmFill($words[$cancel ? 'csubject' : 'subject'], $ctx); $text = tmFill($words[$cancel ? 'cbody' : 'body'], $ctx);
+function tmCompose(string $w, array $R, array $t, string $me, bool $cancel, string $organizer, array $words): array {
+    $ctx = tmCtx($R, $t, $me); $words = tmWordsFix($words); $seq = (int) ($t['seq'] ?? 0); $moved = !$cancel && $seq > 0;
+    /* a subject is one line: {meet} in it just fills in (empty when nobody is named), it never drops the subject */
+    $subject = trim((string) preg_replace('/ {2,}/', ' ', tmFillRaw($words[$cancel ? 'csubject' : 'subject'], $ctx))); $text = tmFill($words[$cancel ? 'cbody' : 'body'], $ctx);
     if ($moved) {
         $subject = 'Updated: ' . preg_replace('/^(confirmed|confirmation)\s*:\s*/i', '', $subject);
         $line = 'The time has changed. The new details are below, and the calendar invite is updated.';
         $p = strpos($text, "\n\n"); $text = $p !== false && $p < 60 ? substr($text, 0, $p) . "\n\n" . $line . substr($text, $p) : $line . "\n\n" . $text;
     }
     $text = str_replace("\r", '', $text);
-    return ['subject' => clean($subject, 200), 'text' => $text, 'html' => tmHtml($text), 'ics' => tmIcs($w, $R, $t, $meet, $cancel, $organizer, $ctx),
+    return ['subject' => clean($subject, 200), 'text' => $text, 'html' => tmHtml($text), 'ics' => tmIcs($w, $R, $t, $cancel, $organizer, $ctx),
         'method' => $cancel ? 'CANCEL' : 'REQUEST', 'ref' => 'tc-' . preg_replace('/[^a-z0-9]/', '', (string) $t['tid']) . '-' . $seq . '-' . ($cancel ? 'c' : 'r'), 'seq' => $seq, 'moved' => $moved];
 }
 /** the same words as simple HTML: no images, no tracked links */
@@ -139,8 +156,10 @@ function tmHtml(string $text): string {
 const TM_VTZ = ['BEGIN:VTIMEZONE', 'TZID:America/Denver', 'X-LIC-LOCATION:America/Denver',
     'BEGIN:DAYLIGHT', 'TZOFFSETFROM:-0700', 'TZOFFSETTO:-0600', 'TZNAME:MDT', 'DTSTART:19700308T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU', 'END:DAYLIGHT',
     'BEGIN:STANDARD', 'TZOFFSETFROM:-0600', 'TZOFFSETTO:-0700', 'TZNAME:MST', 'DTSTART:19701101T020000', 'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU', 'END:STANDARD', 'END:VTIMEZONE'];
-/** the calendar invite: one UID per tour, SEQUENCE per version, local times in America/Denver with its time zone */
-function tmIcs(string $w, array $R, array $t, string $meet, bool $cancel, string $organizer, array $ctx): string {
+/** the calendar invite: one UID per tour, SEQUENCE per version, local times in America/Denver with its time zone. Names who meets
+    visitors ($ctx['meet']) only when the desk names someone; never the seller */
+function tmIcs(string $w, array $R, array $t, bool $cancel, string $organizer, array $ctx): string {
+    $meet = (string) ($ctx['meet'] ?? '');
     $st = new DateTime($t['date'] . ' ' . $t['time'], new DateTimeZone('America/Denver')); $en = (clone $st)->modify('+' . tmMins($t['mins'] ?? 30) . ' minutes');
     $to = strtolower((string) ($t['email'] ?? '')); $cn = trim((string) preg_replace('/[<(].*$/', '', (string) ($t['who'] ?? '')));
     $q = fn(string $s) => '"' . str_replace(['"', "\r", "\n", ';', ':'], '', $s) . '"';
@@ -148,8 +167,8 @@ function tmIcs(string $w, array $R, array $t, string $meet, bool $cancel, string
     array_push($L, ...TM_VTZ);
     array_push($L, 'BEGIN:VEVENT', 'UID:peak-tour-' . preg_replace('/[^a-z0-9]/', '', (string) $t['tid']) . '@traverseplatforms.com', 'DTSTAMP:' . gmdate('Ymd\THis\Z'),
         'SEQUENCE:' . (int) ($t['seq'] ?? 0), 'DTSTART;TZID=America/Denver:' . $st->format('Ymd\THis'), 'DTEND;TZID=America/Denver:' . $en->format('Ymd\THis'),
-        'SUMMARY:' . icsEsc('Visit to Peak Pickleball (meeting ' . $meet . ')'), 'LOCATION:' . icsEsc(TM_ADDRESS),
-        'DESCRIPTION:' . icsEsc(($cancel ? "This visit is cancelled.\n" : '') . "You'll meet " . $meet . ".\nEntrance: from the parking lot off Jamboree Drive (no way in from inside Chapel Hills Mall).\nPeak: " . TM_PHONE . "\nTo change it, reply to the email this came with."),
+        'SUMMARY:' . icsEsc('Visit to Peak Pickleball' . ($meet !== '' ? ' (meeting ' . $meet . ')' : '')), 'LOCATION:' . icsEsc(TM_ADDRESS),
+        'DESCRIPTION:' . icsEsc(($cancel ? "This visit is cancelled.\n" : '') . ($meet !== '' ? "You'll meet " . $meet . ".\n" : '') . "Entrance: from the parking lot off Jamboree Drive (no way in from inside Chapel Hills Mall).\nPeak: " . TM_PHONE . "\nTo change it, reply to the email this came with."),
         'ORGANIZER;CN=' . $q(TM_NAME) . ':mailto:' . $organizer,
         'ATTENDEE;CN=' . $q($cn !== '' && !str_contains($cn, '@') ? $cn : $to) . ';ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:' . $to,
         'STATUS:' . ($cancel ? 'CANCELLED' : 'CONFIRMED'), 'TRANSP:OPAQUE', 'END:VEVENT', 'END:VCALENDAR');
@@ -197,7 +216,7 @@ function tmSend(string $w, string $tid, string $me, bool $cancel): array {
         if ($no !== '') { withLock(fn() => commit($w, [$row(['ok' => false, 'kind' => $to === '' ? 'noemail' : 'dnc', 'why' => $no])])); return ['state' => 'blocked', 'why' => $no, 'to' => $to]; }
         $mb = tmMailbox();
         if (!$mb['ok']) { withLock(fn() => commit($w, [$row(['ok' => false, 'kind' => 'mailer', 'why' => $mb['why']])])); return ['state' => 'failed', 'why' => $mb['why'], 'to' => $to]; }
-        $meet = tmMeet($w, $t, $me); $m = tmCompose($w, $R, $t, $meet, $cancel, $mb['email'], $conf['words']);
+        $signer = tmMeet($w, $t, $me); $m = tmCompose($w, $R, $t, $signer, $cancel, $mb['email'], $conf['words']);
         $x = pmTourSend(['ref' => $m['ref'], 'to' => $to, 'name' => tmFirst((string) ($t['who'] ?? ''), $to) !== 'there' ? trim((string) preg_replace('/[<(].*$/', '', (string) $t['who'])) : '',
             'subject' => $m['subject'], 'text' => $m['text'], 'html' => $m['html'], 'ics' => $m['ics'], 'method' => $method,
             'w' => $w, 'org' => (string) $R['id'], 'company' => (string) $R['name'], 'tid' => $tid, 'seq' => $seq, 'by' => $me]);

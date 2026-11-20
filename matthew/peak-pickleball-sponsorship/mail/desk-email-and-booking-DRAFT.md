@@ -92,7 +92,7 @@ Screenshots: `tests/booking-page.png` and `tests/booking-page-phone.png`.
 PEAK PICKLEBALL
 Book a time with Peak Pickleball
 
-A 30-minute visit to Peak Pickleball with Cai Silva[, for <their company>]. Pick a time below. Times are Mountain time.
+A 30-minute visit to Peak Pickleball[ with <who meets visitors>][, for <their company>]. Pick a time below. Times are Mountain time.
 Where: Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920. The entrance is from the parking lot off Jamboree Drive;
 there is no way in from inside Chapel Hills Mall.
 
@@ -106,7 +106,21 @@ Anything we should know (optional)
 
 The company field and the "talk about" question show only when the link doesn't already know who they are.
 
-After booking: **"You are booked. Tuesday, November 24 at 2:00 pm (Mountain time), 30 minutes, with Cai Silva."** It repeats the
+**Who meets visitors (20 Nov, Matthew: sellers book tours, they don't give them).** The visitor is never told the seller's name, even
+on Cai's own link. What they see comes from one desk-wide setting, **More › Settings › Booking links › Who meets visitors**, empty until
+Tyler says who gives tours. Empty, the name is simply left out:
+
+- page: "A 30-minute visit to Peak Pickleball. Pick a time below. Times are Mountain time." (or "..., for <their company>. Pick a time...")
+- booked: "You are booked. Tuesday, November 24 at 2:00 pm (Mountain time), 30 minutes."
+- already booked: "You already have a time. Tuesday, November 24 at 2:00 pm (Mountain time)."
+- calendar file: "Visit to Peak Pickleball"
+- tour confirmation email: no "You'll meet" line; the invite is "Visit to Peak Pickleball"
+
+Set (say "Tyler"), it reads "... with Tyler", "You'll meet: Tyler" and "Visit to Peak Pickleball (meeting Tyler)". The confirmation
+email is still signed by whoever booked it (Cai, or "The Peak Pickleball team" from the general link). Inside the desk nothing changes:
+the seller whose link it was is the host, owns the tour, gets it on Today, and the heads-up email still says whose link it came from.
+
+After booking: **"You are booked. Tuesday, November 24 at 2:00 pm (Mountain time), 30 minutes."** (", with <who meets visitors>" when that is set.) It repeats the
 address, and adds "A confirmation email with a calendar invite is on its way" when tour confirmations are on. There is an
 **Add it to my calendar** button, and "Need to change it? Reply to the email, or call Peak at (719) 377-4725."
 
@@ -118,7 +132,7 @@ Other answers it can give:
 
 **The hours (one schedule for the whole desk):** Mon, Wed, Fri 2:00–4:00 pm; Tue, Thu 8:00 am–4:00 pm, Mountain time. Meetings are
 30 minutes (the last starts at 3:30, so it ends by 4). Bookings need 24 hours' notice and can be up to 14 days out. Admins change these in
-More › Settings › Booking links: the days and times, the length, the notice, how far ahead, and blocked dates.
+More › Settings › Booking links: the days and times, the length, the notice, how far ahead, blocked dates, and who meets visitors.
 
 **One booking per slot, desk-wide:** a slot disappears for everyone once it is taken. That covers a booking from any link and a tour typed
 on the desk (sponsors or expo). Two people pressing Book on the same slot at the same moment: one gets it, the other is told it was just

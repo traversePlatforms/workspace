@@ -372,7 +372,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-19.3';
+  var BUILD = '2026-11-20.1';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -558,7 +558,13 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       list: 'Organisations that run expos, shows and fairs and could rent Peak as their venue.', deals: 'Tours of Peak for organisers, quotes sent and events booked.',
       more: 'A report on the expo leads, the questions for Peak and the competing venues, your calendar link and the look.' }
   };
-  var subList = function (t) { var L = SUBS[S.world][t]; return L && S.data && S.data.me.role !== 'admin' ? L.filter(function (x) { return x[0] !== 'settings'; }) : L; };   /* Settings: admins only */
+  /* admins only (2026-11-20, Matthew): Settings, and in More the Report, Profit & loss, Packages, What Peak offers and What we could offer.
+     A seller keeps My email & booking link, My calendar and Look (and on the Expo leads, Questions and venues). The server does not send a
+     seller the figures behind them either. */
+  var ADMIN_SUBS = { settings: 1, report: 1, pl: 1, pk: 1, offer: 1, better: 1 };
+  var isAdmin = function () { return !!(S.data && S.data.me.role === 'admin'); };
+  var DESC_SELLER = { sponsor: 'Your email and booking link, your calendar link and the look.', expo: 'The questions for Peak and the competing venues, your email and booking link, your calendar link and the look.' };
+  var subList = function (t) { var L = SUBS[S.world][t]; return L && S.data && !isAdmin() ? L.filter(function (x) { return !(t === 'more' ? ADMIN_SUBS[x[0]] : x[0] === 'settings'); }) : L; };
   var subOf = function (t) { var L = subList(t); return L ? (S.sub[S.world + t] && L.some(function (x) { return x[0] === S.sub[S.world + t]; }) ? S.sub[S.world + t] : L[0][0]) : ''; };
   function tabCount(t) {
     if (t === 'today') { var n = recs().filter(function (r) { return isDue(r) && ownerOk(r); }).length; return n ? [n, 1] : null; }
@@ -589,6 +595,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   function remember() { try { history.replaceState(null, '', '#' + S.world + '/' + S.tab + (subOf(S.tab) ? '/' + subOf(S.tab) : '')); } catch (e) {} }
   function draw() {
     main.textContent = ''; document.documentElement.classList.remove('lock');
+    if (S.print && S.print.kind === 'report' && !isAdmin()) S.print = null;   /* the report: admins only (2026-11-20) */
     if (S.print) return S.print.kind === 'proposal' ? printProposal(S.print.pid) : printReport();
     if (!TABS[S.world].some(function (x) { return x[0] === S.tab; })) S.tab = 'today';
     main.setAttribute('data-world', S.world); main.setAttribute('data-section', S.tab);
@@ -600,7 +607,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var x = TABS[S.world].filter(function (s) { return s[0] === S.tab; })[0], h = el('div', 'shead'), top = el('div', 'shtop');
     var h1 = el('h1'); if (!expoOnly()) h1.appendChild(document.createTextNode((isX() ? 'Expo leads' : 'Sponsors') + ' · ')); h1.appendChild(el('span', null, x[1])); top.appendChild(h1);
     if (S.tab === 'list' || S.tab === 'pipe') { var add = el('button', 'btn ghost small', isX() ? '+ Add an expo lead' : '+ Add a company'); add.type = 'button'; add.addEventListener('click', isX() ? expoAddForm : addForm); top.appendChild(add); }
-    var desc = DESC[S.world][S.tab]; if (S.tab === 'more' && S.data.me.role === 'admin') desc = desc.replace(/ and the look\.$/, ', the look, and the settings (message templates, the end-of-day email).');
+    var desc = S.tab === 'more' && !isAdmin() ? DESC_SELLER[S.world] : DESC[S.world][S.tab]; if (S.tab === 'more' && isAdmin()) desc = desc.replace(/ and the look\.$/, ', the look, and the settings (message templates, the end-of-day email).');
     h.appendChild(top); h.appendChild(el('p', 'sdesc', desc));
     var L = subList(S.tab);
     if (L) {
@@ -1958,6 +1965,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 
   /* ---- More ---- */
   function drawMore(sub) {
+    if (ADMIN_SUBS[sub] && !isAdmin()) return;   /* never drawn for a seller (subOf already keeps them off it) */
     ({ report: drawReport, pl: drawPl, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.sponsor.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.sponsor.better); }, look: drawLook, ref: drawExpoRef, cal: drawCal, mine: drawMine, settings: drawSettings })[sub]();
   }
   /* the look (2026-11-18): Dark is the default; Light is the Clubhouse look; or match this device. Kept on this device only. */
@@ -2056,11 +2064,15 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     (B.lens || [30]).forEach(function (m) { var o = el('option', null, m + ' minutes'); o.value = m; ln.appendChild(o); }); ln.value = String(B.mins || 30); nt.value = B.notice; ah.value = B.ahead;
     var lab = function (t, e) { var d = el('div'); d.appendChild(el('label', 'lab', t)); d.appendChild(e); return d; };
     two.appendChild(lab('Each meeting', ln)); two.appendChild(lab('Notice (hours)', nt)); f.appendChild(two); f.appendChild(lab('How far ahead (days)', ah));
+    /* who meets visitors (2026-11-20): what the visitor is told, never the seller whose link it was */
+    f.appendChild(el('label', 'lab', 'Who meets visitors (the person who gives the tour)'));
+    var mt = el('input'); mt.className = 'bkmeet'; mt.maxLength = 60; mt.placeholder = 'Nobody named yet'; mt.value = B.meet || ''; f.appendChild(mt);
+    f.appendChild(el('small', null, 'What the visitor sees on the booking page, the calendar file and the tour confirmation and cancellation emails (“with …”, “You’ll meet: …”). The seller whose link it was is never named there; they still own the tour, see it on Today and sign the email. Empty: no name is given.'));
     f.appendChild(el('label', 'lab', 'Blocked dates (no bookings): one a line, like 2026-11-26'));
     var bl = el('textarea'); bl.rows = 3; bl.className = 'bkblocked'; bl.value = (B.blocked || []).join('\n'); f.appendChild(bl);
     f.appendChild(el('small', null, 'Holidays are not blocked unless they are listed here (Thanksgiving, Christmas and New Year’s Day included).'));
     var row = el('div', 'seg'), sv = el('button', 'btn small', 'Save'), rs = el('button', 'lnk', 'Go back to the first hours'); sv.type = rs.type = 'button'; sv.setAttribute('data-act', 'bksave');
-    sv.addEventListener('click', function () { if (st.on && !B.on && !confirm('Turn on booking links? From now on anyone with a link can book a time on these hours.')) return; save('bookset', { on: st.on, week: wk.value, mins: +ln.value, notice: +nt.value, ahead: +ah.value, blocked: bl.value }, st.on ? 'Booking links are on' : 'Saved (booking links are off)'); });
+    sv.addEventListener('click', function () { if (st.on && !B.on && !confirm('Turn on booking links? From now on anyone with a link can book a time on these hours.')) return; save('bookset', { on: st.on, week: wk.value, mins: +ln.value, notice: +nt.value, ahead: +ah.value, blocked: bl.value, meet: mt.value }, st.on ? 'Booking links are on' : 'Saved (booking links are off)'); });
     rs.addEventListener('click', function () { var D = B.defaults || {}; wk.value = D.week || ''; ln.value = String(D.mins || 30); nt.value = D.notice || 24; ah.value = D.ahead || 14; toast('The first hours are filled in: press Save to keep them.'); });
     row.appendChild(sv); row.appendChild(rs); f.appendChild(row);
     var gl = el('div', 'form'); gl.style.marginTop = '12px'; c.appendChild(gl);
@@ -2099,7 +2111,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     c3.appendChild(tseg); tpaint();
     c3.appendChild(el('small', null, (TM.on ? 'On' + (TM.by ? ' since ' + (TM.at ? ago(TM.at) : '') + ', by ' + TM.by : '') + '.' : 'Off.' + (TM.by ? ' Last changed by ' + TM.by + (TM.at ? ', ' + ago(TM.at) : '') + '.' : '')) + (TM.ready === false ? ' Peak email can’t send right now: ' + (TM.why || 'not connected') + '.' : '')));
     var tf = el('div', 'form'); tf.style.marginTop = '10px'; c3.appendChild(tf);
-    tf.appendChild(el('small', null, 'Fields: {' + (TM.fields || []).join('}, {') + '}. {me} is the full name of the person who booked it. The confirmation must keep {date}, {time} and {address}; the cancellation {date} and {time}. A moved tour sends the confirmation again, its subject starting “Updated:” and a line saying the time has changed.'));
+    tf.appendChild(el('small', null, 'Fields: {' + (TM.fields || []).join('}, {') + '}. {me} is the full name of the person who booked it (it signs the email); {meet} is who meets visitors, set under Booking links (' + (TM.meet ? 'now “' + TM.meet + '”' : 'nobody named yet, so a line with {meet} in it is left out') + '). The confirmation must keep {date}, {time} and {address}; the cancellation {date} and {time}. A moved tour sends the confirmation again, its subject starting “Updated:” and a line saying the time has changed.'));
     var W0 = TM.words || {}, fld = {};
     [['subject', 'Confirmation: subject', 1], ['body', 'Confirmation: the email', 12], ['csubject', 'Cancellation: subject', 1], ['cbody', 'Cancellation: the email', 7]].forEach(function (x) {
       tf.appendChild(el('label', 'lab', x[1])); var e = x[2] > 1 ? el('textarea') : el('input'); if (x[2] > 1) e.rows = x[2]; e.value = W0[x[0]] || ''; e.setAttribute('data-tmw', x[0]); tf.appendChild(e); fld[x[0]] = e;

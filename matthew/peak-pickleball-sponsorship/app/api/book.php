@@ -22,7 +22,7 @@ if (isset($q['ics'])) {
     if (preg_match('/^([0-9a-f]{10})-([0-9a-f]{12})$/', (string) $q['ics'], $m) && hash_equals(bkSig('ics|' . $m[1], 12), $m[2])) {
         foreach (['sponsor', 'expo'] as $w) foreach (toursOf($w) as $t) if ($t['tid'] === $m[1]) {
             header('Content-Type: text/calendar; charset=utf-8'); header('Content-Disposition: attachment; filename="peak-visit-' . $t['date'] . '.ics"');
-            echo bkIcs($t, (string) ($t['host'] ?? '') ?: BK_GENERIC_HOST); exit;
+            echo bkIcs($t, bkMeet()); exit;   /* who meets visitors (the desk setting), never the seller (2026-11-20) */
         }
     }
     http_response_code(404); exit;
@@ -43,7 +43,9 @@ $ctx = bkParse($q);
 if (!$ctx) $page('That link did not work', '<p style="margin:0">Reply to the email it came in, and we will find a time with you.</p>' . $phone);
 $c = bkConf();
 if (!$c['on']) $page('Not taking bookings right now', '<p style="margin:0">Online booking is closed for the moment. Reply to the email this link came in, and we will find a time with you.</p>' . $phone);
-$host = $ctx['host'] !== '' ? $ctx['host'] : BK_GENERIC_HOST;
+/* who the visitor meets: the desk's "Who meets visitors" setting, never the seller whose link it was (they book tours, they don't give
+   them; 2026-11-20). Empty leaves the name out. */
+$meet = (string) $c['meet']; $with = $meet !== '' ? ', with ' . $h($meet) : '';
 $when = fn(string $d, string $t) => date('l, F j', (int) strtotime($d)) . ' at ' . date('g:i a', (int) strtotime($d . ' ' . $t));
 $where = '<p style="margin:10px 0 0"><b>Where:</b> ' . $h(BK_ADDRESS) . '. The entrance is from the parking lot off Jamboree Drive; there is no way in from inside Chapel Hills Mall.</p>';
 $ftok = bkSig('f|' . $ctx['key']);
@@ -61,12 +63,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if (!empty($r['ok'])) {
         $t = null; foreach (toursOf($r['w']) as $x) if ($x['tid'] === $r['tid']) $t = $x;
         $mail = ($r['tm']['state'] ?? '') === 'sent' || !empty($r['dup']);
-        $page('You are booked', '<p style="margin:0"><b>' . $h($when($r['date'], $r['time'])) . '</b> (Mountain time), ' . (int) $r['mins'] . ' minutes, with ' . $h($host) . '.</p>' . $where
+        $page('You are booked', '<p style="margin:0"><b>' . $h($when($r['date'], $r['time'])) . '</b> (Mountain time), ' . (int) $r['mins'] . ' minutes' . $with . '.</p>' . $where
             . ($mail ? '<p style="margin:10px 0 0">A confirmation email with a calendar invite is on its way to ' . $h(strtolower($val['email'])) . '.</p>' : '')
             . '<p style="margin:14px 0 0"><a href="?ics=' . $h($r['tid'] . '-' . bkSig('ics|' . $r['tid'], 12)) . '" style="display:inline-block;background:#1f5b46;color:#fff;text-decoration:none;font-weight:700;border-radius:10px;padding:10px 18px">Add it to my calendar</a></p>'
             . '<p style="margin:14px 0 0">Need to change it? Reply to the email' . ($mail ? '' : ' this link came in') . ', or call Peak at ' . BK_PHONE . '.</p>');
     }
-    if (($r['code'] ?? '') === 'mine') $page('You already have a time', '<p style="margin:0">' . $h($when($r['date'], $r['time'])) . ' (Mountain time), with ' . $h($host) . '.</p>' . $where . '<p style="margin:12px 0 0">To change it, reply to the email or call Peak at ' . BK_PHONE . '.</p>');
+    if (($r['code'] ?? '') === 'mine') $page('You already have a time', '<p style="margin:0">' . $h($when($r['date'], $r['time'])) . ' (Mountain time)' . $with . '.</p>' . $where . '<p style="margin:12px 0 0">To change it, reply to the email or call Peak at ' . BK_PHONE . '.</p>');
     if (($r['code'] ?? '') === 'closed') $page('Not taking bookings right now', '<p style="margin:0">Online booking just closed. Reply to the email this link came in, and we will find a time with you.</p>' . $phone);
     $err = (string) ($r['why'] ?? 'That did not go through. Try again.');
 } else {
@@ -78,7 +80,7 @@ if (!$slots) $page('No open times just now', '<p style="margin:0">Every time in 
 $known = $ctx['id'] !== '' && empty($ctx['off']);
 $in = 'width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px solid #c3d3ca;border-radius:8px';
 $f = ($err !== '' ? '<p role="alert" style="margin:0 0 12px;padding:9px 12px;border-radius:9px;background:#fdecea;color:#7a1d12">' . $h($err) . '</p>' : '')
-    . '<p style="margin:0">A ' . (int) $c['mins'] . '-minute visit to Peak Pickleball with ' . $h($host) . ($known ? ', for ' . $h($ctx['company']) : '') . '. Pick a time below. Times are Mountain time.</p>' . $where
+    . '<p style="margin:0">A ' . (int) $c['mins'] . '-minute visit to Peak Pickleball' . ($meet !== '' ? ' with ' . $h($meet) : '') . ($known ? ', for ' . $h($ctx['company']) : '') . '. Pick a time below. Times are Mountain time.</p>' . $where
     . '<form method="post" style="margin-top:6px">';
 $by = []; foreach ($slots as [$d, $t]) $by[$d][] = $t;
 foreach ($by as $d => $ts) {

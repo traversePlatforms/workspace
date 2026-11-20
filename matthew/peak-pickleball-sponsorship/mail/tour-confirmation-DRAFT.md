@@ -31,7 +31,7 @@ This confirms your visit to Peak Pickleball.
 When: Tuesday, November 24, 2:30 pm Mountain time (30 minutes)
 Where: Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920
 Entrance: from the parking lot off Jamboree Drive. We're connected to Chapel Hills Mall, but there is no way in from inside the mall.
-You'll meet: Cai Silva
+You'll meet: <who meets visitors>      (20 Nov: this line is left out while that setting is empty; never the seller)
 
 A calendar invite is attached so you can add it to your calendar. If you need to change the time, reply to this email or call Peak at (719) 377-4725.
 
@@ -106,10 +106,10 @@ DTSTAMP:20261119T222423Z
 SEQUENCE:0
 DTSTART;TZID=America/Denver:20261124T143000
 DTEND;TZID=America/Denver:20261124T150000
-SUMMARY:Visit to Peak Pickleball (meeting Cai Silva)
+SUMMARY:Visit to Peak Pickleball (meeting Tyler)       (20 Nov: just "Visit to Peak Pickleball" while nobody is set)
 LOCATION:Peak Pickleball\, 1730 Briargate Blvd\, Colorado Springs\, CO 809
  20
-DESCRIPTION:You'll meet Cai Silva.\nEntrance: from the parking lot off Jam
+DESCRIPTION:You'll meet Tyler.\nEntrance: from the parking lot off Jam
  boree Drive (no way in from inside Chapel Hills Mall).\nPeak: (719) 377-47
  25\nTo change it\, reply to the email this came with.
 ORGANIZER;CN="Peak Pickleball":mailto:partnerships@peakpickleball.us

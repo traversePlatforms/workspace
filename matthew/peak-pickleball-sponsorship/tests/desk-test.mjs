@@ -7,7 +7,10 @@
    Priority 5, duplicate warnings, Don't contact (with the email sender's own import), the end-of-day email (off) and the calendar feed.
    2026-11-19: tour confirmation emails, sent through the Peak email sender's own code (mail/public/lib.php) to a stand-in for Microsoft on
    127.0.0.1: nothing reaches Microsoft and nobody is emailed.
-   2026-11-19: Write an email on every card and booking links on one shared schedule (the booking page on the same test server). */
+   2026-11-19: Write an email on every card and booking links on one shared schedule (the booking page on the same test server).
+   2026-11-20: Who meets visitors: the visitor is never told the seller's name (they book tours, they don't give them).
+   2026-11-20: More for sellers is My email & booking link, My calendar, Look (and Questions and venues on the Expo leads); the Report,
+   Profit & loss, Packages, What Peak offers and What we could offer are the admin's, and a seller's data has none of their figures. */
 import { spawn, execFileSync, execFile } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync, rmSync, mkdtempSync, cpSync, mkdirSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -172,13 +175,15 @@ try {
   ok((await b('tour', { world: 'sponsor', id: TT.id, date: '2020-01-01', time: '10:00' })).error === 'Pick today or a later day.', 'a tour in the past is refused');
   ok((await b('tourmove', { world: 'sponsor', tid: tr.tid, date: later(4), time: '14:00' })).ok && (await b('data')).sponsor.tours.find((x) => x.tid === tr.tid).date === later(4), 'a tour moves');
   ok((await b('tourout', { world: 'sponsor', tid: tr.tid, out: 'toured' })).ok && (await b('data')).sponsor.recs.find((r) => r.id === TT.id).last.out === 'toured', 'They came: logged as an in-person touch (Toured Peak)');
-  ok((await b('packages', { packages: [{ name: 'Court sponsor', price: 12000, per: 'year' }, { name: 'Title sponsor', price: 24000, per: 'year' }] })).ok, 'packages save');
+  ok((await b('packages', { packages: [{ name: 'Court sponsor', price: 12000, per: 'year' }] }))._status === 403 && (await c2('pl', { services: [], running: [] }))._status === 403, 'a seller cannot change the packages or the P&L (admins only, 2026-11-20)');
+  ok((await a('packages', { packages: [{ name: 'Court sponsor', price: 12000, per: 'year' }, { name: 'Title sponsor', price: 24000, per: 'year' }] })).ok, 'packages save (the admin)');
   const pr = await b('proposal', { world: 'sponsor', lead: TT.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }, { name: 'Banner', price: 500, qty: 1 }], to: 'Pat, Marketing', note: 'Two courts' });
   ok(pr.ok && pr.total === 24500 && (await b('data')).sponsor.recs.find((r) => r.id === TT.id).stage === 'proposal', 'a proposal: $24,500, and it moves to Proposal sent');
   ok((await b('signed', { world: 'sponsor', id: TT.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }], start: 'x', months: 12 })).error === 'Pick the start date.', 'Signed needs a start date');
   ok((await b('signed', { world: 'sponsor', id: TT.id, lines: [{ name: 'Court sponsor', price: 12000, qty: 2, per: 'year' }, { name: 'Banner', price: 500, qty: 1 }], start: today(), months: 12, who: 'Pat' })).ok, 'a sponsor is signed');
-  ok((await b('todo', { id: TT.id, text: 'Logo on court 7' })).ok && (await b('pl', { services: [{ name: 'Court sponsor', price: 12000, per: 'year', cost: 1500, costPer: 'year' }], running: [{ name: 'Hosting', amount: 20, per: 'month' }] })).ok, 'to-dos and the P&L save');
-  D = await b('data'); ok(find('sponsor', TT.id).stage === 'signed' && find('sponsor', TT.id).signed.total === 24500 && D.sponsor.pl.services[0].cost === 1500, 'Signed: $24,500, P&L kept');
+  ok((await b('todo', { id: TT.id, text: 'Logo on court 7' })).ok && (await a('pl', { services: [{ name: 'Court sponsor', price: 12000, per: 'year', cost: 1500, costPer: 'year' }], running: [{ name: 'Hosting', amount: 20, per: 'month' }] })).ok, 'to-dos and the P&L save (the P&L by the admin)');
+  D = await b('data'); const DA = await a('data'); ok(find('sponsor', TT.id).stage === 'signed' && find('sponsor', TT.id).signed.total === 24500 && DA.sponsor.pl.services[0].cost === 1500, 'Signed: $24,500, P&L kept');
+  ok(!('pl' in D.sponsor) && !('offer' in D.sponsor) && !('better' in D.sponsor) && !('pl' in (await c2('data')).sponsor) && D.sponsor.packages.length === 2 && DA.sponsor.offer.length > 0 && DA.sponsor.better.length > 0 && 'pl' in DA.sponsor, 'a seller’s data has no Profit & loss, What Peak offers or What we could offer (the packages stay: Make a proposal and Mark signed pick from them); the admin’s has them all');
   const spn = await b('sponsor', { name: 'Test Sponsor Co', kind: 'Dentist', cname: 'Sam', cemail: 'sam@example.com', start: today(), months: 6, lines: [] });
   D = await b('data'); ok(spn.ok && find('sponsor', spn.id).stage === 'signed' && find('sponsor', spn.id).list === 'added' && find('sponsor', spn.id).owner === 'Test Seller', 'a new sponsor in one step: Signed, Added on the desk, owned by whoever added it');
   ok((await b('add', { world: 'sponsor', name: K.name })).error === 'That company is already on the list.', 'a company already on the list is not added twice');
@@ -523,7 +528,8 @@ try {
     let m = mimeParts(GM.sent[0]); const tidB = r.tid, dB = later(4);
     const longDay = new Date(dB + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     ok(/^Jamie Polson <jamie@example.com>$/.test(m.to) && m.subject === 'Confirmed: your visit to Peak Pickleball, ' + longDay + ' at 2:30 pm' && /multipart\/mixed/.test(m.top), 'To the person, subject "Confirmed: your visit to Peak Pickleball, ' + longDay + ' at 2:30 pm"');
-    ok(m.text.startsWith('Hi Jamie,') && m.text.includes('When: ' + longDay + ', 2:30 pm Mountain time (30 minutes)') && m.text.includes('Where: Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920') && /parking lot off Jamboree Drive/.test(m.text) && m.text.includes("You'll meet: Test Seller") && m.text.includes('(719) 377-4725') && /reply to this email/.test(m.text) && m.text.trim().endsWith('Thanks,\r\nTest Seller\r\nPeak Pickleball'), 'the words: date, time (Mountain), length, address, entrance, who they meet, Peak\u2019s phone, reply to change it, signed by the booker');
+    ok(m.text.startsWith('Hi Jamie,') && m.text.includes('When: ' + longDay + ', 2:30 pm Mountain time (30 minutes)') && m.text.includes('Where: Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920') && /parking lot off Jamboree Drive/.test(m.text) && !/You.ll meet/.test(m.text) && m.text.includes('inside the mall.\r\n\r\nA calendar invite') && m.text.includes('(719) 377-4725') && /reply to this email/.test(m.text) && m.text.trim().endsWith('Thanks,\r\nTest Seller\r\nPeak Pickleball'), 'the words: date, time (Mountain), length, address, entrance, Peak’s phone, reply to change it, signed by the booker; nobody set to meet visitors, so no "You’ll meet" line (never the seller)');
+    ok(icsGet(m.cal.body, 'SUMMARY') === 'Visit to Peak Pickleball' && !/Test Seller|meet/i.test(m.cal.body), 'the invite: "Visit to Peak Pickleball", no seller named in it');
     ok(m.html.includes('2:30 pm Mountain time') && !/<img|<a |r\.php|o\.php/i.test(m.html) && !/https?:\/\//.test(m.text), 'the HTML part is the same words: no open image, no tracked links');
     const ics = m.cal.body;
     ok(/method=REQUEST/i.test(m.cal.ct) && /attachment; filename="invite.ics"/.test(m.att.head) && m.att.body === ics, 'a text/calendar part (method=REQUEST) for "Add to calendar", and the same invite attached as invite.ics');
@@ -623,23 +629,45 @@ try {
     const minAhead = (v) => (new Date(v.replace(' ', 'T') + ':00').getTime() - Date.now()) / 3600000;
     D = await b('data'); const busy = D.sponsor.tours.concat(D.expo.tours).map((t) => t.date + ' ' + t.time);
     ok(pg.status === 200 && SL.length > 20 && SL.every(inHours) && SL.every((v) => minAhead(v) >= 23.9) && SL.every((v) => minAhead(v) <= 15 * 24) && !SL.some((v) => busy.includes(v)), `the page shows only open times in the shared hours, 24 hours ahead or more, within 14 days, none already toured (${SL.length}; first ${SL[0]})`);
-    ok(/with Test Seller/.test(pg.text) && /Mountain time/.test(pg.text) && /1730 Briargate Blvd/.test(pg.text) && /Jamboree Drive/.test(pg.text) && /Company or organisation/.test(pg.text) && /Sponsoring at Peak/.test(pg.text) && !/Kaiser|Robin|Test Seller’s|peak-desk|desk\.php/.test(pg.text.replace(/with Test Seller/g, '')) && /noindex/.test(pg.text), 'Peak-branded: who it is with, Mountain time, the address and entrance; no desk data');
+    ok(pg.text.includes('A 30-minute visit to Peak Pickleball. Pick a time below. Times are Mountain time.') && !/Test Seller/.test(pg.text) && /Mountain time/.test(pg.text) && /1730 Briargate Blvd/.test(pg.text) && /Jamboree Drive/.test(pg.text) && /Company or organisation/.test(pg.text) && /Sponsoring at Peak/.test(pg.text) && !/Kaiser|Robin|Test Seller|peak-desk|desk\.php/.test(pg.text) && /noindex/.test(pg.text), 'Peak-branded: "A 30-minute visit to Peak Pickleball. Pick a time below." (a personal link, nobody set to meet visitors: no name, never the seller), Mountain time, the address and entrance; no desk data');
     /* a booking from a personal link: someone new */
     const S1 = SL[0]; n0 = GM.calls; const h0 = heads().length;
     let out = await book(pq, { slot: S1, name: 'Jordan New', email: 'Jordan@NewCo.example', company: 'Brand New Co', topic: 'sponsor', note: 'Bring the sponsor sheet' });
     D = await b('data'); let NR = D.sponsor.recs.find((x) => x.name === 'Brand New Co'), TN = NR && D.sponsor.tours.find((t) => t.lead === NR.id);
-    ok(/You are booked/.test(out) && /with Test Seller/.test(out) && /on its way to jordan@newco\.example/.test(out) && /Add it to my calendar/.test(out), 'booked: the page says when, with whom, where, and that the confirmation is on its way');
+    ok(/You are booked/.test(out) && /\(Mountain time\), 30 minutes\.<\/p>/.test(out) && !/Test Seller/.test(out) && /on its way to jordan@newco\.example/.test(out) && /Add it to my calendar/.test(out), 'booked: "<when> (Mountain time), 30 minutes." (no seller named), where, and that the confirmation is on its way');
     ok(NR && NR.why === 'Booked from link' && NR.list === 'added' && NR.stage === 'meeting' && NR.owner === 'Test Seller' && NR.people.some((p) => p.email === 'jordan@newco.example'), 'someone new: a new lead "Booked from link" at Meeting / tour booked, the link’s owner its owner, the person on it');
     ok(TN && TN.date + ' ' + TN.time === S1 && TN.src === 'link' && TN.host === 'Test Seller' && TN.by === 'Test Seller' && TN.mins === 30 && TN.email === 'jordan@newco.example' && /Bring the sponsor sheet/.test(TN.note), 'the tour: that slot, 30 minutes, from a link, Test Seller its host');
     let m = mimeParts(GM.sent[GM.sent.length - 1]);
-    ok(GM.calls === n0 + 1 && /jordan@newco\.example/.test(m.to) && /^Confirmed: your visit/.test(m.subject) && m.text.includes("You'll meet: Test Seller") && icsGet(m.cal.body, 'METHOD') === 'REQUEST', 'the tour confirmation and its invite go to them (that switch is on in the test), meeting Test Seller');
+    ok(GM.calls === n0 + 1 && /jordan@newco\.example/.test(m.to) && /^Confirmed: your visit/.test(m.subject) && !/You.ll meet/.test(m.text) && /Thanks,\r\nTest Seller\r\nPeak Pickleball/.test(m.text) && !/Test Seller/.test(m.text.replace('Thanks,\r\nTest Seller', '')) && icsGet(m.cal.body, 'METHOD') === 'REQUEST' && icsGet(m.cal.body, 'SUMMARY') === 'Visit to Peak Pickleball' && !/Test Seller/.test(m.cal.body), 'the tour confirmation and its invite go to them (that switch is on in the test): no "You’ll meet" and no seller in the invite; only signed by the seller whose link it was');
     let hd = heads().slice(h0);
     ok(hd.length === 1 && /^Peak: Brand New Co booked a visit, .* \(with Test Seller\)$/.test(hd[0].subject) && /Jordan New \(jordan@newco\.example\)/.test(hd[0].body) && /Test Seller’s booking link/.test(hd[0].body) && /a new lead, marked Booked from link/.test(hd[0].body) && /They wrote: Bring the sponsor sheet/.test(hd[0].body), 'Matthew gets a heads-up email (who, when, whose link, new lead, their note)');
     pg = await page(pq); ok(!slotsOf(pg.text).includes(S1) && slotsOf((await page(gq)).text).indexOf(S1) < 0, 'that time is gone for everyone, from every link');
     const ics = await page('?ics=' + TN.tid + '-' + (out.match(/\?ics=[0-9a-f]{10}-([0-9a-f]{12})/) || [])[1]);
-    ok(/text\/calendar/.test(ics.ct) && /METHOD:PUBLISH/.test(ics.text) && /DTSTART;TZID=America\/Denver:/.test(ics.text) && (await page('?ics=' + TN.tid + '-000000000000')).status === 404, '"Add it to my calendar" gives the visit as a calendar file (a forged one gives nothing)');
+    ok(/text\/calendar/.test(ics.ct) && /METHOD:PUBLISH/.test(ics.text) && /DTSTART;TZID=America\/Denver:/.test(ics.text) && icsGet(ics.text, 'SUMMARY') === 'Visit to Peak Pickleball' && !/Test Seller|meet/i.test(ics.text) && (await page('?ics=' + TN.tid + '-000000000000')).status === 404, '"Add it to my calendar" gives the visit as a calendar file, "Visit to Peak Pickleball", no seller (a forged one gives nothing)');
     out = await book(pq, { slot: slotsOf(pg.text)[0], name: 'Jordan New', email: 'jordan@newco.example', company: 'Brand New Co', topic: 'sponsor' });
-    ok(/You already have a time/.test(out) && D.sponsor.tours.filter((t) => t.email === 'jordan@newco.example').length === 1, 'the same person again: "You already have a time", nothing new booked');
+    ok(/You already have a time/.test(out) && /\(Mountain time\)\.<\/p>/.test(out) && !/Test Seller/.test(out) && D.sponsor.tours.filter((t) => t.email === 'jordan@newco.example').length === 1, 'the same person again: "You already have a time" (no seller named), nothing new booked');
+    /* Who meets visitors (2026-11-20): one desk-wide setting; the visitor sees it, never the seller; the seller still owns the tour */
+    ok((await b('bookset', { meet: 'Tyler' }))._status === 403 && /under 60 characters/.test((await a('bookset', { meet: 'x'.repeat(61) })).error) && /plain words/.test((await a('bookset', { meet: 'Tyler {me}' })).error) && (await a('data')).book.meet === '' && (await b('data')).book.meet === '', 'Who meets visitors: admins only, up to 60 characters, plain words; empty to start');
+    r = await a('bookset', { meet: '  Tyler at Peak ' });
+    ok(r.ok && r.book.meet === 'Tyler at Peak' && r.book.on === true && r.book.hours === 'Mon, Wed, Fri 2:00-4:00 pm · Tue, Thu 8:00 am-4:00 pm' && (await b('data')).book.meet === 'Tyler at Peak' && JSON.parse(lines('book-settings.log').slice(-1)[0]).meet === 'Tyler at Peak', 'set through the booking settings (trimmed, logged); booking links stay on and the hours unchanged');
+    pg = await page(pq);
+    ok(pg.text.includes('A 30-minute visit to Peak Pickleball with Tyler at Peak. Pick a time below. Times are Mountain time.') && !/Test Seller/.test(pg.text), 'the page: "A 30-minute visit to Peak Pickleball with Tyler at Peak." (the seller’s own link, still not the seller)');
+    n0 = GM.calls; const h1 = heads().length, S4 = slotsOf(pg.text)[0];
+    out = await book(pq, { slot: S4, name: 'Casey Meet', email: 'casey@meetco.example', company: 'Meet Co', topic: 'sponsor' });
+    D = await b('data'); const MR = D.sponsor.recs.find((x) => x.name === 'Meet Co'), TM4 = MR && D.sponsor.tours.find((t) => t.lead === MR.id);
+    m = mimeParts(GM.sent[GM.sent.length - 1]); const cal4 = m.cal.body.replace(/\r\n /g, '');
+    ok(/\(Mountain time\), 30 minutes, with Tyler at Peak\.<\/p>/.test(out) && !/Test Seller/.test(out), 'booked: "<when> (Mountain time), 30 minutes, with Tyler at Peak."');
+    ok(GM.calls === n0 + 1 && m.text.includes("You'll meet: Tyler at Peak\r\n") && m.text.trim().endsWith('Thanks,\r\nTest Seller\r\nPeak Pickleball') && icsGet(m.cal.body, 'SUMMARY') === 'Visit to Peak Pickleball (meeting Tyler at Peak)' && cal4.includes("DESCRIPTION:You'll meet Tyler at Peak.") && !/Test Seller/.test(cal4), 'the confirmation: "You’ll meet: Tyler at Peak", still signed by the seller; the invite "Visit to Peak Pickleball (meeting Tyler at Peak)", no seller in it');
+    const ics4 = await page('?ics=' + TM4.tid + '-' + (out.match(/\?ics=[0-9a-f]{10}-([0-9a-f]{12})/) || [])[1]);
+    ok(ics4.text.replace(/\r\n /g, '').includes('SUMMARY:Visit to Peak Pickleball (meeting Tyler at Peak)') && !/Test Seller/.test(ics4.text), 'the page’s calendar file names Tyler at Peak too');
+    let hd4 = heads().slice(h1);
+    ok(TM4 && TM4.host === 'Test Seller' && TM4.by === 'Test Seller' && MR.owner === 'Test Seller' && hd4.length === 1 && /\(with Test Seller\)$/.test(hd4[0].subject) && /Test Seller’s booking link/.test(hd4[0].body) && /Host: Test Seller/.test(hd4[0].body), 'inside the desk nothing changes: the seller is the tour’s host and the owner, and Matthew’s heads-up says whose link it came from');
+    /* older saved wording with "You'll meet: {me}" reads as who meets visitors */
+    const WL = { ...(await a('data')).tourmail.words }; ok(WL.body.includes("You'll meet: {meet}\n"), 'the first wording says "You’ll meet: {meet}"');
+    WL.body = WL.body.replace("You'll meet: {meet}", "You'll meet: {me}");
+    ok((await a('tourmailset', { words: WL })).ok && (await a('data')).tourmail.words.body.includes("You'll meet: {meet}\n") && (await a('tourpreview', { world: 'sponsor', sample: 1 })).text.includes("You'll meet: Tyler at Peak\n"), 'wording saved with "You’ll meet: {me}" (the seller) is read as {meet}');
+    r = await a('bookset', { meet: '' }); let pv0 = await a('tourpreview', { world: 'sponsor', sample: 1 });
+    ok(r.ok && r.book.meet === '' && !/You.ll meet/.test(pv0.text) && pv0.text.includes('inside the mall.\n\nA calendar invite') && /Thanks,\n(Matthew|Test Admin|[A-Z][a-z]+)/.test(pv0.text) && icsGet(pv0.ics, 'SUMMARY') === 'Visit to Peak Pickleball' && !/meet/i.test(pv0.ics) && (await a('tourmailset', { reset: 1 })).tourmail.custom === false, 'cleared again: the line and the name are left out cleanly; the first wording back');
     /* two people, one slot, the same moment */
     SL = slotsOf((await page(gq)).text); const S2 = SL[0], ft = ftOf((await page(gq)).text);
     const two = await Promise.all(['a', 'b'].map((k) => fetch(BKP + gq, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ ft, slot: S2, name: 'Racer ' + k, email: 'racer-' + k + '@example.com', company: 'Racer ' + k.toUpperCase() + ' Inc', topic: 'sponsor' }).toString() }).then((x) => x.text())));
@@ -671,7 +699,7 @@ try {
     r = await b('dmretry', { world: 'sponsor', id: E1.id, ref: ref1 }); ok(r.ok && r.state === 'dup' && GM.calls === n0 + 1, 'Retry on one that went: nothing sent again');
     /* the link in that email: filled in for Robin, books onto this card with the seller as host */
     const mq = new URL(link1).search; pg = await page(mq);
-    ok(/for /.test(pg.text) && pg.text.includes(E1.name.replace(/&/g, '&amp;').replace(/'/g, '&#039;')) && /value="Robin Field"/.test(pg.text) && /value="robin@example.com"/.test(pg.text) && !/Company or organisation/.test(pg.text) && /with Test Seller/.test(pg.text), 'the email’s link: the page knows the company and fills in Robin’s name and email');
+    ok(/for /.test(pg.text) && pg.text.includes(E1.name.replace(/&/g, '&amp;').replace(/'/g, '&#039;')) && /value="Robin Field"/.test(pg.text) && /value="robin@example.com"/.test(pg.text) && !/Company or organisation/.test(pg.text) && pg.text.includes('A 30-minute visit to Peak Pickleball, for ') && !/Test Seller/.test(pg.text), 'the email’s link: "A 30-minute visit to Peak Pickleball, for <company>." (no seller named), Robin’s name and email filled in');
     const ev = lines('book-events.log').map((l) => JSON.parse(l)).filter((x) => x.ref === ref1);
     ok(ev.length === 1 && ev[0].t === 'view' && ev[0].bot === 1, 'its views are counted (one this soon after sending is taken for a mail scanner, as the Peak email does)');
     writeFileSync(join(LD, 'book-events.log'), JSON.stringify({ t: 'view', src: 'm', host: 'Test Seller', ref: ref1, bot: 0, at: Math.floor(Date.now() / 1000) }) + '\n', { flag: 'a' });
@@ -734,9 +762,9 @@ try {
     D = await b('data'); const mev = readFileSync(join(MAILD, 'events.log'), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
     ok(/You are booked/.test(out) && D.sponsor.tours.some((t) => t.lead === E3.id && t.from === 'o' && t.host === '') && find('sponsor', E3.id).stage === 'meeting' && mev.some((x) => x.t === 'booked' && x.to === 'casey3@example.com' && x.desk === 1 && x.org === E3.id) && mev.some((x) => x.t === 'desk' && x.op === 'booked' && x.ok), 'booked: on that company’s card; the sender logs it as booked (its rates stay right) and does not push it to the desk again');
     ok(/the Peak email \(\{book\}\)/.test(heads().slice(-1)[0].body), 'Matthew’s heads-up says it came from the Peak email');
-    /* at most 10 tries an hour from one address (this test has used 7) */
-    { const tq = new URL(PL.url).search, f0 = ftOf((await page(tq)).text); const outs = []; for (let i = 0; i < 4; i++) outs.push(await (await fetch(BKP + tq, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ ft: f0, slot: '2020-01-01 10:00', name: 'x', email: 'x@example.com', company: 'x' }).toString() })).text());
-      ok(outs.slice(0, 3).every((x) => /That time was just taken/.test(x)) && /Too many tries/.test(outs[3]), 'the page takes at most 10 tries an hour from one address'); }
+    /* at most 10 tries an hour from one address (this test has used 8: one more since the Who meets visitors booking, 2026-11-20) */
+    { const tq = new URL(PL.url).search, f0 = ftOf((await page(tq)).text); const outs = []; for (let i = 0; i < 3; i++) outs.push(await (await fetch(BKP + tq, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ ft: f0, slot: '2020-01-01 10:00', name: 'x', email: 'x@example.com', company: 'x' }).toString() })).text());
+      ok(outs.slice(0, 2).every((x) => /That time was just taken/.test(x)) && /Too many tries/.test(outs[2]), 'the page takes at most 10 tries an hour from one address'); }
     /* the log is the record */
     const before = JSON.stringify([find('sponsor', E1.id).dmails, find('sponsor', E2.id).touches.length, D.sponsor.tours.filter((t) => t.src === 'link').length]);
     php(['rebuild']); D = await b('data');
@@ -892,15 +920,29 @@ try {
   ok(await js(`!!document.querySelector('.paper')&&/sponsorship proposal/.test(document.querySelector('.paper').textContent)`), 'a proposal opens as a page to save as PDF');
   writeFileSync(join(ROOT, 'tests', 'desk-proposal.pdf'), Buffer.from((await send('Page.printToPDF', { printBackground: true })).data, 'base64'));
   await clickText('.printbar button', '/Back/', 300);
-  /* more: report */
-  await tab('more'); await sub('report');
+  /* more (2026-11-20): a seller sees My email & booking link, My calendar and Look only; the report and the money pages are the admin's */
+  const signAs = async (cd, what) => { await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
+    await js(`(()=>{const i=document.querySelector('.signin input');i.value='${cd}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`); await waitFor(`!!document.querySelector('.shead')`, what); };
+  const chipsNow = () => js(`[...document.querySelectorAll('.subchips [data-sub]')].map(b=>b.dataset.sub).join()`);
+  await tab('more');
+  ok((await chipsNow()) === 'mine,cal,look' && await js(`document.querySelector('.sdesc').textContent==='Your email and booking link, your calendar link and the look.'`), 'More (a seller): only My email & booking link, My calendar and Look, and the description says so');
+  let byUrl = 0;
+  for (const s of ['report', 'pl', 'pk', 'offer', 'better']) {
+    await send('Page.navigate', { url: ORIGIN + '/?u=' + s + '#sponsor/more/' + s }); await waitFor(`!!document.querySelector('.shead')`, 'opened by address');
+    if (await js(`document.querySelector('.subchips [data-sub="mine"]').getAttribute('aria-pressed')==='true'&&!document.querySelector('.subchips [data-sub="${s}"]')&&!/Who is on the desk|Open the report|Save packages|What Peak offers sponsors now|What we could offer or do better|No cost entered/.test(document.querySelector('main').textContent)`)) byUrl++;
+  }
+  ok(byUrl === 5, 'a seller opening #sponsor/more/report, /pl, /pk, /offer or /better by address gets My email & booking link and nothing of them (' + byUrl + ' of 5)');
+  await signAs(ADMIN, 'the admin, for the report'); await world('sponsor');
+  await tab('more'); ok((await chipsNow()) === 'report,pl,pk,offer,better,mine,cal,look,settings', 'More (the admin): unchanged, all nine');
+  await sub('report');
   ok(/Who is on the desk/.test(await text()), 'More \u203a Report with who has done what');
   await clickText('main .btn', '/Open the report/', 400);
   ok(await js(`/Sponsor pipeline/.test(document.querySelector('.paper h1').textContent)&&/This week by person/.test(document.querySelector('.paper').textContent)&&/Proposals out/.test(document.querySelector('.paper').textContent)`), 'the report page: stages, the week by person, proposals out');
   writeFileSync(join(ROOT, 'tests', 'desk-report.pdf'), Buffer.from((await send('Page.printToPDF', { printBackground: true })).data, 'base64'));
   await clickText('.printbar button', '/Back/', 300);
   for (const s of ['pl', 'pk', 'offer', 'better']) { await sub(s); }
-  ok(await js(`/What we could offer/.test(document.querySelector('main').textContent)`), 'P&L, Packages, What Peak offers, What we could offer still open');
+  ok(await js(`/What we could offer/.test(document.querySelector('main').textContent)`), 'P&L, Packages, What Peak offers, What we could offer still open (the admin)');
+  await signAs(SELLER, 'the seller again'); await world('sponsor'); await tab('more');
   await sub('look'); await click('[data-look="light"]');
   const bgSum = bgS;
   ok((await js(bgSum)) > 600 && await js(`localStorage.getItem('peakdesk.theme')==='light'`), 'Look: Light');
@@ -922,6 +964,7 @@ try {
   await tab('list'); ok(await js(`!!document.querySelector('.xprichips')&&!!document.querySelector('select.xcat')`), 'Organisations keeps priority and category filters');
   await tab('deals'); await sub('quotes'); ok(/Booked/.test(await text()) && new RegExp(XA.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(await text()), 'Tours & quotes \u203a Quotes and bookings');
   await tab('more'); await sub('ref'); ok(await js(`document.querySelectorAll('main .xq li').length===10`), 'Questions and venues kept');
+  ok((await chipsNow()) === 'ref,mine,cal,look' && await js(`/^The questions for Peak and the competing venues, your email and booking link/.test(document.querySelector('.sdesc').textContent)`), 'More on the Expo leads (a seller): Questions and venues, My email & booking link, My calendar, Look; no Report');
   /* kept from the earlier desk: the lists, Peak's tracker, the reading pages, P&L, add / remove / bring back, the expo details */
   console.log('What the desk already did');
   await world('sponsor'); await tab('list'); await sub('new');
@@ -942,11 +985,13 @@ try {
     await click('.detail .close'); await clickText('.list .row', '/Rally Back/', 400);
     ok((await js(`document.querySelectorAll('.detail .kv').length`)) === 2, 'a sponsor with two agreements shows both (Rally Back)'); await click('.detail .close');
   }
+  await signAs(ADMIN, 'the admin, for the reading pages and P&L'); await world('sponsor');
   await tab('more'); await sub('offer');
   ok(await js(`/Court sponsor: .12,000 a year/.test(document.querySelector('main').textContent)&&document.querySelectorAll('main .info').length===5`), 'More › What Peak offers: five sections');
   await sub('better'); ok(await js(`/Springs Pickleball/.test(document.querySelector('main table').textContent)&&[...document.querySelectorAll('main .src a')].every(a=>/^https:/.test(a.href))`), 'More › What we could offer: the price table, sources are links');
   await sub('pl'); ok(await js(`/\\$10,500 a year \\(88%\\)/.test(document.querySelector('main').textContent)&&/\\$21,260/.test(document.querySelector('.numbers').textContent)&&/No cost entered for: Banner/.test(document.querySelector('.numbers').textContent)`), 'More › P&L: $24,500 in, $3,000 to deliver, $240 running = $21,260; flags the banner has no cost');
   await sub('pk'); ok((await js(`document.querySelectorAll('main .pkrow').length`)) === 2, 'More › Packages lists the packages');
+  await signAs(SELLER, 'the seller again'); await world('sponsor');
   await tab('deals'); await sub('tours');
   ok(await js(`[...document.querySelectorAll('main button')].some(b=>b.textContent==='Add to my calendar')&&/Tours coming up/.test(document.querySelector('main').textContent)`), 'Tours: the tours ahead with Add to my calendar'); await shot('desk-tours.png');
   await sub('signed'); await clickText('main button', '/\\+ Add a sponsor/', 300);
@@ -1152,7 +1197,7 @@ try {
     await shot('desk-my-email-booking.png');
     const BL = await js(`document.querySelector('.bookurl').value`);
     await send('Page.navigate', { url: BL }); await waitFor(`!!document.querySelector('form [name="slot"]')`, 'booking page'); await sleep(200);
-    ok(await js(`/Book a time with Peak Pickleball/.test(document.body.textContent)&&/with Test Seller/.test(document.body.textContent)`), 'the booking page, as a visitor sees it');
+    ok(await js(`/Book a time with Peak Pickleball/.test(document.body.textContent)&&!/Test Seller/.test(document.body.textContent)`), 'the booking page, as a visitor sees it');
     await shot('booking-page.png');
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
     ok(await js(fits), 'the booking page fits a phone'); await shot('booking-page-phone.png');
@@ -1222,7 +1267,7 @@ try {
   ok(await js(`/the cancellation/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)&&/BEGIN:VCALENDAR/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)`), 'its Preview: the confirmation, the cancellation and the invite (nothing sent)');
   await js(`document.querySelector('[data-set="tourmail"]').scrollIntoView()`); await sleep(200); await shot('tour-mail-settings.png');
   ok((await a('data')).tourmail.on === false, 'the switch is left Off for Matthew');
-  ok(await js(`(()=>{const d=document.querySelector('[data-set="deskmail"]'),k=document.querySelector('[data-set="booking"]');return !!d&&!!k&&d.querySelector('[data-dmset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('[data-bkset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('.bkweek').value==='Mon 14:00-16:00\\nTue 08:00-16:00\\nWed 14:00-16:00\\nThu 08:00-16:00\\nFri 14:00-16:00'&&k.querySelector('.bkmins').value==='30'&&/Nothing|Off/.test(d.textContent)})()`), 'More › Settings: Desk emails Off and Booking links Off, with the shared hours (Mon, Wed, Fri 2-4 pm; Tue, Thu 8 am-4 pm) to edit');
+  ok(await js(`(()=>{const d=document.querySelector('[data-set="deskmail"]'),k=document.querySelector('[data-set="booking"]');return !!d&&!!k&&d.querySelector('[data-dmset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('[data-bkset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('.bkweek').value==='Mon 14:00-16:00\\nTue 08:00-16:00\\nWed 14:00-16:00\\nThu 08:00-16:00\\nFri 14:00-16:00'&&k.querySelector('.bkmins').value==='30'&&k.querySelector('.bkmeet').value===''&&/Who meets visitors/.test(k.textContent)&&/Nothing|Off/.test(d.textContent)})()`), 'More › Settings: Desk emails Off and Booking links Off, with the shared hours (Mon, Wed, Fri 2-4 pm; Tue, Thu 8 am-4 pm) to edit');
   await js(`document.querySelector('[data-set="deskmail"]').scrollIntoView()`); await sleep(200); await shot('desk-email-settings.png');
   await clickText('[data-set="booking"] button', '/Show the general link/', 700); ok(await js(`/book\\.php\\?g=[0-9a-f]{16}$/.test(document.querySelector('.bkgen').value)`), 'and the general link (no host)');
   { const DA = await a('data'); ok(!DA.deskmail.on && !DA.book.on && !DA.tourmail.on, 'desk emails, booking links and tour confirmations are all left Off for Matthew'); }

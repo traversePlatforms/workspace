@@ -27,7 +27,13 @@ const BK_DAYS = [1 => 'Mon', 2 => 'Tue', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 =
 const BK_MINS = [15, 20, 30, 45, 60, 90];
 const BK_PHONE = '(719) 377-4725';
 const BK_ADDRESS = 'Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920';
-const BK_GENERIC_HOST = 'The Peak Pickleball team';
+const BK_GENERIC_HOST = 'The Peak Pickleball team';   /* signs the tour confirmation from a general link; never shown as who gives the tour */
+const BK_MEET_MAX = 60;
+/* Who meets visitors (2026-11-20, Matthew: sellers like him and Cai book tours but never give them). One desk-wide setting (book.meet,
+ * admins, may be empty). Everything the visitor sees names that, never the seller: the booking page, the booked and already-booked
+ * messages, the .ics, and the tour confirmation and cancellation emails (tour-mail.php reads it through tmVisitHost()). Empty leaves the
+ * name out. Inside the desk nothing changes: the seller whose link it was is still the host, owns the tour and gets the alert. */
+function bkMeet(): string { return bkConf()['meet']; }
 
 function bkTest(): bool { return PHP_SAPI === 'cli' || PHP_SAPI === 'cli-server'; }
 /** where the public page is (the tests point it at their own server) */
@@ -37,7 +43,7 @@ function bkNow(): int { $e = bkTest() ? (string) getenv('DESK_NOW') : ''; return
 /* ---- the shared schedule ---- */
 function bkDefaults(): array {
     return ['on' => false, 'week' => [1 => ['14:00-16:00'], 2 => ['08:00-16:00'], 3 => ['14:00-16:00'], 4 => ['08:00-16:00'], 5 => ['14:00-16:00']],
-        'mins' => 30, 'notice' => 24, 'ahead' => 14, 'blocked' => []];
+        'mins' => 30, 'notice' => 24, 'ahead' => 14, 'blocked' => [], 'meet' => ''];
 }
 function bkConf(): array {
     $s = jread('desk-settings.json', [])['book'] ?? []; $d = bkDefaults(); $o = [];
@@ -46,6 +52,7 @@ function bkConf(): array {
     $o['notice'] = max(0, min(336, (int) $o['notice'])); $o['ahead'] = max(1, min(60, (int) $o['ahead']));
     $w = []; foreach ((array) $o['week'] as $k => $v) if (isset(BK_DAYS[(int) $k])) $w[(int) $k] = array_values((array) $v); ksort($w); $o['week'] = $w;
     $o['blocked'] = array_values(array_filter((array) $o['blocked'], fn($x) => okDay((string) $x)));
+    $o['meet'] = is_string($o['meet']) ? clean($o['meet'], BK_MEET_MAX) : '';
     return $o + ['by' => (string) ($s['by'] ?? ''), 'at' => (int) ($s['at'] ?? 0)];
 }
 /** "Mon 14:00-16:00" lines <-> [day => ["14:00-16:00", ...]] */
@@ -76,6 +83,7 @@ function bkConfIn(array $in, array $cur): array {
     if (array_key_exists('mins', $in)) { if (!in_array((int) $in['mins'], BK_MINS, true)) return ['error' => 'Pick a meeting length.']; $o['mins'] = (int) $in['mins']; }
     if (array_key_exists('notice', $in)) { $n = (int) $in['notice']; if ($n < 0 || $n > 336) return ['error' => 'Notice is 0 to 336 hours.']; $o['notice'] = $n; }
     if (array_key_exists('ahead', $in)) { $n = (int) $in['ahead']; if ($n < 1 || $n > 60) return ['error' => 'How far ahead is 1 to 60 days.']; $o['ahead'] = $n; }
+    if (array_key_exists('meet', $in)) { $m = clean($in['meet'] ?? '', 200); if (mb_strlen($m) > BK_MEET_MAX) return ['error' => 'Keep who meets visitors under ' . BK_MEET_MAX . ' characters.']; if (preg_match('/[<>{}]/', $m)) return ['error' => 'Who meets visitors is plain words: no < > { or }.']; $o['meet'] = $m; }
     if (array_key_exists('blocked', $in)) {
         $b = [];
         foreach (preg_split('/[\s,;]+/', trim(is_array($in['blocked']) ? implode(' ', $in['blocked']) : (string) $in['blocked'])) ?: [] as $d) { if ($d === '') continue; if (!okDay($d)) return ['error' => '“' . $d . '” is not a date: write it as 2026-11-26.']; $b[$d] = 1; }
@@ -208,7 +216,7 @@ function bkStats(): array {
 /** what the desk page gets */
 function bkOut(bool $admin, string $me): array {
     $c = bkConf(); $s = bkStats()['host'][$me] ?? [];
-    $o = ['on' => $c['on'], 'hours' => bkHoursText($c['week']), 'mins' => $c['mins'], 'notice' => $c['notice'], 'ahead' => $c['ahead'], 'blocked' => $c['blocked'], 'open' => count(bkSlots(1000, $c)),
+    $o = ['on' => $c['on'], 'hours' => bkHoursText($c['week']), 'mins' => $c['mins'], 'notice' => $c['notice'], 'ahead' => $c['ahead'], 'blocked' => $c['blocked'], 'meet' => $c['meet'], 'open' => count(bkSlots(1000, $c)),
         'views' => (int) ($s['views'] ?? 0), 'booked' => (int) ($s['booked'] ?? 0), 'canHost' => in_array($me, bkHosts(), true)];
     if ($admin) $o += ['week' => bkWeekText($c['week']), 'by' => $c['by'], 'at' => $c['at'], 'lens' => BK_MINS, 'defaults' => ['week' => bkWeekText(bkDefaults()['week']), 'mins' => 30, 'notice' => 24, 'ahead' => 14]];
     return $o;
@@ -306,14 +314,15 @@ function bkNotify(string $subject, string $body): array {
     if (empty($r['ok'])) error_log('peak booking heads-up not sent: ' . ($r['stage'] ?? ''));
     return $r;
 }
-/** a calendar file for the "Add to my calendar" button on the page (METHOD:PUBLISH: nothing to answer) */
-function bkIcs(array $t, string $host): string {
+/** a calendar file for the "Add to my calendar" button on the page (METHOD:PUBLISH: nothing to answer). $meet: who meets visitors
+    (the desk setting, '' = nobody named), never the seller */
+function bkIcs(array $t, string $meet): string {
     $st = new DateTime($t['date'] . ' ' . $t['time'], new DateTimeZone('America/Denver')); $en = (clone $st)->modify('+' . ((int) ($t['mins'] ?? 30) ?: 30) . ' minutes');
     $L = ['BEGIN:VCALENDAR', 'PRODID:-//Peak Pickleball//Peak booking//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
     array_push($L, ...TM_VTZ);
     array_push($L, 'BEGIN:VEVENT', 'UID:peak-tour-' . preg_replace('/[^a-z0-9]/', '', (string) $t['tid']) . '@traverseplatforms.com', 'DTSTAMP:' . gmdate('Ymd\THis\Z'),
         'DTSTART;TZID=America/Denver:' . $st->format('Ymd\THis'), 'DTEND;TZID=America/Denver:' . $en->format('Ymd\THis'),
-        'SUMMARY:' . icsEsc('Visit to Peak Pickleball' . ($host !== '' && $host !== BK_GENERIC_HOST ? ' (meeting ' . $host . ')' : '')), 'LOCATION:' . icsEsc(BK_ADDRESS),
-        'DESCRIPTION:' . icsEsc("Entrance: from the parking lot off Jamboree Drive (no way in from inside Chapel Hills Mall).\nPeak: " . BK_PHONE), 'END:VEVENT', 'END:VCALENDAR');
+        'SUMMARY:' . icsEsc('Visit to Peak Pickleball' . ($meet !== '' ? ' (meeting ' . $meet . ')' : '')), 'LOCATION:' . icsEsc(BK_ADDRESS),
+        'DESCRIPTION:' . icsEsc(($meet !== '' ? "You'll meet " . $meet . ".\n" : '') . "Entrance: from the parking lot off Jamboree Drive (no way in from inside Chapel Hills Mall).\nPeak: " . BK_PHONE), 'END:VEVENT', 'END:VCALENDAR');
     return implode("\r\n", array_map('icsFold', $L)) . "\r\n";
 }
