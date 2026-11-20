@@ -12,7 +12,7 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
 4. **DONE 19 Nov (Matthew, as admin):** **Shared mailbox** "Peak Pickleball" (for example tours@ or partnerships@peakpickleball.us). It's free, with no licence. Give Matthew **Full Access** and **Send As**. Then emails show as from "Peak Pickleball" and the team sees the replies.
 5. **DONE 19 Nov:** **One more approval click** for the "Matthew outreach" app, so it can send from that shared mailbox. Matthew sends the link.
 6. **IN PROGRESS 20 Nov: the GoDaddy CNAMEs are in (Tyler gave Matthew the GoDaddy login); waiting on Microsoft to publish the keys, then Matthew enables signing.** **DKIM** for peakpickleball.us. In Microsoft Defender, turn on DKIM, then add the two CNAME records at the domain's DNS (GoDaddy). Who controls the GoDaddy login? On hold until there's a paid agreement.
-7. **OK to email in Peak's name** to the sponsor list (43) and the expo list (35), and his read of the two email drafts.
+7. **DONE 20 Nov: Tyler gave Matthew full control of the sponsor and expo blasts.** **OK to email in Peak's name** to the sponsor list (43) and the expo list (35), and his read of the two email drafts.
 
 ## 3. Answers for the emails and tours
 8. Are the offer shapes really on offer: court naming, event presence, and memberships bundled for a sponsor's staff? Is renting the whole building for expos on offer? Is the wording "first group of sponsors" OK?
