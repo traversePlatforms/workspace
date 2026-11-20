@@ -131,7 +131,7 @@ function trackHtml(it){
 }
 function drawPeak(){
   const P=V.peak, R=P.redirect||{};
-  let h='<div class="lead">Peak Pickleball: your outreach emails from your Peak Outlook. Everything here works as it did on its own page: lists, the email, preview, Start and Pause, settings, Connect Microsoft and the numbers.</div>';
+  let h='<div class="lead">Peak Pickleball: every Peak email goes out as '+esc((P.from&&P.from.name)||'Peak Partnerships')+' &lt;'+esc((P.from&&P.from.email)||'partnerships@peakpickleball.us')+'&gt;, and replies are read from there onto the Peak desk. Everything here works as it did on its own page: lists, the email, preview, Start and Pause, settings, Connect Microsoft and the numbers.</div>';
   if(P.ready){
     h+='<div class="nums" style="margin:12px 0">'+[['sent today',P.today],['last 7 days',P.d7],['last 30 days',P.d30],['clicks, 30 days',P.clicks30]].map(x=>'<div><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>';
     h+=(P.lists||[]).map(l=>{const r=l.rates||{};return '<p class="note"><b>'+esc(l.name)+'</b> ('+esc(l.status)+'): '+l.people+' people at '+l.orgs+' organisations, '+l.queued+' waiting, '+l.sent+' sent'

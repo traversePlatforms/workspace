@@ -28,12 +28,19 @@ const env = { ...process.env, DESK_DATA: LD };
    Microsoft that only records what it is given */
 const MAILD = mkdtempSync(join(tmpdir(), 'pmtour-')).replace(/\\/g, '/');
 writeFileSync(join(MAILD, 'app.json'), JSON.stringify({ client_id: '11111111-2222-3333-4444-555555555555', tenant: '66666666-7777-8888-9999-000000000000', secret: 'mock-secret-not-real' }));
-const GM = { sent: [], calls: 0, fail: null };
+const GM = { sent: [], calls: 0, fail: null, boxes: [], drafts: {}, replies: [] };
 const gmock = http.createServer((req, res) => { let bd = ''; req.on('data', (d) => (bd += d)); req.on('end', () => {
   const u = new URL(req.url, 'http://x'), j = (c, o) => { res.writeHead(c, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
   if (req.method === 'POST' && /\/oauth2\/v2.0\/token$/.test(u.pathname)) return j(200, { access_token: 'AT-2', refresh_token: 'RT-2', expires_in: 3600 });
   if (!/^Bearer AT-\d+$/.test(req.headers.authorization || '')) return j(401, { error: { code: 'InvalidAuthenticationToken' } });
-  if (req.method === 'POST' && u.pathname === '/graph/v1.0/me/sendMail') { GM.calls++; if (GM.fail) return j(GM.fail.code, { error: { code: GM.fail.err, message: GM.fail.err } }); GM.sent.push(Buffer.from(bd, 'base64').toString('utf8')); res.writeHead(202); return res.end(); }
+  /* since 2026-11-19 every Peak email goes out as Peak Partnerships: /users/partnerships@peakpickleball.us/... (or /me with the fallback setting) */
+  const bm = u.pathname.match(/^\/graph\/v1.0\/(me|users\/([^/]+))(\/.*)$/), box = bm ? (bm[2] ? decodeURIComponent(bm[2]).toLowerCase() : 'me') : '', rest = bm ? bm[3] : '';
+  if (req.method === 'POST' && rest === '/sendMail') { GM.calls++; if (GM.fail) return j(GM.fail.code, { error: { code: GM.fail.err, message: GM.fail.err } }); GM.sent.push(Buffer.from(bd, 'base64').toString('utf8')); GM.boxes.push(box); res.writeHead(202); return res.end(); }
+  if (req.method === 'GET' && rest === '/mailFolders/inbox') return j(200, { id: 'inbox' });
+  if (req.method === 'GET' && rest === '/mailFolders/sentitems/messages') return j(200, { value: [{ from: { emailAddress: { name: 'Peak Partnerships', address: 'partnerships@peakpickleball.us' } } }] });
+  if (req.method === 'POST' && /^\/messages\/[^/]+\/createReply$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]), did = 'draft' + (Object.keys(GM.drafts).length + 1); GM.drafts[did] = { of: id, box, create: JSON.parse(bd || '{}') }; return j(201, { id: did, body: { contentType: 'html', content: '<html><body><div>Their email, quoted</div></body></html>' } }); }
+  if (req.method === 'PATCH' && /^\/messages\/[^/]+$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]); if (GM.drafts[id]) Object.assign(GM.drafts[id], JSON.parse(bd || '{}')); return j(200, { id }); }
+  if (req.method === 'POST' && /^\/messages\/[^/]+\/send$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]); if (!GM.drafts[id]) return j(404, { error: { code: 'ErrorItemNotFound' } }); GM.calls++; GM.replies.push(GM.drafts[id]); res.writeHead(202); return res.end(); }
   j(404, { error: { code: 'NotFound' } }); }); });
 await new Promise((r) => gmock.listen(0, '127.0.0.1', r));
 Object.assign(env, { DESK_PEAK_MAIL_LIB: join(ROOT, 'mail/public/lib.php'), PEAK_MAIL_DATA: MAILD, PEAK_MAIL_MOCK: 'http://127.0.0.1:' + gmock.address().port });
@@ -507,7 +514,7 @@ try {
     ok(/must keep \{address\}/.test((await a('tourmailset', { words: { ...W0, body: W0.body.replace('{address}', 'here') } })).error) && /must keep \{time\}/.test((await a('tourmailset', { words: { ...W0, cbody: W0.cbody.replace('{time}', '') } })).error), 'nor {address} or {time} (the cancellation keeps {date} and {time})');
     ok(/has \{price\} in it/.test((await a('tourmailset', { words: { ...W0, subject: 'Your visit {price}' } })).error), 'an unknown field is refused');
     msConnect('reconnect');
-    ok(/can.t go on yet: Matthew.s Peak Outlook needs to be connected again/.test((await a('tourmailset', { on: true })).error), 'it will not go on while Matthew\u2019s Peak Outlook is not connected');
+    ok(/can.t go on yet: the Microsoft sign-in for Peak email needs connecting again/.test((await a('tourmailset', { on: true })).error), 'it will not go on while Matthew\u2019s Peak Outlook is not connected');
     msConnect();
     ok((await a('tourmailset', { on: true })).tourmail.on === true && (await b('data')).tourmail.on && (await b('data')).tourmail.ready, 'the admin turns it on (the test does it here; live it stays off for Matthew)');
     /* a booking with the tick: one email, multipart, with the invite */
@@ -521,7 +528,7 @@ try {
     const ics = m.cal.body;
     ok(/method=REQUEST/i.test(m.cal.ct) && /attachment; filename="invite.ics"/.test(m.att.head) && m.att.body === ics, 'a text/calendar part (method=REQUEST) for "Add to calendar", and the same invite attached as invite.ics');
     ok(icsGet(ics, 'METHOD') === 'REQUEST' && icsGet(ics, 'UID') === 'peak-tour-' + tidB + '@traverseplatforms.com' && icsGet(ics, 'SEQUENCE') === '0' && icsGet(ics, 'DTSTART') === 'TZID=America/Denver:' + dB.replace(/-/g, '') + 'T143000' && icsGet(ics, 'DTEND') === 'TZID=America/Denver:' + dB.replace(/-/g, '') + 'T150000', 'the invite: METHOD:REQUEST, one UID for the tour, SEQUENCE 0, 2:30 to 3:00 pm America/Denver');
-    ok(/BEGIN:VTIMEZONE\r\nTZID:America\/Denver/.test(ics) && /ORGANIZER;CN="Peak Pickleball":mailto:matthewsharpe@peakpickleball.us/.test(ics.replace(/\r\n /g, '')) && /ATTENDEE;CN="Jamie Polson";ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:jamie@example.com/.test(ics.replace(/\r\n /g, '')) && icsGet(ics, 'LOCATION') === 'Peak Pickleball\\, 1730 Briargate Blvd\\, Colorado Springs\\, CO 80920', 'with its time zone, Matthew\u2019s Peak address as organizer, the contact as attendee, the address as location');
+    ok(/BEGIN:VTIMEZONE\r\nTZID:America\/Denver/.test(ics) && /ORGANIZER;CN="Peak Pickleball":mailto:partnerships@peakpickleball.us/.test(ics.replace(/\r\n /g, '')) && /^From: "Peak Partnerships" <partnerships@peakpickleball.us>\r$/m.test(GM.sent[0]) && GM.boxes[0] === 'partnerships@peakpickleball.us' && /ATTENDEE;CN="Jamie Polson";ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:jamie@example.com/.test(ics.replace(/\r\n /g, '')) && icsGet(ics, 'LOCATION') === 'Peak Pickleball\\, 1730 Briargate Blvd\\, Colorado Springs\\, CO 80920', 'with its time zone, Matthew\u2019s Peak address as organizer, the contact as attendee, the address as location');
     D = await b('data'); let RB = find('sponsor', TB.id), tB = D.sponsor.tours.find((x) => x.tid === tidB), tch = RB.touches.find((x) => x.tc);
     ok(tch && tch.m === 'email' && tch.out === 'sent' && tch.by === 'Test Seller (via Peak email)' && /^Emailed: tour confirmation \(/.test(tch.note) && RB.stage === 'meeting', 'on the Activity: "Emailed: tour confirmation" by "Test Seller (via Peak email)"; the stage stays Meeting / tour booked');
     ok(((D.sponsor.week['Test Seller'] || {}).emails || 0) === wk0 && tB.tms.s === 'sent' && /^Confirmation sent to jamie@example.com/.test(tB.tms.text), 'not counted as the seller\u2019s own email; the tour says it went');
@@ -606,7 +613,7 @@ try {
     ok(pg.status === 200 && /Not taking bookings right now/.test(pg.text) && !slotsOf(pg.text).length && /\(719\) 377-4725/.test(pg.text), 'while off, every link answers "Not taking bookings right now"');
     ok(/That link did not work/.test((await page('?g=0000000000000000')).text) && /That link did not work/.test((await page(pq.replace(/.$/, (c) => (c === '0' ? '1' : '0')))).text) && /That link did not work/.test((await page('')).text), 'a made-up or changed link does not work, and the bare page shows nothing');
     ok(/do not read right/.test((await a('bookset', { week: 'Tue 8-4' })).error) && /shorter than one meeting/.test((await a('bookset', { week: 'Mon 14:00-14:15' })).error) && /is not a date/.test((await a('bookset', { blocked: 'tomorrow' })).error) && /meeting length/.test((await a('bookset', { mins: 7 })).error), 'hours that don’t read right, a range shorter than a meeting, a bad date or length are refused');
-    msConnect('reconnect'); ok(/can.t go on yet: Matthew.s Peak Outlook needs to be connected again/.test((await a('dmset', { on: true })).error), 'desk emails will not go on while Matthew’s Peak Outlook is not connected'); msConnect();
+    msConnect('reconnect'); ok(/can.t go on yet: the Microsoft sign-in for Peak email needs connecting again/.test((await a('dmset', { on: true })).error), 'desk emails will not go on while the Microsoft sign-in needs connecting again'); msConnect();
     r = await a('dmset', { on: true }); ok(r.ok && r.deskmail.on && (await b('data')).deskmail.on, 'the admin turns desk emails on (the test does it here; live it stays off for Matthew)');
     r = await b('dmsend', msg); ok(r._status === 400 && /Booking links are off/.test(r.error) && GM.calls === n0, 'an email with {book} is refused while booking links are off');
     r = await a('bookset', { on: true }); ok(r.ok && r.book.on && r.book.open > 20, 'the admin turns booking links on: ' + r.book.open + ' times open');
@@ -703,6 +710,21 @@ try {
     const gif = await fetch(px.replace(/&amp;/g, '&')); ok(/image\/gif/.test(gif.headers.get('content-type') || ''), 'the image answers a GIF');
     D = await b('data'); ok(find('expo', XE.id).dmails[0].opens === 1 && find('expo', XE.id).touches.some((x) => x.dm === r.ref && x.by === 'Second Seller'), 'and the card shows the email opened once');
     ok((await a('dmset', { pixel: false })).deskmail.pixel === false, 'the open image off again (its default)');
+    /* Peak Partnerships (2026-11-19): who it goes out as, read only; their replies on the card for everyone, with Reply in the same thread */
+    D = await b('data');
+    ok(D.sendFrom && D.sendFrom.email === 'partnerships@peakpickleball.us' && D.sendFrom.name === 'Peak Partnerships' && D.deskmail.from === 'partnerships@peakpickleball.us' && D.tourmail.from === 'partnerships@peakpickleball.us' && GM.boxes.every((x) => x === 'partnerships@peakpickleball.us'), 'every desk email and confirmation went out as Peak Partnerships; the page shows it');
+    const inject = (code, extra) => execFileSync('php', ['-r', 'require getenv("STORE"); ' + code], { encoding: 'utf8', env: { ...env, STORE: join(WEB, 'api/desk-store.php'), ID: E4.id, ...extra } });
+    const KM = { from: 'kim@replytest.com', name: 'Kim Reyes', subject: 'RE: Hi', at: Math.floor(Date.now() / 1000) - 60, text: 'Yes, Thursday works.\n\nKim', files: ['Sponsor terms.pdf'], mid: 'AAMkReplyId1', mb: 'partnerships@peakpickleball.us', imid: '<k1@replytest.com>' };
+    inject('echo json_encode(deskReplied("sponsor", getenv("ID"), "Kim Reyes", "“RE: Hi”", "Peak email", "reply:t1", false, json_decode(getenv("MAIL"), true)));', { MAIL: JSON.stringify(KM) });
+    inject('echo json_encode(deskAutoReplied("sponsor", getenv("ID"), "Lee Park", json_decode(getenv("MAIL"), true), "Peak email", "auto:t2"));', { MAIL: JSON.stringify({ from: 'lee@replytest.com', name: 'Lee Park', subject: 'Automatic reply: Hi', text: 'Out until Monday.', mid: 'AAMkReplyId2', mb: 'partnerships@peakpickleball.us' }) });
+    D = await b('data'); const KT = find('sponsor', E4.id).touches.find((x) => x.mail && x.mail.from === 'kim@replytest.com'), LT = find('sponsor', E4.id).touches.find((x) => x.out === 'auto');
+    ok(KT && KT.out === 'replied' && KT.mail.text === 'Yes, Thursday works.\n\nKim' && KT.mail.rp === 1 && !('mid' in KT.mail) && !('mb' in KT.mail) && !JSON.stringify(D).includes('AAMkReplyId') && find('sponsor', E4.id).next.date === D.today, 'their reply on the card for every desk sign-in (the page never gets where the message is), with a follow-up today');
+    ok(LT && LT.mail.auto === 1 && !LT.mail.rp && find('sponsor', E4.id).touches.filter((x) => x.out === 'replied').length === 1, 'an out-of-office shows as one, cannot be replied to, and is not a reply');
+    ok(/no longer on the card/.test((await b('dmsend', { world: 'sponsor', id: E4.id, to: 'kim@replytest.com', subject: 'RE: Hi', text: 'Hello', re: 'nosuchkey1' })).error), 'a Reply to an email not on the card is refused');
+    n0 = GM.calls; r = await b('dmsend', { world: 'sponsor', id: E4.id, to: 'kim@replytest.com', name: 'Kim Reyes', subject: 'RE: Hi', text: 'Great, see you Thursday.', re: KT.k });
+    const RP = GM.replies[GM.replies.length - 1] || {}; D = await b('data');
+    ok(r.ok && r.state === 'sent' && GM.calls === n0 + 1 && RP.of === 'AAMkReplyId1' && RP.box === 'partnerships@peakpickleball.us' && RP.create.message.toRecipients[0].emailAddress.address === 'kim@replytest.com' && RP.subject === 'RE: Hi'
+      && /Great, see you Thursday\.[\s\S]*Test Seller[\s\S]*Their email, quoted/.test(RP.body.content) && find('sponsor', E4.id).touches.some((x) => x.dm === r.ref && /^Replied “RE: Hi” to Kim Reyes/.test(x.note)), 'Reply: Microsoft’s own reply on her message in Peak Partnerships (same thread), signed by the seller, logged as Replied');
     /* the Peak email sender's {book}: its own link, signed by the desk, lands on that company's card; the sender hears of it */
     const ou = execFileSync('php', ['-r', 'require getenv("LIB"); echo pmBookDesk(["kind" => "org", "org" => getenv("ORG"), "to" => "casey3@example.com", "person" => "Casey Three", "company" => getenv("CO"), "list" => "sponsors", "rid" => "0123456789"]);'],
       { encoding: 'utf8', env: { ...env, LIB: env.DESK_PEAK_MAIL_LIB, PEAK_DESK_STORE: join(WEB, 'api/desk-store.php'), PEAK_DESK_DATA: LD, ORG: E3.id, CO: E3.name } }).trim();
@@ -1110,12 +1132,22 @@ try {
     ok(await js(`[...document.querySelectorAll('.detail pre.dmtext')].some(p=>!p.hidden&&/Thanks for the chat today/.test(p.textContent))`), 'Show the email opens the whole email');
     await js(`[...document.querySelectorAll('.detail .tli')].find(i=>!!i.querySelector('.dmline')).scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-email-activity.png');
     await click('.detail .close', 300);
+    /* their reply on the Activity, and Reply (2026-11-19) */
+    ok(await openCo(LOC[123].id, find('sponsor', LOC[123].id).name), 'the card with Kim’s reply');
+    ok(await js(`(()=>{const m=[...document.querySelectorAll('.detail .mailin')].find(x=>/kim@replytest.com/.test(x.textContent));const a=[...document.querySelectorAll('.detail .mailin')].find(x=>/Automatic reply from/.test(x.textContent));return !!m&&/Yes, Thursday works\./.test(m.textContent)&&/Sponsor terms\.pdf/.test(m.textContent)&&!!m.querySelector('[data-act="mailreply"]')&&!!a&&!a.querySelector('[data-act="mailreply"]')&&[...document.querySelectorAll('.detail .tli')].some(i=>/Auto-reply \\(out of office\\)/.test(i.textContent))})()`), 'the Activity shows her email (words, attachment by name, Reply) and the out-of-office as one (no Reply)');
+    await js(`[...document.querySelectorAll('.detail .mailin')].find(x=>/kim@replytest.com/.test(x.textContent)).scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-reply-activity.png');
+    await js(`[...document.querySelectorAll('.detail .mailin')].find(x=>/kim@replytest.com/.test(x.textContent)).querySelector('[data-act="mailreply"]').click()`); await sleep(300);
+    ok(await js(`(()=>{const b=document.querySelector('.detail .dmbox');return !b.hidden&&b.querySelector('.dmsub').value==='RE: Hi'&&/Replying to Kim Reyes/.test(b.querySelector('.dmre').textContent)&&/same thread/.test(b.querySelector('.dmre').textContent)&&(b.querySelector('.dmemail').value==='kim@replytest.com'||/kim@replytest.com/.test(b.querySelector('.dmto').selectedOptions[0].textContent))&&/Peak Partnerships \\(partnerships@peakpickleball.us\\)/.test(b.querySelector('.dmstate').textContent)})()`), 'Reply opens Write an email as a reply: to her, RE: subject, same thread, sent as Peak Partnerships');
+    await click('.detail [data-act="dmnotre"]', 200);
+    ok(await js(`!document.querySelector('.detail .dmre')&&document.querySelector('.detail .dmsub').value===''`), 'Write a new email instead takes the reply off');
+    await click('.detail .close', 300);
     await tab('today');
     ok(await js(`(()=>{const b=document.querySelector('[data-blk="linkbooked"]');return !!b&&/Booked from your booking link/.test(b.textContent)&&/Brand New Co/.test(b.textContent)})()`), 'Today: "Booked from your booking link", for the host');
     await js(`document.querySelector('[data-blk="linkbooked"]').scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-booked-today.png');
     await tab('deals'); await sub('tours');
     ok(await js(`[...document.querySelectorAll('main .card')].some(c=>/Brand New Co/.test(c.textContent)&&/Booked from Test Seller’s link/.test(c.textContent))`), 'Tours: the tour says it was booked from the seller’s link');
     await tab('more'); await sub('mine'); await click('[data-act="booklink"]', 800);
+    ok(await js(`/Your emails go out as Peak Partnerships \\(partnerships@peakpickleball.us\\)/.test(document.querySelector('[data-set="mysig"]').textContent)&&/replies come to Peak Partnerships \\(partnerships@peakpickleball.us\\)/.test(document.querySelector('[data-set="mysig"]').textContent)`), 'My email: who it goes out as (read only) and where replies come');
     ok(await js(`/book\\.php\\?p=[0-9a-f]{12}-[0-9a-f]{16}$/.test(document.querySelector('.bookurl').value)&&document.querySelector('.mysig').value.endsWith('(719) 555-0100')&&document.querySelector('.myreply').value==='seller@example.com'&&/Mon, Wed, Fri 2:00-4:00 pm/.test(document.querySelector('main').textContent)`), 'More › My email & booking link: the link, the shared hours, my signature and reply address');
     await shot('desk-my-email-booking.png');
     const BL = await js(`document.querySelector('.bookurl').value`);

@@ -2,7 +2,8 @@
 declare(strict_types=1);
 /* Peak outreach email (2026-11-17, Matthew: "I need to start doing emails for peak, similiar to how I do email for traverse, sending X amount out
  * each hour until our list is tapped. I need it to go to the inbox ... for peak sponsors and for potential people that want to rent that expo
- * space"). Sends from Matthew's Peak Pickleball Outlook mailbox through Microsoft Graph (/me/sendMail), one plain-text email per person, in
+ * space"). Sends through Microsoft Graph as Peak Partnerships, the shared mailbox (since 2026-11-19; it was Matthew's own Peak Outlook
+ * before), one plain-text email per person, in
  * hourly batches inside a sending window, until each list is done. Not a page: opened directly this file answers 404.
  *
  * Where things are (live):
@@ -19,8 +20,8 @@ declare(strict_types=1);
  * Rules built in: lists start PAUSED and only Matthew's Start sends; Start is refused while a template is still a DRAFT, while the postal
  * address is missing, or while Microsoft is not connected; a template edit or a re-import that adds people pauses a running list; nobody
  * suppressed (unsubscribed, bounced, replied STOP, added by hand) is ever emailed; no open-tracking pixel; every web address in an email
- * goes through r.php so clicks are counted. Matthew's mailbox is only READ (replies and bounce notices): nothing in it is moved, marked
- * or deleted.
+ * goes through r.php so clicks are counted. Mail is only READ (replies and bounce notices): nothing is moved or deleted; in Peak
+ * Partnerships a handled reply is marked read, and Matthew's own mailbox is never changed.
  * The Peak desk (2026-11-18, Matthew: "Hook the email tool into peak desk"): the desk's own record code (public_html/peak-desk-28d38d/api/
  * desk-store.php) is required here. The lists are read through it, and every send, reply, STOP, unsubscribe and bounce is put on the
  * desk card (deskEmailed / deskReplied / deskBounced, by "Peak email"). A desk write that fails never stops or repeats a send: it is logged
@@ -40,7 +41,16 @@ if (is_file(__DIR__ . '/site.php')) require_once __DIR__ . '/site.php';
 defined('PM_PATH') || define('PM_PATH', '/peak-mail-31dc56');
 defined('PM_ROOT') || define('PM_ROOT', dirname(__DIR__, 2));
 const PM_LISTS = ['sponsors' => 'Peak sponsors', 'expo' => 'Expo space rental'];
-const PM_SCOPE = 'offline_access User.Read Mail.ReadWrite Mail.Send';
+/* Peak Partnerships (2026-11-19, Matthew set up the shared mailbox "Peak Partnerships" <partnerships@peakpickleball.us> in Peak's Microsoft 365
+   with Send As and Full Access for himself, and Mail.Send.Shared + Mail.ReadWrite.Shared on "Matthew outreach", admin-consented): every Peak
+   email goes out as the shared mailbox (/v1.0/users/{it}/sendMail, kept in its Sent Items), and replies, bounces, auto-replies and STOP are
+   read from its Inbox and shown on the Peak desk. The setting "sendFrom" (Outbox, Peak, Settings) can fall back to the connected mailbox
+   ('me'). A Send As refusal is said plainly and never falls back by itself. Peak's other shared mailboxes belong to Peak's staff: never here. */
+const PM_SCOPE_BASE = 'offline_access User.Read Mail.ReadWrite Mail.Send';
+const PM_SCOPE = PM_SCOPE_BASE . ' Mail.Send.Shared Mail.ReadWrite.Shared';
+const PM_SHARED = 'partnerships@peakpickleball.us';
+const PM_SHARED_NAME = 'Peak Partnerships';
+const PM_SENDAS = 'Microsoft hasn\'t finished giving Send As yet, or it was removed';
 const PM_ORIGIN = 'https://traverseplatforms.com';
 const PM_RATE_MAX = 30;
 const PM_RAMP = 10;        /* the first sending day: at most 10 an hour, whatever the rate */
@@ -195,7 +205,7 @@ function pmAuthCallback(array $get, array $cookies): array {
     $w = json_decode($wb, true) ?: [];
     $mail = strtolower(trim((string) (($w['mail'] ?? '') ?: ($w['userPrincipalName'] ?? ''))));
     if ($s2 !== 200 || !filter_var($mail, FILTER_VALIDATE_EMAIL)) return $r('failed', 'Signed in, but Microsoft did not say which mailbox this is. Try again.');
-    $j = ['email' => $mail, 'upn' => strtolower((string) ($w['userPrincipalName'] ?? '')), 'name' => pmClean($w['displayName'] ?? '', 80), 'status' => 'ok',
+    $j = ['email' => $mail, 'upn' => strtolower((string) ($w['userPrincipalName'] ?? '')), 'name' => pmClean($w['displayName'] ?? '', 80), 'status' => 'ok', 'scope' => pmClean($granted, 300),
           'tok' => pmSeal(['r' => $ref, 'a' => $acc, 'x' => pmNow() + max(60, (int) ($tk['expires_in'] ?? 3600))]), 'at' => pmNow(), 'refreshed' => pmNow(), 'by' => (string) ($st['by'] ?? '')];
     if (!pmW('ms.json', $j)) return $r('failed', 'Could not save the sign-in. Try again.');
     pmLog(['t' => 'connected', 'as' => $mail, 'by' => (string) ($st['by'] ?? '')]);
@@ -222,7 +232,11 @@ function pmAccess(bool $force = false): array {
         if (!$tok || empty($tok['r'])) { pmLost('saved sign-in unreadable'); return ['ok' => false, 'why' => 'The saved Microsoft sign-in could not be read. Connect again.', 'stop' => true]; }
         if (!$force && !empty($tok['a']) && (int) ($tok['x'] ?? 0) > pmNow() + 120) return ['ok' => true, 't' => (string) $tok['a']];
         $app = pmApp(); if (!$app) return ['ok' => false, 'why' => 'The Microsoft app keys are missing on the server.', 'stop' => true];
-        [$s, $r] = pmForm(pmLogin() . '/' . $app['tenant'] . '/oauth2/v2.0/token', ['client_id' => $app['id'], 'client_secret' => $app['secret'], 'grant_type' => 'refresh_token', 'refresh_token' => (string) $tok['r'], 'scope' => PM_SCOPE]);
+        $ask = fn(string $scope) => pmForm(pmLogin() . '/' . $app['tenant'] . '/oauth2/v2.0/token', ['client_id' => $app['id'], 'client_secret' => $app['secret'], 'grant_type' => 'refresh_token', 'refresh_token' => (string) $tok['r'], 'scope' => $scope]);
+        [$s, $r] = $ask(PM_SCOPE);
+        /* a sign-in made before the shared-mailbox permissions (2026-11-19) that Microsoft will not widen: renew it as it was; the shared
+           mailbox then answers 403 and says so, rather than the whole sign-in being lost */
+        if (empty($r['access_token']) && preg_match('/^(invalid_scope|consent_required)$/', (string) ($r['error'] ?? ''))) [$s, $r] = $ask(PM_SCOPE_BASE);
         if (empty($r['access_token'])) {
             $e = preg_replace('/[^a-z_]/', '', (string) ($r['error'] ?? ''));
             if (in_array($e, ['invalid_grant', 'interaction_required', 'consent_required', 'invalid_client', 'unauthorized_client'], true)) {
@@ -233,7 +247,7 @@ function pmAccess(bool $force = false): array {
         }
         $tok['a'] = (string) $r['access_token']; $tok['x'] = pmNow() + max(60, (int) ($r['expires_in'] ?? 3600));
         if (!empty($r['refresh_token'])) $tok['r'] = (string) $r['refresh_token'];   /* Microsoft hands out a new one each time */
-        $j['tok'] = pmSeal($tok); $j['refreshed'] = pmNow(); pmW('ms.json', $j);
+        $j['tok'] = pmSeal($tok); $j['refreshed'] = pmNow(); if (!empty($r['scope'])) $j['scope'] = pmClean(strtolower((string) $r['scope']), 300); pmW('ms.json', $j);
         return ['ok' => true, 't' => $tok['a']];
     } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
 }
@@ -254,6 +268,53 @@ function pmKeepAlive(): void {
     if ((int) ($j['refreshed'] ?? 0) < pmNow() - 20 * 3600) pmAccess(true);
 }
 
+/* ---------------------------------------------------------------- who the emails go out as (2026-11-19) */
+/** the mailbox every Peak email goes out as: ['email', 'name', 'shared' => bool, 'base' => its Graph path, 'mine' => the connected mailbox,
+    'choice' => the setting]. Shared = Peak Partnerships, unless the setting says 'me' (or the connected mailbox is that address itself). */
+function pmFrom(?array $set = null): array {
+    $set ??= pmState()['settings']; $c = pmJ('ms.json', null); $me = strtolower((string) ($c['email'] ?? ''));
+    $want = strtolower(trim((string) ($set['sendFrom'] ?? PM_SHARED)));
+    if ($want !== PM_SHARED || $want === $me) return ['email' => $me, 'name' => (string) ($c['name'] ?? ''), 'shared' => false, 'base' => '/v1.0/me', 'mine' => $me, 'choice' => $want === PM_SHARED ? PM_SHARED : 'me'];
+    $f = pmJ('from.json', []);
+    return ['email' => PM_SHARED, 'name' => (string) (($f['name'] ?? '') ?: PM_SHARED_NAME), 'shared' => true, 'base' => '/v1.0/users/' . rawurlencode(PM_SHARED), 'mine' => $me, 'choice' => PM_SHARED];
+}
+/** a From: line for a MIME email sent as the shared mailbox ('' for the connected mailbox: Microsoft fills it in) */
+function pmFromHead(array $F): string {
+    if (empty($F['shared'])) return '';
+    $n = trim(str_replace(['"', '\\', "\r", "\n", '<', '>'], '', (string) $F['name']));
+    return 'From: ' . ($n !== '' ? (preg_match('/[\x80-\xFF]/', $n) ? '=?UTF-8?B?' . base64_encode($n) . '?=' : '"' . $n . '"') . ' ' : '') . '<' . $F['email'] . ">\r\n";
+}
+/** remember how the shared mailbox last answered: kind 'access' (it can be opened) or 'sendas' (it can be sent as); written only on a change
+    (and 'access' at least every six hours, which is how old a look may be) */
+function pmFromMark(string $kind, bool $ok, string $why = ''): void {
+    $f = pmJ('from.json', []); $was = $f[$kind] ?? null;
+    if (is_array($was) && (bool) $was['ok'] === $ok && ($ok || (string) $was['why'] === $why) && ($kind !== 'access' || (int) $was['at'] > pmNow() - 6 * 3600)) return;
+    $f[$kind] = ['ok' => $ok, 'why' => mb_substr($why, 0, 200), 'at' => pmNow()]; pmW('from.json', $f);
+    if (!$ok && (!is_array($was) || !empty($was['ok']))) pmLog(['t' => 'fromwarn', 'kind' => $kind, 'why' => mb_substr($why, 0, 200)]);
+}
+/** look at the shared mailbox (read only): can it be opened, and its display name as Microsoft has it (from its Sent Items). At most every
+    six hours unless $force; nothing is sent. */
+function pmFromProbe(bool $force = false, ?array $set = null): void {
+    $F = pmFrom($set); if (!$F['shared'] || !pmConn()['connected']) return;
+    $f = pmJ('from.json', []); if (!$force && (int) ($f['access']['at'] ?? 0) > pmNow() - 6 * 3600) return;
+    [$s, $j] = pmGraph('GET', $F['base'] . '/mailFolders/inbox?$select=id');
+    if ($s === -1 || $s === 0 || $s === 429 || $s >= 500) return;   /* Microsoft not answering just now says nothing about the mailbox */
+    if ($s !== 200) { pmFromMark('access', false, ($s > 0 ? $s . ' ' : '') . trim((string) ($j['error']['code'] ?? '') . ': ' . (string) ($j['error']['message'] ?? ''), ': ')); return; }
+    pmFromMark('access', true);
+    [$s2, $j2] = pmGraph('GET', $F['base'] . '/mailFolders/sentitems/messages?$top=1&$select=from');
+    $nm = $s2 === 200 ? pmClean($j2['value'][0]['from']['emailAddress']['name'] ?? '', 80) : '';
+    if ($nm !== '' && strtolower((string) ($j2['value'][0]['from']['emailAddress']['address'] ?? '')) === PM_SHARED) { $f = pmJ('from.json', []); if (($f['name'] ?? '') !== $nm) { $f['name'] = $nm; pmW('from.json', $f); } }
+}
+/** for the pages: pmFrom() plus how it last answered, and 'warn': the plain words to show when something is wrong ('' when fine) */
+function pmFromStatus(?array $set = null): array {
+    $F = pmFrom($set); $f = pmJ('from.json', []); $F['warn'] = '';
+    if (!$F['shared']) return $F;
+    $F['access'] = $f['access'] ?? null; $F['sendas'] = $f['sendas'] ?? null;
+    if (is_array($F['sendas']) && empty($F['sendas']['ok'])) $F['warn'] = PM_SENDAS . ': ' . $F['sendas']['why'] . ' (' . date('M j, g:i a', (int) $F['sendas']['at']) . '). Nothing goes out from Matthew\'s own mailbox instead.';
+    elseif (is_array($F['access']) && empty($F['access']['ok'])) $F['warn'] = 'Microsoft does not let the connected mailbox open ' . PM_SHARED . ' (' . $F['access']['why'] . '). Check Full Access on Peak Partnerships in Exchange admin, then reconnect Microsoft.';
+    return $F;
+}
+
 /* ---------------------------------------------------------------- settings, templates, state */
 function pmDefaults(): array {
     return ['rate' => 12, 'days' => [1, 2, 3, 4, 5], 'from' => 9, 'to' => 16, 'ramp' => true,
@@ -268,6 +329,8 @@ function pmDefaults(): array {
             /* opens (2026-11-18, Matthew: "track all the analytics ... clicks opens, views"): each email goes as plain text plus the same words
                in HTML with a 1x1 image from o.php. Off = plain text only, as before. */
             'opens' => true,
+            /* who every Peak email goes out as (2026-11-19): Peak Partnerships, or 'me' (the connected mailbox) */
+            'sendFrom' => PM_SHARED,
             /* the "book a time" page (2026-11-18, Matthew: "whatever replies to come to me unless they are just booking things directly"): {book}
                in an email is a link to b.php, where they pick a time from this weekly pattern (Colorado time). Off until Matthew turns it on. */
             'book' => ['on' => false, 'kind' => 'tour', 'mins' => 30, 'ahead' => 14, 'notice' => 24,
@@ -323,7 +386,7 @@ function pmBlocked(array $S, string $to): string {
     $to = strtolower($to); $x = $S['people'][$to] ?? null;
     if (isset($S['suppressed'][$to])) return 'suppressed: ' . $S['suppressed'][$to];
     if ($x && $x['sent']) return 'already emailed';
-    if ($x && $x['reply']) return 'wrote to Matthew already';
+    if ($x && $x['reply']) return 'wrote to Peak already';
     if ($x && $x['bad'] !== '') return 'Microsoft refused the address: ' . $x['bad'];
     if ($x && $x['fails'] >= 3) return 'three tries failed';
     return '';
@@ -499,7 +562,11 @@ function pmDeskPush(array $r): array {
         $w = (string) $r['w']; $org = (string) $r['org']; $ref = (string) $r['dref']; $to = (string) ($r['to'] ?? ''); $who = (string) ($r['who'] ?? '') ?: $to;
         $x = match ((string) ($r['t'] ?? '')) {
             'sent' => deskEmailed($w, $org, $to, (string) ($r['subject'] ?? ''), PM_BY, $ref, (int) ($r['at'] ?? 0)),
-            'reply' => deskReplied($w, $org, $who, 'the reply is in Matthew\'s Peak Outlook (' . date('M j', (int) ($r['at'] ?? pmNow())) . ')', PM_BY, $ref, !empty($r['stop'])),
+            /* a reply (2026-11-19: with its own words, read from Peak Partnerships, shown on the card for everyone on the desk) */
+            'reply' => is_array($r['mail'] ?? null)
+                ? deskReplied($w, $org, $who, '“' . (string) ($r['mail']['subject'] ?? '') . '”' . (($r['mail']['mb'] ?? '') === PM_SHARED ? '' : ' (in Matthew\'s mailbox)'), PM_BY, $ref, !empty($r['stop']), (array) $r['mail'])
+                : deskReplied($w, $org, $who, 'the reply is in Matthew\'s Peak Outlook (' . date('M j', (int) ($r['at'] ?? pmNow())) . ')', PM_BY, $ref, !empty($r['stop'])),
+            'auto' => function_exists('deskAutoReplied') ? deskAutoReplied($w, $org, $who, (array) ($r['mail'] ?? []), PM_BY, $ref) : ['ok' => false, 'code' => 400, 'error' => 'the desk\'s code is an older version'],
             'unsub' => deskReplied($w, $org, $who, 'used the unsubscribe link in the email (' . date('M j', (int) ($r['at'] ?? pmNow())) . ')', PM_BY, $ref, true),
             'bounce' => deskBounced($w, $org, $to, '', PM_BY, $ref),
             'booked' => deskBooked($w, $org, (string) ($r['date'] ?? ''), (string) ($r['time'] ?? ''), trim($who . ($to !== '' && $to !== $who ? ' <' . $to . '>' : '')),
@@ -516,7 +583,7 @@ function pmDeskPending(?array $rows = null): array {
     foreach ($rows ?? pmRows() as $r) {
         $t = (string) ($r['t'] ?? ''); $k = (string) ($r[$t === 'desk' ? 'ref' : 'dref'] ?? ''); if ($k === '') continue;
         if ($t === 'desk') { if (!empty($r['ok']) || !empty($r['final'])) $done[$k] = 1; else $tries[$k] = ($tries[$k] ?? 0) + 1; }
-        elseif (in_array($t, ['sent', 'reply', 'bounce', 'unsub', 'booked'], true) && !empty($r['org']) && !empty($r['w'])) $jobs[$k] = $r;
+        elseif (in_array($t, ['sent', 'reply', 'bounce', 'unsub', 'booked', 'auto'], true) && !empty($r['org']) && !empty($r['w'])) $jobs[$k] = $r;
     }
     $o = []; foreach ($jobs as $k => $r) if (!isset($done[$k])) $o[$k] = $r + ['tries' => $tries[$k] ?? 0];
     return $o;
@@ -606,21 +673,35 @@ function pmMime(array $m): string {
     $b = 'pm-' . bin2hex(random_bytes(12)); $enc = fn(string $s) => preg_match('/[\x80-\xFF]/', $s) ? '=?UTF-8?B?' . base64_encode($s) . '?=' : $s;
     $to = $m['to']; $nm = trim((string) ($m['name'] ?? '')); if ($nm !== '') $to = $enc(str_replace(['"', '\\'], '', $nm)) . ' <' . $m['to'] . '>';
     $part = fn(string $type, string $s) => "--$b\r\nContent-Type: $type; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n" . rtrim(chunk_split(base64_encode($s), 76, "\r\n")) . "\r\n";
-    return "To: $to\r\nSubject: " . $enc((string) $m['subject']) . "\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"$b\"\r\n\r\n"
+    return "To: $to\r\n" . (string) ($m['fromHead'] ?? '') . "Subject: " . $enc((string) $m['subject']) . "\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"$b\"\r\n\r\n"
         . $part('text/plain', str_replace("\n", "\r\n", (string) $m['body'])) . $part('text/html', (string) $m['html']) . "--$b--\r\n";
 }
-/** send one email from the connected mailbox: ['ok'] or ['ok' => false, 'kind' => server|address|blocked|auth, 'why'] */
-function pmSendOne(array $m): array {
-    if (isset($m['mime'])) [$s, $j, $raw, $a] = pmGraph('POST', '/v1.0/me/sendMail', null, [], base64_encode((string) $m['mime']));   /* a whole MIME email made by the caller (tour confirmations) */
-    elseif (isset($m['html'])) [$s, $j, $raw, $a] = pmGraph('POST', '/v1.0/me/sendMail', null, [], base64_encode(pmMime($m)));   /* MIME: saved to Sent Items too */
+/** send one email as pmFrom() (Peak Partnerships, or the connected mailbox): ['ok' => true, 'from' => address] or ['ok' => false, 'kind' =>
+    server|address|blocked|auth|sendas|other, 'why']. As the shared mailbox a refusal (403, ErrorSendAsDenied, the mailbox gone) is 'sendas':
+    said plainly, and never sent from Matthew's own mailbox instead. Saved in that mailbox's Sent Items. */
+function pmSendOne(array $m, ?array $set = null, ?array $F = null): array {
+    $F ??= pmFrom($set); $p = $F['base'] . '/sendMail';
+    if (isset($m['mime'])) [$s, $j, $raw, $a] = pmGraph('POST', $p, null, [], base64_encode((string) $m['mime']));   /* a whole MIME email made by the caller (its From: line from pmFromHead) */
+    elseif (isset($m['html'])) [$s, $j, $raw, $a] = pmGraph('POST', $p, null, [], base64_encode(pmMime($m + ['fromHead' => pmFromHead($F)])));   /* MIME: saved to Sent Items too */
     else {
         $msg = ['message' => ['subject' => $m['subject'], 'body' => ['contentType' => 'Text', 'content' => $m['body']],
                 'toRecipients' => [['emailAddress' => array_filter(['address' => $m['to'], 'name' => $m['name'] ?? ''], 'strlen')]]], 'saveToSentItems' => true];
-        [$s, $j, $raw, $a] = pmGraph('POST', '/v1.0/me/sendMail', $msg);
+        if ($F['shared']) $msg['message']['from'] = ['emailAddress' => ['address' => $F['email'], 'name' => $F['name']]];
+        [$s, $j, $raw, $a] = pmGraph('POST', $p, $msg);
     }
-    if ($s === 202 || $s === 200) return ['ok' => true];
+    if ($s === 202 || $s === 200) { if ($F['shared']) pmFromMark('sendas', true); return ['ok' => true, 'from' => $F['email']]; }
+    return pmSendErr($s, $j, $raw, $a, $F);
+}
+/** what a refused send means, in the shape pmSendOne answers */
+function pmSendErr(int $s, array $j, string $raw, array $a, array $F): array {
     if ($s === -1) return ['ok' => false, 'kind' => !empty($a['stop']) ? 'auth' : 'server', 'why' => (string) ($j['error']['message'] ?? 'not connected')];
     $code = (string) ($j['error']['code'] ?? ''); $why = mb_substr(trim($code . ': ' . (string) ($j['error']['message'] ?? '')), 0, 200);
+    /* Microsoft holding the whole tenant's or mailbox's sending back (spam, quota) is the same trouble whichever mailbox it is */
+    if (preg_match('/SubmissionBlocked|OutboundSpam|QuotaExceeded|suspended/i', $code)) return ['ok' => false, 'kind' => 'blocked', 'why' => $why];
+    if ($F['shared'] && ($s === 403 || $s === 404 || preg_match('/SendAsDenied|AccessDenied|MailboxNotFound|ResourceNotFound/i', $code))) {
+        pmFromMark('sendas', false, $s . ' ' . $why);
+        return ['ok' => false, 'kind' => 'sendas', 'why' => PM_SENDAS . ': ' . $s . ' ' . $why];
+    }
     if (preg_match('/SubmissionBlocked|OutboundSpam|SendAsDenied|QuotaExceeded|MailboxNotEnabled|blocked|suspended/i', $code . ' ' . $raw)) return ['ok' => false, 'kind' => 'blocked', 'why' => $why];
     if ($s === 403 || $s === 401) return ['ok' => false, 'kind' => 'auth', 'why' => $why];
     if ($s === 0 || $s === 429 || $s >= 500) return ['ok' => false, 'kind' => 'server', 'why' => ($s ?: 'no answer') . ' ' . $why];
@@ -642,7 +723,7 @@ function pmTourMime(array $m): string {
     $mx = 'pmx-' . bin2hex(random_bytes(10)); $al = 'pma-' . bin2hex(random_bytes(10)); $meth = ($m['method'] ?? '') === 'CANCEL' ? 'CANCEL' : 'REQUEST';
     $to = (string) $m['to']; $nm = trim(str_replace(['"', '\\', "\r", "\n"], '', (string) ($m['name'] ?? ''))); if ($nm !== '') $to = $enc($nm) . ' <' . $to . '>';
     $part = fn(string $bd, string $head, string $body) => "--$bd\r\n$head\r\nContent-Transfer-Encoding: base64\r\n\r\n" . $b64($body) . "\r\n";
-    return "To: $to\r\nSubject: " . $enc((string) $m['subject']) . "\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"$mx\"\r\n\r\n"
+    return "To: $to\r\n" . (string) ($m['fromHead'] ?? '') . "Subject: " . $enc((string) $m['subject']) . "\r\nMIME-Version: 1.0\r\nContent-Type: multipart/mixed; boundary=\"$mx\"\r\n\r\n"
         . "--$mx\r\nContent-Type: multipart/alternative; boundary=\"$al\"\r\n\r\n"
         . $part($al, 'Content-Type: text/plain; charset=UTF-8', str_replace("\n", "\r\n", str_replace("\r", '', (string) $m['text'])))
         . $part($al, 'Content-Type: text/html; charset=UTF-8', (string) $m['html'])
@@ -662,16 +743,15 @@ function pmTourSend(array $m): array {
         $lk = @fopen(pmData() . '/tour.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
         try {
             if (pmTourRow($ref)) return ['ok' => true, 'dup' => true];
-            $x = pmSendOne(['to' => $to, 'mime' => pmTourMime(['to' => $to] + $m)]);
-            $row = ['t' => 'tourmail', 'ref' => $ref, 'to' => $to, 'method' => ($m['method'] ?? '') === 'CANCEL' ? 'CANCEL' : 'REQUEST', 'seq' => (int) ($m['seq'] ?? 0),
+            $F = pmFrom(); $x = pmSendOne(['to' => $to, 'mime' => pmTourMime(['to' => $to, 'fromHead' => pmFromHead($F)] + $m)], null, $F);
+            $row = ['t' => 'tourmail', 'ref' => $ref, 'to' => $to, 'from' => $F['email'], 'method' => ($m['method'] ?? '') === 'CANCEL' ? 'CANCEL' : 'REQUEST', 'seq' => (int) ($m['seq'] ?? 0),
                 'w' => (string) ($m['w'] ?? ''), 'org' => (string) ($m['org'] ?? ''), 'company' => pmClean($m['company'] ?? '', 100), 'tid' => (string) ($m['tid'] ?? ''), 'by' => pmClean($m['by'] ?? '', 60),
                 'subject' => pmClean($m['subject'] ?? '', 160), 'ok' => !empty($x['ok'])];
             if (!empty($m['test'])) $row['test'] = 1;
             if (empty($x['ok'])) { $row['kind'] = (string) ($x['kind'] ?? 'other'); $row['why'] = mb_substr((string) ($x['why'] ?? ''), 0, 200); }
             pmLog($row);
             if (!empty($x['ok'])) return ['ok' => true, 'dup' => false];
-            $why = match ($row['kind']) { 'auth' => 'Microsoft refused the sign-in: connect Matthew\'s Peak Outlook again in Outbox (' . $row['why'] . ')', 'blocked' => 'Microsoft is blocking this mailbox from sending (' . $row['why'] . ')',
-                'address' => 'Microsoft refused the address (' . $row['why'] . ')', 'server' => 'Microsoft did not answer just now (' . $row['why'] . '). Try again', default => $row['why'] !== '' ? $row['why'] : 'it did not send' };
+            $why = pmWhyText($row['kind'], $row['why']);
             return ['ok' => false, 'kind' => $row['kind'], 'why' => $why];
         } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
     } catch (Throwable $e) { return ['ok' => false, 'kind' => 'other', 'why' => mb_substr($e->getMessage(), 0, 160)]; }
@@ -703,8 +783,10 @@ function pmDeskMime(array $m): string {
     $al = 'pmd-' . bin2hex(random_bytes(10));
     $to = (string) $m['to']; $nm = trim(str_replace(['"', '\\', "\r", "\n", '<', '>'], '', (string) ($m['name'] ?? ''))); if ($nm !== '') $to = $enc($nm) . ' <' . $to . '>';
     $rt = strtolower(trim((string) ($m['replyTo'] ?? ''))); $rtName = trim(str_replace(['"', '\\', "\r", "\n", '<', '>'], '', (string) ($m['replyName'] ?? '')));
-    $head = "To: $to\r\nSubject: " . $enc((string) $m['subject']) . "\r\n";
+    $head = "To: $to\r\n" . (string) ($m['fromHead'] ?? '') . "Subject: " . $enc((string) $m['subject']) . "\r\n";
     if ($rt !== '' && filter_var($rt, FILTER_VALIDATE_EMAIL)) $head .= 'Reply-To: ' . ($rtName !== '' ? $enc($rtName) . ' ' : '') . '<' . $rt . ">\r\n";
+    /* a reply to their email when Microsoft's own reply cannot be used (2026-11-19): the thread is kept by these two lines */
+    $ir = (string) ($m['inReplyTo'] ?? ''); if (preg_match('/^<[\x21-\x3B\x3D\x3F-\x7E]{3,250}>$/', $ir)) $head .= "In-Reply-To: $ir\r\nReferences: $ir\r\n";
     $part = fn(string $head, string $body) => "--$al\r\n$head\r\nContent-Transfer-Encoding: base64\r\n\r\n" . $b64($body) . "\r\n";
     return $head . "MIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"$al\"\r\n\r\n"
         . $part('Content-Type: text/plain; charset=UTF-8', str_replace("\n", "\r\n", str_replace("\r", '', (string) $m['text'])))
@@ -723,17 +805,50 @@ function pmDeskSend(array $m): array {
         $lk = @fopen(pmData() . '/deskmail.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
         try {
             if (pmDeskRow($ref)) return ['ok' => true, 'dup' => true];
-            $x = pmSendOne(['to' => $to, 'mime' => pmDeskMime(['to' => $to] + $m)]);
-            $row = ['t' => 'deskmail', 'ref' => $ref, 'to' => $to, 'w' => (string) ($m['w'] ?? ''), 'org' => (string) ($m['org'] ?? ''), 'company' => pmClean($m['company'] ?? '', 100),
+            $F = pmFrom(); $re = is_array($m['reply'] ?? null) ? $m['reply'] : null;
+            $x = $re ? pmReplySend($re, $to, $m, $F) : pmSendOne(['to' => $to, 'mime' => pmDeskMime(['to' => $to, 'fromHead' => pmFromHead($F)] + $m)], null, $F);
+            $row = ['t' => 'deskmail', 'ref' => $ref, 'to' => $to, 'from' => $F['email'], 'w' => (string) ($m['w'] ?? ''), 'org' => (string) ($m['org'] ?? ''), 'company' => pmClean($m['company'] ?? '', 100),
                 'by' => pmClean($m['by'] ?? '', 60), 'subject' => pmClean($m['subject'] ?? '', 160), 'ok' => !empty($x['ok'])];
+            if ($re) $row['re'] = (string) ($x['via'] ?? 'reply');
             if (empty($x['ok'])) { $row['kind'] = (string) ($x['kind'] ?? 'other'); $row['why'] = mb_substr((string) ($x['why'] ?? ''), 0, 200); }
             pmLog($row);
             if (!empty($x['ok'])) return ['ok' => true, 'dup' => false];
-            $why = match ($row['kind']) { 'auth' => 'Microsoft refused the sign-in: connect Matthew\'s Peak Outlook again in Outbox (' . $row['why'] . ')', 'blocked' => 'Microsoft is blocking this mailbox from sending (' . $row['why'] . ')',
-                'address' => 'Microsoft refused the address (' . $row['why'] . ')', 'server' => 'Microsoft did not answer just now (' . $row['why'] . '). Try again', default => $row['why'] !== '' ? $row['why'] : 'it did not send' };
+            $why = pmWhyText($row['kind'], $row['why']);
             return ['ok' => false, 'kind' => $row['kind'], 'why' => $why];
         } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
     } catch (Throwable $e) { return ['ok' => false, 'kind' => 'other', 'why' => mb_substr($e->getMessage(), 0, 160)]; }
+}
+/** a failed tour confirmation or desk email in words for the desk */
+function pmWhyText(string $kind, string $why): string {
+    return match ($kind) { 'auth' => 'Microsoft refused the sign-in: connect Microsoft again in Outbox, Peak section (' . $why . ')', 'blocked' => 'Microsoft is blocking the mailbox from sending (' . $why . ')',
+        'sendas' => $why, 'address' => 'Microsoft refused the address (' . $why . ')', 'server' => 'Microsoft did not answer just now (' . $why . '). Try again', default => $why !== '' ? $why : 'it did not send' };
+}
+/** a desk email that answers one of their emails (2026-11-19): Microsoft's own reply on that message in the mailbox it came to (createReply,
+    the seller's words put above their email, then send), so it stays in one thread for them and in Peak Partnerships. When that message is no
+    longer there, or it came to another mailbox (Matthew's own, before), it goes as a new email with In-Reply-To instead. Their email is never
+    moved or deleted. Answers like pmSendOne, plus 'via' => reply | thread. */
+function pmReplySend(array $re, string $to, array $m, array $F): array {
+    $mid = (string) ($re['mid'] ?? ''); $mb = strtolower((string) ($re['mb'] ?? '')); $imid = (string) ($re['imid'] ?? '');
+    $fallback = fn() => pmSendOne(['to' => $to, 'mime' => pmDeskMime(['to' => $to, 'fromHead' => pmFromHead($F), 'inReplyTo' => $imid] + $m)], null, $F) + ['via' => 'thread'];
+    if ($mid === '' || !preg_match('#^[A-Za-z0-9+/=_-]{1,400}$#D', $mid) || $mb === '' || $mb !== $F['email']) return $fallback();
+    $base = $F['base'] . '/messages/';
+    $msg = ['toRecipients' => [['emailAddress' => array_filter(['address' => $to, 'name' => trim(str_replace(['"', "\r", "\n"], '', (string) ($m['name'] ?? '')))], 'strlen')]]];
+    $rt = strtolower(trim((string) ($m['replyTo'] ?? '')));
+    if ($rt !== '' && filter_var($rt, FILTER_VALIDATE_EMAIL)) $msg['replyTo'] = [['emailAddress' => array_filter(['address' => $rt, 'name' => trim(str_replace(['"', "\r", "\n"], '', (string) ($m['replyName'] ?? '')))], 'strlen')]];
+    [$s, $d, $raw, $a] = pmGraph('POST', $base . rawurlencode($mid) . '/createReply', ['message' => $msg]);
+    if ($s === 404 && (string) ($d['error']['code'] ?? '') !== 'MailboxNotFound') return $fallback();   /* their email is no longer in the mailbox */
+    if (($s !== 200 && $s !== 201) || empty($d['id'])) return pmSendErr($s, $d, $raw, $a, $F) + ['via' => 'reply'];
+    $id = (string) $d['id']; $orig = (string) ($d['body']['content'] ?? '');
+    if (strtolower((string) ($d['body']['contentType'] ?? 'html')) === 'text') $orig = '<div>' . str_replace("\n", "<br>\n", htmlspecialchars($orig, ENT_QUOTES, 'UTF-8')) . '</div>';
+    $mine = (string) ($m['html'] ?? ''); if (preg_match('~<body[^>]*>(.*)</body>~is', $mine, $x)) $mine = $x[1];
+    if (preg_match('/<body[^>]*>/i', $orig, $bm, PREG_OFFSET_CAPTURE)) { $at = $bm[0][1] + strlen($bm[0][0]); $html = substr($orig, 0, $at) . $mine . '<br>' . substr($orig, $at); }
+    else $html = $mine . '<br>' . $orig;
+    $left = ' (a draft of it is left in the mailbox\'s Drafts)';
+    [$s2, $d2, $raw2, $a2] = pmGraph('PATCH', $base . rawurlencode($id), ['subject' => (string) ($m['subject'] ?? ''), 'body' => ['contentType' => 'HTML', 'content' => $html]]);
+    if ($s2 !== 200) { $e = pmSendErr($s2, $d2, $raw2, $a2, $F); $e['why'] .= $left; return $e + ['via' => 'reply']; }
+    [$s3, $d3, $raw3, $a3] = pmGraph('POST', $base . rawurlencode($id) . '/send', null, ['Content-Length: 0']);
+    if ($s3 === 202 || $s3 === 200) { if ($F['shared']) pmFromMark('sendas', true); return ['ok' => true, 'from' => $F['email'], 'via' => 'reply']; }
+    $e = pmSendErr($s3, $d3, $raw3, $a3, $F); $e['why'] .= $left; return $e + ['via' => 'reply'];
 }
 /** for Outbox: desk emails sent (times), and the ones whose last try failed with no later success */
 function pmDeskMailStats(?array $rows = null): array {
@@ -811,6 +926,7 @@ function pmStartBlocks(array $S, string $list): array {
     $b = []; $c = pmConn();
     if (!$c['app']) $b[] = 'The Microsoft app keys are not on the server.';
     if (!$c['connected']) $b[] = 'Microsoft is not connected.';
+    $F = pmFromStatus($S['settings']); if ($F['shared'] && is_array($F['access']) && empty($F['access']['ok'])) $b[] = $F['warn'];
     if (!pmAddressOk((string) $S['settings']['address'])) $b[] = 'Peak\'s postal address is missing in Settings (the law wants it in every email).';
     if (pmIsDraft($S['templates'][$list])) $b[] = 'The template is still the DRAFT placeholder. Put the approved email in and save it.';
     if (!str_contains(strtolower((string) $S['templates'][$list]['body']), 'http') ) $b[] = 'The email has no web address, so clicks cannot be counted (add Peak\'s website).';
@@ -870,54 +986,138 @@ function pmIsNdr(array $m): bool {
 }
 function pmIsAuto(array $m): bool { return (bool) preg_match('/^(automatic reply|auto(matic)?[- ]?(reply|response)|out of (the )?office|ooo\b|away from|on vacation|i am (currently )?out)/i', trim((string) ($m['subject'] ?? ''))); }
 function pmIsStop(string $text): bool { return (bool) preg_match('/^\W*(stop|unsubscribe|remove( me)?|take me off|no thanks|not interested)\b|\b(unsubscribe me|remove me from|stop emailing|take me off|do not (email|contact)|don\'t (email|contact))\b/i', trim($text)); }
-/** read the inbox and junk folder since the last look; mark replies and bounces. Returns a short summary. Nothing in the mailbox is changed. */
+/** their own words from a reply, as plain text for the desk (2026-11-19): the quoted history under "On ... wrote:", "-----Original Message-----",
+    Outlook's "From: ... Sent:" block or its line of underscores is cut off, and so are lines starting with ">"; at most $max characters */
+function pmReplyText(string $t, int $max = 3000): string {
+    $t = str_replace(["\r\n", "\r", "\u{00A0}"], ["\n", "\n", ' '], $t);
+    $t = (string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $t);
+    if (!mb_check_encoding($t, 'UTF-8')) $t = (string) mb_convert_encoding($t, 'UTF-8', 'UTF-8');
+    $cut = strlen($t);
+    foreach (['/^[ \t>]*On [^\n]{4,250}(\n[^\n]{0,250})?wrote:[ \t]*$/mu', '/^[ \t]*-{2,}[ \t]*Original Message[ \t]*-{2,}/mi', '/^[ \t]*_{10,}[ \t]*$/m',
+              '/^[ \t]*\*?From:\*?[ \t][^\n]+\n[ \t]*\*?(Sent|Date):\*?[ \t]/mi', '/^[ \t]*-{2,}[ \t]*Forwarded message[ \t]*-{2,}/mi'] as $re)
+        if (preg_match($re, $t, $m, PREG_OFFSET_CAPTURE) && $m[0][1] < $cut) $cut = (int) $m[0][1];
+    $own = substr($t, 0, $cut);
+    $own = implode("\n", array_filter(explode("\n", $own), fn($l) => !preg_match('/^\s*>/', $l)));
+    $own = trim((string) preg_replace("/\n{3,}/", "\n\n", (string) preg_replace('/[ \t]+$/m', '', $own)));
+    if ($own === '') $own = trim(mb_substr(trim($t), 0, 600));   /* nothing above the quote: the start of what they sent */
+    return mb_strlen($own) > $max ? rtrim(mb_substr($own, 0, $max)) . "\n[… the rest is in the mailbox]" : $own;
+}
+/** one email in full for the desk (read only): their own words, the attachments by name (inline images left out), its internet message id */
+function pmMailFull(array $box, string $id, array $m): array {
+    [$s, $j] = pmGraph('GET', $box['base'] . '/messages/' . rawurlencode($id) . '?$select=uniqueBody,body,internetMessageId,hasAttachments', null, ['Prefer: outlook.body-content-type="text"']);
+    $raw = $s === 200 ? (string) ((string) ($j['uniqueBody']['content'] ?? '') !== '' ? $j['uniqueBody']['content'] : ($j['body']['content'] ?? '')) : '';
+    $text = pmReplyText($raw !== '' ? $raw : (string) ($m['bodyPreview'] ?? ''));
+    $files = [];
+    if (!empty($m['hasAttachments']) || !empty($j['hasAttachments'])) {
+        [$s2, $a] = pmGraph('GET', $box['base'] . '/messages/' . rawurlencode($id) . '/attachments?$select=name,isInline,size');
+        if ($s2 === 200) foreach ((array) ($a['value'] ?? []) as $x) if (empty($x['isInline']) && count($files) < 12) $files[] = pmClean($x['name'] ?? 'attachment', 120) ?: 'attachment';
+    }
+    return ['text' => $text, 'files' => $files, 'imid' => pmClean(((string) ($m['internetMessageId'] ?? '')) ?: (string) ($j['internetMessageId'] ?? ''), 300)];
+}
+/** whose mail is looked for in a mailbox, and where each belongs on the desk: [address => [to, person, company, org, kind, list, last (the
+    latest email to them, 0 = none)]]. 'shared' (Peak Partnerships): everyone on the lists, everyone a desk email or tour confirmation went
+    to, and anyone whose address is on one desk card. 'me' (Matthew's own mailbox): only people this sender emailed from it (before
+    2026-11-19), so the rest of his mail stays his. Where several fit, the latest email to them wins. */
+function pmWho(array $S, string $box): array {
+    $me = strtolower((string) (pmJ('ms.json', [])['email'] ?? '')); $via = []; $sent = [];
+    foreach (pmRows() as $r) {
+        $t = (string) ($r['t'] ?? ''); if (!in_array($t, ['sent', 'deskmail', 'tourmail'], true) || ($t !== 'sent' && (empty($r['ok']) || !empty($r['test'])))) continue;
+        $to = strtolower((string) ($r['to'] ?? '')); if ($to === '') continue; $at = (int) ($r['at'] ?? 0);
+        $via[$to][strtolower((string) ($r['from'] ?? '')) ?: $me] = 1;   /* rows from before 2026-11-19 all went from Matthew's own mailbox */
+        if ($t !== 'sent' && (string) ($r['org'] ?? '') !== '' && in_array($r['w'] ?? '', ['sponsor', 'expo'], true) && (!isset($sent[$to]) || $sent[$to]['last'] <= $at))
+            $sent[$to] = ['to' => $to, 'person' => '', 'company' => (string) ($r['company'] ?? ''), 'org' => (string) $r['org'], 'kind' => $r['w'] === 'expo' ? 'xorg' : 'lead', 'list' => '', 'last' => $at];
+    }
+    $who = [];
+    if ($box === 'shared') {
+        $twice = [];
+        foreach (['sponsor', 'expo'] as $w) foreach ((array) pmDeskRecs($w) as $id => $R) foreach (array_merge((array) ($R['contacts'] ?? []), (array) ($R['added'] ?? [])) as $c) {
+            $e = strtolower(trim((string) ($c['email'] ?? ''))); if ($e === '' || !filter_var($e, FILTER_VALIDATE_EMAIL)) continue;
+            if (isset($who[$e]) && $who[$e]['org'] !== (string) $id) { $twice[$e] = 1; continue; }
+            $who[$e] ??= ['to' => $e, 'person' => pmClean($c['name'] ?? '', 80), 'company' => (string) ($R['name'] ?? ''), 'org' => (string) $id, 'kind' => $w === 'expo' ? 'xorg' : 'lead', 'list' => '', 'last' => 0];
+        }
+        foreach ($twice as $e => $_) unset($who[$e]);   /* an address on two cards: only an email to them says which */
+    }
+    $fromList = [];
+    foreach ((pmJ('lists.json', ['lists' => []])['lists'] ?? []) as $k => $ps) foreach ($ps as $p) {
+        if (($p['hold'] !== '' && !isset($S['people'][$p['to']])) || isset($fromList[$p['to']])) continue;
+        $fromList[$p['to']] = 1; $who[$p['to']] = $p + ['list' => $k, 'last' => (int) ($S['people'][$p['to']]['sent'] ?? 0)];
+    }
+    foreach ($sent as $e => $x) {
+        $o = $who[$e] ?? null; if ($o && (int) $o['last'] > $x['last']) continue;
+        if ($o && (string) $o['org'] === $x['org']) { $x['person'] = (string) ($o['person'] ?? ''); $x['list'] = (string) ($o['list'] ?? ''); $x['company'] = $x['company'] ?: (string) ($o['company'] ?? ''); }
+        $who[$e] = $x;
+    }
+    if ($box === 'me') $who = array_filter($who, fn($e) => isset($via[$e][$me]), ARRAY_FILTER_USE_KEY);
+    return $who;
+}
+/** read Peak Partnerships' Inbox and Junk folder (and Matthew's own, for people emailed from it before 2026-11-19) since the last look. A
+    reply, STOP, auto-reply or bounce notice from someone pmWho() knows goes on their desk card: the reply's own words, its attachments by name,
+    an auto-reply shown as one and not counted as a reply. Each one handled in Peak Partnerships is marked read there; nothing is ever moved
+    or deleted, and Matthew's own mailbox is only read. Returns a short summary. */
 function pmScan(array $S): string {
-    $lj = pmJ('lists.json', ['lists' => []]); $who = [];
-    foreach ($lj['lists'] ?? [] as $k => $ps) foreach ($ps as $p) if ($p['hold'] === '' || isset($S['people'][$p['to']])) $who[$p['to']] ??= $p + ['list' => $k];
-    if (!$who) return 'nothing to look for';
-    $sc = pmJ('scan.json', ['last' => 0, 'seen' => []]);
-    $since = max((int) $sc['last'] - 2 * 86400, ($S['firstSent'] ?: pmNow()) - 3 * 86400);
-    $iso = gmdate('Y-m-d\TH:i:s\Z', $since); $n = ['reply' => 0, 'bounce' => 0, 'auto' => 0, 'stop' => 0]; $seen = (array) $sc['seen']; $now = pmNow();
-    foreach (['inbox', 'junkemail'] as $folder) {
-        $path = '/v1.0/me/mailFolders/' . $folder . '/messages?$select=id,from,subject,receivedDateTime,bodyPreview&$filter=' . rawurlencode('receivedDateTime ge ' . $iso) . '&$orderby=' . rawurlencode('receivedDateTime desc') . '&$top=50';
-        for ($page = 0; $page < 8 && $path !== ''; $page++) {
-            [$s, $j] = pmGraph('GET', $path);
-            if ($s !== 200) return 'could not read the ' . $folder . ' (' . $s . ': ' . mb_substr((string) ($j['error']['message'] ?? ''), 0, 80) . ')';
-            foreach ((array) ($j['value'] ?? []) as $m) {
-                $id = (string) ($m['id'] ?? ''); if ($id === '' || isset($seen[$id])) continue; $seen[$id] = $now;
-                $from = strtolower((string) ($m['from']['emailAddress']['address'] ?? '')); $at = (int) strtotime((string) ($m['receivedDateTime'] ?? '')) ?: $now;
-                if (pmIsNdr($m)) {
-                    [$s2, $full] = pmGraph('GET', '/v1.0/me/messages/' . rawurlencode($id) . '?$select=body', null, ['Prefer: outlook.body-content-type="text"']);
-                    $txt = ($s2 === 200 ? (string) ($full['body']['content'] ?? '') : '') . ' ' . (string) ($m['bodyPreview'] ?? '');
-                    preg_match_all('/[A-Za-z0-9._%+\'-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', $txt, $em);
-                    foreach (array_unique(array_map('strtolower', $em[0])) as $e) {
-                        if (!isset($who[$e]) || empty($S['people'][$e]['sent']) || !empty($S['people'][$e]['bounce'])) continue;
-                        $row = ['t' => 'bounce', 'to' => $e, 'l' => $who[$e]['list'], 'at' => $at] + pmDeskTag($who[$e], 'bounce:' . substr(sha1($id . '|' . $e), 0, 16));
-                        pmLog($row); pmDeskNow($row, $S['settings']); $S['people'][$e]['bounce'] = $at; $n['bounce']++;
+    $F = pmFrom($S['settings']); $boxes = [];
+    if ($F['shared']) $boxes[] = ['base' => $F['base'], 'addr' => $F['email'], 'shared' => true, 'name' => PM_SHARED_NAME, 'who' => pmWho($S, 'shared')];
+    $boxes[] = ['base' => '/v1.0/me', 'addr' => $F['mine'], 'shared' => false, 'name' => 'Matthew\'s mailbox', 'who' => pmWho($S, 'me')];
+    $boxes = array_values(array_filter($boxes, fn($b) => $b['who']));
+    if (!$boxes) return 'read mail: nobody to look for yet';
+    $sc = pmJ('scan.json', ['last' => 0, 'seen' => []]); $seen = (array) ($sc['seen'] ?? []); $now = pmNow();
+    $since = (int) $sc['last'] > 0 ? (int) $sc['last'] - 2 * 86400 : $now - 3 * 86400;
+    $iso = gmdate('Y-m-d\TH:i:s\Z', $since); $n = ['reply' => 0, 'bounce' => 0, 'auto' => 0, 'stop' => 0, 'other' => 0]; $err = [];
+    foreach ($boxes as $box) {
+        $who = $box['who']; $tag = $box['shared'] ? 'p:' : 'm:';
+        $read = function (string $id) use ($box): void { if ($box['shared']) pmGraph('PATCH', $box['base'] . '/messages/' . rawurlencode($id), ['isRead' => true]); };
+        foreach (['inbox', 'junkemail'] as $folder) {
+            $path = $box['base'] . '/mailFolders/' . $folder . '/messages?$select=id,from,subject,receivedDateTime,bodyPreview,internetMessageId,hasAttachments&$filter=' . rawurlencode('receivedDateTime ge ' . $iso) . '&$orderby=' . rawurlencode('receivedDateTime desc') . '&$top=50';
+            for ($page = 0; $page < 8 && $path !== ''; $page++) {
+                [$s, $j] = pmGraph('GET', $path);
+                if ($s !== 200) { $err[] = 'could not read the ' . $folder . ' of ' . $box['name'] . ' (' . $s . ': ' . mb_substr((string) ($j['error']['message'] ?? ''), 0, 80) . ')'; if ($box['shared'] && in_array($s, [403, 404], true)) pmFromMark('access', false, $s . ' ' . (string) ($j['error']['code'] ?? '')); break; }
+                foreach ((array) ($j['value'] ?? []) as $m) {
+                    $id = (string) ($m['id'] ?? ''); if ($id === '' || isset($seen[$tag . $id])) continue; $seen[$tag . $id] = $now;
+                    $imid = (string) ($m['internetMessageId'] ?? ''); if ($imid !== '' && isset($seen['i:' . $imid])) continue;   /* the same email in both mailboxes: once */
+                    if ($imid !== '') $seen['i:' . $imid] = $now;
+                    $from = strtolower((string) ($m['from']['emailAddress']['address'] ?? '')); $at = (int) strtotime((string) ($m['receivedDateTime'] ?? '')) ?: $now;
+                    if (pmIsNdr($m)) {
+                        [$s2, $full] = pmGraph('GET', $box['base'] . '/messages/' . rawurlencode($id) . '?$select=body', null, ['Prefer: outlook.body-content-type="text"']);
+                        $txt = ($s2 === 200 ? (string) ($full['body']['content'] ?? '') : '') . ' ' . (string) ($m['bodyPreview'] ?? '');
+                        preg_match_all('/[A-Za-z0-9._%+\'-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', $txt, $em); $hit = false;
+                        foreach (array_unique(array_map('strtolower', $em[0])) as $e) {
+                            if (!isset($who[$e]) || empty($who[$e]['last']) || !empty($S['people'][$e]['bounce'])) continue;
+                            $row = ['t' => 'bounce', 'to' => $e, 'l' => (string) $who[$e]['list'], 'at' => $at] + pmDeskTag($who[$e], 'bounce:' . substr(sha1($id . '|' . $e), 0, 16));
+                            pmLog($row); pmDeskNow($row, $S['settings']); $S['people'][$e]['bounce'] = $at; $n['bounce']++; $hit = true;
+                        }
+                        if ($hit) $read($id); elseif ($box['shared']) $n['other']++;
+                        continue;
                     }
-                    continue;
+                    if (!isset($who[$from])) { if ($box['shared']) $n['other']++; continue; }
+                    if (pmIsCalReply($m)) continue;   /* their calendar answering a tour invite (2026-11-19) */
+                    $x = $who[$from]; $full = pmMailFull($box, $id, $m);
+                    $mail = ['from' => $from, 'name' => pmClean($m['from']['emailAddress']['name'] ?? '', 80), 'subject' => pmClean($m['subject'] ?? '', 160), 'at' => $at,
+                        'text' => $full['text'], 'files' => $full['files'], 'mid' => $id, 'mb' => $box['addr'], 'imid' => $full['imid'] ?: $imid];
+                    $name = (string) ($x['person'] ?? '') !== '' ? (string) $x['person'] : ($mail['name'] !== '' ? $mail['name'] : $from);
+                    if (pmIsAuto($m)) {
+                        $mail['text'] = mb_substr($mail['text'], 0, 600); $mail['auto'] = 1;
+                        $row = ['t' => 'auto', 'to' => $from, 'who' => $name, 'l' => (string) $x['list'], 'at' => $at, 'mail' => $mail] + pmDeskTag($x, 'auto:' . substr(sha1($id), 0, 16));
+                        pmLog($row); pmDeskNow($row, $S['settings']); $read($id); $n['auto']++; continue;
+                    }
+                    $subj = (string) preg_replace('/^((re|aw|fw|fwd)\s*:\s*)+/i', '', (string) ($m['subject'] ?? ''));
+                    $stop = pmIsStop($full['text'] !== '' ? $full['text'] : (string) ($m['bodyPreview'] ?? '')) || (bool) preg_match('/^\W*(stop|unsubscribe)\W*$/i', $subj);
+                    $firstReply = empty($S['people'][$from]['reply']);
+                    /* every reply goes on the card (2026-11-19: the team reads them there); only the first counts as "replied" */
+                    $row = ['t' => 'reply', 'to' => $from, 'who' => $name, 'l' => (string) $x['list'], 'stop' => $stop, 'before' => empty($x['last']) && empty($S['people'][$from]['sent']),
+                            'subject' => pmClean($m['subject'] ?? '', 120), 'at' => $at, 'mail' => $mail + ($stop ? ['stop' => 1] : [])] + pmDeskTag($x, 'reply:' . substr(sha1($id), 0, 16));
+                    pmLog($row); pmDeskNow($row, $S['settings']); $read($id);
+                    if ($firstReply) $n['reply']++;
+                    $S['people'][$from]['reply'] = $at; if ($stop) $n['stop']++;
                 }
-                if (!isset($who[$from])) continue;
-                if (pmIsCalReply($m)) continue;   /* their calendar answering a tour invite (2026-11-19) */
-                if (pmIsAuto($m)) { pmLog(['t' => 'auto', 'to' => $from, 'l' => $who[$from]['list'], 'at' => $at]); $n['auto']++; continue; }
-                $subj = (string) preg_replace('/^((re|aw|fw|fwd)\s*:\s*)+/i', '', (string) ($m['subject'] ?? ''));
-                $stop = pmIsStop((string) ($m['bodyPreview'] ?? '')) || (bool) preg_match('/^\W*(stop|unsubscribe)\W*$/i', $subj);
-                $firstReply = empty($S['people'][$from]['reply']);
-                if (!$firstReply && !$stop) continue;
-                /* the desk hears of the first reply, and of a STOP even after an earlier reply (Not now, or the owner's follow-up) */
-                $row = ['t' => 'reply', 'to' => $from, 'who' => $who[$from]['person'] !== '' ? $who[$from]['person'] : $from, 'l' => $who[$from]['list'], 'stop' => $stop, 'before' => empty($S['people'][$from]['sent']),
-                        'subject' => pmClean($m['subject'] ?? '', 120), 'at' => $at] + pmDeskTag($who[$from], 'reply:' . substr(sha1($id), 0, 16));
-                pmLog($row); pmDeskNow($row, $S['settings']);
-                if ($firstReply) $n['reply']++;
-                $S['people'][$from]['reply'] = $at; if ($stop) $n['stop']++;
+                $next = (string) ($j['@odata.nextLink'] ?? '');
+                $path = $next !== '' ? (string) preg_replace('#^https://graph\.microsoft\.com|^' . preg_quote(pmGraphBase(), '#') . '#', '', $next) : '';
             }
-            $next = (string) ($j['@odata.nextLink'] ?? '');
-            $path = $next !== '' ? (string) preg_replace('#^https://graph\.microsoft\.com|^' . preg_quote(pmGraphBase(), '#') . '#', '', $next) : '';
         }
     }
     foreach ($seen as $k => $t) if ($t < $now - 30 * 86400) unset($seen[$k]);
-    pmW('scan.json', ['last' => $now, 'seen' => $seen]);
-    return 'read mail: ' . $n['reply'] . ' replies (' . $n['stop'] . ' STOP), ' . $n['bounce'] . ' bounces, ' . $n['auto'] . ' auto-replies';
+    pmW('scan.json', ['last' => $err ? (int) $sc['last'] : $now, 'seen' => $seen]);
+    return ($err ? implode('; ', $err) . '; ' : '') . 'read mail: ' . $n['reply'] . ' replies (' . $n['stop'] . ' STOP), ' . $n['bounce'] . ' bounces, ' . $n['auto'] . ' auto-replies'
+        . ($n['other'] ? '; ' . $n['other'] . ' other email' . ($n['other'] === 1 ? '' : 's') . ' in ' . PM_SHARED_NAME . ' not matched to the desk (left unread)' : '');
 }
 
 /* ---------------------------------------------------------------- the hourly run */
@@ -929,8 +1129,8 @@ function pmCronRun(): int {
     /* first, anything the Peak desk has not heard about yet (it was down, or busy, last time) */
     $said = []; $d = pmDeskFlush($S['settings']); if ($d !== '') $said[] = $d;
     if (!$c['connected']) { pmRunLine(implode('; ', array_merge($said, [$running ? 'Microsoft is not connected: nothing sent' : 'idle (not connected)']))); return 0; }
-    pmKeepAlive();
-    if ($S['firstSent'] || $running) $said[] = pmScan($S);
+    pmKeepAlive(); pmFromProbe(false, $S['settings']);
+    $said[] = pmScan($S);   /* every run (2026-11-19): replies to desk emails and tour confirmations come to Peak Partnerships too, lists or not */
     $S = pmState();
     /* a list whose bounces pass 8% after 20 sends stops itself: a mailbox that keeps hitting dead addresses gets blocked */
     foreach (PM_LISTS as $k => $nm) {
@@ -971,10 +1171,10 @@ function pmCronRun(): int {
         $m = pmRender($p, $S['templates'][$k], $S['settings'], true);
         if (isset($m['badph'])) { pmLog(['t' => 'fail', 'l' => $k, 'to' => $p['to'], 'why' => 'the template has ' . $m['badph'] . ' in it', 'final' => false]); $stopWhy = 'the ' . $k . ' template has ' . $m['badph'] . ' in it'; pmLog(['t' => 'pause', 'l' => $k, 'by' => 'the hourly run', 'why' => $stopWhy]); break; }
         $sid = 'pm-' . bin2hex(random_bytes(6));   /* this send's own id: the desk keeps it, so telling the desk twice is harmless */
-        $r = pmSendOne($m); $tried = true;
+        $r = pmSendOne($m, $S['settings']); $tried = true;
         if ($r['ok']) {
             /* the send is logged first; the desk is told after, and a desk failure only leaves a row for the next run to retry */
-            $row = ['t' => 'sent', 'l' => $k, 'to' => $p['to'], 'subject' => $m['subject'], 'by' => $S['lists'][$k]['by'], 'sid' => $sid, 'html' => isset($m['html']), 'at' => pmNow()] + pmDeskTag($p, $sid);
+            $row = ['t' => 'sent', 'l' => $k, 'to' => $p['to'], 'from' => (string) ($r['from'] ?? ''), 'subject' => $m['subject'], 'by' => $S['lists'][$k]['by'], 'sid' => $sid, 'html' => isset($m['html']), 'at' => pmNow()] + pmDeskTag($p, $sid);
             pmLog($row); $sent[$k]++;
             try { pmDeskNow($row, $S['settings']); } catch (Throwable $e) { error_log('peak-mail: desk after send: ' . $e->getMessage()); }
             continue;
@@ -982,6 +1182,7 @@ function pmCronRun(): int {
         if ($r['kind'] === 'address') { pmLog(['t' => 'fail', 'l' => $k, 'to' => $p['to'], 'why' => $r['why'], 'final' => true]); $i--; continue; }
         if ($r['kind'] === 'other') { pmLog(['t' => 'fail', 'l' => $k, 'to' => $p['to'], 'why' => $r['why'], 'final' => false]); continue; }
         if ($r['kind'] === 'blocked') { foreach (PM_LISTS as $kk => $nn) if ($S['lists'][$kk]['status'] === 'running') pmLog(['t' => 'pause', 'l' => $kk, 'by' => 'the hourly run', 'why' => 'Microsoft refused to send from the mailbox: ' . $r['why']]); $stopWhy = 'Microsoft refused to send (' . $r['why'] . '): both lists paused'; break; }
+        if ($r['kind'] === 'sendas') { $stopWhy = $r['why'] . ': nothing sent, and nothing from Matthew\'s own mailbox instead (the next run tries again)'; break; }
         $stopWhy = ($r['kind'] === 'auth' ? 'the Microsoft sign-in needs attention: ' : 'Microsoft trouble, trying next hour: ') . $r['why']; break;
     }
     $dk = !empty($S['settings']['deskNotes']) ? count(pmDeskPending()) : 0;
@@ -1021,7 +1222,8 @@ function pmStatsLine(): string {
     foreach (PM_LISTS as $k => $nm) { $x = $st[$k]; $parts[] = $k . ' ' . strtoupper($x['status']) . ' ' . $x['sent'] . ' sent/' . $x['queued'] . ' waiting, ' . $x['replied'] . ' replied, ' . $x['bounced'] . ' bounced, ' . $x['unsubscribed'] . ' unsub, ' . $x['opened'] . ' opened, ' . $x['clicked'] . ' clicked, ' . $x['booked'] . ' booked'; }
     $dp = !empty($S['settings']['deskNotes']) ? count(pmDeskPending()) : 0; if ($dp) $parts[] = $dp . ' desk updates waiting';
     $last = ''; $rl = @file(pmData() . '/run.log', FILE_IGNORE_NEW_LINES); if ($rl) $last = ' | last run ' . mb_substr((string) end($rl), 0, 90);
-    return 'Peak email: Microsoft ' . ($c['connected'] ? 'connected (' . $c['email'] . ')' : (($c['status'] ?? '') === 'reconnect' ? 'NEEDS RECONNECT' : 'not connected')) . '; ' . implode('; ', $parts) . $last;
+    $F = pmFromStatus($S['settings']); if ($F['warn'] !== '') $parts[] = 'ATTENTION: ' . $F['warn'];
+    return 'Peak email: Microsoft ' . ($c['connected'] ? 'connected (' . $c['email'] . ', sending as ' . $F['email'] . ')' :(($c['status'] ?? '') === 'reconnect' ? 'NEEDS RECONNECT' : 'not connected')) . '; ' . implode('; ', $parts) . $last;
 }
 
 /* ---------------------------------------------------------------- deliverability (public DNS, read only) */

@@ -307,6 +307,7 @@ button.kpi:hover{border-color:var(--c,var(--acc))}
 .tmtick{display:grid;gap:4px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--bg)}.tmtick label{display:flex;gap:8px;align-items:flex-start;font-weight:650;font-size:13.5px}.tmtick input[type=checkbox]{width:auto;margin-top:2px}.tmtick small{color:var(--soft);font-size:12.5px}.tmtick label.off{color:var(--soft)}
 .tmline{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12.5px;color:var(--soft);margin-top:3px}.tmline.bad{color:var(--warn);font-weight:650}.tmline .lnk{font-size:12.5px}
 .dmsec .tmline{margin:0 0 6px}.dmbox .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dmbox .two[hidden]{display:none}.dmline small{color:var(--soft)}input.bookurl,input.bkgen{width:100%;font:13px ui-monospace,Consolas,monospace;padding:8px;border-radius:8px}
+.mailin{border-left:3px solid var(--line);background:var(--bg);border-radius:8px;padding:7px 10px;margin:6px 0 4px}.mailin .mh{font-size:12.5px;color:var(--soft)}.mailin .ms{font-weight:650;margin:2px 0 3px}.mailin .mt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px;line-height:1.45}.mailin .mt.clip{max-height:9.6em;overflow:hidden}.mailin .mf{font-size:12.5px;color:var(--soft);margin-top:4px}.mailin .lnk{font-size:12.5px}.mailin .btn{margin-top:6px}.dmre{font-size:12.5px;color:var(--soft);margin:0 0 6px}
 pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.5 ui-monospace,Consolas,monospace;max-height:420px;overflow:auto;color:var(--ink)}
 /* the print pages: a proposal or a report, saved as PDF from the browser (always light, whatever the desk's look) */
 .paper{background:#fff;color:#111;max-width:820px;margin:0 auto;padding:40px 46px;border-radius:6px;box-shadow:0 1px 6px rgba(0,0,0,.08);font:11pt/1.45 Arial,Helvetica,sans-serif}
@@ -371,7 +372,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-19.1';
+  var BUILD = '2026-11-19.3';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -471,9 +472,12 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   var ownerTag = function (r) { return el('span', 'own' + (!r.owner ? ' open' : r.owner === me() ? ' me' : ''), !r.owner ? 'Open' : r.owner === me() ? 'Mine' : first(r.owner)); };
   /* how a touch reads on a card */
   var TN = { 'call/noanswer': 'Called, no answer', 'call/talked': 'Talked on the phone', 'call/wrong': 'Wrong number', 'voicemail/left': 'Left a voicemail', 'email/sent': 'Emailed', 'email/replied': 'They replied by email',
-    'email/bounced': 'Email bounced', 'text/sent': 'Texted', 'text/replied': 'They replied by text', 'inperson/met': 'Met in person', 'inperson/toured': 'Toured Peak', 'inperson/noshow': 'Missed the tour',
+    'email/bounced': 'Email bounced', 'email/auto': 'Auto-reply (out of office)', 'text/sent': 'Texted', 'text/replied': 'They replied by text', 'inperson/met': 'Met in person', 'inperson/toured': 'Toured Peak', 'inperson/noshow': 'Missed the tour',
     'linkedin/sent': 'Messaged on LinkedIn', 'linkedin/replied': 'Replied on LinkedIn', 'other/contacted': 'Contacted (how not recorded, old desk)' };
-  var touchName = function (t) { return (TN[t.m + '/' + t.out] || ((S.data.methods[t.m] || t.m) + ', ' + (S.data.outs[t.out] || t.out))) + (t.auto ? ' (automatic)' : ''); };
+  var touchName = function (t) { return (TN[t.m + '/' + t.out] || ((S.data.methods[t.m] || t.m) + ', ' + (S.data.outs[t.out] || t.out))) + (t.auto && !t.mail ? ' (automatic)' : ''); };
+  /* who Peak's emails go out as (2026-11-19: Peak Partnerships, set in Outbox) */
+  var FROMN = function () { var f = (S.data && S.data.sendFrom) || {}; return f.name || 'Peak Partnerships'; };
+  var FROML = function () { var f = (S.data && S.data.sendFrom) || {}; return FROMN() + ' (' + (f.email || 'partnerships@peakpickleball.us') + ')'; };
   var who = function (n) { return W().owners.indexOf(n) >= 0 ? first(n) : n; };   /* sellers by first name; "Peak email" and others in full */
   var lastLine = function (r) { var t = r.last; return t ? touchName(t) + ' · ' + relDay(t.when) + ' · ' + who(t.by) : 'Not contacted yet'; };
   /* can someone reach them: an email and a phone (2026-10-21) */
@@ -1326,7 +1330,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   }
   /* ---- Write an email (2026-11-19, Matthew for Cai: "a box in the peak desk app ... she can fill it out with whatever she wants to say click
      send and it will send it to the prospect"): your own words to one person, optionally from a template, with your booking link; sent from
-     Matthew's Peak Outlook once an admin turns Desk emails on. While off: Preview, Copy and Open in my mail app. ---- */
+     Peak Partnerships (the shared mailbox; it was Matthew's Peak Outlook until 2026-11-19 evening) once an admin turns Desk emails on.
+     While off: Preview, Copy and Open in my mail app. Reply on one of their emails in the Activity opens this box as a reply (s._reply). ---- */
   var DMC = function () { return (S.data && S.data.deskmail) || { on: false, mine: { sig: '' } }; };
   var BKC = function () { return (S.data && S.data.book) || { on: false }; };
   var dmToast = function (j) {
@@ -1350,8 +1355,10 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var P = (r.people || []).filter(function (p) { return p.email && !p.dnc; }).sort(function (a, b) { return (b.best ? 1 : 0) - (a.best ? 1 : 0); });
     var ob = el('button', 'btn small ghost', P.length ? 'Write an email to ' + (P[0].name && P[0].name !== 'general inbox' ? first(P[0].name) : P[0].email) + '…' : 'Write an email…'); ob.type = 'button'; ob.setAttribute('data-act', 'dmopen');
     var box = el('div', 'tplbox dmbox'); box.hidden = true; s.appendChild(ob); s.appendChild(box);
+    var RE = null;   /* the touch holding their email, while this is a reply */
     ob.addEventListener('click', function () { if (box.hidden) { paintBox(); box.hidden = false; ob.hidden = true; box.querySelector('.dmbody').focus(); } });
     s._open = function () { ob.click(); s.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+    s._reply = function (t) { RE = t; paintBox(); box.hidden = false; ob.hidden = true; s.scrollIntoView({ behavior: 'smooth', block: 'start' }); box.querySelector('.dmbody').focus(); };
     function paintBox() {
       box.textContent = '';
       var to = el('select'); to.className = 'dmto'; to.setAttribute('aria-label', 'Send to');
@@ -1363,7 +1370,15 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       box.appendChild(el('label', 'lab', 'To')); box.appendChild(to); box.appendChild(two);
       var who = function () { var p = P[+to.value]; return to.value !== '' && p ? { name: p.name && p.name !== 'general inbox' ? p.name : '', email: p.email } : { name: tn.value.trim(), email: te.value.trim() }; };
       var showTyped = function () { two.hidden = to.value !== ''; };
-      to.addEventListener('change', function () { showTyped(); links(); }); if (!P.length) to.value = ''; showTyped();
+      to.addEventListener('change', function () { showTyped(); links(); }); if (!P.length) to.value = '';
+      if (RE) {   /* a reply: to whoever wrote, the same subject with RE: */
+        var rm = RE.mail || {}, pi = -1; P.forEach(function (p, i) { if (pi < 0 && String(p.email).toLowerCase() === String(rm.from).toLowerCase()) pi = i; });
+        if (pi >= 0) to.value = String(pi); else { to.value = ''; tn.value = rm.name || ''; te.value = rm.from || ''; }
+        var rl = el('div', 'dmre', 'Replying to ' + (rm.name || rm.from) + '’s email of ' + when(rm.at || RE.when) + (rm.subject ? ', “' + rm.subject + '”' : '') + ': it goes in the same thread. ');
+        var nr = el('button', 'lnk', 'Write a new email instead'); nr.type = 'button'; nr.setAttribute('data-act', 'dmnotre'); nr.addEventListener('click', function () { RE = null; paintBox(); }); rl.appendChild(nr);
+        box.insertBefore(rl, box.firstChild);
+      }
+      showTyped();
       var T = (W().templates || []).filter(function (t) { return t.body; }), tp = el('select'); tp.className = 'dmtpl'; tp.setAttribute('aria-label', 'Start from');
       var b0 = el('option', null, 'A blank email'); b0.value = ''; tp.appendChild(b0);
       T.forEach(function (t) { var o = el('option', null, 'Template: ' + t.name); o.value = t.k; tp.appendChild(o); });
@@ -1371,6 +1386,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var sj = el('input'); sj.className = 'dmsub'; sj.placeholder = 'Subject'; sj.setAttribute('aria-label', 'Subject');
       var bd = el('textarea'); bd.className = 'dmbody'; bd.rows = 10; bd.placeholder = 'Write whatever you want to say to them.'; bd.setAttribute('aria-label', 'Message');
       box.appendChild(el('label', 'lab', 'Subject')); box.appendChild(sj); box.appendChild(el('label', 'lab', 'Message')); box.appendChild(bd);
+      if (RE) { var rsub = String((RE.mail || {}).subject || ''); sj.value = /^re:/i.test(rsub) ? rsub : 'RE: ' + rsub; }
       var cur = '';
       tp.addEventListener('change', function () {
         var t = T.filter(function (x) { return x.k === tp.value; })[0];
@@ -1385,25 +1401,25 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       row1.appendChild(ins); box.appendChild(row1);
       box.appendChild(el('div', 'fuhint', B.on ? '{book} turns into your own booking link when it sends: they pick a time on the desk’s shared hours (' + B.hours + ') and it lands on this card with you as host.' : 'Booking links turn on once Matthew says go.'));
       var mine = C.mine || {};
-      box.appendChild(el('div', 'fuhint', 'Signed: ' + String(mine.sig || me()).split('\n').join(' · ') + (mine.replyto ? ' · replies go to ' + mine.replyto : ' · replies go to Matthew’s Peak inbox') + '. Change it in More, My email & booking link.'));
+      box.appendChild(el('div', 'fuhint', 'Signed: ' + String(mine.sig || me()).split('\n').join(' · ') + (mine.replyto ? ' · replies go to ' + mine.replyto : ' · replies come to ' + FROMN() + ' and show on this card') + '. Change it in More, My email & booking link.'));
       if (r.owner && r.owner !== me()) box.appendChild(el('div', 'fuhint', r.owner + ' owns ' + r.name + '. What you send is logged under your name.'));
       var acts = el('div', 'acts'), pv = el('button', 'btn small ghost', 'Preview'), sd = el('button', 'btn small', 'Send'), cp = el('button', 'btn small ghost'), mt = el('a', 'btn small ghost');
       pv.type = sd.type = cp.type = 'button'; pv.setAttribute('data-act', 'dmpreview'); sd.setAttribute('data-act', 'dmsend'); cp.setAttribute('data-act', 'dmcopy'); mt.setAttribute('data-act', 'dmmailto');
       cp.appendChild(ic('copy')); cp.appendChild(document.createTextNode('Copy')); mt.appendChild(ic('mail')); mt.appendChild(document.createTextNode('Open in my mail app')); mt.href = '#';
       acts.appendChild(pv); acts.appendChild(sd); acts.appendChild(cp); acts.appendChild(mt);
-      var x = el('button', 'lnk', 'Close'); x.type = 'button'; x.addEventListener('click', function () { box.hidden = true; ob.hidden = false; }); acts.appendChild(x);
+      var x = el('button', 'lnk', 'Close'); x.type = 'button'; x.addEventListener('click', function () { box.hidden = true; ob.hidden = false; RE = null; }); acts.appendChild(x);
       box.appendChild(acts);
       var sh = el('div', 'fuhint dmstate'); box.appendChild(sh);
       var pre = el('pre', 'eodpre'); pre.hidden = true; box.appendChild(pre);
       var links = function () { var w = who(); mt.classList.toggle('off', !w.email || !bd.value.trim()); };
       [sj, bd, tn, te].forEach(function (i) { i.addEventListener('input', links); });
       sd.disabled = !C.on;
-      sh.textContent = !C.on ? 'Send turns on once Matthew says go. Until then use Preview, then Copy or Open in my mail app.' : C.ready === false ? 'Peak email can’t send right now (' + (C.why || 'not connected') + '): it would show as not sent, with a Retry.' : 'Send goes from Matthew’s Peak Outlook (' + (C.from || '') + '), signed by you, and is logged on this card.';
-      var body = function () { var w = who(); return { id: r.id, to: w.email, name: w.name, subject: sj.value, text: bd.value, tpl: cur }; };
+      sh.textContent = !C.on ? 'Send turns on once Matthew says go. Until then use Preview, then Copy or Open in my mail app.' : C.fromWarn ? C.fromWarn : C.ready === false ? 'Peak email can’t send right now (' + (C.why || 'not connected') + '): it would show as not sent, with a Retry.' : 'Send goes out as ' + FROML() + ', signed by you, and is logged on this card.';
+      var body = function () { var w = who(); return { id: r.id, to: w.email, name: w.name, subject: sj.value, text: bd.value, tpl: cur, re: RE ? RE.k : '' }; };
       pv.addEventListener('click', function () {
         api('dmpreview', Object.assign({ world: S.world }, body())).then(function (j) {
           if (!j.ok) { toast(j.error || 'No preview.'); return; }
-          pre.hidden = false; pre.textContent = 'To: ' + (j.name ? j.name + ' <' + j.to + '>' : j.to) + '\nFrom: ' + j.from + (j.replyto ? '\nReply-To: ' + j.replyto : '') + '\nSubject: ' + j.subject + '\n\n' + j.text.replace(/\S*\?m=dm0000000000-\w+/, '[your booking link for this email]')
+          pre.hidden = false; pre.textContent = 'To: ' + (j.name ? j.name + ' <' + j.to + '>' : j.to) + '\nFrom: ' + (j.fromName ? j.fromName + ' <' + j.from + '>' : j.from) + (j.replyto ? '\nReply-To: ' + j.replyto : '') + '\nSubject: ' + j.subject + (j.re ? '\n(In reply to their email “' + j.re.subject + '”: the same thread, their email quoted under yours)' : '') + '\n\n' + j.text.replace(/\S*\?m=dm0000000000-\w+/, '[your booking link for this email]')
             + (j.can ? '\n\n(This one would not go: ' + j.can + '.)' : '') + (j.book === 'off' ? '\n\n(Booking links are off: take {book} out to send it.)' : '') + (!j.on ? '\n\n(Desk emails are off: nothing is sent from here yet.)' : '');
         });
       });
@@ -1411,7 +1427,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         var w = who(); if (!w.email) { toast('Pick who it goes to, or type their email.'); return; }
         if (!sj.value.trim() || !bd.value.trim()) { toast('Write the subject and the message first.'); return; }
         if (r.owner && r.owner !== me() && !confirm(r.owner + ' owns ' + r.name + '. Send anyway? It stays theirs.')) return;
-        if (!confirm('Send this email to ' + (w.name ? w.name + ' (' + w.email + ')' : w.email) + ' now? It goes from Matthew’s Peak Outlook, signed by you.')) return;
+        if (!confirm((RE ? 'Send this reply to ' : 'Send this email to ') + (w.name ? w.name + ' (' + w.email + ')' : w.email) + ' now? It goes as ' + FROML() + ', signed by you' + (RE ? ', in the same thread as their email.' : '.'))) return;
         var tpn = document.querySelector('.detail .touchp'), fu = tpn && tpn._fuDay ? tpn._fuDay('tpl') : '';
         sd.disabled = true; save('dmsend', Object.assign(body(), { fu: fu })).then(function (j) { if (!j || !j.ok) sd.disabled = false; dmToast(j); });
       });
@@ -1449,6 +1465,24 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     if (!X) (W().proposals || []).filter(function (p) { return p.lead === r.id; }).forEach(function (p) { var b = el('button', 'lnk', 'Proposal ' + money(p.total) + ', ' + ago(p.at) + ' ›'); b.type = 'button'; b.addEventListener('click', function () { S.print = { kind: 'proposal', pid: p.pid }; draw(); window.scrollTo(0, 0); }); s.appendChild(el('div')).appendChild(b); });
     return s;
   }
+  /* one of their emails on the Activity (2026-11-19): who, when, the subject, their own words (the quoted history is cut off), attachments by
+     name (they stay in the mailbox), and Reply, which opens Write an email as a reply in the same thread. Everyone on the desk sees it. */
+  function mailBlock(r, t) {
+    var m = t.mail, d = el('div', 'mailin' + (m.auto ? ' auto' : '')); d.setAttribute('data-mail', t.k);
+    d.appendChild(el('div', 'mh', (m.auto ? 'Automatic reply from ' : 'From ') + (m.name ? m.name + ' <' + m.from + '>' : m.from || '') + ' · ' + when(m.at || t.when) + (m.stop ? ' · asked not to be emailed again' : '')));
+    if (m.subject) d.appendChild(el('div', 'ms', m.subject));
+    if (m.text) {
+      var p = el('div', 'mt', m.text); d.appendChild(p);
+      if (m.text.split('\n').length > 7 || m.text.length > 520) { p.classList.add('clip'); var mo = el('button', 'lnk', 'Show all of it'); mo.type = 'button'; mo.addEventListener('click', function () { var c = p.classList.toggle('clip'); mo.textContent = c ? 'Show all of it' : 'Show less'; }); d.appendChild(mo); }
+    }
+    if (m.files && m.files.length) d.appendChild(el('div', 'mf', 'Attached: ' + m.files.join(', ') + ' (the files stay in the ' + FROMN() + ' mailbox)'));
+    if (m.rp && !m.stop) {
+      var rb = el('button', 'btn small ghost', 'Reply'); rb.type = 'button'; rb.setAttribute('data-act', 'mailreply');
+      rb.addEventListener('click', function () { var sec = null; [].forEach.call(document.querySelectorAll('.dmsec'), function (q) { if (q.getAttribute('data-dm') === r.id) sec = q; }); if (sec && sec._reply) sec._reply(t); });
+      d.appendChild(rb);
+    }
+    return d;
+  }
   /* everything that happened, newest first: touches, notes, stage changes */
   function activitySec(r) {
     var s = el('div', 'sec'); s.appendChild(el('h3', null, 'Activity'));
@@ -1467,7 +1501,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var tone = x.k === 't' ? touchTone(x.t) : x.k === 'n' ? ['stone', 'note'] : x.k === 'c' ? ['stone', x.c.do === 'del' ? 'trash' : 'pen'] : [HUEOF[x.h.to] || 'slate', 'flag'];
       var it = el('div', 'tli ' + x.k + ' h-' + tone[0]), body = el('div', 'tx'), dot = el('i'); dot.appendChild(ic(tone[1])); it.appendChild(dot); it.appendChild(body);
       if (x.k === 't') {
-        body.appendChild(el('b', null, touchName(x.t))); if (x.t.note) body.appendChild(el('div', null, x.t.note));
+        body.appendChild(el('b', null, touchName(x.t))); if (x.t.note && !x.t.mail) body.appendChild(el('div', null, x.t.note));
+        if (x.t.mail) body.appendChild(mailBlock(r, x.t));   /* their email (2026-11-19), read from Peak Partnerships */
         /* a desk email (2026-11-19): the whole email, and how often its booking link was opened */
         var dmx = x.t.dm ? (r.dmails || []).filter(function (q) { return q.ref === x.t.dm; })[0] : null;
         if (dmx) {
@@ -1734,7 +1769,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       if (!c.on) { cb.disabled = true; cb.checked = false; lab.className = 'off'; tx.textContent = verb + (em ? ' to ' + em : ''); hint.textContent = 'Turns on once Matthew approves the wording.'; return; }
       if (!em) { cb.disabled = true; cb.checked = false; lab.className = 'off'; tx.textContent = verb; hint.textContent = 'No email for this booking, so no confirmation goes out.'; return; }
       cb.disabled = false; lab.className = ''; if (!touched) cb.checked = opt.def != null ? !!opt.def : true; tx.textContent = verb + ' to ' + em;
-      hint.textContent = c.ready === false ? 'Peak email can’t send right now (' + (c.why || 'not connected') + '): it would show as not sent, with a Retry.' : 'From Matthew’s Peak Outlook, signed by the person who booked it, with a calendar invite.';
+      hint.textContent = c.ready === false ? 'Peak email can’t send right now (' + (c.why || 'not connected') + '): it would show as not sent, with a Retry.' : 'From ' + FROML() + ', signed by the person who booked it, with a calendar invite.';
     };
     paint();
     return { node: box, want: function () { return !cb.disabled && cb.checked; }, paint: paint };
@@ -1978,19 +2013,24 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var get = function (renew) { api('booklink', renew ? { 'new': 1 } : {}).then(function (j) { if (!j.ok) { toast(j.error || 'The link could not be made.'); return; } show(j); if (renew) toast('A new link: the old one no longer works'); }).catch(function () { toast('No connection.'); }); };
     var b = el('button', 'btn small', 'Show my booking link'); b.type = 'button'; b.setAttribute('data-act', 'booklink'); b.addEventListener('click', function () { get(false); }); out.appendChild(b);
     var c2 = el('div', 'card info'); c2.setAttribute('data-set', 'mysig'); g.appendChild(c2); c2.appendChild(el('h3', null, 'My email signature'));
+    c2.appendChild(el('p', 'soft fromro', 'Your emails go out as ' + FROML() + ', signed by you. Matthew sets this in Outbox.'));
     c2.appendChild(el('p', 'soft', 'What goes under every email you send from a card. Add your phone if you like. Peak’s address and a one-line way to opt out are added under it.'));
     var f = el('div', 'form'); c2.appendChild(f);
     var sg = el('textarea'); sg.rows = 4; sg.className = 'mysig'; sg.value = mine.sig || ''; sg.setAttribute('aria-label', 'My signature'); f.appendChild(sg);
     f.appendChild(el('label', 'lab', 'Replies to my emails go to (optional)'));
     var rt = el('input'); rt.type = 'email'; rt.className = 'myreply'; rt.placeholder = 'Your own email, so replies come to you'; rt.value = mine.replyto || ''; f.appendChild(rt);
-    f.appendChild(el('small', null, 'Left empty, replies go to Matthew’s Peak inbox (the address the email comes from).'));
+    f.appendChild(el('small', null, 'Left empty (best), replies come to ' + FROML() + ', the address the email comes from, and show on the company’s card for everyone on the desk.'));
     var sv = el('button', 'btn small', 'Save'); sv.type = 'button'; sv.setAttribute('data-act', 'mysave'); sv.addEventListener('click', function () { save('myset', { sig: sg.value, replyto: rt.value.trim() }, 'Saved'); }); f.appendChild(sv);
   }
   /* Settings: Desk emails and Booking links (2026-11-19): both OFF until Matthew says go */
   function setDeskMail(g) {
+    var SF = S.data.sendFrom || {}, c0 = el('div', 'card info'); c0.setAttribute('data-set', 'sendfrom'); g.appendChild(c0);
+    c0.appendChild(el('h3', null, 'Send from'));
+    c0.appendChild(el('p', 'soft', 'Every Peak email (desk emails, tour confirmations and the Peak email lists) goes out as ' + FROML() + '. Replies, bounces, auto-replies and STOP come back there and show on the company’s card. Matthew changes this in Outbox (Peak, Settings); here it is read only.'));
+    if (SF.warn) c0.appendChild(el('div', 'tmline bad', SF.warn));
     var C = DMC(), c = el('div', 'card info'); c.setAttribute('data-set', 'deskmail'); g.appendChild(c);
     c.appendChild(el('h3', null, 'Desk emails'));
-    c.appendChild(el('p', 'soft', 'Write an email on every card: the seller writes it (or starts from a template), presses Send, and it goes from Matthew’s Peak Outlook (' + (C.from || '') + ') to that one person, signed by the seller, with Peak’s address and a one-line opt-out under it. Logged on the card as Emailed. Never to anyone marked Don’t contact or on the Peak email do-not-email list. Replies go to the seller’s own address when they set one, else to Matthew’s Peak inbox. While Off, Send is greyed and they can still Preview, Copy or open it in their own mail.'));
+    c.appendChild(el('p', 'soft', 'Write an email on every card: the seller writes it (or starts from a template), presses Send, and it goes out as ' + FROML() + ' to that one person, signed by the seller, with Peak’s address and a one-line opt-out under it. Logged on the card as Emailed. Never to anyone marked Don’t contact or on the Peak email do-not-email list. Replies come to ' + FROMN() + ' and show on the card for everyone (or to the seller’s own address, if they set one). While Off, Send is greyed and they can still Preview, Copy or open it in their own mail.'));
     var st = { on: !!C.on, px: !!C.pixel }, seg = el('div', 'seg'); [['off', 'Off'], ['on', 'On']].forEach(function (o) { var b = el('button', null, o[1]); b.type = 'button'; b.setAttribute('data-dmset', o[0]); b.addEventListener('click', function () { st.on = o[0] === 'on'; paint(); }); seg.appendChild(b); });
     var paint = function () { [].forEach.call(seg.children, function (b) { b.setAttribute('aria-pressed', String((b.getAttribute('data-dmset') === 'on') === st.on)); }); };
     c.appendChild(seg); paint();
@@ -1998,7 +2038,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var lb = el('label', 'chk'), cb = el('input'); cb.type = 'checkbox'; cb.checked = st.px; cb.setAttribute('data-dm', 'pixel'); cb.addEventListener('change', function () { st.px = cb.checked; }); lb.appendChild(cb);
     lb.appendChild(document.createTextNode(' Count opens with a 1x1 image (off: opens are rough and the image can hurt inbox placement; the booking link’s visits are counted either way)')); lb.style.cssText = 'display:block;margin-top:10px;font-size:13.5px'; c.appendChild(lb);
     var sv = el('button', 'btn small', 'Save'); sv.type = 'button'; sv.setAttribute('data-act', 'dmsave'); sv.style.marginTop = '10px';
-    sv.addEventListener('click', function () { if (st.on && !C.on && !confirm('Turn on desk emails? From now on Send on a card emails that person from Matthew’s Peak Outlook.')) return; save('dmset', { on: st.on, pixel: st.px }, st.on ? 'Desk emails are on' : 'Desk emails are off'); });
+    sv.addEventListener('click', function () { if (st.on && !C.on && !confirm('Turn on desk emails? From now on Send on a card emails that person as ' + FROML() + '.')) return; save('dmset', { on: st.on, pixel: st.px }, st.on ? 'Desk emails are on' : 'Desk emails are off'); });
     c.appendChild(el('div')).appendChild(sv);
   }
   function setBooking(g) {
@@ -2053,7 +2093,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     /* tour confirmation emails (2026-11-19): OFF until Matthew approves the wording and turns it on */
     var TM = S.data.tourmail || {}, c3 = el('div', 'card info'); c3.setAttribute('data-set', 'tourmail'); g.appendChild(c3);
     c3.appendChild(el('h3', null, 'Tour confirmation emails'));
-    c3.appendChild(el('p', 'soft', 'When someone books a tour with the contact’s email and leaves “Send a confirmation email” ticked, the contact gets this email from Matthew’s Peak Outlook (' + (TM.from || '') + '), signed by the person who booked it, with a calendar invite they can add to their calendar. Moving the tour sends the new time; cancelling it sends a cancellation. Never to anyone marked Don’t contact. Both lists. Nothing goes out while it is Off.'));
+    c3.appendChild(el('p', 'soft', 'When someone books a tour with the contact’s email and leaves “Send a confirmation email” ticked, the contact gets this email from ' + FROML() + ', signed by the person who booked it, with a calendar invite they can add to their calendar. Moving the tour sends the new time; cancelling it sends a cancellation. Never to anyone marked Don’t contact. Both lists. Nothing goes out while it is Off.'));
     var ts = { on: !!TM.on }, tseg = el('div', 'seg'); [['off', 'Off'], ['on', 'On']].forEach(function (o) { var b = el('button', null, o[1]); b.type = 'button'; b.setAttribute('data-tmset', o[0]); b.addEventListener('click', function () { ts.on = o[0] === 'on'; tpaint(); }); tseg.appendChild(b); });
     var tpaint = function () { [].forEach.call(tseg.children, function (b) { b.setAttribute('aria-pressed', String((b.getAttribute('data-tmset') === 'on') === ts.on)); }); };
     c3.appendChild(tseg); tpaint();

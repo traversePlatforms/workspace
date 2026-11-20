@@ -4,7 +4,7 @@ Matthew's ask, 19 Nov: "when for example, cai books a tour using our app for the
 
 **Status: built, OFF.** Nothing has been sent to anyone. The switch is in the Peak desk under More › Settings › Tour confirmation emails. It is admin only and stays Off until you turn it on. You can also change the wording there (Save, Preview, Go back to the first wording).
 
-**Who sends it:** your Peak Outlook (matthewsharpe@peakpickleball.us), through the Peak email sender's existing Microsoft connection. The email is signed with the name of the person who booked the tour, so replies come to your Peak inbox.
+**Who sends it (changed 19 Nov evening):** Peak Partnerships <partnerships@peakpickleball.us>, the shared mailbox, through the Peak email sender's Microsoft connection (your sign-in, with Send As). It is kept in Peak Partnerships' Sent Items. The email is signed with the name of the person who booked the tour. Replies come to Peak Partnerships, and the Peak email sender puts them on the company's card in the desk (within the hour), where Cai and everyone else on the desk can read them and press Reply.
 
 **What triggers it:**
 - Someone books a tour (sponsors: Meeting / tour booked; expo: Tour booked) with the contact's email, and "Send a confirmation email to ..." is still ticked.
@@ -112,7 +112,7 @@ LOCATION:Peak Pickleball\, 1730 Briargate Blvd\, Colorado Springs\, CO 809
 DESCRIPTION:You'll meet Cai Silva.\nEntrance: from the parking lot off Jam
  boree Drive (no way in from inside Chapel Hills Mall).\nPeak: (719) 377-47
  25\nTo change it\, reply to the email this came with.
-ORGANIZER;CN="Peak Pickleball":mailto:matthewsharpe@peakpickleball.us
+ORGANIZER;CN="Peak Pickleball":mailto:partnerships@peakpickleball.us
 ATTENDEE;CN="Jamie Polson";ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP
  =TRUE:mailto:jamie@example.com
 STATUS:CONFIRMED
@@ -124,8 +124,8 @@ END:VCALENDAR
 ## Things to decide before turning it on
 
 1. **The wording above.** Edit it in Settings if you want; the date, time and address fields can't be removed.
-2. **Signed by the booker, sent from your mailbox.** The From line shows your Peak Outlook, and replies land in your inbox, not Cai's. Forward them to whoever booked the tour.
-3. **"Accepted" answers.** When someone accepts the invite, their calendar's "Accepted: ..." note comes to your Peak inbox. The outreach sender ignores these: they are not counted as replies.
+2. **Signed by the booker, sent as Peak Partnerships.** The From line shows Peak Partnerships. Replies land in Peak Partnerships and show on the company's card in the desk for whoever booked the tour (no forwarding needed).
+3. **"Accepted" answers.** When someone accepts the invite, their calendar's "Accepted: ..." note comes to Peak Partnerships. The outreach sender ignores these: they are not counted as replies.
 4. **Test first.** Settings has "Send me a test": type your own Gmail address and it sends the sample visit now, even while the switch is Off. Check the email shows "Add to calendar" before you turn it on. This could not be tested here because nothing was sent to a real mailbox. One point is still unknown: whether Microsoft keeps the invite as a proper meeting invite when the email goes out through Graph.
 
 ## Fact-check log

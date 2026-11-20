@@ -24,9 +24,9 @@ Every company card (Sponsors and Expo leads) has a new section, **Write an email
 - **Insert my booking link:** puts `{book}` where her cursor is ("Pick a time that suits you: {book}"). When the email is sent, `{book}`
   becomes a link made for that email. The link knows the company and the person, so the booking page is already filled in for them, and
   the booking lands on this card with Cai as host.
-- **Preview:** the email as it would go: To, From (Matthew's Peak Outlook), Reply-To, Subject, her words, her signature, Peak's address
+- **Preview:** the email as it would go: To, From (Peak Partnerships <partnerships@peakpickleball.us>), Reply-To, Subject, her words, her signature, Peak's address
   and the opt-out line. Nothing is sent.
-- **Send:** asks "Send this email to Robin Field (robin@…) now? It goes from Matthew's Peak Outlook, signed by you." Then it goes.
+- **Send:** asks "Send this email to Robin Field (robin@…) now? It goes as Peak Partnerships (partnerships@peakpickleball.us), signed by you." Then it goes.
 - **Copy** and **Open in my mail app:** for when she would rather send it herself. Both still work while desk emails are off. Her
   personal booking link goes in place of `{book}`, and the card asks her to log it, as Send a message does.
 
@@ -42,16 +42,28 @@ After Send:
 
 **Her settings:** More › **My email & booking link**:
 - **My email signature:** starts as "Cai Silva / Peak Pickleball", and she can add her phone.
-- **Replies to my emails go to:** optional. If she puts her own address here, replies to her desk emails go to her. Left empty,
-  replies come to your Peak inbox.
+- **Replies to my emails go to:** optional. If she puts her own address here, replies to her desk emails go to her. Left empty (the default, and the better choice),
+  replies come to Peak Partnerships and show on the company's card for everyone on the desk.
 - **My booking link:** her personal link to paste anywhere, with "Make a new link" if it ever needs replacing.
 
 While **Desk emails** is off: **Send** is greyed and says "Send turns on once Matthew says go. Until then use Preview, then Copy or Open
 in my mail app." While **Booking links** is off, the Insert button is greyed and says "Booking links turn on once Matthew says go."
 
+**Replies on the card (19 Nov evening):** a reply to a desk email, a tour confirmation or the outreach lists lands in Peak Partnerships.
+Each hour the Peak email sender reads its Inbox and puts the reply on that company's card, in the Activity: who wrote, when, the subject,
+their own words (the quoted history under "On ... wrote:" is cut off), and any attachments by name (the files stay in the mailbox).
+Everyone with a desk sign-in sees it, and it sets a follow-up for today. Out-of-office answers show as "Auto-reply (out of office)" and
+do not count as replies. Each one handled is marked read in Peak Partnerships; nothing is moved or deleted. Mail from people the desk
+doesn't know is left unread there.
+
+**Reply:** a reply on the Activity has a **Reply** button. It opens Write an email as a reply: to whoever wrote, "RE: <their subject>",
+with "Replying to Kim's email of Nov 19 ...: it goes in the same thread". Send answers their email with Microsoft's own reply on that
+message in Peak Partnerships, so it stays one thread for them, with their email quoted under yours. If their email is no longer in the
+mailbox, it goes as a new email in the same thread instead.
+
 ## 2. A sample email as the prospect gets it
 
-From: matthewsharpe@peakpickleball.us (your Peak Outlook)
+From: Peak Partnerships <partnerships@peakpickleball.us> (the shared mailbox, since 19 Nov evening)
 Reply-To: Cai's own address, only if she sets one
 Subject: Following up from today
 
@@ -138,7 +150,7 @@ The existing tour confirmation then sends the updated invite.
    show open times. Add them in More › Settings › Booking links › Blocked dates (one a line, like 2026-11-26).
 3. Booking links: More › Settings › Booking links › **On** › Save. Then open your own link (More › My email & booking link) on your phone
    and look at the times.
-4. Desk emails: More › Settings › Desk emails › **On** › Save. It refuses to turn on while your Peak Outlook isn't connected. Send the
+4. Desk emails: More › Settings › Desk emails › **On** › Save. It refuses to turn on while Microsoft isn't connected in Outbox. Send the
    first one to yourself: add yourself as a contact on a test card, write an email, Send, and check it arrives and the booking link works.
 5. Tour confirmations are a separate switch (Settings › Tour confirmation emails), still off. With it on, link bookings also get the
    confirmation and calendar invite.

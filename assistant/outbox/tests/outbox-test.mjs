@@ -239,7 +239,7 @@ try {
     const mock = http.createServer((q, s) => { let b = ''; q.on('data', d => b += d); q.on('end', () => {
       const u = new URL(q.url, 'http://x'), j = (c, o) => { s.writeHead(c, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(o)); };
       if (/\/oauth2\/v2.0\/token$/.test(u.pathname)) return j(200, { access_token: 'AT-9', refresh_token: 'RT-9', expires_in: 3600 });
-      if (u.pathname === '/graph/v1.0/me/sendMail') { const raw = Buffer.from(b, 'base64').toString('utf8'); MS.sent.push({ to: (raw.match(/^To: (?:.*<)?([^>\r\n]+)>?\r?$/m) || [])[1], mime: /multipart\/alternative/.test(raw) && /Content-Type: text\/html/.test(raw) && /o\.php\?r=/.test(Buffer.from((raw.split('Content-Type: text/html')[1] || '').split('\r\n\r\n')[1] || '', 'base64').toString('utf8')) }); s.writeHead(202); return s.end(); }
+      if (/^\/graph\/v1.0\/(me|users\/[^/]+)\/sendMail$/.test(u.pathname)) { const raw = Buffer.from(b, 'base64').toString('utf8'); MS.sent.push({ box: u.pathname.split('/')[3] === 'me' ? 'me' : decodeURIComponent(u.pathname.split('/')[4]), from: (raw.match(/^From: (.*)\r$/m) || [])[1] || '', to: (raw.match(/^To: (?:.*<)?([^>\r\n]+)>?\r?$/m) || [])[1], mime: /multipart\/alternative/.test(raw) && /Content-Type: text\/html/.test(raw) && /o\.php\?r=/.test(Buffer.from((raw.split('Content-Type: text/html')[1] || '').split('\r\n\r\n')[1] || '', 'base64').toString('utf8')) }); s.writeHead(202); return s.end(); }
       if (/mailFolders/.test(u.pathname)) return j(200, { value: [] });
       j(404, { error: { code: 'NotFound' } });
     }); });
@@ -266,6 +266,7 @@ try {
       const cron = extra => new Promise(res => { const p = spawn('php', [path.join(PUB, 'peak-mail-31dc56', 'cron.php'), 'run'], { env: { ...menv, ...extra } }); let o = ''; p.stdout.on('data', d => o += d); p.on('close', () => res(o)); });
       let o = await cron({ PEAK_MAIL_DESKFAIL: '1' });
       ok(MS.sent.length === 10 && MS.sent.every(x => x.mime) && /10 desk updates wait/.test(o), 'desk down: 10 sent anyway (multipart, with the open image), the desk waits: ' + o.trim());
+      ok(MS.sent.every(x => x.box === 'partnerships@peakpickleball.us' && x.from === '"Peak Partnerships" <partnerships@peakpickleball.us>'), 'inside Outbox too, every email goes out as Peak Partnerships (2026-11-19)');
       r = await api('state'); ok(/10 updates have not reached the Peak desk/.test(r.json.summary.attention.map(a => a.text).join('\n')), 'Outbox flags the desk updates still waiting');
       o = await cron({ PEAK_MAIL_NOW: String(RUN + 1800) });
       fs.writeFileSync(path.join(R, 'desk-read.php'), "<?php require getenv('STORE'); echo json_encode(recs('sponsor'));");
@@ -278,6 +279,11 @@ try {
       ok(!/updates have not reached/.test(r.json.summary.attention.map(a => a.text).join('\n')), 'and no desk warning once caught up');
       r = await req('GET', '/outbox-092b0f/peak/o.php?r=0000000000&s=0'); ok(r.status === 200 && /image\/gif/.test(r.headers['content-type']), 'the open image answers inside Outbox');
       r = await req('GET', '/outbox-092b0f/peak/b.php?r=0000000000&s=0'); ok(r.status === 200 && /did not work/.test(r.text), 'the book-a-time page answers inside Outbox (a bad link says so)');
+      r = await api('state'); ok(r.json.peak.from && r.json.peak.from.email === 'partnerships@peakpickleball.us' && r.json.peak.from.shared && !r.json.peak.from.warn, 'Outbox says who the Peak emails go out as');
+      /* a Send As refusal (2026-11-19) is said plainly in Outbox */
+      fs.writeFileSync(path.join(R, 'peak-mail-data', 'from.json'), JSON.stringify({ sendas: { ok: false, why: '403 ErrorSendAsDenied: no right to send', at: RUN } }));
+      r = await api('state'); ok(r.json.summary.attention.some(a => a.level === 'bad' && /^Peak email: Microsoft hasn't finished giving Send As yet, or it was removed: 403 ErrorSendAsDenied/.test(a.text)), 'a Send As refusal is flagged in Outbox in plain words');
+      fs.unlinkSync(path.join(R, 'peak-mail-data', 'from.json'));
       await P('pause', { list: 'sponsors' });
     } finally { mock.close(); }
   }

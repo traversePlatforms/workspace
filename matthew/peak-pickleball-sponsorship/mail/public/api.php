@@ -52,8 +52,9 @@ function pmWhat(array $r): string {
     return match ((string) ($r['t'] ?? '')) {
         'sent' => 'Sent to ' . $to . ' (' . $l . ')',
         'fail' => 'Could not send to ' . $to . ': ' . ($r['why'] ?? '') . (!empty($r['final']) ? ' (will not try again)' : ''),
-        'reply' => (!empty($r['stop']) ? 'STOP reply from ' : 'Reply from ') . $to . (!empty($r['before']) ? ' (wrote before we emailed: not emailed)' : ''),
-        'auto' => 'Auto-reply from ' . $to,
+        'reply' => (!empty($r['stop']) ? 'STOP reply from ' : 'Reply from ') . $to . (!empty($r['before']) ? ' (wrote before we emailed: not emailed)' : '') . (is_array($r['mail'] ?? null) ? ' (in ' . (($r['mail']['mb'] ?? '') === PM_SHARED ? PM_SHARED_NAME : 'Matthew\'s mailbox') . ', on the Peak desk card)' : ''),
+        'auto' => 'Auto-reply from ' . $to . (!empty($r['org']) ? ' (shown on the Peak desk card, not counted as a reply)' : ''),
+        'fromwarn' => ($r['kind'] ?? '') === 'sendas' ? PM_SENDAS . ': ' . ($r['why'] ?? '') : 'Could not open ' . PM_SHARED_NAME . ': ' . ($r['why'] ?? ''),
         'bounce' => 'Bounced: ' . $to . ' (never emailed again)',
         'unsub' => 'Unsubscribed: ' . $to,
         'click' => 'Clicked a link: ' . $to,
@@ -72,7 +73,7 @@ function pmWhat(array $r): string {
         'msadmin' => 'Microsoft asked for Peak\'s admin to approve the app',
         'tourmail' => (!empty($r['test']) ? 'Test tour confirmation' : (($r['method'] ?? '') === 'CANCEL' ? 'Tour cancellation' : 'Tour confirmation')) . (!empty($r['ok']) ? ' sent to ' : ' NOT sent to ') . $to
             . ((string) ($r['company'] ?? '') !== '' ? ' (' . $r['company'] . ')' : '') . ', from the Peak desk by ' . ($r['by'] ?? '') . (empty($r['ok']) ? ': ' . ($r['why'] ?? '') : ''),
-        'deskmail' => 'Desk email ' . (!empty($r['ok']) ? 'sent to ' : 'NOT sent to ') . $to . ((string) ($r['company'] ?? '') !== '' ? ' (' . $r['company'] . ')' : '') . ', from the Peak desk by ' . ($r['by'] ?? '') . (empty($r['ok']) ? ': ' . ($r['why'] ?? '') : ''),
+        'deskmail' => 'Desk email ' . (!empty($r['re']) ? '(a reply) ' : '') . (!empty($r['ok']) ? 'sent to ' : 'NOT sent to ') . $to . ((string) ($r['company'] ?? '') !== '' ? ' (' . $r['company'] . ')' : '') . ', from the Peak desk by ' . ($r['by'] ?? '') . (empty($r['ok']) ? ': ' . ($r['why'] ?? '') : ''),
         'suppress' => 'Added to do-not-email: ' . $to,
         'unsuppress' => 'Taken off do-not-email: ' . $to,
         default => '',
@@ -85,7 +86,7 @@ function pmView(): array {
     $sup = []; foreach ($S['suppressed'] as $a => $why) $sup[] = ['to' => $a, 'why' => $why];
     $rl = @file(pmData() . '/run.log', FILE_IGNORE_NEW_LINES) ?: [];
     $first = $S['firstSent']; $today = date('Y-m-d', pmNow());
-    return ['ok' => true, 'conn' => pmConn(), 'oauth' => pmJ('oauth-last.json', null), 'settings' => $S['settings'], 'window' => pmWindowText($S['settings']), 'inWindow' => pmInWindow($S['settings'], pmNow()),
+    return ['ok' => true, 'conn' => pmConn(), 'from' => pmFromStatus($S['settings']), 'shared' => ['email' => PM_SHARED, 'name' => PM_SHARED_NAME], 'oauth' => pmJ('oauth-last.json', null), 'settings' => $S['settings'], 'window' => pmWindowText($S['settings']), 'inWindow' => pmInWindow($S['settings'], pmNow()),
         'rampToday' => !empty($S['settings']['ramp']) && (!$first || date('Y-m-d', $first) === $today), 'rampMax' => PM_RAMP, 'rateMax' => PM_RATE_MAX,
         'lists' => $L, 'imported' => (int) ($lj['at'] ?? 0), 'activity' => $act, 'suppressed' => array_slice($sup, 0, 300), 'suppressedCount' => count($sup),
         'runs' => array_slice($rl, -6), 'book' => ['week' => pmWeekText((array) $S['settings']['book']['week']), 'kinds' => PM_BOOK_KINDS, 'open' => count(pmBookSlots($S, 500)), 'next' => pmBookSlots($S, 3)],
@@ -148,6 +149,8 @@ switch ($action) {
         if (isset($in['skip'])) { $k = []; foreach ((array) $in['skip'] as $d) { $d = trim((string) $d); if ($d === '') continue; if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) fail('Days off look like 2026-11-26.'); $k[] = $d; } $s['skip'] = array_values(array_unique($k)); }
         if (isset($in['address'])) { $a = pmClean($in['address'], 200); if ($a !== '' && !pmAddressOk($a)) fail('That does not look like a full postal address.'); $s['address'] = $a; }
         if (isset($in['signature'])) $s['signature'] = pmText($in['signature'], 400);
+        /* who the emails go out as (2026-11-19): Peak Partnerships, or the connected mailbox; nothing else */
+        if (isset($in['sendFrom'])) { $v = strtolower(trim((string) $in['sendFrom'])); if (!in_array($v, [PM_SHARED, 'me'], true)) fail('Send from ' . PM_SHARED . ' or the connected mailbox.'); $s['sendFrom'] = $v; }
         pmLog(['t' => 'settings', 's' => $s, 'by' => $BY]);
         if (((int) $s['perOrg'] !== (int) $S['settings']['perOrg'] || (bool) $s['deskSkip'] !== (bool) $S['settings']['deskSkip']) && is_file(pmData() . '/lists.json')) pmImportSave($BY);   /* who is queued per organisation changed */
         out(pmView());
@@ -176,6 +179,8 @@ switch ($action) {
         if (!str_starts_with((string) ($S['suppressed'][$a] ?? ''), 'added by hand')) fail('Only addresses added by hand can be taken off. Unsubscribes, bounces and STOP replies stay.');
         pmLog(['t' => 'unsuppress', 'to' => $a, 'by' => $BY]); out(pmView());
     }
+    /* look at Peak Partnerships now (read only: can it be opened, and its name as Microsoft has it); nothing is sent */
+    case 'fromcheck': { pmFromProbe(true); out(pmView()); }
     case 'dns': {
         $c = pmConn(); $d = !empty($c['email']) ? substr((string) strrchr((string) $c['email'], '@'), 1) : 'peakpickleball.us';
         pmW('dns.json', pmDns($d)); out(pmView());

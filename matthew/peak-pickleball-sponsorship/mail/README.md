@@ -1,6 +1,7 @@
 # Peak outreach email (built 17 Nov 2026)
 
-Hourly batches of plain-text emails from Matthew's Peak Pickleball Outlook mailbox to two lists from the Peak desk: sponsor
+Hourly batches of plain-text emails, sent as **Peak Partnerships <partnerships@peakpickleball.us>** (the shared mailbox, since 19 Nov 2026
+evening; before that Matthew's own Peak Outlook), to two lists from the Peak desk: sponsor
 prospects and expo-space rental leads. Built on Matthew's ask of 17 Nov ("sending X amount out each hour until our list is tapped").
 **Nothing has been sent. Each list starts PAUSED; only Matthew's Start on the page sends.**
 
@@ -44,6 +45,23 @@ prospects and expo-space rental leads. Built on Matthew's ask of 17 Nov ("sendin
   - A seller writes an email on a card (`app/api/desk-email.php`); `pmDeskSend()` here sends it from this mailbox, once per ref (`dm` + 10 hex), with Reply-To the seller's own address if they set one. Rows `deskmail`; Outbox counts them and flags the ones not sent (Retry is on the card). Never to the do-not-email list.
   - `{book}` now leads to the desk's own booking page (`app/api/book.php`, public at `/peak-book/`): b.php counts the view (`bookview`, `desk: 1`) and sends the person on with a link the desk signs (`pmBookDesk`). One shared schedule for the whole desk; a booking there is logged here as `booked` too, so the rates stay right. Start's `{book}` check follows the desk's Booking links switch.
   - Wording, the booking page and how to turn them on: `desk-email-and-booking-DRAFT.md`.
+- **Peak Partnerships (19 Nov 2026 evening):** Matthew made the shared mailbox "Peak Partnerships" <partnerships@peakpickleball.us> in Peak's
+  Microsoft 365, with Send As and Full Access for himself, and added the delegated permissions Mail.Send.Shared and Mail.ReadWrite.Shared
+  (admin consent granted) to "Matthew outreach". `PM_SCOPE` asks for both by name on the next Connect.
+  - **Send from** (Outbox › Peak › Settings; the desk shows it read only): Peak Partnerships by default, or the connected mailbox. Every
+    Peak email (these lists, tour confirmations, desk emails) goes through `/v1.0/users/partnerships@peakpickleball.us/sendMail`, with a
+    From: line in the MIME, and is kept in Peak Partnerships' Sent Items. The .ics ORGANIZER is that address.
+  - **Send As refused** (403, ErrorSendAsDenied, the mailbox gone): said plainly on the page, in Outbox, on the desk and in the overnight
+    line ("Microsoft hasn't finished giving Send As yet, or it was removed: ..."). Nothing goes from Matthew's own mailbox instead; the
+    hourly run stops and tries again next hour. `from.json` keeps the last answer; the hourly run looks at the mailbox every 6 hours
+    (read only), and Settings has Check now.
+  - **Replies:** every hourly run reads Peak Partnerships' Inbox and Junk (and Matthew's own, only for people emailed from it before).
+    Replies, STOP, bounce notices and auto-replies from people on the lists, people a desk email or tour confirmation went to, or an
+    address on one desk card go onto that card: their own words (quoted history cut, 3,000 characters at most), attachments by name, a
+    follow-up today; an auto-reply shown as one and not counted. Handled ones are marked read in Peak Partnerships; nothing is moved or
+    deleted, and Matthew's own mailbox is never changed. The run line counts mail there that matched nobody (left unread).
+  - **Reply** on the desk: `pmReplySend` uses Microsoft's own reply (createReply on the message in Peak Partnerships, the seller's words
+    above theirs, send), so the thread holds; a message no longer there goes as a new email with In-Reply-To.
 - **Commands (server):** `php cron.php run | stats | import | check | dns`. `setapp` and `setcode` read from a pipe.
 - **Overnight check:** section 12 of `shared/tools/overnight-check.sh` prints `cron.php stats`.
 - **Test:** `node matthew/peak-pickleball-sponsorship/mail/tests/mail-test.mjs`. It mocks Microsoft and uses throwaway data, and

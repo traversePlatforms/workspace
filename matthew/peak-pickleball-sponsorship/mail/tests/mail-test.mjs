@@ -51,7 +51,7 @@ function fromMime(raw) {
   const bnd = (hd('Content-Type').match(/boundary="([^"]+)"/) || [])[1];
   const parts = {}; for (const p of raw.split('--' + bnd).slice(1, -1)) { const [ph, ...rest] = p.replace(/^\r\n/, '').split('\r\n\r\n'); const ty = (ph.match(/Content-Type: ([^;\r\n]+)/i) || [])[1]; parts[ty] = Buffer.from(rest.join('').replace(/\s+/g, ''), 'base64').toString('utf8'); }
   const to = hd('To'), addr = (to.match(/<([^>]+)>/) || [null, to])[1];
-  return { mime: true, saveToSentItems: true, multipart: /multipart\/alternative/.test(hd('Content-Type')), html: parts['text/html'] || '',
+  return { mime: true, saveToSentItems: true, multipart: /multipart\/alternative/.test(hd('Content-Type')), html: parts['text/html'] || '', fromHead: hd('From'), inReplyTo: hd('In-Reply-To'),
     message: { subject: dec(hd('Subject')), body: { contentType: 'Text', content: (parts['text/plain'] || '').replace(/\r\n/g, '\n') }, toRecipients: [{ emailAddress: { address: addr } }] } };
 }
 /* the Peak desk as its own code reads it (the throwaway copy): both worlds and their tours */
@@ -63,7 +63,7 @@ const auto = R => (R.touches || []).filter(t => t.by === 'Peak email');
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
 
 /* ---- the stand-in for Microsoft ---- */
-const M = { sent: [], calls: [], inbox: [], bodies: {}, sendFail: null, refreshFail: null, tokenN: 0 };
+const M = { sent: [], calls: [], inbox: [], meInbox: [], bodies: {}, unique: {}, atts: {}, patched: [], drafts: {}, replies: [], gone: [], sendAs: false, noAccess: false, sendFail: null, refreshFail: null, tokenN: 0 };
 const mock = http.createServer((req, res) => {
   let b = ''; req.on('data', d => b += d); req.on('end', () => {
     const u = new URL(req.url, 'http://x'); M.calls.push(req.method + ' ' + u.pathname);
@@ -83,19 +83,40 @@ const mock = http.createServer((req, res) => {
     }
     if (!/^Bearer AT-\d+$/.test(req.headers.authorization || '')) return j(401, { error: { code: 'InvalidAuthenticationToken' } });
     if (req.method === 'GET' && u.pathname === '/graph/v1.0/me') return j(200, { displayName: 'Matthew Sharpe', mail: 'M.Sharpe@PeakPickleball.us', userPrincipalName: 'm.sharpe@peakpickleball.us' });
-    if (req.method === 'POST' && u.pathname === '/graph/v1.0/me/sendMail') {
+    /* the mailbox a call is for: /me (Matthew's own) or /users/partnerships@peakpickleball.us (Peak Partnerships, 2026-11-19) */
+    const bm = u.pathname.match(/^\/graph\/v1.0\/(me|users\/([^/]+))(\/.*)$/), box = bm ? (bm[2] ? decodeURIComponent(bm[2]).toLowerCase() : 'me') : '', rest = bm ? bm[3] : '';
+    if (box && box !== 'me' && box !== 'partnerships@peakpickleball.us') return j(404, { error: { code: 'ErrorInvalidUser', message: 'no such mailbox' } });
+    if (req.method === 'POST' && rest === '/sendMail') {
       /* JSON (plain text only) or MIME (base64, Content-Type text/plain: the plain text plus the HTML part with the open image) */
-      if (/^text\/plain/.test(req.headers['content-type'] || '')) (M.raw ||= []).push(Buffer.from(b, 'base64').toString('utf8'));   /* the whole MIME, as sent (tour confirmations) */
-      const m = /^text\/plain/.test(req.headers['content-type'] || '') ? fromMime(Buffer.from(b, 'base64').toString('utf8')) : JSON.parse(b);
+      const mime = /^text\/plain/.test(req.headers['content-type'] || '');
+      if (box !== 'me' && M.sendAs) { M.denied = (M.denied || 0) + 1; return j(403, { error: { code: 'ErrorSendAsDenied', message: 'The user account which was used to submit this request does not have the right to send mail on behalf of the specified sending account.' } }); }
+      if (mime) (M.raw ||= []).push(Buffer.from(b, 'base64').toString('utf8'));   /* the whole MIME, as sent (tour confirmations) */
+      const m = mime ? fromMime(Buffer.from(b, 'base64').toString('utf8')) : JSON.parse(b);
       if (M.sendFail) { const f = M.sendFail; if (f.once) M.sendFail = null; return j(f.code, { error: { code: f.err, message: f.msg || f.err } }); }
-      M.sent.push(m); res.writeHead(202); return res.end();
+      m.box = box; M.sent.push(m); res.writeHead(202); return res.end();
     }
-    if (req.method === 'GET' && /^\/graph\/v1.0\/me\/mailFolders\/(inbox|junkemail)\/messages$/.test(u.pathname)) {
-      const f = u.pathname.includes('inbox') ? M.inbox : []; return j(200, { value: f });
+    if (req.method === 'GET' && /^\/mailFolders\/(inbox|junkemail)\/messages$/.test(rest)) {
+      if (box !== 'me' && M.noAccess) return j(403, { error: { code: 'ErrorAccessDenied', message: 'Access is denied.' } });
+      const f = rest.includes('inbox') ? (box === 'me' ? M.meInbox : M.inbox) : []; return j(200, { value: f });
     }
-    if (req.method === 'GET' && /^\/graph\/v1.0\/me\/messages\//.test(u.pathname)) {
-      const id = decodeURIComponent(u.pathname.split('/').pop()); return j(200, { body: { contentType: 'text', content: M.bodies[id] || '' } });
+    if (req.method === 'GET' && rest === '/mailFolders/inbox') return M.noAccess && box !== 'me' ? j(403, { error: { code: 'ErrorAccessDenied', message: 'Access is denied.' } }) : j(200, { id: 'inbox-id' });
+    if (req.method === 'GET' && rest === '/mailFolders/sentitems/messages') return j(200, { value: box === 'me' ? [] : [{ from: { emailAddress: { name: 'Peak Partnerships', address: 'partnerships@peakpickleball.us' } } }] });
+    if (req.method === 'GET' && /^\/messages\/[^/]+\/attachments$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]); return j(200, { value: M.atts[id] || [] }); }
+    if (req.method === 'GET' && /^\/messages\/[^/]+$/.test(rest)) {
+      const id = decodeURIComponent(rest.split('/').pop()); return j(200, { body: { contentType: 'text', content: M.bodies[id] || '' }, ...(M.unique[id] ? { uniqueBody: { contentType: 'text', content: M.unique[id] } } : {}) });
     }
+    /* marking a message read (Peak Partnerships only), and Microsoft's own reply: createReply, the draft's words, send */
+    if (req.method === 'PATCH' && /^\/messages\/[^/]+$/.test(rest)) {
+      const id = decodeURIComponent(rest.split('/').pop()), p = JSON.parse(b || '{}');
+      if (M.drafts[id]) { Object.assign(M.drafts[id], p); return j(200, { id }); }
+      M.patched.push([box, id, p]); return j(200, { id });
+    }
+    if (req.method === 'POST' && /^\/messages\/[^/]+\/createReply$/.test(rest)) {
+      const id = decodeURIComponent(rest.split('/')[2]); if (M.gone.includes(id)) return j(404, { error: { code: 'ErrorItemNotFound', message: 'The specified object was not found in the store.' } });
+      const did = 'draft' + (Object.keys(M.drafts).length + 1); M.drafts[did] = { of: id, box, create: JSON.parse(b || '{}'), body: { contentType: 'html', content: '<html><head></head><body><div id="divRplyFwdMsg"><b>From:</b> them</div><div>Their words, quoted</div></body></html>' } };
+      return j(201, { id: did, subject: 'RE: theirs', body: M.drafts[did].body });
+    }
+    if (req.method === 'POST' && /^\/messages\/[^/]+\/send$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]); if (!M.drafts[id]) return j(404, { error: { code: 'ErrorItemNotFound' } }); M.drafts[id].sent = true; M.replies.push(M.drafts[id]); res.writeHead(202); return res.end(); }
     j(404, { error: { code: 'NotFound' } });
   });
 });
@@ -169,7 +190,7 @@ try {
   const cn = await api('connect', {});
   const au = new URL(cn.json.url);
   ok(au.pathname === '/login/66666666-7777-8888-9999-000000000000/oauth2/v2.0/authorize', 'sign-in goes to Peak\'s tenant');
-  ok(au.searchParams.get('scope') === 'offline_access User.Read Mail.ReadWrite Mail.Send' && au.searchParams.get('code_challenge_method') === 'S256', 'scopes + PKCE');
+  ok(au.searchParams.get('scope') === 'offline_access User.Read Mail.ReadWrite Mail.Send Mail.Send.Shared Mail.ReadWrite.Shared' && au.searchParams.get('code_challenge_method') === 'S256', 'scopes (the shared-mailbox ones asked for by name since 2026-11-19) + PKCE');
   ok(au.searchParams.get('redirect_uri') === 'http://127.0.0.1:' + PORT + '/oauth.php', 'redirect is oauth.php');
   const msCookie = (cn.headers['set-cookie'] || []).find(c => c.startsWith('peakmail_ms=')).split(';')[0];
   const stt = au.searchParams.get('state');
@@ -221,6 +242,7 @@ try {
   let out = await cron(T(2026, 11, 17, 8)); ok(/outside the sending window/.test(out) && M.sent.length === 0, '8 am: outside the window');
   out = await cron(NOW1); ok(M.sent.length === 10, 'first day: ramp holds it to 10 (got ' + M.sent.length + ')');
   const g = M.sent[0];
+  ok(M.sent.every(x => x.box === 'partnerships@peakpickleball.us') && g.fromHead === '"Peak Partnerships" <partnerships@peakpickleball.us>', 'every email goes out as Peak Partnerships (/users/partnerships@.../sendMail, From: "Peak Partnerships"): ' + g.fromHead);
   ok(g.mime && g.multipart && g.saveToSentItems === true && g.message.toRecipients.length === 1 && /Test body for/.test(g.message.body.content) && /Test body for/.test(g.html) && /o\.php\?r=/.test(g.html) && !/o\.php/.test(g.message.body.content), 'sendMail: one person, multipart (the plain text as before, plus HTML with the open image), saved to Sent Items');
   /* the desk after the first run: each company emailed has exactly one Emailed touch by "Peak email", and moved To contact -> Emailed */
   let D = desk(); const ev0 = events(), sent0 = ev0.filter(e => e.t === 'sent');
@@ -318,10 +340,11 @@ try {
   ok(ev.some(e => e.t === 'reply' && e.to === unsentReplier && e.before), 'someone who wrote before being emailed is marked');
   ok(!M.sent.some(x => x.message.toRecipients[0].emailAddress.address === unsentReplier), '... and never emailed');
   ok(!ev.some(e => e.to === 'someone@else.com'), 'unrelated mail ignored');
-  ok(!M.calls.some(c => /^(PATCH|DELETE|PUT)/.test(c) || /\/move|\/copy/.test(c)), 'the mailbox is only read (no PATCH, DELETE, move)');
+  ok(!M.calls.some(c => /^(DELETE|PUT)/.test(c) || /\/move|\/copy/.test(c)) && M.patched.every(p => p[0] === 'partnerships@peakpickleball.us' && JSON.stringify(p[2]) === '{"isRead":true}')
+    && ['m1', 'm2', 'm3', 'm4', 'm5'].every(id => M.patched.some(p => p[1] === id)) && !M.patched.some(p => p[1] === 'm6'), 'nothing moved or deleted; in Peak Partnerships only the handled ones are marked read (m6, unrelated, left alone)');
   D = desk();
   const R2 = D.sponsor[orgOf(to2)], R3 = D.sponsor[orgOf(to3)], R4 = D.sponsor[orgOf(to4)];
-  ok(auto(R2).some(t => t.out === 'replied' && /Outlook/.test(t.note)) && R2.next && R2.next.date === today() && /answer them/.test(R2.next.what) && R2.stage === 'emailed', 'a reply shows on the desk’s Today: a Replied touch and a follow-up today');
+  ok(auto(R2).some(t => t.out === 'replied' && t.mail && /Sounds interesting/.test(t.mail.text) && t.mail.mb === 'partnerships@peakpickleball.us') && R2.next && R2.next.date === today() && /answer them/.test(R2.next.what) && R2.stage === 'emailed', 'a reply shows on the desk’s Today: a Replied touch and a follow-up today');
   ok(R3.stage === 'notnow' && auto(R3).some(t => t.out === 'replied' && /not to be emailed/.test(t.note)), 'a STOP reply: the desk marks it Not now (nobody owned it)');
   ok(auto(R4).some(t => t.out === 'bounced' && t.note.includes(to4)) && R4.stage === 'emailed', 'a bounce: a Bounced touch on the desk, the stage stays');
   const unsentOrg = L.lists.sponsors.find(p => p.to === unsentReplier).org;
@@ -335,7 +358,7 @@ try {
 
   /* 9. stats */
   out = await cron(T(2026, 11, 19, 10, 40), 'stats');
-  ok(/Peak email: Microsoft connected \(m\.sharpe@peakpickleball\.us\); sponsors RUNNING 34 sent\/\d+ waiting, 3 replied, 1 bounced, 1 unsub, 1 opened, 1 clicked, 1 booked/.test(out), 'stats line: ' + out.trim());
+  ok(/Peak email: Microsoft connected \(m\.sharpe@peakpickleball\.us, sending as partnerships@peakpickleball\.us\); sponsors RUNNING 34 sent\/\d+ waiting, 3 replied, 1 bounced, 1 unsub, 1 opened, 1 clicked, 1 booked/.test(out), 'stats line: ' + out.trim());
   s = (await api('state')).json;
   ok(s.lists.sponsors.sent === 34 && s.lists.sponsors.replied === 3 && s.lists.sponsors.bounced === 1 && s.lists.sponsors.unsubscribed === 1 && s.lists.sponsors.clicked === 1 && s.lists.sponsors.auto === 1, 'page counts');
   const rt = s.lists.sponsors.rates;
@@ -432,6 +455,67 @@ try {
     s2.kill();
     ok(r7.statusCode === 302 && /^https:\/\/example\.test\/peak-book\/\?o=/.test(r7.headers.location || '') && events().some(e => e.t === 'bookview' && e.to === to7 && e.desk === 1), 'b.php sends them on to the desk\u2019s page (the view still counted here)');
   }
+
+  /* 15. Peak Partnerships (2026-11-19): every email goes out as the shared mailbox; a Send As refusal is said plainly and never falls back;
+     the connected mailbox only when the setting says so; replies (their own words, attachments by name), auto-replies and the ones in
+     Matthew's own mailbox; Reply in the same thread */
+  s = (await api('state')).json;
+  ok(s.settings.sendFrom === 'partnerships@peakpickleball.us' && s.from.shared && s.from.email === 'partnerships@peakpickleball.us' && s.from.name === 'Peak Partnerships' && !s.from.warn, 'Send from: Peak Partnerships by default, its name as Microsoft has it (read from its Sent Items)');
+  ok((await api('settings', { s: { sendFrom: 'info@peakpickleball.us' } })).status === 400, 'Send from takes only Peak Partnerships or the connected mailbox (never another shared mailbox)');
+  M.sendAs = true; n0 = M.sent.length; const meSends = () => M.calls.filter(c => c === 'POST /graph/v1.0/me/sendMail').length, me0 = meSends();
+  dr = await dsend({ ...dmsg, ref: 'dm00000000ba' });
+  ok(!dr.ok && dr.kind === 'sendas' && /^Microsoft hasn't finished giving Send As yet, or it was removed: 403 ErrorSendAsDenied/.test(dr.why) && M.sent.length === n0 && meSends() === me0, 'Send As refused: said plainly, and nothing sent from Matthew’s own mailbox instead: ' + dr.why.slice(0, 90));
+  tr = await tsend({ ...tmsg, ref: 'tc-sendas-0-r' }); ok(!tr.ok && tr.kind === 'sendas' && /Send As/.test(tr.why) && meSends() === me0, 'a tour confirmation the same');
+  s = (await api('state')).json;
+  ok(/^Microsoft hasn't finished giving Send As yet, or it was removed: 403/.test(s.from.warn) && /Nothing goes out from Matthew's own mailbox instead/.test(s.from.warn) && s.activity.some(a => /Send As/.test(a.what)), 'the page says so in plain words (and in its activity)');
+  out = await cron(T(2026, 11, 24, 10), 'stats'); ok(/ATTENTION: Microsoft hasn't finished giving Send As/.test(out), 'the overnight check line says so too');
+  M.sendAs = false; dr = await dsend({ ...dmsg, ref: 'dm00000000ba' }); s = (await api('state')).json;
+  ok(dr.ok && M.sent[M.sent.length - 1].box === 'partnerships@peakpickleball.us' && !s.from.warn && s.from.sendas.ok, 'Send As back: the same email goes (its retry), and the warning clears');
+  s = (await api('settings', { s: { sendFrom: 'me' } })).json; ok(!s.from.shared && s.from.email === 'm.sharpe@peakpickleball.us' && s.settings.sendFrom === 'me', 'the fallback setting: the connected mailbox');
+  dr = await dsend({ ...dmsg, ref: 'dm00000000bb' }); let last = M.sent[M.sent.length - 1];
+  ok(dr.ok && last.box === 'me' && last.fromHead === '' && meSends() === me0 + 1, 'then it sends from the connected mailbox (no From line: Microsoft fills it in)');
+  s = (await api('settings', { s: { sendFrom: 'partnerships@peakpickleball.us' } })).json; ok(s.from.shared && s.settings.sendFrom === 'partnerships@peakpickleball.us', 'and back to Peak Partnerships');
+  M.noAccess = true; s = (await api('fromcheck', {})).json;
+  ok(/does not let the connected mailbox open partnerships@peakpickleball.us/.test(s.from.warn) && s.lists.expo.blocks.some(b => /open partnerships@/.test(b)), 'Check now: a shared mailbox that will not open is said plainly, and Start is held');
+  M.noAccess = false; s = (await api('fromcheck', {})).json; ok(!s.from.warn && s.from.access.ok, 'and clears when it opens again');
+
+  /* their replies on the desk card: a desk email to two people at a real company, then Kim replies and Lee's out of office answers */
+  const DR = Object.values(desk().sponsor).find(R => !R.off && R.list !== 'renew' && R.stage === 'new' && !(R.touches || []).length);
+  for (const [ref, to] of [['dm00000000ca', 'kim@replytest.com'], ['dm00000000cb', 'lee@replytest.com']]) await dsend({ ...dmsg, ref, to, name: '', replyTo: '', org: DR.id, company: DR.name });
+  M.inbox = [
+    { id: 'k1', from: { emailAddress: { address: 'kim@replytest.com', name: 'Kim Reyes' } }, subject: 'RE: Following up', bodyPreview: 'Yes, Thursday works.', hasAttachments: true, internetMessageId: '<k1@replytest.com>', receivedDateTime: new Date().toISOString() },
+    { id: 'k2', from: { emailAddress: { address: 'lee@replytest.com', name: 'Lee Park' } }, subject: 'Automatic reply: Following up', bodyPreview: 'I am out until Monday.', internetMessageId: '<k2@replytest.com>', receivedDateTime: new Date().toISOString() },
+    { id: 'k3', from: { emailAddress: { address: 'stranger@nowhere.com' } }, subject: 'Hello', bodyPreview: 'who is this', receivedDateTime: new Date().toISOString() },
+  ];
+  M.unique.k1 = 'Yes, Thursday works.\r\n\r\nKim\r\n\r\nOn Wed, Nov 19, 2026 at 3:00 PM Peak Partnerships <partnerships@peakpickleball.us>\r\nwrote:\r\n> Hi Kim,\r\n> Following up';
+  M.atts.k1 = [{ name: 'image001.png', isInline: true }, { name: 'Sponsor terms.pdf', isInline: false }];
+  M.patched = [];
+  out = await cron(T(2026, 11, 24, 10, 30));
+  const KR = desk().sponsor[DR.id], kt = (KR.touches || []).find(t => t.mail && t.mail.from === 'kim@replytest.com'), lt = (KR.touches || []).find(t => t.mail && t.mail.from === 'lee@replytest.com');
+  ok(kt && kt.out === 'replied' && kt.mail.text === 'Yes, Thursday works.\n\nKim' && kt.mail.name === 'Kim Reyes' && kt.mail.subject === 'RE: Following up' && JSON.stringify(kt.mail.files) === '["Sponsor terms.pdf"]' && kt.mail.mid === 'k1' && kt.mail.imid === '<k1@replytest.com>', 'a reply to a desk email: on the card with who, the subject, their own words (the quoted history cut off) and the attachment by name (not the inline image)');
+  ok(KR.next && KR.next.date === today() && /answer them/.test(KR.next.what), '... and a follow-up today, so it is on Today');
+  ok(lt && lt.out === 'auto' && lt.mail.auto === 1 && /out until Monday/.test(lt.mail.text) && !events().some(e => e.t === 'reply' && e.to === 'lee@replytest.com') && events().some(e => e.t === 'auto' && e.to === 'lee@replytest.com' && e.org === DR.id), 'an out-of-office: on the card as an auto-reply, not counted as a reply');
+  ok(M.patched.some(p => p[1] === 'k1') && M.patched.some(p => p[1] === 'k2') && !M.patched.some(p => p[1] === 'k3') && /1 other email in Peak Partnerships not matched to the desk/.test(out), 'handled ones marked read in Peak Partnerships; a stranger’s left unread and counted: ' + out.trim().slice(-80));
+  /* Reply from the card: Microsoft's own reply on Kim's message, our words above hers */
+  dr = await dsend({ ...dmsg, ref: 'dm00000000cc', to: 'kim@replytest.com', name: 'Kim Reyes', subject: 'RE: Following up', html: '<!DOCTYPE html><html><head></head><body><div>Great, see you Thursday.</div></body></html>', replyTo: '', org: DR.id, company: DR.name, reply: { k: kt.k, mid: 'k1', mb: 'partnerships@peakpickleball.us', imid: '<k1@replytest.com>' } });
+  const rp = M.replies[M.replies.length - 1] || {};
+  ok(dr.ok && rp.of === 'k1' && rp.box === 'partnerships@peakpickleball.us' && rp.create.message.toRecipients[0].emailAddress.address === 'kim@replytest.com' && rp.subject === 'RE: Following up'
+    && /<body><div>Great, see you Thursday\.<\/div><br><div id="divRplyFwdMsg">/.test(rp.body.content) && events().some(e => e.t === 'deskmail' && e.ref === 'dm00000000cc' && e.re === 'reply' && e.ok), 'Reply: Microsoft’s own reply on her message in Peak Partnerships (same thread), our words above hers, sent');
+  M.gone = ['k9']; n0 = M.sent.length;
+  dr = await dsend({ ...dmsg, ref: 'dm00000000cd', to: 'kim@replytest.com', subject: 'RE: Following up', replyTo: '', org: DR.id, reply: { mid: 'k9', mb: 'partnerships@peakpickleball.us', imid: '<k9@replytest.com>' } }); last = M.sent[M.sent.length - 1];
+  ok(dr.ok && M.sent.length === n0 + 1 && last.inReplyTo === '<k9@replytest.com>' && last.box === 'partnerships@peakpickleball.us' && events().some(e => e.ref === 'dm00000000cd' && e.re === 'thread'), 'her message gone from the mailbox: a new email in the same thread (In-Reply-To) instead');
+  /* Matthew's own mailbox: read only for people emailed from it before (a row with no From); his other mail stays his */
+  await php('pmLog(["t" => "deskmail", "ref" => "dm00000000ee", "to" => "old@before.com", "w" => "sponsor", "org" => getenv("ORG"), "company" => "X", "by" => "Cai", "subject" => "Old", "ok" => true, "at" => time() - 86400]); echo "ok";', { ORG: DR.id });
+  M.inbox = []; M.patched = [];
+  M.meInbox = [{ id: 'o1', from: { emailAddress: { address: 'old@before.com' } }, subject: 'RE: Old', bodyPreview: 'Matthew, yes please.', internetMessageId: '<o1@before.com>', receivedDateTime: new Date().toISOString() },
+    { id: 'o2', from: { emailAddress: { address: 'kim@replytest.com' } }, subject: 'Personal note', bodyPreview: 'to Matthew only', internetMessageId: '<o2@replytest.com>', receivedDateTime: new Date().toISOString() }];
+  out = await cron(T(2026, 11, 24, 11));
+  const ot = (desk().sponsor[DR.id].touches || []).find(t => t.mail && t.mail.from === 'old@before.com');
+  ok(ot && ot.mail.mb === 'm.sharpe@peakpickleball.us' && /yes please/.test(ot.mail.text) && !events().some(e => e.t === 'reply' && e.mail && e.mail.mid === 'o2') && !M.patched.length, 'Matthew’s own mailbox: a reply to an email sent from it before is read; mail from others stays his; nothing there is marked');
+  const rt2 = JSON.parse(await php(String.raw`echo json_encode([pmReplyText("Thanks!\n\n-----Original Message-----\nFrom: x"), pmReplyText("Sure\r\n\r\n________________________________\r\nFrom: Peak\r\nSent: Wed"), pmReplyText("ok then\nFrom: Peak Partnerships <p@x.com>\nSent: Wednesday\nTo: k"), pmReplyText("> quoted line\nmine"), mb_strlen(pmReplyText(str_repeat("a", 5000)))]);`));
+  ok(rt2[0] === 'Thanks!' && rt2[1] === 'Sure' && rt2[2] === 'ok then' && rt2[3] === 'mine' && rt2[4] < 3100, 'their own words: Original Message, Outlook’s line and From/Sent block, ">" lines cut; long ones capped ' + JSON.stringify(rt2.slice(0, 4)));
+  const deskLog = fs.readFileSync(path.join(DESK, 'events.log'), 'utf8');
+  ok(!/RT-SECRET|AT-\d/.test(deskLog), 'no token in the desk’s log');
 
   /* 13. the address guard */
   ok((await api('settings', { s: { address: '[ADDRESS]' } })).status === 400, 'a placeholder address is refused');

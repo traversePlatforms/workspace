@@ -34,7 +34,7 @@ const SP_LEGACY = ['contacted' => 'called', 'tour' => 'meeting', 'toured' => 'me
 const XP_LEGACY = ['talking' => 'contacted', 'visit' => 'tour', 'proposal' => 'quote', 'notfit' => 'lost'];
 /* how someone was reached, and how each can go */
 const METHODS = ['call' => 'Call', 'voicemail' => 'Voicemail', 'email' => 'Email', 'text' => 'Text', 'inperson' => 'In person', 'linkedin' => 'LinkedIn', 'other' => 'Contacted'];
-const OUTS = ['noanswer' => 'No answer', 'talked' => 'Talked', 'wrong' => 'Wrong number', 'left' => 'Left a voicemail', 'sent' => 'Sent', 'replied' => 'Replied',
+const OUTS = ['noanswer' => 'No answer', 'talked' => 'Talked', 'wrong' => 'Wrong number', 'left' => 'Left a voicemail', 'sent' => 'Sent', 'replied' => 'Replied', 'auto' => 'Auto-reply',
     'bounced' => 'Bounced', 'met' => 'Met', 'toured' => 'Toured Peak', 'noshow' => 'Did not show', 'contacted' => 'Contacted'];
 const MOUTS = ['call' => ['noanswer', 'talked', 'wrong'], 'voicemail' => ['left'], 'email' => ['sent', 'replied', 'bounced'], 'text' => ['sent', 'replied'],
     'inperson' => ['met', 'toured', 'noshow'], 'linkedin' => ['sent', 'replied'], 'other' => ['contacted']];
@@ -218,6 +218,7 @@ function apply(array &$M, string $w, array $r): void {
             if (!$has || !is_array($r['touch'] ?? null)) return; $x = $r['touch']; $k = (string) ($r['k'] ?? newKey()); $m = (string) ($x['m'] ?? 'other');
             $T = ['k' => $k, 'at' => $at, 'when' => (int) ($x['when'] ?? $at) ?: $at, 'by' => $by, 'm' => $m, 'out' => (string) ($x['out'] ?? ''), 'note' => (string) ($x['note'] ?? '')];
             foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from', 'tpl', 'tc', 'dm'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
+            if (is_array($x['mail'] ?? null)) $T['mail'] = $x['mail'];   /* their email, read from Peak Partnerships (2026-11-19) */
             /* a tour confirmation (tc, 2026-11-19) is on the Activity but is not counted as the booker's own email */
             $M['recs'][$id]['touches'][] = $T; $dirty($id); if (empty($T['tc'])) $act($m, $id, $T['when'], $k); return;
         }
@@ -247,7 +248,7 @@ function apply(array &$M, string $w, array $r): void {
            is written only once it went. */
         case 'dmail': {
             if (!$has) return; $ref = (string) ($r['ref'] ?? ''); if ($ref === '') return;
-            $x = []; foreach (['to', 'name', 'subject', 'text', 'sig', 'replyto', 'tpl', 'fu', 'fuWhat', 'book'] as $f) if (isset($r[$f])) $x[$f] = $r[$f];
+            $x = []; foreach (['to', 'name', 'subject', 'text', 'sig', 'replyto', 'tpl', 'fu', 'fuWhat', 'book', 're'] as $f) if (isset($r[$f])) $x[$f] = $r[$f];
             $M['recs'][$id]['dmails'][$ref] = $x + ['ref' => $ref, 'by' => $by, 'at' => $at, 'state' => 'sending', 'tries' => 0, 'why' => ''];
             $dirty($id); return;
         }
@@ -620,15 +621,27 @@ function deskEmailed(string $w, string $id, string $to, string $subject = '', st
    (To contact .. Texted; expo To contact, Contacted) goes to Not now, back in 90 days, with the reason. One a person owns, or one further
    along, keeps its stage; its owner gets a follow-up today to see it. */
 const STOP_BACK_DAYS = 90;
-function deskReplied(string $w, string $id, string $from, string $note = '', string $by = 'Peak email', string $ref = '', bool $stop = false): array {
-    W($w); $from = clean($from, 160); $note = clean($note, 600); $by = clean($by, 60) ?: 'Peak email'; $ref = clean($ref, 200);
-    return withLock(function () use ($w, $id, $from, $note, $by, $ref, $stop) {
+/* their email as the Peak email sender read it from Peak Partnerships (2026-11-19), kept on the touch: who, when, the subject, their own words
+   (quoted history already cut, at most 3,000 characters), attachments by name only, and where it is (message id and mailbox, for Reply; the
+   page never gets those two) */
+function deskMailIn(array $m): array {
+    $text = (string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', str_replace("\r", '', (string) ($m['text'] ?? '')));
+    $files = []; foreach ((array) ($m['files'] ?? []) as $f) if (is_string($f) && count($files) < 12) $files[] = clean($f, 120);
+    $o = ['from' => strtolower(clean($m['from'] ?? '', 160)), 'name' => clean($m['name'] ?? '', 80), 'subject' => clean($m['subject'] ?? '', 160), 'at' => (int) ($m['at'] ?? 0),
+        'text' => mb_substr(trim($text), 0, 3200), 'files' => $files, 'mid' => clean($m['mid'] ?? '', 400), 'mb' => strtolower(clean($m['mb'] ?? '', 160)), 'imid' => clean($m['imid'] ?? '', 300),
+        'auto' => !empty($m['auto']) ? 1 : 0, 'stop' => !empty($m['stop']) ? 1 : 0];
+    return array_filter($o, fn($v) => $v !== '' && $v !== [] && $v !== 0);
+}
+function deskReplied(string $w, string $id, string $from, string $note = '', string $by = 'Peak email', string $ref = '', bool $stop = false, array $mail = []): array {
+    W($w); $from = clean($from, 160); $note = clean($note, 600); $by = clean($by, 60) ?: 'Peak email'; $ref = clean($ref, 200); $mail = $mail ? deskMailIn($mail) : [];
+    return withLock(function () use ($w, $id, $from, $note, $by, $ref, $stop, $mail) {
         sync($w, true); $R = recs($w)[$id] ?? null;
         if (!$R) return ['ok' => false, 'error' => 'No such lead.', 'code' => 404];
         if ($ref !== '') foreach ($R['touches'] as $t) if (($t['ref'] ?? '') === $ref) return ['ok' => true, 'dup' => true, 'k' => $t['k'], 'stage' => $R['stage']];
         $now = time(); $k = newKey(); $C = W($w);
         $txt = ($from !== '' ? $from . ' replied' : 'They replied') . ($stop ? ' and asked not to be emailed again' : '') . ($note !== '' ? ': ' . $note : '.');
         $touch = ['m' => 'email', 'out' => 'replied', 'note' => $txt, 'when' => $now, 'auto' => 1]; if ($ref !== '') $touch['ref'] = $ref;
+        if ($mail) { $touch['mail'] = $mail; if (!empty($mail['at']) && $mail['at'] <= $now) $touch['when'] = (int) $mail['at']; }
         $rows = [rowTouch($w, $id, $k, $touch, $by, $now)];
         $nd = (string) ($R['next']['date'] ?? ''); $open = in_array((string) $R['owner'], ['', $by], true);
         $r = stageRank($w, (string) $R['stage']); $reaching = $r >= 0 && $r < $C['reach'];
@@ -639,6 +652,21 @@ function deskReplied(string $w, string $id, string $from, string $note = '', str
         } elseif (!in_array($R['stage'], $C['done'], true) && ($nd === '' || $nd > date('Y-m-d')) && (!$stop || !$open))
             $rows[] = rowNext($w, $id, ['date' => date('Y-m-d'), 'what' => $stop ? 'They asked not to be emailed again: no more emails' : 'They replied to the email: answer them'], $by, $now);
         commit($w, $rows);
+        return ['ok' => true, 'k' => $k, 'stage' => recs($w)[$id]['stage']];
+    });
+}
+/* an auto-reply (out of office) to a Peak email (2026-11-19): on the card as one, with its words, so the team sees when they are back. Not a
+   reply: no follow-up, no stage, nothing counted. $ref makes a repeat harmless. */
+function deskAutoReplied(string $w, string $id, string $from, array $mail, string $by = 'Peak email', string $ref = ''): array {
+    W($w); $from = clean($from, 160); $by = clean($by, 60) ?: 'Peak email'; $ref = clean($ref, 200); $mail = deskMailIn($mail + ['auto' => 1]);
+    return withLock(function () use ($w, $id, $from, $mail, $by, $ref) {
+        sync($w, true); $R = recs($w)[$id] ?? null;
+        if (!$R) return ['ok' => false, 'error' => 'No such lead.', 'code' => 404];
+        if ($ref !== '') foreach ($R['touches'] as $t) if (($t['ref'] ?? '') === $ref) return ['ok' => true, 'dup' => true, 'k' => $t['k'], 'stage' => $R['stage']];
+        $now = time(); $k = newKey(); $when = !empty($mail['at']) && $mail['at'] <= $now ? (int) $mail['at'] : $now;
+        $touch = ['m' => 'email', 'out' => 'auto', 'note' => 'An automatic reply' . ($from !== '' ? ' from ' . $from : '') . ' (out of office or similar): not a reply.', 'when' => $when, 'auto' => 1, 'mail' => $mail];
+        if ($ref !== '') $touch['ref'] = $ref;
+        commit($w, [rowTouch($w, $id, $k, $touch, $by, $now)]);
         return ['ok' => true, 'k' => $k, 'stage' => recs($w)[$id]['stage']];
     });
 }

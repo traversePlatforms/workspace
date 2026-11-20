@@ -41,10 +41,15 @@
  * 2026-11-19 (Matthew for Cai: "a box in the peak desk app ... she can fill it out with whatever she wants to say click send and it will send
  * it to the prospect" and "they can click a link and book a time slot based on the availability"): Write an email on every card
  * (desk-email.php: actions dmpreview, dmsend, dmretry, dmset; myset for a person's signature and reply address) and booking links on one
- * shared schedule (book-lib.php, the public page book.php: actions booklink, bookgeneric, bookset). Both OFF until an admin turns them on. */
+ * shared schedule (book-lib.php, the public page book.php: actions booklink, bookgeneric, bookset). Both OFF until an admin turns them on.
+ *
+ * 2026-11-19 evening (Matthew set up the shared mailbox Peak Partnerships): every Peak email goes out as Peak Partnerships
+ * <partnerships@peakpickleball.us> (set in Outbox; shown read only in More, Settings), and the Peak email sender reads replies, bounces,
+ * auto-replies and STOP from its Inbox onto the card: the reply's own words, its attachments by name, for everyone with a desk sign-in, with
+ * a Reply button that answers in the same thread (desk-email.php). The page never gets a message's id or mailbox, only the touch's key. */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-19.2';
+const BUILD = '2026-11-19.3';
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
@@ -356,9 +361,12 @@ function people(string $w, array $R): array {
 }
 function shape(string $w, array $R): array {
     $R['touches'] = array_values($R['touches'] ?? []); usort($R['touches'], fn($a, $b) => $a['when'] <=> $b['when']);
+    /* their emails (2026-11-19): where the message is stays on the server; rp = it can be answered with Reply */
+    foreach ($R['touches'] as &$t) if (is_array($t['mail'] ?? null)) { $t['mail']['rp'] = empty($t['mail']['auto']) && (($t['mail']['mid'] ?? '') !== '' || ($t['mail']['imid'] ?? '') !== '') ? 1 : 0; unset($t['mail']['mid'], $t['mail']['mb'], $t['mail']['imid']); }
+    unset($t);
     $R['last'] = lastTouch($R); $R['tries'] = missCount($R); $R['people'] = people($w, $R);
     /* desk emails (2026-11-19): newest first, with how often the booking link in each was opened */
-    if (!empty($R['dmails'])) { $bs = bkStats()['ref']; $R['dmails'] = array_values(array_map(fn($x) => $x + ['views' => (int) ($bs[$x['ref']]['views'] ?? 0), 'opens' => (int) ($bs[$x['ref']]['opens'] ?? 0), 'booked' => (int) ($bs[$x['ref']]['booked'] ?? 0)], $R['dmails'])); usort($R['dmails'], fn($a, $b) => $b['at'] <=> $a['at']); }
+    if (!empty($R['dmails'])) { $bs = bkStats()['ref']; $R['dmails'] = array_values(array_map(fn($x) => ['re' => is_array($x['re'] ?? null) ? ['k' => (string) ($x['re']['k'] ?? ''), 'subject' => (string) ($x['re']['subject'] ?? '')] : ''] + $x + ['views' => (int) ($bs[$x['ref']]['views'] ?? 0), 'opens' => (int) ($bs[$x['ref']]['opens'] ?? 0), 'booked' => (int) ($bs[$x['ref']]['booked'] ?? 0)], $R['dmails'])); usort($R['dmails'], fn($a, $b) => $b['at'] <=> $a['at']); }
     unset($R['log']);
     return $R;
 }
@@ -376,6 +384,8 @@ function dataOut(string $ME, string $ROLE): array {
     if ($ROLE === 'admin') $base['eod'] = eodConf();
     $base['tourmail'] = tmOut($ROLE === 'admin');
     $base['deskmail'] = dmOut($ROLE === 'admin', $ME); $base['book'] = bkOut($ROLE === 'admin', $ME);
+    /* who Peak's emails go out as (2026-11-19): set in Outbox, shown here read only */
+    $mb = tmMailbox(); $base['sendFrom'] = ['email' => $mb['email'] ?: TM_ORGANIZER, 'name' => $mb['name'] ?: TM_FROM_NAME, 'shared' => (bool) ($mb['shared'] ?? false), 'warn' => (string) ($mb['warn'] ?? ''), 'ready' => (bool) $mb['ok']];
     $X = worldOut('expo'); $xs = jread('expo-seed.json', []);
     $X += ['questions' => $xs['questions'] ?? [], 'venues' => $xs['venues'] ?? [], 'venueNote' => $xs['venueNote'] ?? '', 'built' => $xs['built'] ?? '', 'from' => $xs['from'] ?? ''];
     if ($ROLE === 'expo') return $base + ['expo' => $X];   /* the expo account: the Expo leads and nothing of the sponsors' */

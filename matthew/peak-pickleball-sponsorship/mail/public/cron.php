@@ -47,6 +47,11 @@ if ($cmd === 'check') {
     $c = pmConn(); $S = pmState();
     echo 'data folder: ', pmReady() ? 'yes' : 'NO', "\n", 'app keys: ', $c['app'] ? 'yes' : 'NO', "\n", 'sign-in code set: ', is_file(pmData() . '/code.hash') ? 'yes' : 'NO', "\n",
          'Microsoft: ', $c['connected'] ? 'connected as ' . $c['email'] : ($c['status'] ?? 'not connected'), "\n", 'lists imported: ', is_file(pmData() . '/lists.json') ? 'yes' : 'no', "\n";
+    /* who the emails go out as (2026-11-19): a fresh look at Peak Partnerships (read only, nothing is sent) */
+    if ($c['connected']) pmFromProbe(true, $S['settings']);
+    $F = pmFromStatus($S['settings']);
+    echo 'sends as: ', $F['shared'] ? $F['name'] . ' <' . $F['email'] . '> (shared mailbox' . (is_array($F['access'] ?? null) ? ', opens ' . ($F['access']['ok'] ? 'fine' : 'NOT') : '') . (is_array($F['sendas'] ?? null) ? ', last send ' . ($F['sendas']['ok'] ? 'ok' : 'REFUSED') : '') . ')' : 'the connected mailbox', "\n";
+    if ($F['warn'] !== '') echo '  ', $F['warn'], "\n";
     foreach (PM_LISTS as $k => $n) echo $k, ': ', $S['lists'][$k]['status'], ', template ', pmIsDraft($S['templates'][$k]) ? 'DRAFT' : 'set', "\n";
     exit(0);
 }

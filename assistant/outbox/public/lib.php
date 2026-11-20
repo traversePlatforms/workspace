@@ -475,6 +475,9 @@ function obPeak(): array {
             'people' => (int) $L['people'], 'orgs' => (int) ($L['orgs'] ?? 0), 'opened' => (int) ($L['opened'] ?? 0), 'booked' => (int) ($L['booked'] ?? 0), 'rates' => (array) ($L['rates'] ?? []), 'skips' => (array) ($L['skips'] ?? [])];
         if (!empty($L['deskError'])) $att[] = ['bad', $pn . ': ' . $L['deskError']];
     }
+    /* who the emails go out as (2026-11-19): a Send As refusal or a shared mailbox that will not open is said plainly here */
+    $from = function_exists('pmFromStatus') ? pmFromStatus($S['settings']) : ['email' => (string) ($c['email'] ?? ''), 'name' => '', 'shared' => false, 'warn' => ''];
+    if ($c['connected'] && $from['warn'] !== '') $att[] = ['bad', 'Peak email: ' . $from['warn']];
     $dp = (int) ($st['sponsors']['deskPending'] ?? 0);
     if ($dp) $att[] = ['bad', 'Peak email: ' . $dp . ' updates have not reached the Peak desk yet (the next hourly run tries again).'];
     $dns = pmJ('dns.json', null); if (is_array($dns) && !empty($dns['fix'])) $att[] = ['info', 'Peak email: ' . (string) $dns['fix'][0]];
@@ -493,7 +496,7 @@ function obPeak(): array {
         'window' => pmWindowText($S['settings']), 'rate' => (int) $S['settings']['rate'], 'waiting' => $waiting, 'waitingPaused' => $waitingPaused,
         'clicks30' => obCount($click)['d30'], 'bounces30' => obCount($bounce)['d30'], 'unsubs30' => obCount($unsub)['d30'], 'replies30' => obCount($reply)['d30'],
         'fails' => obFails($fail), 'attention' => $att, 'lastRun' => (string) (array_slice(@file(pmData() . '/run.log', FILE_IGNORE_NEW_LINES) ?: [], -1)[0] ?? ''),
-        'redirect' => ['now' => obPeakRedirect(), 'old' => OB_REDIRECT_OLD, 'new' => OB_REDIRECT_NEW, 'choice' => obSettings()['peakReturn']], 'tours' => $tours, 'deskmails' => $dms] + obCount($sent) + $f;
+        'redirect' => ['now' => obPeakRedirect(), 'old' => OB_REDIRECT_OLD, 'new' => OB_REDIRECT_NEW, 'choice' => obSettings()['peakReturn']], 'tours' => $tours, 'deskmails' => $dms, 'from' => ['email' => (string) $from['email'], 'name' => (string) $from['name'], 'shared' => (bool) $from['shared'], 'warn' => (string) $from['warn']]] + obCount($sent) + $f;
 }
 
 /* ================================================================ the whole page */

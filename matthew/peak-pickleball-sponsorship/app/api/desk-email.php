@@ -3,14 +3,18 @@
  * box in the peak desk app ... she can fill it out with whatever she wants to say click send and it will send it to the prospect").
  *
  * On every card (sponsors and expo): To (a contact with an email, or one typed), Subject, the message, optionally started from a saved
- * template, "Insert my booking link" ({book}), Preview, Send. It goes from Matthew's Peak Outlook through the Peak email sender
- * (outbox-092b0f/peak/lib.php, pmDeskSend: its Microsoft token, its log, its own once-only check by ref). Nothing here holds a token.
+ * template, "Insert my booking link" ({book}), Preview, Send. It goes out as Peak Partnerships <partnerships@peakpickleball.us> (the shared
+ * mailbox, since 2026-11-19; set in Outbox, Peak, Settings) through the Peak email sender (outbox-092b0f/peak/lib.php, pmDeskSend: its
+ * Microsoft token, its log, its own once-only check by ref). Nothing here holds a token.
  *
  *   - OFF until an admin turns "Desk emails" on in More, Settings (desk-settings.json, key "deskmail"). While off, Send is greyed; Preview,
  *     Copy and "Open in my mail app" still work.
  *   - Signed with the sender's own signature (More, My email and booking link; their desk name and "Peak Pickleball" until they change
  *     it), then Peak's address and a one-line way to opt out (the law wants both in a sales email).
- *   - Reply-To: the sender's own address when they set one, so their replies go to them; otherwise replies come to Matthew's Peak inbox.
+ *   - Reply-To: the sender's own address when they set one, so their replies go to them; otherwise (the default) replies come to Peak
+ *     Partnerships, and the Peak email sender puts them on the card's Activity for everyone on the desk.
+ *   - Reply (2026-11-19): a reply shown on the Activity has a Reply button. It opens this box filled in as a reply (to them, "RE: ..."), and
+ *     Send answers their email in the same thread (Microsoft's own reply on that message in Peak Partnerships; pmReplySend).
  *   - {book} becomes a link to the desk's booking page for this email (book-lib.php): it knows the company and the person, so the page is
  *     filled in for them, the booking lands on this card, and the sender is its host. Its views are counted. An open image only when the
  *     admin setting asks for one (off).
@@ -48,7 +52,8 @@ function dmMineSave(string $name, array $in): array {
 /** what the page needs */
 function dmOut(bool $admin, string $me): array {
     $c = dmConf(); $o = ['on' => $c['on'], 'mine' => dmMine($me), 'footer' => DM_FOOTER];
-    if ($c['on'] || $admin) { $mb = tmMailbox(); $o['ready'] = $mb['ok']; $o['why'] = $mb['why']; $o['from'] = $mb['email'] ?: TM_ORGANIZER; }
+    $mb = tmMailbox(); $o['from'] = $mb['email'] ?: TM_ORGANIZER; $o['fromName'] = $mb['name'] ?: TM_FROM_NAME; $o['fromWarn'] = $mb['warn'];
+    if ($c['on'] || $admin) { $o['ready'] = $mb['ok']; $o['why'] = $mb['why']; }
     if ($admin) $o += ['pixel' => $c['pixel'], 'by' => $c['by'], 'at' => $c['at']];
     return $o;
 }
@@ -69,7 +74,15 @@ function dmIn(array $b): array {
     if (preg_match('/\{(?!book\})[a-z_]+\}/i', $subject . "\n" . $text, $m)) return ['error' => 'The message still has ' . $m[0] . ' in it: fill it in or take it out.'];
     $fu = (string) ($b['fu'] ?? ''); if ($fu !== '' && (!okDay($fu) || $fu < date('Y-m-d'))) return ['error' => 'Pick a follow-up day from today on.'];
     $tpl = clean($b['tpl'] ?? '', 40); if ($tpl !== '' && !preg_match('/^[a-z0-9-]{1,40}$/', $tpl)) $tpl = '';
-    return ['to' => $to, 'name' => clean($b['name'] ?? '', 80), 'subject' => $subject, 'text' => $text, 'tpl' => $tpl, 'fu' => $fu, 'fuWhat' => clean($b['fuWhat'] ?? '', 160), 'book' => str_contains($text, '{book}')];
+    $re = clean($b['re'] ?? '', 20); if ($re !== '' && !preg_match('/^[a-z0-9]{4,20}$/', $re)) $re = '';
+    return ['to' => $to, 'name' => clean($b['name'] ?? '', 80), 'subject' => $subject, 'text' => $text, 'tpl' => $tpl, 'fu' => $fu, 'fuWhat' => clean($b['fuWhat'] ?? '', 160), 'book' => str_contains($text, '{book}'), 're' => $re];
+}
+/** the email of theirs a Reply answers (2026-11-19): the touch on the card that holds it, as the sender needs it; null when there is none */
+function dmReOf(array $R, string $k): ?array {
+    if ($k === '') return null;
+    foreach ($R['touches'] ?? [] as $t) if (($t['k'] ?? '') === $k && is_array($t['mail'] ?? null) && empty($t['mail']['auto']))
+        return ['k' => $k, 'mid' => (string) ($t['mail']['mid'] ?? ''), 'mb' => (string) ($t['mail']['mb'] ?? ''), 'imid' => (string) ($t['mail']['imid'] ?? ''), 'from' => (string) ($t['mail']['from'] ?? ''), 'subject' => (string) ($t['mail']['subject'] ?? '')];
+    return null;
 }
 /** the email as it goes: subject, text, html */
 function dmCompose(array $d, string $ref): array {
@@ -89,9 +102,10 @@ function dmCompose(array $d, string $ref): array {
 function dmPreview(string $w, array $R, array $b, string $me): array {
     $d = dmIn($b); if (isset($d['error'])) return ['ok' => false, 'error' => $d['error']];
     $mine = dmMine($me); $m = dmCompose($d + ['sig' => $mine['sig']], 'dm0000000000');
-    $c = dmConf(); $mb = ['email' => TM_ORGANIZER]; if (tmLoad() === '') { $x = tmMailbox(); if ($x['email'] !== '') $mb['email'] = $x['email']; }
-    return ['ok' => true, 'to' => $d['to'], 'name' => $d['name'], 'from' => $mb['email'], 'replyto' => $mine['replyto'], 'subject' => $m['subject'], 'text' => $m['text'],
-        'can' => dmMayGet($R, $d['to']), 'on' => $c['on'], 'book' => $d['book'] ? (bkConf()['on'] ? 'on' : 'off') : ''];
+    $c = dmConf(); $mb = ['email' => TM_ORGANIZER, 'name' => TM_FROM_NAME]; if (tmLoad() === '') { $x = tmMailbox(); if ($x['email'] !== '') $mb = $x; }
+    $re = dmReOf($R, $d['re']);
+    return ['ok' => true, 'to' => $d['to'], 'name' => $d['name'], 'from' => $mb['email'], 'fromName' => (string) ($mb['name'] ?? ''), 'replyto' => $mine['replyto'], 'subject' => $m['subject'], 'text' => $m['text'],
+        'can' => dmMayGet($R, $d['to']), 'on' => $c['on'], 'book' => $d['book'] ? (bkConf()['on'] ? 'on' : 'off') : '', 're' => $re ? ['subject' => $re['subject'], 'from' => $re['from']] : null];
 }
 /** write it down, then send it */
 function dmSend(string $w, array $R, array $b, string $me): array {
@@ -100,6 +114,8 @@ function dmSend(string $w, array $R, array $b, string $me): array {
     $no = dmMayGet($R, $d['to']); if ($no !== '') return ['ok' => false, 'error' => 'Not sent: ' . $no . '.'];
     if ($d['book'] && !bkConf()['on']) return ['ok' => false, 'error' => 'Booking links are off, so the booking link would not work. Take {book} out, or ask Matthew to turn booking links on.'];
     $mb = tmMailbox(); if (!$mb['ok']) return ['ok' => false, 'error' => 'It can\'t send right now: ' . $mb['why'] . '.'];
+    $re = null; if ($d['re'] !== '') { $re = dmReOf($R, $d['re']); if (!$re) return ['ok' => false, 'error' => 'That email of theirs is no longer on the card, so this can\'t go as a reply. Close it and write a new email instead.']; }
+    $d['re'] = $re ?? '';
     $mine = dmMine($me); $ref = 'dm' . bin2hex(random_bytes(5)); $id = (string) $R['id'];
     withLock(fn() => commit($w, [['t' => W($w)['T']['dmail'], 'id' => $id, 'ref' => $ref, 'sig' => $mine['sig'], 'replyto' => $mine['replyto'], 'by' => $me, 'at' => time()] + $d]));
     return ['ok' => true, 'ref' => $ref] + dmDeliver($w, $id, $ref, $me);
@@ -114,7 +130,8 @@ function dmDeliver(string $w, string $id, string $ref, string $me): array {
         $mb = tmMailbox(); if (!$mb['ok']) { withLock(fn() => commit($w, [$res(false, $mb['why'], 'mailer')])); return ['state' => 'failed', 'why' => $mb['why'], 'to' => (string) $d['to']]; }
         $m = dmCompose($d, $ref);
         $x = pmDeskSend(['ref' => $ref, 'to' => (string) $d['to'], 'name' => (string) ($d['name'] ?? ''), 'subject' => $m['subject'], 'text' => $m['text'], 'html' => $m['html'],
-            'replyTo' => (string) ($d['replyto'] ?? ''), 'replyName' => (string) ($d['by'] ?? ''), 'w' => $w, 'org' => $id, 'company' => (string) $R['name'], 'by' => (string) ($d['by'] ?? $me)]);
+            'replyTo' => (string) ($d['replyto'] ?? ''), 'replyName' => (string) ($d['by'] ?? ''), 'w' => $w, 'org' => $id, 'company' => (string) $R['name'], 'by' => (string) ($d['by'] ?? $me)]
+            + (is_array($d['re'] ?? null) ? ['reply' => $d['re']] : []));
         if (empty($x['ok'])) { $why = (string) ($x['why'] ?? 'it did not send'); withLock(fn() => commit($w, [$res(false, $why, (string) ($x['kind'] ?? 'other'))])); return ['state' => 'failed', 'why' => $why, 'to' => (string) $d['to']]; }
         $by = (string) ($d['by'] ?? $me);
         $st = withLock(function () use ($w, $id, $ref, $d, $res, $by) {
@@ -122,7 +139,7 @@ function dmDeliver(string $w, string $id, string $ref, string $me): array {
             $seen = false; foreach ($R['touches'] ?? [] as $t) if (($t['ref'] ?? '') === $ref) $seen = true;
             if (!$seen) {
                 $fu = (string) ($d['fu'] ?? ''); if ($fu !== '' && $fu < date('Y-m-d')) $fu = '';
-                $touch = ['m' => 'email', 'out' => 'sent', 'note' => 'Emailed “' . $d['subject'] . '” to ' . ((string) ($d['name'] ?? '') !== '' ? $d['name'] . ' (' . $d['to'] . ')' : $d['to']) . ' from the desk', 'when' => $now, 'to' => (string) $d['to'], 'ref' => $ref, 'dm' => $ref];
+                $touch = ['m' => 'email', 'out' => 'sent', 'note' => (is_array($d['re'] ?? null) ? 'Replied “' : 'Emailed “') . $d['subject'] . '” to ' . ((string) ($d['name'] ?? '') !== '' ? $d['name'] . ' (' . $d['to'] . ')' : $d['to']) . ' from the desk' . (is_array($d['re'] ?? null) ? ', answering their email' : ''), 'when' => $now, 'to' => (string) $d['to'], 'ref' => $ref, 'dm' => $ref];
                 if (!empty($d['tpl'])) $touch['tpl'] = (string) $d['tpl'];
                 $rows = array_merge($rows, touchRows($w, $R, newKey(), $touch, $by, in_array($by, owners($w), true), $fu, (string) ($d['fuWhat'] ?? ''), $now));
             }

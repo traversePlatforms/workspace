@@ -84,17 +84,22 @@ $('#code').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
 
 function drawMs(){
   const c=V.conn, o=V.oauth, q=new URLSearchParams(location.search).get('ms');
-  let h='<h2>Microsoft (Matthew\'s Peak Outlook)</h2>';
+  const F=V.from||{};
+  let h='<h2>Microsoft (signed in as Matthew\'s Peak account)</h2>';
   if(!c.app)h+='<div class="bad">The Microsoft app keys are not on the server yet.</div>';
-  if(c.connected)h+='<div class="good">Connected: <b>'+esc(c.name)+'</b> &lt;'+esc(c.email)+'&gt; since '+when(c.since)+'. Emails go out from this mailbox and land in its Sent Items.</div>'+(/@peakpickleball\.us$/i.test(c.email)?'':'<div class="warn">This mailbox is not a peakpickleball.us address. Check it is the right one before starting.</div>');
+  if(c.connected)h+='<div class="good">Connected: <b>'+esc(c.name)+'</b> &lt;'+esc(c.email)+'&gt; since '+when(c.since)+'. '+(F.shared?'Every Peak email goes out as <b>'+esc(F.name)+'</b> &lt;'+esc(F.email)+'&gt; (the shared mailbox) and lands in its Sent Items; replies, bounces and STOP are read from its Inbox and shown on the Peak desk.':'Emails go out from this mailbox and land in its Sent Items (Settings: Send from).')+'</div>'+(/@peakpickleball\.us$/i.test(c.email)?'':'<div class="warn">This mailbox is not a peakpickleball.us address. Check it is the right one before starting.</div>');
+  if(c.connected&&F.warn)h+='<div class="bad"><b>'+esc(F.warn)+'</b></div>';
+  else if(c.connected&&F.shared&&F.access&&F.access.ok)h+='<p class="note tiny">'+esc(F.name)+' opened fine '+when(F.access.at)+(F.sendas&&F.sendas.ok?'; last sent as it '+when(F.sendas.at):'')+'. <button class="tiny" id="fromchk">Check now</button></p>';
+  else if(c.connected&&F.shared)h+='<p class="note tiny"><button class="tiny" id="fromchk">Check '+esc(F.email)+' now</button> (reads only; nothing is sent)</p>';
   else if(c.status==='reconnect')h+='<div class="bad">The sign-in for '+esc(c.email)+' stopped working ('+esc(c.why)+'). Nothing sends until you reconnect.</div>';
-  else h+='<p class="note">Not connected. Press Connect Microsoft and sign in with your Peak Pickleball account. Microsoft will ask you to allow "Matthew outreach" to read and send mail as you: the page then reads replies and bounce notices only, and never moves, marks or deletes anything.</p>';
+  else h+='<p class="note">Not connected. Press Connect Microsoft and sign in with your Peak Pickleball account. Microsoft will ask you to allow "Matthew outreach" to read and send mail as you and as the shared mailboxes you can use (Peak Partnerships): the page sends as Peak Partnerships, reads replies and bounce notices, marks the ones it handled read in Peak Partnerships, and never moves or deletes anything.</p>';
   if(o&&o.kind==='admin'||q==='admin')h+='<div class="bad"><b>Microsoft says Peak\'s admin has to approve this app first.</b><br>'+esc(V.adminHelp)+'</div>';
   else if(o&&q&&o.kind!=='connected')h+='<div class="warn">'+esc(o.msg)+'</div>';
   else if(q==='connected'&&c.connected)h+='<div class="good">Microsoft connected.</div>';
   if(!c.connected)h+='<p class="note tiny">If Microsoft shows <b>Need admin approval</b>: you are not a Peak admin, so the app needs Peak\'s Global admin to approve it once. '+esc(V.adminHelp)+'</p>';
   h+='<div class="row"><button class="main" id="conn"'+(c.app?'':' disabled')+'>'+(c.connected?'Reconnect Microsoft':c.status==='reconnect'?'Reconnect Microsoft':'Connect Microsoft')+'</button>'+(c.email?'<button id="disc">Disconnect</button>':'')+'</div>';
-  $('#ms').innerHTML=h; $('#who').textContent=c.connected?'Sending from '+c.email:'Not connected';
+  $('#ms').innerHTML=h; $('#who').textContent=c.connected?'Sending as '+(F.email||c.email):'Not connected';
+  if($('#fromchk'))$('#fromchk').onclick=async()=>{try{V=await api('fromcheck',{});draw();flash(V.from.warn?esc(V.from.warn):'Peak Partnerships opened fine.',V.from.warn?'bad':'')}catch(e){flash(esc(e.message),'bad')}};
   /* Microsoft's sign-in page will not open inside a frame (Outbox, the hub): there it opens in a new tab and comes back to Outbox */
   $('#conn').onclick=async()=>{try{const j=await api('connect',{});if(window.top!==window){window.open(j.url,'_blank');flash('Finish the Microsoft sign-in in the new tab. It comes back to Outbox when it is done; then press Reload here.','warn')}else location.href=j.url}catch(e){flash(esc(e.message),'bad')}};
   if($('#disc'))$('#disc').onclick=async()=>{if(!confirm('Disconnect Microsoft? Running lists pause.'))return;try{const j=await api('disconnect',{});flash(esc(j.note),'warn');load()}catch(e){flash(esc(e.message),'bad')}};
@@ -119,7 +124,7 @@ function listCard(k,L){
 function drawLists(){
   $('#lists').innerHTML=Object.keys(V.lists).map(k=>listCard(k,V.lists[k])).join('')+'<div class="note" style="grid-column:1/-1">'+(V.imported?'Lists brought in from the Peak desk '+when(V.imported)+'. ':'Lists not brought in yet. ')+'<button id="imp">Bring the lists in from the Peak desk again</button> Each hour the run also checks the desk, and checks each company again just before its email: anyone the desk moves on (Called, Tour booked, removed ...), owns, or touched in the last 14 days is skipped.</div>';
   document.querySelectorAll('[data-start]').forEach(b=>b.onclick=async()=>{const k=b.dataset.start,L=V.lists[k];
-    if(!confirm('Start sending "'+L.name+'" from '+V.conn.email+'?\n\n'+L.queued+' people, '+(V.rampToday?'at most '+Math.min(V.settings.rate,V.rampMax)+' an hour today, then ':'')+V.settings.rate+' an hour, '+V.window+'.\n\nSubject: '+L.template.subject))return;
+    if(!confirm('Start sending "'+L.name+'" as '+((V.from&&V.from.email)||V.conn.email)+'?\n\n'+L.queued+' people, '+(V.rampToday?'at most '+Math.min(V.settings.rate,V.rampMax)+' an hour today, then ':'')+V.settings.rate+' an hour, '+V.window+'.\n\nSubject: '+L.template.subject))return;
     try{V=await api('start',{list:k});flash(esc(L.name)+' started. The next hourly run sends the first ones.');draw()}catch(e){flash(esc(e.message),'bad')}});
   document.querySelectorAll('[data-pause]').forEach(b=>b.onclick=async()=>{try{V=await api('pause',{list:b.dataset.pause});flash('Paused. Nothing more goes out from this list until you press Start.','warn');draw()}catch(e){flash(esc(e.message),'bad')}});
   document.querySelectorAll('[data-save]').forEach(b=>b.onclick=async()=>{const k=b.dataset.save;try{V=await api('template',{list:k,subject:$('#sub-'+k).value,body:$('#body-'+k).value});flash('Saved. Check the preview.');draw()}catch(e){flash(esc(e.message),'bad')}});
@@ -139,6 +144,7 @@ function drawSettings(){
    +'<label>Days off (one per line, like 2026-11-26)</label><textarea id="s-skip" style="min-height:80px">'+esc(s.skip.join('\n'))+'</textarea>'
    +'</div><div>'
    +'<label>Peak\'s postal address (the law wants it in every email)</label><input id="s-address" value="'+esc(s.address)+'">'
+   +'<label>Send from</label><select id="s-from-mb"><option value="'+esc(V.shared.email)+'"'+(s.sendFrom!=='me'?' selected':'')+'>'+esc(V.shared.name)+' &lt;'+esc(V.shared.email)+'&gt; (the shared mailbox)</option><option value="me"'+(s.sendFrom==='me'?' selected':'')+'>The connected mailbox'+(V.conn.email?' ('+esc(V.conn.email)+')':'')+'</option></select><p class="note tiny" style="margin:4px 0 0">Every Peak email: these lists, tour confirmations and desk emails from the Peak desk. The Peak desk shows it read only.</p>'
    +'<label>Signature</label><textarea id="s-signature" style="min-height:80px">'+esc(s.signature)+'</textarea>'
    +'<label>People emailed per organisation</label><select id="s-per">'+[1,2,3].map(i=>'<option'+(s.perOrg==i?' selected':'')+'>'+i+'</option>').join('')+'</select>'
    +'<label><input type="checkbox" id="s-notes" style="width:auto"'+(s.deskNotes?' checked':'')+'> Put every send, reply, STOP, bounce and booking on the Peak desk card (as "Peak email")</label>'
@@ -151,7 +157,7 @@ function drawSettings(){
    +'</div><div><label>Weekly hours, Colorado time (one day a line, like Tue 10:00-12:00, 13:00-16:00; the days off above are skipped)</label><textarea id="b-week" style="min-height:90px">'+esc(V.book.week)+'</textarea>'
    +'</div></div><div class="row" style="margin-top:10px"><button class="main" id="s-save">Save settings</button><span class="note">Now: '+esc(V.window)+(V.inWindow?' (inside the window)':' (outside the window)')+'.</span></div>';
   $('#s-save').onclick=async()=>{const days=[...document.querySelectorAll('[data-day]')].filter(x=>x.checked).map(x=>+x.dataset.day);
-    try{V=await api('settings',{s:{rate:+$('#s-rate').value,ramp:$('#s-ramp').checked,days,from:+$('#s-from').value,to:+$('#s-to').value,skip:$('#s-skip').value.split(/\s+/).filter(Boolean),address:$('#s-address').value,signature:$('#s-signature').value,perOrg:+$('#s-per').value,deskNotes:$('#s-notes').checked,deskSkip:$('#s-dskip').checked,opens:$('#s-opens').checked,book:{on:$('#b-on').checked,kind:$('#b-kind').value,mins:+$('#b-mins').value,ahead:+$('#b-ahead').value,notice:+$('#b-notice').value,week:$('#b-week').value}}});flash('Settings saved.');draw()}catch(e){flash(esc(e.message),'bad')}};
+    try{V=await api('settings',{s:{rate:+$('#s-rate').value,ramp:$('#s-ramp').checked,days,from:+$('#s-from').value,to:+$('#s-to').value,skip:$('#s-skip').value.split(/\s+/).filter(Boolean),address:$('#s-address').value,signature:$('#s-signature').value,sendFrom:$('#s-from-mb').value,perOrg:+$('#s-per').value,deskNotes:$('#s-notes').checked,deskSkip:$('#s-dskip').checked,opens:$('#s-opens').checked,book:{on:$('#b-on').checked,kind:$('#b-kind').value,mins:+$('#b-mins').value,ahead:+$('#b-ahead').value,notice:+$('#b-notice').value,week:$('#b-week').value}}});flash('Settings saved.');draw()}catch(e){flash(esc(e.message),'bad')}};
 }
 function drawSup(){
   $('#supn').textContent=V.suppressedCount;

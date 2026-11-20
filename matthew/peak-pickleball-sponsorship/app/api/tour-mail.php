@@ -4,7 +4,8 @@
  * connect to their calendar").
  *
  * When someone books a tour (sponsors: Meeting / tour booked; expo: Tour booked) with the contact's email and leaves "Send a confirmation
- * email" ticked, the desk sends that person a short email from Matthew's Peak Outlook, with a calendar invite attached (.ics, METHOD:REQUEST,
+ * email" ticked, the desk sends that person a short email as Peak Partnerships (the shared mailbox, since 2026-11-19; it was Matthew's
+ * own Peak Outlook before), with a calendar invite attached (.ics, METHOD:REQUEST, ORGANIZER the address it goes out as,
  * one UID per tour). Moving the tour sends the invite again with the same UID and a higher SEQUENCE; cancelling it sends METHOD:CANCEL.
  *
  *   - The sending is the Peak email sender's (outbox-092b0f/peak/lib.php, pmTourSend): its Microsoft token, its log, and its own once-only
@@ -25,7 +26,8 @@ if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__
 const TM_NAME = 'Peak Pickleball';
 const TM_ADDRESS = 'Peak Pickleball, 1730 Briargate Blvd, Colorado Springs, CO 80920';
 const TM_PHONE = '(719) 377-4725';
-const TM_ORGANIZER = 'matthewsharpe@peakpickleball.us';   /* Matthew's Peak Outlook; the connected mailbox's own address is used when it can be read */
+const TM_ORGANIZER = 'partnerships@peakpickleball.us';   /* Peak Partnerships (2026-11-19); the Peak email sender's own answer is used when it can be read */
+const TM_FROM_NAME = 'Peak Partnerships';
 const TM_FIELDS = ['first', 'company', 'date', 'time', 'length', 'address', 'me', 'phone'];
 const TM_MUST = ['date', 'time', 'address'];               /* the confirmation can't lose these */
 const TM_MUST_CANCEL = ['date', 'time'];
@@ -79,19 +81,23 @@ function tmLoad(): string {
     if (!pmReady()) return $why = 'the Peak email data folder is missing';
     return $why = '';
 }
-/** is Matthew's Peak Outlook connected: ['ok' => bool, 'email' => ..., 'why' => ...] */
+/** can Peak email send, and as whom: ['ok' => bool, 'email' => the address it goes out as, 'name' => its name, 'shared' => bool, 'warn' => words
+    when the shared mailbox refused (a Send As refusal is said plainly; it never falls back to Matthew's own mailbox), 'why' => ...] */
 function tmMailbox(): array {
-    $l = tmLoad(); if ($l !== '') return ['ok' => false, 'email' => '', 'why' => $l];
-    try { $c = pmConn(); } catch (Throwable $e) { return ['ok' => false, 'email' => '', 'why' => 'the Peak email sender could not be read']; }
-    if (!empty($c['connected'])) return ['ok' => true, 'email' => (string) $c['email'], 'why' => ''];
-    return ['ok' => false, 'email' => (string) ($c['email'] ?? ''), 'why' => ($c['status'] ?? '') === 'reconnect' ? 'Matthew\'s Peak Outlook needs to be connected again (Outbox, Peak section)' : 'Matthew\'s Peak Outlook is not connected (Outbox, Peak section)'];
+    static $o = null; if ($o !== null) return $o;
+    $l = tmLoad(); if ($l !== '') return $o = ['ok' => false, 'email' => '', 'name' => '', 'shared' => false, 'warn' => '', 'why' => $l];
+    try { $c = pmConn(); $F = function_exists('pmFromStatus') ? pmFromStatus() : ['email' => (string) ($c['email'] ?? ''), 'name' => (string) ($c['name'] ?? ''), 'shared' => false, 'warn' => '']; }
+    catch (Throwable $e) { return $o = ['ok' => false, 'email' => '', 'name' => '', 'shared' => false, 'warn' => '', 'why' => 'the Peak email sender could not be read']; }
+    $as = ['email' => (string) $F['email'], 'name' => (string) $F['name'], 'shared' => (bool) $F['shared'], 'warn' => (string) $F['warn']];
+    if (!empty($c['connected'])) return $o = ['ok' => true, 'why' => ''] + $as;
+    return $o = ['ok' => false, 'why' => ($c['status'] ?? '') === 'reconnect' ? 'the Microsoft sign-in for Peak email needs connecting again (Outbox, Peak section)' : 'Peak email is not connected to Microsoft (Outbox, Peak section)'] + $as;
 }
 /** what the page needs: the switch, whether it can send, and (admins) the wording */
 function tmOut(bool $admin): array {
-    $c = tmConf(); $o = ['on' => $c['on'], 'mins' => TM_MINS];
-    if ($c['on'] || $admin) { $mb = tmMailbox(); $o['ready'] = $mb['ok']; $o['why'] = $mb['why']; }
-    if ($admin) $o += ['words' => $c['words'], 'defaults' => tmDefaults(), 'custom' => $c['custom'], 'fields' => TM_FIELDS, 'must' => TM_MUST, 'by' => $c['by'], 'at' => $c['at'], 'wby' => $c['wby'], 'wat' => $c['wat'],
-        'from' => ($mb['email'] ?? '') ?: TM_ORGANIZER];
+    $c = tmConf(); $o = ['on' => $c['on'], 'mins' => TM_MINS]; $mb = tmMailbox();
+    $o['from'] = $mb['email'] ?: TM_ORGANIZER; $o['fromName'] = $mb['name'] ?: TM_FROM_NAME; $o['fromWarn'] = $mb['warn'];
+    if ($c['on'] || $admin) { $o['ready'] = $mb['ok']; $o['why'] = $mb['why']; }
+    if ($admin) $o += ['words' => $c['words'], 'defaults' => tmDefaults(), 'custom' => $c['custom'], 'fields' => TM_FIELDS, 'must' => TM_MUST, 'by' => $c['by'], 'at' => $c['at'], 'wby' => $c['wby'], 'wat' => $c['wat']];
     return $o;
 }
 
