@@ -3281,7 +3281,7 @@ function a365Phone(array $l = []): string { $f = trim((string) ($l['fphone'] ?? 
 /* the redesigned aftercare and signed-copy emails, and the balance pay link on Done, wait for Jen and Cai's review (2026-11-01, Matthew: 'dont send
    anything yet, i am waiting for the conformation'): ON only when sixfold-data/rounds/emails2.json says {"on":true}. The follow-up, deposit reminders
    and the newsletter have their own switches. */
-function a365Emails2(): bool { static $on = null; if ($on === null) $j = json_decode((string) @file_get_contents(DATA_DIR . '/emails2.json'), true) ?: []; $on = !empty($j['on']) && time() >= (int) ($j['from'] ?? 0); return $on; }   /* 'from': a start time (2026-11-01, Matthew: approved, "starting on monday") */
+function a365Emails2(): bool { static $on = null; if ($on === null) { $j = json_decode((string) @file_get_contents(DATA_DIR . '/emails2.json'), true) ?: []; $on = !empty($j['on']) && time() >= (int) ($j['from'] ?? 0); } return $on; }   /* 19 Nov fix (Matthew: "fix the footer"): the braces were missing, so only the FIRST call in a request saw the setting; the second (the social footer in aftercare and the signed copy) always read false */   /* 'from': a start time (2026-11-01, Matthew: approved, "starting on monday") */
 function a365MailHead(string $name): string {
     $e = fn($x) => htmlspecialchars((string) $x, ENT_QUOTES, 'UTF-8');
     return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#2e5e2c" style="background:#2e5e2c;border-radius:14px;margin:0 0 18px"><tr><td style="padding:16px 20px">'
