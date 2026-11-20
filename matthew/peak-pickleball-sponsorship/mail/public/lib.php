@@ -648,7 +648,9 @@ function pmRender(array $p, array $tpl, array $set, bool $save = false): array {
     $subject = trim(str_replace('{book}', '', $subject)); $main = str_replace('{book}', pmBookUrl($p['rid']), $main);
     $sig = trim((string) $set['signature']);
     $body = $main . "\n\n" . ($sig !== '' ? $sig . "\n" : '') . trim((string) $set['address'])
-          . "\n\nIf you'd rather not hear from us again, reply STOP or use this link: " . pmUnsubUrl($p['rid']);
+          /* 2026-11-20 (Matthew): no Traverse address in Peak's words, so the opt-out is a reply. STOP replies are read and suppressed;
+             u.php stays for links already sent. Next: Peak's own link domain (links.peakpickleball.us). */
+          . "\n\nIf you'd rather not hear from us again, just reply STOP.";
     $m = ['to' => $p['to'], 'name' => $p['person'], 'subject' => $subject, 'body' => $body, 'links' => $links, 'fallbacks' => $miss];
     if (!empty($set['opens'])) $m['html'] = pmHtml($body, pmOpenUrl($p['rid']), $sig);
     if (preg_match('/\{[a-z_]+\}/i', $subject . "\n" . $main, $ph)) $m['badph'] = $ph[0];

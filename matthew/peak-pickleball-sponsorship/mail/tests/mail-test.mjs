@@ -226,7 +226,7 @@ try {
   ok(pv.messages.length === 3, 'preview shows 3');
   const m0 = pv.messages[0];
   ok(/\/r\.php\?r=[0-9a-f]{10}&l=[0-9a-f]{8}&s=[0-9a-f]{12}/.test(m0.body) && !m0.body.includes('peakpickleball.us/sponsors'), 'web address replaced by a tracked link');
-  ok(m0.body.includes('1730 Briargate Blvd') && /reply STOP or use this link: http:\/\/127\.0\.0\.1:8791\/u\.php\?r=/.test(m0.body), 'footer: address + STOP + unsubscribe link');
+  ok(m0.body.includes('1730 Briargate Blvd') && /If you'd rather not hear from us again, just reply STOP\.$/.test(m0.body) && !/u\.php/.test(m0.body), 'footer: address + reply STOP, no unsubscribe link');
   ok(!/\{(first|company|town)\}/.test(m0.subject + m0.body), 'merge fields filled');
   ok(!/<img|<html/i.test(m0.body), 'plain text, no pixel');
 
@@ -281,7 +281,8 @@ try {
   ok(rr.headers.location === 'https://peakpickleball.us/', 'a forged link goes to the homepage, not anywhere');
   const ev1 = events(); ok(ev1.filter(e => e.t === 'click' && e.to === to0).length === 1 && ev1.filter(e => e.t === 'scan').length === 1, 'click counted once, scanner kept apart');
   const to1 = M.sent[1].message.toRecipients[0].emailAddress.address;
-  const un = M.sent[1].message.body.content.match(/http:\/\/127\.0\.0\.1:8791(\/u\.php\?[^\s]+)/)[1];
+  /* the link is no longer in the email (20 Nov: reply STOP instead); u.php still works for any sent before, so make one the same way */
+  const un = spawnSync('php', ['-r', 'require getenv("LIB"); $p = null; foreach ((pmJ("lists.json", ["lists" => []])["lists"] ?? []) as $ps) foreach ($ps as $x) if ($x["to"] === getenv("TO1")) $p = $x; $u = pmUnsubUrl($p["rid"]); echo substr($u, strpos($u, "/u.php"));'], { env: { ...ENV, LIB: path.join(PUB, 'lib.php'), TO1: to1 } }).stdout.toString();
   rr = await req('GET', un); ok(rr.status === 200 && /Unsubscribe<\/button>/.test(rr.text) && !events().some(e => e.t === 'unsub'), 'opening the link only shows the button');
   rr = await req('POST', un, ''); ok(/You are unsubscribed/.test(rr.text) && events().some(e => e.t === 'unsub' && e.to === to1), 'the button unsubscribes');
   const orgOf = to => events().find(e => e.t === 'sent' && e.to === to).org;
