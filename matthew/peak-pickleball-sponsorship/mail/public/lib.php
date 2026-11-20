@@ -648,7 +648,7 @@ function pmRender(array $p, array $tpl, array $set, bool $save = false): array {
     $subject = trim(str_replace('{book}', '', $subject)); $main = str_replace('{book}', pmBookUrl($p['rid']), $main);
     $sig = trim((string) $set['signature']);
     $body = $main . "\n\n" . ($sig !== '' ? $sig . "\n" : '') . trim((string) $set['address'])
-          . "\n\nIf you'd rather not hear from me again, reply STOP or use this link: " . pmUnsubUrl($p['rid']);
+          . "\n\nIf you'd rather not hear from us again, reply STOP or use this link: " . pmUnsubUrl($p['rid']);
     $m = ['to' => $p['to'], 'name' => $p['person'], 'subject' => $subject, 'body' => $body, 'links' => $links, 'fallbacks' => $miss];
     if (!empty($set['opens'])) $m['html'] = pmHtml($body, pmOpenUrl($p['rid']));
     if (preg_match('/\{[a-z_]+\}/i', $subject . "\n" . $main, $ph)) $m['badph'] = $ph[0];
