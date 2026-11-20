@@ -58,7 +58,7 @@ pmLog(['t' => 'bookview', 'to' => $p['to'], 'l' => $p['list']]);
 $slots = pmBookSlots($S, 120);
 if (!$slots) $page('No open times just now', '<p style="margin:0">Reply to the email and Matthew will set up a time with you.</p>');
 $by = []; foreach ($slots as [$d, $t]) $by[$d][] = $t;
-$f = '<p style="margin:0 0 12px">' . $h($kind) . ' with Matthew Sharpe, ' . $mins . ' minutes. Pick a time (Colorado time).</p><form method="post" action="b.php?r=' . $h($rid) . '&amp;s=' . $h($sg) . '">';
+$f = '<p style="margin:0 0 12px">' . $h($kind) . ' with Matthew Sharpe, ' . $mins . ' minutes. Pick a time (Colorado time).</p><form method="post" action="?r=' . $h($rid) . '&amp;s=' . $h($sg) . '">';
 foreach ($by as $d => $ts) {
     $f .= '<p style="margin:12px 0 4px;font-weight:600">' . $h(date('l, M j', (int) strtotime($d))) . '</p><div style="display:flex;flex-wrap:wrap;gap:6px">';
     foreach ($ts as $t) $f .= '<label style="border:1px solid #c9d6cf;border-radius:8px;padding:5px 9px;cursor:pointer"><input type="radio" name="slot" value="' . $h($d . ' ' . $t) . '" required> ' . $h(date('g:i a', (int) strtotime($d . ' ' . $t))) . '</label>';

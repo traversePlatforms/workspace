@@ -518,6 +518,60 @@ try {
   const deskLog = fs.readFileSync(path.join(DESK, 'events.log'), 'utf8');
   ok(!/RT-SECRET|AT-\d/.test(deskLog), 'no token in the desk’s log');
 
+  /* 16. Peak's own link address (X-16, 2026-11-20): one setting (peak-desk-data/peak-links.json) moves every address in a Peak email to
+     https://links.peakpickleball.us; without it nothing changes; a bad value is ignored; Microsoft's redirect never moves; the handlers
+     answer the new addresses' paths; `cron.php links-on` refuses while the check fails */
+  {
+    const LF = path.join(DESK, 'peak-links.json');
+    const someone = '$S = pmState(); $p = null; foreach ((pmJ("lists.json", ["lists" => []])["lists"] ?? []) as $ps) foreach ($ps as $x) if (!$p && !empty($S["people"][$x["to"]]["sent"])) $p = $x;';
+    const links = async (extra = {}) => JSON.parse(await php(someone + ' echo json_encode(["to" => $p["to"], "rid" => $p["rid"], "r" => pmTrack("https://peakpickleball.us/sponsorship", $p["rid"], true), "o" => pmOpenUrl($p["rid"]), "b" => pmBookUrl($p["rid"]), "u" => pmUnsubUrl($p["rid"]), "html" => pmHtml("Hi\n\nThe Peak Partnerships Team", pmOpenUrl($p["rid"]), "The Peak Partnerships Team"), "redir" => pmRedirect(), "base" => pmLinkBase()]);', extra));
+    const noMock = { PEAK_MAIL_MOCK: '' };
+    if (fs.existsSync(LF)) fs.rmSync(LF);
+    let L = await links();
+    ok(L.base === 'http://127.0.0.1:' + PORT && L.r.startsWith(L.base + '/r.php?'), 'no setting: the addresses are this folder, as before');
+    L = await links(noMock);
+    ok(L.base === 'https://traverseplatforms.com/peak-mail-31dc56' && L.r.startsWith('https://traverseplatforms.com/peak-mail-31dc56/r.php?r=') && L.o.startsWith('https://traverseplatforms.com/peak-mail-31dc56/o.php?') && /src="https:\/\/traverseplatforms\.com\/peak-mail-31dc56\/peak-logo\.png"/.test(L.html), 'no setting, live: traverseplatforms.com exactly as before');
+    for (const bad of ['http://links.peakpickleball.us', 'https://links.example.com', 'https://links.peakpickleball.us/x', 'https://peakpickleball.us.evil.com', 'https://-x.peakpickleball.us']) {
+      fs.writeFileSync(LF, JSON.stringify({ base: bad })); L = await links(noMock);
+      ok(L.base === 'https://traverseplatforms.com/peak-mail-31dc56', 'a setting that is not https on a peakpickleball.us name is ignored: ' + bad);
+    }
+    fs.writeFileSync(LF, JSON.stringify({ base: 'https://links.peakpickleball.us', by: 'test' }));
+    L = await links(noMock);
+    const PB = 'https://links.peakpickleball.us/';
+    ok(L.r.startsWith(PB + 'r.php?r=' + L.rid + '&l=') && L.o.startsWith(PB + 'o.php?r=' + L.rid + '&s=') && L.b.startsWith(PB + 'book.php?r=' + L.rid + '&s=') && L.u.startsWith(PB + 'u.php?r=' + L.rid + '&s='), 'on: clicks, opens, book a time (/book.php: SiteGround refuses /b.php at the top of a site) and the old unsubscribe are all on links.peakpickleball.us');
+    ok(new RegExp('src="' + PB.replace(/\./g, '\\.') + 'peak-logo\\.png"').test(L.html) && L.html.includes('src="' + PB + 'o.php?r=') && !/traverseplatforms/i.test(L.html), 'on: the logo and the open image too; no traverseplatforms.com in the HTML');
+    ok(L.redir === 'https://traverseplatforms.com/peak-mail-31dc56/oauth.php', 'Microsoft’s redirect never moves (it is registered in Entra)');
+    /* a whole email as it renders: words, the {book} link, the HTML part */
+    const em = JSON.parse(await php('echo json_encode(pmRender(["to" => "pat@example.com", "person" => "Pat Example", "first" => "Pat", "company" => "Acme", "town" => "Colorado Springs", "rid" => "0123456789", "org" => "x", "list" => "sponsors"], ["subject" => "Hi {first}", "body" => "See https://peakpickleball.us/sponsorship and book here: {book}"], ["signature" => "The Peak Partnerships Team\nPeak Pickleball", "address" => "1730 Briargate Blvd, Colorado Springs, CO 80920", "opens" => true], false));', noMock));
+    ok(em.links === 1 && em.body.includes(PB + 'r.php?r=0123456789') && em.body.includes(PB + 'book.php?r=0123456789') && em.html.includes(PB + 'o.php?r=0123456789') && em.html.includes(PB + 'peak-logo.png') && !/traverseplatforms/i.test(em.body + em.html), 'a whole email on the Peak address: not one traverseplatforms.com in the words or the HTML');
+    /* the handlers answer those paths (the site's .htaccess sends the Peak name's /r.php etc. to this folder) */
+    const get = (p, h = {}) => req('GET', p, undefined, h);
+    const pathOf = u => u.slice(PB.length - 1);
+    const n0 = events().length;
+    let g = await get(pathOf(L.r), { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0) Chrome/120' });
+    ok(g.status === 302 && g.headers.location === 'https://peakpickleball.us/sponsorship' && events().slice(n0).some(e => (e.t === 'click' || e.t === 'scan') && e.to === L.to), 'r.php at the Peak path: the click is counted and they land on the page the email showed');
+    g = await get(pathOf(L.o));
+    ok(g.status === 200 && /image\/gif/.test(g.headers['content-type']) && events().slice(n0).some(e => e.t === 'open' && e.to === L.to), 'o.php at the Peak path: the open is counted');
+    g = await get(pathOf(L.b).replace('/book.php?', '/b.php?')); ok(g.status === 200 && /Peak Pickleball/.test(g.text) && !/traverseplatforms/i.test(g.text) && !/action="b.php/.test(g.text), 'b.php (the Peak name’s /book.php) answers, nothing of Traverse on it, and its form posts back to the address it was opened at');
+    g = await get(pathOf(L.u)); ok(g.status === 200 && /Stop these emails|You are unsubscribed/.test(g.text) && !/traverseplatforms/i.test(g.text), 'u.php at the Peak path answers (opening it changes nothing)');
+    g = await get('/peak-logo.png'); ok(g.status === 200 && /image\/png/.test(g.headers['content-type']), 'the logo is served from this folder');
+    /* with the desk's booking code beside it, {book} goes to the desk's page on the Peak address too */
+    const bu2 = (await php('echo pmBookDesk(["kind" => "org", "org" => "abc", "to" => "pat@example.com", "person" => "Pat", "company" => "Acme", "list" => "sponsors", "rid" => "0123456789"]);', { ...noMock, PEAK_MAIL_BOOK_LEGACY: '', DESK_BOOK_BASE: 'https://example.test/peak-book/' })).trim();
+    ok(/^https:\/\/links\.peakpickleball\.us\/book\/\?o=[A-Za-z0-9_-]+\.[0-9a-f]{16}$/.test(bu2), 'on: b.php forwards to the desk’s booking page at links.peakpickleball.us/book/: ' + bu2.slice(0, 60));
+    /* the switch: links-on refuses while the check fails (a name with no DNS) and changes nothing; with the check passed it writes the one file; links-off removes it */
+    fs.rmSync(LF);
+    let o = await cron(NOW1, 'links-on', { PEAK_LINKS_HOST: 'x16-no-such-name.peakpickleball.us' });
+    ok(!fs.existsSync(LF) && /FAIL\s+DNS: x16-no-such-name\.peakpickleball\.us does not resolve yet/.test(o), 'links-on with no DNS: refused, nothing written ' + o.split('\n')[0]);
+    o = await cron(NOW1, 'links', { PEAK_LINKS_HOST: 'x16-no-such-name.peakpickleball.us' });
+    ok(/does not resolve yet/.test(o) && /now: off, emails carry http:\/\/127\.0\.0\.1/.test(o) && /Not ready: nothing changed/.test(o) && !fs.existsSync(LF), 'links (the check) says what is missing and changes nothing');
+    o = await cron(NOW1, 'links-on', { PEAK_LINKS_CHECK_PASS: '1' });
+    ok(/^ON: every new Peak email and booking link now uses https:\/\/links\.peakpickleball\.us\./m.test(o) && JSON.parse(fs.readFileSync(LF, 'utf8')).base === 'https://links.peakpickleball.us', 'links-on once the check passes: the setting is written');
+    ok(/links: on, https:\/\/links\.peakpickleball\.us/.test(await cron(NOW1, 'check')), 'cron.php check shows it');
+    o = await cron(NOW1, 'links-off');
+    ok(/^off: back to http:\/\/127\.0\.0\.1/m.test(o) && !fs.existsSync(LF) && fs.readFileSync(path.join(DESK, 'peak-links.log'), 'utf8').trim().split('\n').map(l => JSON.parse(l).t).join() === 'on,off', 'links-off: back to the old addresses, both switches logged');
+    L = await links(noMock); ok(L.base === 'https://traverseplatforms.com/peak-mail-31dc56', 'and the emails are back on traverseplatforms.com');
+  }
+
   /* 13. the address guard */
   ok((await api('settings', { s: { address: '[ADDRESS]' } })).status === 400, 'a placeholder address is refused');
   ok((await api('settings', { s: { rate: 31 } })).status === 400 && (await api('settings', { s: { rate: 20 } })).json.settings.rate === 20, 'rate capped at 30');

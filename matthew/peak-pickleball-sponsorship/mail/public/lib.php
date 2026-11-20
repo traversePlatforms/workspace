@@ -73,6 +73,24 @@ function pmOrigin(): string {
     return preg_match('/^127\.0\.0\.1:\d{2,5}$/D', $h) ? 'http://' . $h : PM_ORIGIN;
 }
 function pmBase(): string { return pmOrigin() . (pmMock() !== '' ? '' : PM_PATH); }   /* the test server serves this folder at its root */
+/* Peak's own link address (X-16, 2026-11-20, Matthew: "we want to try and seperate the two in terms of the wordage"). Every address a Peak
+   email carries (r.php clicks, o.php opens, b.php, u.php, the logo; and the desk's booking page, book-lib.php bkBase) is built on ONE
+   setting: peak-desk-data/peak-links.json {"base": "https://links.peakpickleball.us"}, read by this sender and by the desk. No file (or a
+   base that is not https on a peakpickleball.us name) = the old addresses on traverseplatforms.com, exactly as before. On the Peak name
+   the site's root .htaccess sends /r.php /o.php /u.php /peak-logo.png here, /book.php to b.php (SiteGround's front server refuses /b.php
+   at the top of a site), and /book/ to the desk's booking page, and nothing else.
+   `php cron.php links` checks the name (DNS, certificate, every handler); `php cron.php links-on` switches it on only when all of that
+   passes; `links-off` goes back. Links already sent keep working at their old addresses: the files there are unchanged. Microsoft's
+   redirect (oauth.php) and the admin page never move. */
+const PM_LINKS_FILE = 'peak-links.json';
+function pmLinkOk(string $b): bool { return (bool) preg_match('#^https://[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.peakpickleball\.us$#D', $b); }
+/** the Peak address from the setting ('' = off) */
+function pmLinkSet(): string {
+    $j = json_decode((string) @file_get_contents(pmDesk() . '/' . PM_LINKS_FILE), true);
+    $b = is_array($j) ? strtolower((string) ($j['base'] ?? '')) : ''; return pmLinkOk($b) ? $b : '';
+}
+/** where the addresses in an email start: the Peak address when it is on, else this folder on traverseplatforms.com (pmBase) */
+function pmLinkBase(): string { static $b = null; if ($b === null || pmTestOk()) $b = pmLinkSet() ?: pmBase(); return $b; }
 /** where Microsoft sends Matthew back: it must be a redirect registered on the Entra app (Outbox chooses between the old and the new one) */
 function pmRedirect(): string { return pmMock() === '' && function_exists('pmSiteRedirect') ? pmSiteRedirect() : pmBase() . '/oauth.php'; }
 /** the folder of that redirect: the short-lived Connect cookie must be sent there */
@@ -627,12 +645,12 @@ function pmImportSave(string $by): array {
 }
 
 /* ---------------------------------------------------------------- one email */
-function pmUnsubUrl(string $rid): string { return pmBase() . '/u.php?r=' . $rid . '&s=' . pmSig('u|' . $rid); }
+function pmUnsubUrl(string $rid): string { return pmLinkBase() . '/u.php?r=' . $rid . '&s=' . pmSig('u|' . $rid); }
 /** a web address in an email, through r.php (the address itself is kept in links.json by a short key) */
 function pmTrack(string $url, string $rid, bool $save): string {
     $h = substr(hash('sha256', $url), 0, 8);
     if ($save) { $m = pmJ('links.json', []); if (($m[$h] ?? '') !== $url) { $m[$h] = $url; pmW('links.json', $m); } }
-    return pmBase() . '/r.php?r=' . $rid . '&l=' . $h . '&s=' . pmSig('r|' . $rid . '|' . $h);
+    return pmLinkBase() . '/r.php?r=' . $rid . '&l=' . $h . '&s=' . pmSig('r|' . $rid . '|' . $h);
 }
 /** one person's email: subject, body (plain text), and what to warn about */
 function pmRender(array $p, array $tpl, array $set, bool $save = false): array {
@@ -649,7 +667,7 @@ function pmRender(array $p, array $tpl, array $set, bool $save = false): array {
     $sig = trim((string) $set['signature']);
     $body = $main . "\n\n" . ($sig !== '' ? $sig . "\n" : '') . trim((string) $set['address'])
           /* 2026-11-20 (Matthew): no Traverse address in Peak's words, so the opt-out is a reply. STOP replies are read and suppressed;
-             u.php stays for links already sent. Next: Peak's own link domain (links.peakpickleball.us). */
+             u.php stays for links already sent. The links themselves are on Peak's own address once it is on (pmLinkBase, X-16). */
           . "\n\nIf you'd rather not hear from us again, just reply STOP.";
     $m = ['to' => $p['to'], 'name' => $p['person'], 'subject' => $subject, 'body' => $body, 'links' => $links, 'fallbacks' => $miss];
     if (!empty($set['opens'])) $m['html'] = pmHtml($body, pmOpenUrl($p['rid']), $sig);
@@ -667,12 +685,13 @@ function pmHtml(string $text, string $pixel, string $sig = ''): string {
     if ($hs !== '' && ($i = strrpos($h, $hs)) !== false)
         $h = substr($h, 0, $i + strlen($hs)) . "\x01" . substr($h, $i + strlen($hs));
     $h = str_replace("\n", "<br>\n", $h);
-    $h = str_replace("\x01", '<img src="' . htmlspecialchars(pmBase() . '/' . PM_LOGO, ENT_QUOTES, 'UTF-8') . '" width="220" alt="Peak Pickleball" style="display:block;border:0;width:220px;max-width:100%;height:auto;margin:8px 0 2px">', $h);
+    $h = str_replace("\x01", '<img src="' . htmlspecialchars(pmLinkBase() . '/' . PM_LOGO, ENT_QUOTES, 'UTF-8') . '" width="220" alt="Peak Pickleball" style="display:block;border:0;width:220px;max-width:100%;height:auto;margin:8px 0 2px">', $h);
     return '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.45;color:#111">'
         . $h . '</div><img src="' . htmlspecialchars($pixel, ENT_QUOTES, 'UTF-8') . '" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px"></body></html>';
 }
-function pmOpenUrl(string $rid): string { return pmBase() . '/o.php?r=' . $rid . '&s=' . pmSig('o|' . $rid); }
-function pmBookUrl(string $rid): string { return pmBase() . '/b.php?r=' . $rid . '&s=' . pmSig('b|' . $rid); }
+function pmOpenUrl(string $rid): string { return pmLinkBase() . '/o.php?r=' . $rid . '&s=' . pmSig('o|' . $rid); }
+/* on the Peak name b.php is /book.php: SiteGround's front server refuses /b.php (and most one-letter .php names) at the top of a site */
+function pmBookUrl(string $rid): string { $b = pmLinkBase(); return $b . ($b !== pmBase() ? '/book.php' : '/b.php') . '?r=' . $rid . '&s=' . pmSig('b|' . $rid); }
 /** the person on the lists with this link id, with their list ([] when none) */
 function pmByRid(string $rid): array {
     foreach ((array) (pmJ('lists.json', ['lists' => []])['lists'] ?? []) as $k => $ps) foreach ($ps as $p) if (($p['rid'] ?? '') === $rid) return $p + ['list' => $k];
@@ -1251,4 +1270,79 @@ function pmDns(string $domain): array {
     if ($dk['selector1'] === '' || $dk['selector2'] === '') $fix[] = 'DKIM for Microsoft 365 is not set up: no selector1/selector2._domainkey CNAMEs. In the Microsoft Defender portal (Email & collaboration > Policies > Email authentication settings > DKIM) pick ' . $domain . ', copy the two CNAME values into the domain\'s DNS, then turn DKIM signing on.';
     if (!$dmarc) $fix[] = 'No DMARC record: add TXT at _dmarc.' . $domain . ' "v=DMARC1; p=none; rua=mailto:postmaster@' . $domain . '".';
     return ['domain' => $domain, 'spf' => $spf, 'dkim' => $dk, 'dmarc' => $dmarc, 'mx' => $mx, 'fix' => $fix, 'at' => pmNow()];
+}
+
+/* ---------------------------------------------------------------- Peak's own link address: the check before it goes on (X-16) */
+const PM_LINKS_HOST = 'links.peakpickleball.us';
+const PM_LINKS_SITE = 'traverseplatforms.com';   /* the SiteGround site the Peak name must point at (its A record) */
+/** one request to the Peak name, the certificate checked by curl: code, type, location, body, error */
+function pmLinksGet(string $url): array {
+    $h = curl_init($url);
+    curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true, CURLOPT_FOLLOWLOCATION => false, CURLOPT_TIMEOUT => 20, CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_SSL_VERIFYPEER => true, CURLOPT_SSL_VERIFYHOST => 2, CURLOPT_USERAGENT => 'Mozilla/5.0 (Peak link address check)', CURLOPT_NOSIGNAL => true]);
+    $r = curl_exec($h); $err = $r === false ? curl_error($h) : ''; $code = (int) curl_getinfo($h, CURLINFO_HTTP_CODE); $hs = (int) curl_getinfo($h, CURLINFO_HEADER_SIZE);
+    $type = (string) curl_getinfo($h, CURLINFO_CONTENT_TYPE); curl_close($h);
+    $head = $r === false ? '' : substr((string) $r, 0, $hs); $loc = preg_match('/^Location:\s*(\S+)/mi', $head, $m) ? $m[1] : '';
+    return ['code' => $code, 'type' => $type, 'loc' => $loc, 'body' => $r === false ? '' : substr((string) $r, $hs), 'err' => $err];
+}
+/** is the Peak name ready: DNS to this site, a valid certificate, and every handler answering as itself (with bad signatures, so nothing
+    is logged or counted). ['ok' => bool, 'base' => ..., 'lines' => [[pass|warn|FAIL, words], ...]]. Nothing is changed. */
+function pmLinksHost(): string { return pmEnv('PEAK_LINKS_HOST') ?: PM_LINKS_HOST; }   /* the tests check a name that does not exist */
+function pmLinksCheck(string $host = ''): array {
+    $host = $host !== '' ? $host : pmLinksHost();
+    $L = []; $ok = true; $add = function (string $s, string $t) use (&$L, &$ok) { $L[] = [$s, $t]; if ($s === 'FAIL') $ok = false; };
+    $base = 'https://' . $host; $done = function () use (&$ok, &$L, $base) { return ['ok' => $ok, 'base' => $base, 'lines' => $L]; };
+    if (!pmLinkOk($base)) { $add('FAIL', $host . ' is not a name under peakpickleball.us'); return $done(); }
+    /* 1. DNS: an A record to this SiteGround site */
+    $a = (array) (@gethostbynamel($host) ?: []); $site = (array) (@gethostbynamel(PM_LINKS_SITE) ?: []);
+    if (!$a) { $add('FAIL', 'DNS: ' . $host . ' does not resolve yet. GoDaddy, peakpickleball.us, DNS: add an A record, name "links", value ' . ($site[0] ?? 'this site\'s IP') . '.'); return $done(); }
+    if (!$site || array_diff($a, $site)) { $add('FAIL', 'DNS: ' . $host . ' points at ' . implode(', ', $a) . ', not this site (' . implode(', ', $site) . ').'); return $done(); }
+    $add('pass', 'DNS: ' . $host . ' -> ' . implode(', ', $a) . ' (this site)');
+    /* 2. the certificate: valid for the name, not about to run out */
+    $ctx = stream_context_create(['ssl' => ['capture_peer_cert' => true, 'verify_peer' => true, 'verify_peer_name' => true, 'peer_name' => $host, 'SNI_enabled' => true]]);
+    $s = @stream_socket_client('ssl://' . $host . ':443', $en, $es, 15, STREAM_CLIENT_CONNECT, $ctx);
+    if (!$s) { $add('FAIL', 'Certificate: none valid for ' . $host . ' yet (SiteGround, Site Tools, Security, SSL Manager: Let\'s Encrypt for ' . $host . ').'); return $done(); }
+    $x = @openssl_x509_parse(stream_context_get_params($s)['options']['ssl']['peer_certificate'] ?? ''); fclose($s);
+    $days = is_array($x) ? (int) floor(((int) ($x['validTo_time_t'] ?? 0) - time()) / 86400) : -1;
+    $add($days >= 7 ? 'pass' : 'FAIL', 'Certificate: valid for ' . $host . ', ' . (string) ($x['issuer']['O'] ?? $x['issuer']['CN'] ?? 'issuer unknown') . ', ' . $days . ' days left');
+    /* 3. every handler on the Peak name answers as itself; nothing else of this site shows there; no traverseplatforms.com in any answer */
+    $logo = (string) (@md5_file(__DIR__ . '/' . PM_LOGO) ?: '');
+    $gif = base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
+    $want = [
+        ['/peak-logo.png', 200, fn($r) => str_starts_with($r['type'], 'image/png') && ($logo === '' || md5($r['body']) === $logo), 'the logo'],
+        ['/o.php?r=0000000000&s=0', 200, fn($r) => str_starts_with($r['type'], 'image/gif') && $r['body'] === $gif, 'the open image (o.php)'],
+        ['/r.php?r=0000000000&l=00000000&s=0', 302, fn($r) => $r['loc'] === 'https://peakpickleball.us/', 'tracked links (r.php)'],
+        ['/book.php?r=0000000000&s=0', 200, fn($r) => str_contains($r['body'], 'That link did not work'), 'book a time (/book.php is b.php)'],
+        ['/u.php?r=0000000000&s=0', 200, fn($r) => str_contains($r['body'], 'That link did not work'), 'the old unsubscribe page (u.php)'],
+        ['/book/?g=0000000000000000', 200, fn($r) => str_contains($r['body'], 'PEAK PICKLEBALL') && str_contains($r['body'], 'That link did not work'), 'the desk\'s booking page (/book/)'],
+        ['/', 302, fn($r) => $r['loc'] === 'https://peakpickleball.us/', 'the bare name goes to peakpickleball.us'],
+        ['/peak-desk-28d38d/', 404, fn($r) => true, 'the desk is not served on the Peak name'],
+        ['/outbox-092b0f/', 404, fn($r) => true, 'Outbox is not served on the Peak name'],
+        ['/index.html', 404, fn($r) => true, 'the Traverse website is not served on the Peak name (if 200: SiteGround serves plain files itself on this name; turn that off for it: site-tools-client domain-alias update id=<its id> settings.static_direct=0)'],
+        ['/peak-desk-28d38d/index.html', 404, fn($r) => true, 'the desk page is not served on the Peak name'],
+    ];
+    foreach ($want as [$p, $code, $test, $what]) {
+        $r = pmLinksGet($base . $p);
+        if ($r['err'] !== '') { $add('FAIL', $what . ': ' . $p . ' did not answer (' . mb_substr($r['err'], 0, 120) . ')'); continue; }
+        $leak = stripos($r['body'] . ' ' . $r['loc'], 'traverseplatforms') !== false;
+        $good = $r['code'] === $code && $test($r) && !$leak;
+        $add($good ? 'pass' : 'FAIL', $what . ': ' . $p . ' -> ' . $r['code'] . ($r['loc'] !== '' ? ' ' . $r['loc'] : '') . ($leak ? ' (says traverseplatforms.com)' : '') . ($good ? '' : ' (expected ' . $code . ')'));
+    }
+    /* 4. plain http goes to https (the emails only carry https, so this is a warning) */
+    $r = pmLinksGet('http://' . $host . '/peak-logo.png');
+    $add(in_array($r['code'], [301, 302, 307, 308], true) && str_starts_with($r['loc'], 'https://' . $host . '/') ? 'pass' : 'warn',
+        'http goes to https: ' . ($r['err'] !== '' ? 'no answer' : $r['code'] . ' ' . $r['loc']) . ' (if not: SiteGround, Security, HTTPS Enforce, on for ' . $host . ')');
+    return $done();
+}
+/** switch Peak's own link address on (only after the check passes) or off. The setting is one file the desk reads too. */
+function pmLinksSwitch(bool $on, string $by): array {
+    $f = pmDesk() . '/' . PM_LINKS_FILE;
+    $log = function (array $r) use ($by) { @file_put_contents(pmDesk() . '/peak-links.log', json_encode($r + ['by' => $by, 'at' => time()], JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX); };
+    if (!$on) { $was = pmLinkSet(); if (is_file($f) && !@unlink($f)) return ['ok' => false, 'why' => 'could not remove ' . $f]; $log(['t' => 'off', 'was' => $was]); return ['ok' => true, 'base' => pmBase()]; }
+    $c = pmEnv('PEAK_LINKS_CHECK_PASS') !== '' ? ['ok' => true, 'base' => 'https://' . pmLinksHost(), 'lines' => [['pass', 'test: check skipped']]] : pmLinksCheck();
+    if (!$c['ok']) return ['ok' => false, 'why' => 'the check did not pass, so nothing changed', 'check' => $c];
+    $s = (string) json_encode(['base' => $c['base'], 'by' => $by, 'at' => time()], JSON_UNESCAPED_SLASHES); $t = $f . '.tmp' . bin2hex(random_bytes(3));
+    if (@file_put_contents($t, $s, LOCK_EX) !== strlen($s) || !@chmod($t, 0600) || !@rename($t, $f)) { @unlink($t); return ['ok' => false, 'why' => 'could not write ' . $f]; }
+    if (pmLinkSet() !== $c['base']) return ['ok' => false, 'why' => 'written, but it does not read back'];
+    $log(['t' => 'on', 'base' => $c['base']]); return ['ok' => true, 'base' => $c['base'], 'check' => $c];
 }

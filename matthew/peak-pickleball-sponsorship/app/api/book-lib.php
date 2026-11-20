@@ -36,8 +36,20 @@ const BK_MEET_MAX = 60;
 function bkMeet(): string { return bkConf()['meet']; }
 
 function bkTest(): bool { return PHP_SAPI === 'cli' || PHP_SAPI === 'cli-server'; }
-/** where the public page is (the tests point it at their own server) */
-function bkBase(): string { $e = bkTest() ? (string) getenv('DESK_BOOK_BASE') : ''; return $e !== '' ? $e : BK_BASE; }
+/* Peak's own link address (X-16, 2026-11-20, Matthew: "we want to try and seperate the two in terms of the wordage"): one setting for the
+ * desk and the Peak email sender, peak-desk-data/peak-links.json {"base": "https://links.peakpickleball.us"}, switched on by the sender's
+ * `php cron.php links-on` only once that name answers with a valid certificate. When it is on, every booking link the desk hands out
+ * (personal, general, a desk email's, the sender's {book}) and the desk's open image are <base>/book/ (the site's .htaccess sends that name's
+ * /book/ to this page). No file, or anything but https on a peakpickleball.us name = traverseplatforms.com/peak-book/ as before. Links
+ * already out keep working: /peak-book/ is unchanged. */
+const BK_LINKS_FILE = 'peak-links.json';
+function bkLinkBase(): string {
+    static $b = null; if ($b !== null && !bkTest()) return $b;
+    $j = json_decode((string) @file_get_contents(DATA_DIR . '/' . BK_LINKS_FILE), true); $x = is_array($j) ? strtolower((string) ($j['base'] ?? '')) : '';
+    return $b = preg_match('#^https://[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.peakpickleball\.us$#D', $x) ? $x . '/book/' : '';
+}
+/** where the public page is: Peak's own address when it is on, else traverseplatforms.com/peak-book/ (the tests point it at their own server) */
+function bkBase(): string { $p = bkLinkBase(); if ($p !== '') return $p; $e = bkTest() ? (string) getenv('DESK_BOOK_BASE') : ''; return $e !== '' ? $e : BK_BASE; }
 function bkNow(): int { $e = bkTest() ? (string) getenv('DESK_NOW') : ''; return ctype_digit($e) ? (int) $e : time(); }
 
 /* ---- the shared schedule ---- */
@@ -320,7 +332,7 @@ function bkIcs(array $t, string $meet): string {
     $st = new DateTime($t['date'] . ' ' . $t['time'], new DateTimeZone('America/Denver')); $en = (clone $st)->modify('+' . ((int) ($t['mins'] ?? 30) ?: 30) . ' minutes');
     $L = ['BEGIN:VCALENDAR', 'PRODID:-//Peak Pickleball//Peak booking//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
     array_push($L, ...TM_VTZ);
-    array_push($L, 'BEGIN:VEVENT', 'UID:peak-tour-' . preg_replace('/[^a-z0-9]/', '', (string) $t['tid']) . '@traverseplatforms.com', 'DTSTAMP:' . gmdate('Ymd\THis\Z'),
+    array_push($L, 'BEGIN:VEVENT', 'UID:' . tmUid($t), 'DTSTAMP:' . gmdate('Ymd\THis\Z'),
         'DTSTART;TZID=America/Denver:' . $st->format('Ymd\THis'), 'DTEND;TZID=America/Denver:' . $en->format('Ymd\THis'),
         'SUMMARY:' . icsEsc('Visit to Peak Pickleball' . ($meet !== '' ? ' (meeting ' . $meet . ')' : '')), 'LOCATION:' . icsEsc(BK_ADDRESS),
         'DESCRIPTION:' . icsEsc(($meet !== '' ? "You'll meet " . $meet . ".\n" : '') . "Entrance: from the parking lot off Jamboree Drive (no way in from inside Chapel Hills Mall).\nPeak: " . BK_PHONE), 'END:VEVENT', 'END:VCALENDAR');

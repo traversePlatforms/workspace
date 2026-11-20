@@ -7,6 +7,8 @@ declare(strict_types=1);
      php cron.php import    bring the two lists in from the Peak desk again (a running list that gains people is paused)
      php cron.php check     what is set up (never a key, token or code)
      php cron.php dns       check SPF, DKIM and DMARC for peakpickleball.us (or the connected mailbox's domain) and save it for the page
+     php cron.php links     check Peak's own link address (links.peakpickleball.us: DNS, certificate, every handler); changes nothing
+     php cron.php links-on  switch every Peak link to it, only if that check passes;  links-off  back to traverseplatforms.com
    Setup, each reading from a pipe so nothing is typed on a command line or printed:
      php cron.php setapp  < 3 lines: client ID, tenant ID, secret     (writes app.json, 0600)
      php cron.php setcode < the sign-in code                          (writes code.hash, a password hash) */
@@ -35,6 +37,22 @@ if ($cmd === 'dns') {
     foreach ($r['fix'] as $f) echo '  fix: ', $f, "\n";
     exit(0);
 }
+/* Peak's own link address (X-16): links checks links.peakpickleball.us and changes nothing; links-on switches every Peak email and the
+   booking page to it, only when the check passes; links-off goes back to traverseplatforms.com */
+if ($cmd === 'links' || $cmd === 'links-on' || $cmd === 'links-off') {
+    $show = function (array $c) { foreach ($c['lines'] as [$s, $t]) echo str_pad($s, 5), ' ', $t, "\n"; };
+    if ($cmd === 'links') {
+        $c = pmLinksCheck(); $show($c);
+        echo 'now: ', pmLinkSet() !== '' ? 'ON, emails carry ' . pmLinkSet() : 'off, emails carry ' . pmBase(), "\n";
+        echo $c['ok'] ? "All checks passed. To switch on: php cron.php links-on\n" : "Not ready: nothing changed.\n";
+        exit($c['ok'] ? 0 : 1);
+    }
+    $r = pmLinksSwitch($cmd === 'links-on', 'command line');
+    if (isset($r['check'])) $show($r['check']);
+    if (!$r['ok']) { fwrite(STDERR, $r['why'] . "\n"); exit(1); }
+    echo $cmd === 'links-on' ? 'ON: every new Peak email and booking link now uses ' . $r['base'] . ". Links already sent keep working.\n" : 'off: back to ' . $r['base'] . "\n";
+    exit(0);
+}
 if ($cmd === 'run') exit(pmCronRun());
 if ($cmd === 'stats') { echo pmStatsLine(), "\n"; exit(0); }
 if ($cmd === 'import') {
@@ -52,6 +70,8 @@ if ($cmd === 'check') {
     $F = pmFromStatus($S['settings']);
     echo 'sends as: ', $F['shared'] ? $F['name'] . ' <' . $F['email'] . '> (shared mailbox' . (is_array($F['access'] ?? null) ? ', opens ' . ($F['access']['ok'] ? 'fine' : 'NOT') : '') . (is_array($F['sendas'] ?? null) ? ', last send ' . ($F['sendas']['ok'] ? 'ok' : 'REFUSED') : '') . ')' : 'the connected mailbox', "\n";
     if ($F['warn'] !== '') echo '  ', $F['warn'], "\n";
+    echo 'links: ', pmLinkSet() !== '' ? 'on, ' . pmLinkSet() : 'off (traverseplatforms.com)', "
+";
     foreach (PM_LISTS as $k => $n) echo $k, ': ', $S['lists'][$k]['status'], ', template ', pmIsDraft($S['templates'][$k]) ? 'DRAFT' : 'set', "\n";
     exit(0);
 }

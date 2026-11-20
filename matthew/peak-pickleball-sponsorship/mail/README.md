@@ -63,7 +63,22 @@ prospects and expo-space rental leads. Built on Matthew's ask of 17 Nov ("sendin
     deleted, and Matthew's own mailbox is never changed. The run line counts mail there that matched nobody (left unread).
   - **Reply** on the desk: `pmReplySend` uses Microsoft's own reply (createReply on the message in Peak Partnerships, the seller's words
     above theirs, send), so the thread holds; a message no longer there goes as a new email with In-Reply-To.
-- **Commands (server):** `php cron.php run | stats | import | check | dns`. `setapp` and `setcode` read from a pipe.
+- **Peak's own link address (X-16, 20 Nov 2026; Matthew: "we want to try and seperate the two in terms of the wordage"):** every address
+  in a Peak email (r.php, o.php, b.php, u.php, the logo) and on the desk (booking links, the desk-email and tour-confirmation open image)
+  is built on one setting, `peak-desk-data/peak-links.json` `{"base": "https://links.peakpickleball.us"}` (`pmLinkBase()` here,
+  `bkBase()` in `app/api/book-lib.php`). No file = traverseplatforms.com as before; only https on a peakpickleball.us name is accepted.
+  - The name is parked on the traverseplatforms.com SiteGround site; the site's root `.htaccess` (source
+    `traverse/marketing-site/site-src/htaccess.txt`) answers on it ONLY `/r.php /o.php /u.php /peak-logo.png` and `/book.php` (= b.php:
+    SiteGround's front server refuses `/b.php`, `/a.php`, `/c.php`, `/s.php`, `/t.php`, `/x.php` at the top of a site with a 403) from
+    this folder in Outbox, and `/book/` (the desk's booking page); `/` goes to peakpickleball.us; everything else is 404. Plain files
+    (index.html, og.png ...) are served by SiteGround's nginx before .htaccess, so the alias needs `settings.static_direct=0`
+    (`site-tools-client domain-alias update id=<id> settings.static_direct=0`); `links` fails on `/index.html` until it is.
+  - `php cron.php links` checks it (DNS to this site, a valid certificate, every handler, no traverseplatforms.com in any answer) and
+    changes nothing; `php cron.php links-on` switches on only if that passes; `links-off` goes back. Logged in `peak-desk-data/peak-links.log`.
+  - Links already sent keep working at their old addresses. Microsoft's redirect (oauth.php) and the admin page never move.
+  - Tour invites: tours made from 21 Nov 2026 carry UID `peak-tour-<id>@peakpickleball.us`; older tours keep `@traverseplatforms.com` so a
+    move or cancel still matches the invite already in the person's calendar (`tmUid()` in `app/api/tour-mail.php`).
+- **Commands (server):** `php cron.php run | stats | import | check | dns | links | links-on | links-off`. `setapp` and `setcode` read from a pipe.
 - **Overnight check:** section 12 of `shared/tools/overnight-check.sh` prints `cron.php stats`.
 - **Test:** `node matthew/peak-pickleball-sponsorship/mail/tests/mail-test.mjs`. It mocks Microsoft and uses throwaway data, and
   sends nothing.

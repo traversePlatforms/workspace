@@ -68,6 +68,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let pass = 0, failN = 0; const ok = (c, m) => { if (c) { pass++; console.log('  ok  ' + m); } else { failN++; console.log('  FAIL ' + m); } };
 const PORT = 8790 + Math.floor(Math.random() * 400), ORIGIN = `http://127.0.0.1:${PORT}`, API = ORIGIN + '/api/desk.php';
 env.DESK_BOOK_BASE = ORIGIN + '/api/book.php';   /* the booking page (2026-11-19) on the test's own server */
+env.DESK_UID_SINCE = '0';   /* X-16: every tour made in the test carries the new @peakpickleball.us invite UID (the line itself is tested below) */
 function client(extra = {}) { let ck = ''; const f = async (action, body, hdr = true) => { const r = await fetch(`${API}?action=${action}`, { method: body ? 'POST' : 'GET', headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(body && hdr ? { 'X-Desk': '1' } : {}), ...(ck ? { Cookie: ck } : {}), ...extra }, body: body ? JSON.stringify(body) : undefined }); const sc = r.headers.get('set-cookie'); if (sc) ck = sc.split(';')[0]; const j = await r.json().catch(() => ({})); j._status = r.status; return j; }; return f; }
 const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const today = () => iso(new Date());
@@ -533,7 +534,7 @@ try {
     ok(m.html.includes('2:30 pm Mountain time') && !/<img|<a |r\.php|o\.php/i.test(m.html) && !/https?:\/\//.test(m.text), 'the HTML part is the same words: no open image, no tracked links');
     const ics = m.cal.body;
     ok(/method=REQUEST/i.test(m.cal.ct) && /attachment; filename="invite.ics"/.test(m.att.head) && m.att.body === ics, 'a text/calendar part (method=REQUEST) for "Add to calendar", and the same invite attached as invite.ics');
-    ok(icsGet(ics, 'METHOD') === 'REQUEST' && icsGet(ics, 'UID') === 'peak-tour-' + tidB + '@traverseplatforms.com' && icsGet(ics, 'SEQUENCE') === '0' && icsGet(ics, 'DTSTART') === 'TZID=America/Denver:' + dB.replace(/-/g, '') + 'T143000' && icsGet(ics, 'DTEND') === 'TZID=America/Denver:' + dB.replace(/-/g, '') + 'T150000', 'the invite: METHOD:REQUEST, one UID for the tour, SEQUENCE 0, 2:30 to 3:00 pm America/Denver');
+    ok(icsGet(ics, 'METHOD') === 'REQUEST' && icsGet(ics, 'UID') === 'peak-tour-' + tidB + '@peakpickleball.us' && icsGet(ics, 'SEQUENCE') === '0' && icsGet(ics, 'DTSTART') === 'TZID=America/Denver:' + dB.replace(/-/g, '') + 'T143000' && icsGet(ics, 'DTEND') === 'TZID=America/Denver:' + dB.replace(/-/g, '') + 'T150000', 'the invite: METHOD:REQUEST, one UID for the tour, SEQUENCE 0, 2:30 to 3:00 pm America/Denver');
     ok(/BEGIN:VTIMEZONE\r\nTZID:America\/Denver/.test(ics) && /ORGANIZER;CN="Peak Pickleball":mailto:partnerships@peakpickleball.us/.test(ics.replace(/\r\n /g, '')) && /^From: "Peak Partnerships" <partnerships@peakpickleball.us>\r$/m.test(GM.sent[0]) && GM.boxes[0] === 'partnerships@peakpickleball.us' && /ATTENDEE;CN="Jamie Polson";ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:jamie@example.com/.test(ics.replace(/\r\n /g, '')) && icsGet(ics, 'LOCATION') === 'Peak Pickleball\\, 1730 Briargate Blvd\\, Colorado Springs\\, CO 80920', 'with its time zone, Matthew\u2019s Peak address as organizer, the contact as attendee, the address as location');
     D = await b('data'); let RB = find('sponsor', TB.id), tB = D.sponsor.tours.find((x) => x.tid === tidB), tch = RB.touches.find((x) => x.tc);
     ok(tch && tch.m === 'email' && tch.out === 'sent' && tch.by === 'Test Seller (via Peak email)' && /^Emailed: tour confirmation \(/.test(tch.note) && RB.stage === 'meeting', 'on the Activity: "Emailed: tour confirmation" by "Test Seller (via Peak email)"; the stage stays Meeting / tour booked');
@@ -545,7 +546,7 @@ try {
     /* moved: the same UID, SEQUENCE 1 */
     r = await b('tourmove', { world: 'sponsor', tid: tidB, date: later(5), time: '09:00', mail: true });
     m = mimeParts(GM.sent[1]);
-    ok(r.mail.state === 'sent' && /^Updated: your visit to Peak Pickleball, /.test(m.subject) && /The time has changed/.test(m.text) && icsGet(m.cal.body, 'UID') === 'peak-tour-' + tidB + '@traverseplatforms.com' && icsGet(m.cal.body, 'SEQUENCE') === '1' && /T090000$/.test(icsGet(m.cal.body, 'DTSTART')), 'moving it sends the new time: "Updated:", same UID, SEQUENCE 1');
+    ok(r.mail.state === 'sent' && /^Updated: your visit to Peak Pickleball, /.test(m.subject) && /The time has changed/.test(m.text) && icsGet(m.cal.body, 'UID') === 'peak-tour-' + tidB + '@peakpickleball.us' && icsGet(m.cal.body, 'SEQUENCE') === '1' && /T090000$/.test(icsGet(m.cal.body, 'DTSTART')), 'moving it sends the new time: "Updated:", same UID, SEQUENCE 1');
     /* a failure shows on the tour and in the counts; Retry sends it once */
     GM.fail = { code: 503, err: 'ServiceUnavailable' };
     r = await b('tourmove', { world: 'sponsor', tid: tidB, date: later(6), time: '11:00', mail: true });
@@ -560,7 +561,7 @@ try {
     D = await b('data'); ok(D.sponsor.tours.find((x) => x.tid === tidB).tms.s === 'sent' && !D.sponsor.tmFailed.length, 'after the retry: sent, nothing left to retry');
     /* cancelled: METHOD:CANCEL */
     r = await b('tourdel', { world: 'sponsor', tid: tidB }); m = mimeParts(GM.sent[GM.sent.length - 1]);
-    ok(r.mail.state === 'sent' && /^Cancelled: your visit/.test(m.subject) && /is cancelled/.test(m.text) && /method=CANCEL/i.test(m.cal.ct) && icsGet(m.cal.body, 'METHOD') === 'CANCEL' && icsGet(m.cal.body, 'STATUS') === 'CANCELLED' && icsGet(m.cal.body, 'SEQUENCE') === '3' && icsGet(m.cal.body, 'UID') === 'peak-tour-' + tidB + '@traverseplatforms.com', 'cancelling it sends METHOD:CANCEL with the same UID, SEQUENCE 3');
+    ok(r.mail.state === 'sent' && /^Cancelled: your visit/.test(m.subject) && /is cancelled/.test(m.text) && /method=CANCEL/i.test(m.cal.ct) && icsGet(m.cal.body, 'METHOD') === 'CANCEL' && icsGet(m.cal.body, 'STATUS') === 'CANCELLED' && icsGet(m.cal.body, 'SEQUENCE') === '3' && icsGet(m.cal.body, 'UID') === 'peak-tour-' + tidB + '@peakpickleball.us', 'cancelling it sends METHOD:CANCEL with the same UID, SEQUENCE 3');
     D = await b('data'); RB = find('sponsor', TB.id);
     ok(RB.touches.filter((x) => x.tc).length === 4 && RB.touches.filter((x) => x.tc).map((x) => x.note.split(' (')[0]).join('|') === 'Emailed: tour confirmation|Emailed: tour moved, updated invite|Emailed: tour moved, updated invite|Emailed: tour cancellation', 'four on the Activity: confirmation, two updates, the cancellation');
     /* not ticked, no email, Don't contact */
@@ -783,6 +784,30 @@ try {
     ok(JSON.stringify([find('sponsor', E1.id).dmails, find('sponsor', E2.id).touches.length, D.sponsor.tours.filter((t) => t.src === 'link').length]) === before, 'php desk.php rebuild: the same emails, touches and link bookings');
     ok(lines('deskmail-settings.log').length >= 3 && lines('book-settings.log').length >= 3, 'each change of either switch or the hours is logged');
     ok(!/RT-|AT-\d|mock-secret/.test(readFileSync(join(LD, 'book-events.log'), 'utf8') + lines('notify-out.jsonl').join('')), 'no token or secret in the booking log or the heads-ups');
+    /* Peak's own link address (X-16, 2026-11-20): with peak-desk-data/peak-links.json on, every booking link the desk hands out and its
+       open image are on https://links.peakpickleball.us/book/ (same signatures, same page); without it, as before */
+    {
+      const LF = join(LD, 'peak-links.json'), PB = 'https://links.peakpickleball.us/book/';
+      const viaLib = (code, extra = {}) => execFileSync('php', ['-r', 'define("DATA_DIR", getenv("DESK_DATA")); require getenv("STORE"); require getenv("TM"); require getenv("BL"); ' + code],
+        { encoding: 'utf8', env: { ...env, STORE: join(WEB, 'api/desk-store.php'), TM: join(WEB, 'api/tour-mail.php'), BL: join(WEB, 'api/book-lib.php'), ...extra } });
+      writeFileSync(LF, JSON.stringify({ base: 'https://links.peakpickleball.us', by: 'test' }));
+      const G2 = await a('bookgeneric', {}), P2 = await b('booklink', {});
+      ok(G2.url === PB + gq && P2.url === PB + pq, 'on: the general and personal links are links.peakpickleball.us/book/ with the same codes: ' + G2.url.slice(0, 50));
+      pg = await page(new URL(G2.url).search);
+      ok(pg.status === 200 && /Book a time with Peak Pickleball/.test(pg.text) && !/traverseplatforms/i.test(pg.text), 'the page answers those codes, and says nothing of Traverse');
+      pv = await cc('dmpreview', msg);
+      ok(pv.ok && pv.text.includes(PB + '?m=dm0000000000-') && !/traverseplatforms/i.test(pv.text), 'a desk email’s {book} is on links.peakpickleball.us; not one traverseplatforms.com in it');
+      const px = viaLib('echo bkPixelUrl("dm0000000001"), "\\n", bkMsgUrl("dm0000000001"), "\\n", bkOutreachUrl(["w" => "sponsor", "org" => "x", "to" => "a@b.c"]);').trim().split('\n');
+      ok(px[0].startsWith(PB + '?px=dm0000000001-') && px[1].startsWith(PB + '?m=dm0000000001-') && px[2].startsWith(PB + '?o='), 'the open image and the sender’s {book} link too');
+      for (const bad of ['http://links.peakpickleball.us', 'https://links.example.com', 'https://links.peakpickleball.us/x']) {
+        writeFileSync(LF, JSON.stringify({ base: bad })); ok((await a('bookgeneric', {})).url === G.url, 'a setting that is not https on a peakpickleball.us name is ignored: ' + bad);
+      }
+      rmSync(LF);
+      ok((await a('bookgeneric', {})).url === G.url && (await b('booklink', {})).url === PL.url, 'off again: the links are exactly what they were');
+      /* the invite's UID: a tour keeps the UID of its first invite; tours made from 2026-11-21 are @peakpickleball.us */
+      const u = JSON.parse(viaLib('echo json_encode([tmUid(["tid" => "ab12", "at" => 1795244399]), tmUid(["tid" => "ab12", "at" => 1795244400]), tmUid(["tid" => "ab12"])]);', { DESK_UID_SINCE: '' }));
+      ok(u[0] === 'peak-tour-ab12@traverseplatforms.com' && u[1] === 'peak-tour-ab12@peakpickleball.us' && u[2] === 'peak-tour-ab12@traverseplatforms.com', 'invite UID: tours made before 21 Nov keep @traverseplatforms.com (so a move or cancel still matches), later ones are @peakpickleball.us');
+    }
     /* left on for the screens; turned off at the end */
   }
 

@@ -168,7 +168,15 @@ function tmHtml(string $text): string {
 const TM_VTZ = ['BEGIN:VTIMEZONE', 'TZID:America/Denver', 'X-LIC-LOCATION:America/Denver',
     'BEGIN:DAYLIGHT', 'TZOFFSETFROM:-0700', 'TZOFFSETTO:-0600', 'TZNAME:MDT', 'DTSTART:19700308T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU', 'END:DAYLIGHT',
     'BEGIN:STANDARD', 'TZOFFSETFROM:-0600', 'TZOFFSETTO:-0700', 'TZNAME:MST', 'DTSTART:19701101T020000', 'RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU', 'END:STANDARD', 'END:VTIMEZONE'];
-/** the calendar invite: one UID per tour, SEQUENCE per version, local times in America/Denver with its time zone. Names who meets
+/* The invite's UID (X-16, 2026-11-20: no traverseplatforms.com in Peak's emails). A calendar matches a moved or cancelled visit to the one it
+   already has by its UID, so a tour keeps the UID its first invite carried: tours made before TM_UID_PEAK_SINCE (2026-11-21 00:00 Mountain,
+   after this went live) stay @traverseplatforms.com, later ones are @peakpickleball.us. DESK_UID_SINCE moves the line in the tests. */
+const TM_UID_PEAK_SINCE = 1795244400;
+function tmUid(array $t): string {
+    $e = (PHP_SAPI === 'cli' || PHP_SAPI === 'cli-server') ? (string) getenv('DESK_UID_SINCE') : ''; $since = ctype_digit($e) ? (int) $e : TM_UID_PEAK_SINCE;
+    return 'peak-tour-' . preg_replace('/[^a-z0-9]/', '', (string) ($t['tid'] ?? '')) . '@' . ((int) ($t['at'] ?? 0) >= $since ? 'peakpickleball.us' : 'traverseplatforms.com');
+}
+/** the calendar invite: one UID per tour (tmUid), SEQUENCE per version, local times in America/Denver with its time zone. Names who meets
     visitors ($ctx['meet']) only when the desk names someone; never the seller */
 function tmIcs(string $w, array $R, array $t, bool $cancel, string $organizer, array $ctx): string {
     $meet = (string) ($ctx['meet'] ?? '');
@@ -177,7 +185,7 @@ function tmIcs(string $w, array $R, array $t, bool $cancel, string $organizer, a
     $q = fn(string $s) => '"' . str_replace(['"', "\r", "\n", ';', ':'], '', $s) . '"';
     $L = ['BEGIN:VCALENDAR', 'PRODID:-//Peak Pickleball//Peak desk//EN', 'VERSION:2.0', 'CALSCALE:GREGORIAN', 'METHOD:' . ($cancel ? 'CANCEL' : 'REQUEST')];
     array_push($L, ...TM_VTZ);
-    array_push($L, 'BEGIN:VEVENT', 'UID:peak-tour-' . preg_replace('/[^a-z0-9]/', '', (string) $t['tid']) . '@traverseplatforms.com', 'DTSTAMP:' . gmdate('Ymd\THis\Z'),
+    array_push($L, 'BEGIN:VEVENT', 'UID:' . tmUid($t), 'DTSTAMP:' . gmdate('Ymd\THis\Z'),
         'SEQUENCE:' . (int) ($t['seq'] ?? 0), 'DTSTART;TZID=America/Denver:' . $st->format('Ymd\THis'), 'DTEND;TZID=America/Denver:' . $en->format('Ymd\THis'),
         'SUMMARY:' . icsEsc('Visit to Peak Pickleball' . ($meet !== '' ? ' (meeting ' . $meet . ')' : '')), 'LOCATION:' . icsEsc(TM_ADDRESS),
         'DESCRIPTION:' . icsEsc(($cancel ? "This visit is cancelled.\n" : '') . ($meet !== '' ? "You'll meet " . $meet . ".\n" : '') . "Entrance: from the parking lot off Jamboree Drive (no way in from inside Chapel Hills Mall).\nPeak: " . TM_PHONE . "\nTo change it, reply to the email this came with."),
@@ -267,13 +275,13 @@ function tmWordsIn(array $in): array { $o = []; foreach (tmDefaults() as $k => $
 /** a made-up company and tour for the Settings preview and the test: the next working day at 10 am */
 function tmSample(string $me, string $email): array {
     return [['id' => 'sample', 'name' => 'Sample Company', 'dnc' => []],
-        ['tid' => 'sample' . substr(sha1($me), 0, 6), 'date' => nextBizDay(), 'time' => '10:00', 'mins' => 30, 'who' => 'Pat Example', 'email' => $email !== '' ? $email : 'pat@example.com', 'by' => $me, 'seq' => 0]];
+        ['tid' => 'sample' . substr(sha1($me), 0, 6), 'date' => nextBizDay(), 'time' => '10:00', 'mins' => 30, 'who' => 'Pat Example', 'email' => $email !== '' ? $email : 'pat@example.com', 'by' => $me, 'seq' => 0, 'at' => time()]];
 }
 /** a preview: the email as it would go for these details (nothing is sent) */
 function tmPreview(string $w, array $R, array $t, string $me, ?array $words = null): array {
     $conf = tmConf(); $mb = ['email' => TM_ORGANIZER];
     if (tmLoad() === '') { $x = tmMailbox(); if ($x['email'] !== '') $mb['email'] = $x['email']; }
-    $t += ['tid' => 'preview', 'seq' => 0]; $m = tmCompose($w, $R, $t, tmMeet($w, $t, $me), false, $mb['email'], $words ?? $conf['words']);
+    $t += ['tid' => 'preview', 'seq' => 0, 'at' => time()]; $m = tmCompose($w, $R, $t, tmMeet($w, $t, $me), false, $mb['email'], $words ?? $conf['words']);
     $c = tmCompose($w, $R, ['seq' => 1] + $t, tmMeet($w, $t, $me), true, $mb['email'], $words ?? $conf['words']);
     $to = strtolower(trim((string) ($t['email'] ?? '')));
     return ['ok' => true, 'subject' => $m['subject'], 'text' => $m['text'], 'ics' => $m['ics'], 'csubject' => $c['subject'], 'ctext' => $c['text'], 'to' => $to, 'on' => $conf['on'], 'from' => $mb['email'],

@@ -7,6 +7,24 @@
 RewriteEngine On
 RewriteCond %{HTTP_HOST} ^www\.traverseplatforms\.com$ [NC]
 RewriteRule ^ https://traverseplatforms.com%{REQUEST_URI} [R=301,L]
+# Peak's own link address (X-16, 2026-11-20): links.peakpickleball.us is parked on this site and answers ONLY Peak's email links:
+# /r.php /o.php /u.php /peak-logo.png and /book.php (= b.php; SiteGround's front server refuses /b.php at the top of a site) go to the
+# Peak email sender in outbox-092b0f/peak/, and /book/ to the Peak desk's booking page. Its bare name goes to peakpickleball.us; anything
+# else on that name is 404, so nothing of Traverse shows under Peak's name (plain files too, once SiteGround's static_direct is off for it).
+# END: the rewritten request is not run through these rules again (or the last rule would 404 it).
+RewriteCond %{HTTP_HOST} ^links\.peakpickleball\.us$ [NC]
+RewriteRule ^(r|o|u)\.php$ /outbox-092b0f/peak/$1.php [END]
+RewriteCond %{HTTP_HOST} ^links\.peakpickleball\.us$ [NC]
+RewriteRule ^book\.php$ /outbox-092b0f/peak/b.php [END]
+RewriteCond %{HTTP_HOST} ^links\.peakpickleball\.us$ [NC]
+RewriteRule ^peak-logo\.png$ /outbox-092b0f/peak/peak-logo.png [END]
+RewriteCond %{HTTP_HOST} ^links\.peakpickleball\.us$ [NC]
+RewriteRule ^book/?$ /peak-book/index.php [END]
+RewriteCond %{HTTP_HOST} ^links\.peakpickleball\.us$ [NC]
+RewriteRule ^$ https://peakpickleball.us/ [R=302,END]
+RewriteCond %{HTTP_HOST} ^links\.peakpickleball\.us$ [NC]
+RewriteCond %{REQUEST_URI} !^/\.well-known/
+RewriteRule ^ - [R=404,END]
 </IfModule>
 <FilesMatch "\.(md|mjs|log|sh|map)$">
   Require all denied
