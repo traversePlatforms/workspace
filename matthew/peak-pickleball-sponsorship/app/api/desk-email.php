@@ -91,8 +91,18 @@ function dmCompose(array $d, string $ref): array {
     /* a sign-off line ("Thanks,") sits right above the signature */
     $sep = preg_match('/\n(thanks|thank you|many thanks|best|best wishes|cheers|regards|best regards|kind regards|warm regards|talk soon|see you soon),?[ \t]*$/i', "\n" . rtrim($body)) ? "\n" : "\n\n";
     $text = rtrim($body) . $sep . trim((string) $d['sig']) . "\n\n" . DM_FOOTER;
-    $h = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-    $h = (string) preg_replace('~\bhttps?://[^\s<>"\']+[^\s<>().,;:!?"\']~i', '<a href="$0">$0</a>', $h);
+    /* HTML link text (2026-11-20, Matthew: "do the same for the desk emails"): the booking link shows as words, not its long address.
+       "Pick a time that suits you: {book}" (what Insert my booking link adds) becomes that phrase as the link; any other {book}, or a
+       booking link pasted in full, shows "Book a time". Other addresses show as written. The plain-text part keeps the address. */
+    $hb = (string) preg_replace('/Pick a time that suits you:[ \t]*\{book\}/i', "\x02", (string) $d['text']);
+    $hb = str_replace('{book}', "\x03", $hb);
+    $h = htmlspecialchars(rtrim($hb) . $sep . trim((string) $d['sig']) . "\n\n" . DM_FOOTER, ENT_QUOTES, 'UTF-8');
+    $bb = bkBase();
+    $h = (string) preg_replace_callback('~\bhttps?://[^\s<>"\']+[^\s<>().,;:!?"\']~i', function ($m) use ($bb) {
+        $raw = html_entity_decode($m[0], ENT_QUOTES, 'UTF-8');
+        return '<a href="' . $m[0] . '">' . ($bb !== '' && str_starts_with($raw, $bb) ? 'Book a time' : $m[0]) . '</a>'; }, $h);
+    $la = '<a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">';
+    $h = str_replace(["\x02", "\x03"], [$la . 'Pick a time that suits you</a>', $la . 'Book a time</a>'], $h);
     $px = dmConf()['pixel'] ? '<img src="' . htmlspecialchars(bkPixelUrl($ref), ENT_QUOTES, 'UTF-8') . '" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">' : '';
     $html = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.45;color:#111">'
         . str_replace("\n", "<br>\n", $h) . '</div>' . $px . '</body></html>';
