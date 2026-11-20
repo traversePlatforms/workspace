@@ -544,6 +544,9 @@ try {
     /* a whole email as it renders: words, the {book} link, the HTML part */
     const em = JSON.parse(await php('echo json_encode(pmRender(["to" => "pat@example.com", "person" => "Pat Example", "first" => "Pat", "company" => "Acme", "town" => "Colorado Springs", "rid" => "0123456789", "org" => "x", "list" => "sponsors"], ["subject" => "Hi {first}", "body" => "See https://peakpickleball.us/sponsorship and book here: {book}"], ["signature" => "The Peak Partnerships Team\nPeak Pickleball", "address" => "1730 Briargate Blvd, Colorado Springs, CO 80920", "opens" => true], false));', noMock));
     ok(em.links === 1 && em.body.includes(PB + 'r.php?r=0123456789') && em.body.includes(PB + 'book.php?r=0123456789') && em.html.includes(PB + 'o.php?r=0123456789') && em.html.includes(PB + 'peak-logo.png') && !/traverseplatforms/i.test(em.body + em.html), 'a whole email on the Peak address: not one traverseplatforms.com in the words or the HTML');
+    /* 2026-11-20 (Matthew: show peakpickleball.us, keep the tracking): the HTML shows the landing address, the link is still r.php */
+    ok(/<a href="[^"]*\/r\.php\?r=0123456789[^"]*">peakpickleball\.us\/sponsorship<\/a>/.test(em.html) && /<a href="[^"]*\/book\.php\?r=0123456789[^"]*">Book a time<\/a>/.test(em.html) && !/>https?:\/\/[^<]*r\.php/.test(em.html), 'HTML link text: the landing address and "Book a time", never the long tracked address');
+    ok(em.body.includes(PB + 'r.php?r=0123456789'), 'the plain-text part keeps the tracked address');
     /* the handlers answer those paths (the site's .htaccess sends the Peak name's /r.php etc. to this folder) */
     const get = (p, h = {}) => req('GET', p, undefined, h);
     const pathOf = u => u.slice(PB.length - 1);

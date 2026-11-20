@@ -660,25 +660,40 @@ function pmRender(array $p, array $tpl, array $set, bool $save = false): array {
     foreach (['first' => 'first name', 'company' => 'company', 'town' => 'town'] as $f => $label) if ($p[$f] === '' && str_contains($usedTpl, '{' . $f . '}')) $miss[] = $label;
     $subject = pmClean(strtr((string) $tpl['subject'], $v), 200);
     $main = rtrim(strtr(pmText($tpl['body'], 8000), $v));
-    $links = 0;
-    $main = (string) preg_replace_callback('~\bhttps?://[^\s<>()"\']+[^\s<>().,;:!?"\']~i', function ($m) use ($p, $save, &$links) { $links++; return pmTrack($m[0], $p['rid'], $save); }, $main);
+    $links = 0; $labels = [];
+    $main = (string) preg_replace_callback('~\bhttps?://[^\s<>()"\']+[^\s<>().,;:!?"\']~i', function ($m) use ($p, $save, &$links, &$labels) {
+        $links++; $t = pmTrack($m[0], $p['rid'], $save); $labels[$t] = pmLinkLabel($m[0]); return $t; }, $main);
     /* {book}: their own link to the book-a-time page (not sent through r.php: the page counts its own views) */
-    $subject = trim(str_replace('{book}', '', $subject)); $main = str_replace('{book}', pmBookUrl($p['rid']), $main);
+    $subject = trim(str_replace('{book}', '', $subject));
+    if (str_contains($main, '{book}')) { $bu = pmBookUrl($p['rid']); $labels[$bu] = 'Book a time'; $main = str_replace('{book}', $bu, $main); }
     $sig = trim((string) $set['signature']);
     $body = $main . "\n\n" . ($sig !== '' ? $sig . "\n" : '') . trim((string) $set['address'])
           /* 2026-11-20 (Matthew): no Traverse address in Peak's words, so the opt-out is a reply. STOP replies are read and suppressed;
              u.php stays for links already sent. The links themselves are on Peak's own address once it is on (pmLinkBase, X-16). */
           . "\n\nIf you'd rather not hear from us again, just reply STOP.";
     $m = ['to' => $p['to'], 'name' => $p['person'], 'subject' => $subject, 'body' => $body, 'links' => $links, 'fallbacks' => $miss];
-    if (!empty($set['opens'])) $m['html'] = pmHtml($body, pmOpenUrl($p['rid']), $sig);
+    if (!empty($set['opens'])) $m['html'] = pmHtml($body, pmOpenUrl($p['rid']), $sig, $labels);
     if (preg_match('/\{[a-z_]+\}/i', $subject . "\n" . $main, $ph)) $m['badph'] = $ph[0];
     return $m;
 }
 /** the HTML part: the same words as the plain text, its web addresses as links, and the 1x1 open image at the end */
 const PM_LOGO = 'peak-logo.png';   /* Peak's own logo (from peakpickleball.us, 852x90), served from this folder */
-function pmHtml(string $text, string $pixel, string $sig = ''): string {
+/** what the reader sees for a link: the address they will land on, short ("peakpickleball.us", "peakpickleball.us/events") */
+function pmLinkLabel(string $url): string {
+    $u = parse_url($url); $host = strtolower((string) ($u['host'] ?? ''));
+    if ($host === '') return $url;
+    if (str_starts_with($host, 'www.')) $host = substr($host, 4);
+    $path = rtrim((string) ($u['path'] ?? ''), '/');
+    return $host . $path;
+}
+/* $labels: tracked address => the words shown for it (2026-11-20, Matthew: show peakpickleball.us, "keep the tracking"). The link still goes
+   through r.php on Peak's own name; label and link share peakpickleball.us, so filters see no mismatched domain. Plain text keeps the address. */
+function pmHtml(string $text, string $pixel, string $sig = '', array $labels = []): string {
     $h = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
-    $h = (string) preg_replace('~\bhttps?://[^\s<>"\']+[^\s<>().,;:!?"\']~i', '<a href="$0">$0</a>', $h);
+    $h = (string) preg_replace_callback('~\bhttps?://[^\s<>"\']+[^\s<>().,;:!?"\']~i', function ($m) use ($labels) {
+        $raw = html_entity_decode($m[0], ENT_QUOTES, 'UTF-8');
+        $show = isset($labels[$raw]) ? htmlspecialchars($labels[$raw], ENT_QUOTES, 'UTF-8') : $m[0];
+        return '<a href="' . $m[0] . '">' . $show . '</a>'; }, $h);
     /* Peak's logo under the signature (2026-11-20, Matthew: "does the signature have the peak logo? because it should"); HTML part only,
        the plain-text part is unchanged */
     $hs = htmlspecialchars($sig, ENT_QUOTES, 'UTF-8');
