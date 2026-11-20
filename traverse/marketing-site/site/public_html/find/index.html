@@ -41,7 +41,7 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
 .small{font-size:14px;color:var(--soft);margin:18px 0 0}
 @media (max-width:560px){h1{font-size:32px}main{padding-top:36px}}
 </style>
-</head>
+<script src="/sv/v.js" defer></script></head>
 <body>
 <header><div class="hin">
   <a class="brand" href="../"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#13294b"/><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="47" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="24" cy="31" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="37" cy="40" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="53" cy="17" r="8" fill="#d6400c"/></g></svg><span><b>Traverse</b> <span>Platforms</span></span></a>
@@ -71,7 +71,7 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
     b.disabled = true; say('Sending…');
     fetch('../api/traverse-findapp.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: v, hp: document.getElementById('website').value, t: Date.now() - T0 }) })
       .then(function (r) { return r.json(); })
-      .then(function (j) { b.disabled = false; if (j && j.ok) { say(j.said || "If that address is on an app, the link is on its way. Nothing arrived? Check the spelling, or ask your admin.", 'ok'); f.reset(); } else say((j && j.error) || 'That did not go through. Try again.', 'bad'); })
+      .then(function (j) { b.disabled = false; if (j && j.ok) { if (window.sa) window.sa('app_link_request'); say(j.said || "If that address is on an app, the link is on its way. Nothing arrived? Check the spelling, or ask your admin.", 'ok'); f.reset(); } else say((j && j.error) || 'That did not go through. Try again.', 'bad'); })
       .catch(function () { b.disabled = false; say('No connection. Try again.', 'bad'); });
   });
 })();

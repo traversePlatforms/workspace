@@ -69,6 +69,8 @@
   .way span{display:grid;gap:2px;min-width:0;overflow-wrap:anywhere}.way b{font-size:17px}.way .btn{width:auto;min-height:42px;margin:0;padding:0 18px;font-size:15px}
   .zqr{display:block;width:160px;max-width:60%;height:auto;margin:-2px 0 4px;border:1px solid var(--line);border-radius:8px;background:#fff}
 </style>
+<!-- our own cookie-free visit counting (2026-11-20): shared/site-analytics, served from /sv/ -->
+<script src="/sv/v.js" defer></script>
 </head>
 <body>
 <header><div class="wrap">
@@ -203,6 +205,7 @@
       fetch(API + '?action=a365signed', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ s: key, name: ni.value.trim(), agree: true, read: true }) })
         .then(function (r) { return r.json(); }).then(function (j) {
           if (!j || !j.ok) { go.disabled = false; go.textContent = 'Sign'; err.textContent = (j && j.error) || 'That did not go through. Try again, or call or text us.'; return; }
+          if (window.sa) window.sa('agreement_signed');   /* counted as a conversion (2026-11-20, /sv/v.js; staff opens send nothing) */
           var pre = main.querySelector('.fullpay'); if (pre) pre.remove();
           var sc = signedCard(j.signed, j.booked, j.mailed); c.replaceWith(sc); var fc = fullCard(j.full); if (fc) sc.after(fc); if (j.ways && j.ways.length && !(j.full && j.full.paid)) main.appendChild(waysCard({ ways: j.ways }, 'balance')); window.scrollTo(0, 0);
         }).catch(function () { go.disabled = false; go.textContent = 'Sign'; err.textContent = 'No connection. Try again, or call or text us.'; });

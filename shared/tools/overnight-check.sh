@@ -117,6 +117,10 @@ case "$CF" in *FAILED*) bad "$CF";; *) say "  info  $CF";; esac
 # The server's access log is written once a day (~10:40 pm MT), so this moves once a day. Source: traverse/ops/site-visitors.php.
 SV=$($SG 'php ~/www/traverseplatforms.com/traverse-tools/site-visitors.php --line' < /dev/null 2>/dev/null | tail -1)
 [ -n "$SV" ] && say "  info  $SV"
+# 8b. Our own cookie-free site counting (2026-11-20, Matthew: "Lets track traverse and sixfold analytics as well"): yesterday's visitors,
+# views and conversions for traverseplatforms.com and 365aeration.com, live (not once a day). Full page: the hub's Site stats tab.
+SA=$($SG 'php ~/www/traverseplatforms.com/site-analytics/report.php --line' < /dev/null 2>/dev/null | tail -1)
+case "$SA" in "") bad "site analytics report did not answer";; *"not reachable"*) bad "$SA";; *) say "  info  $SA";; esac
 
 # 9. Sixfold profit, for Matthew's 5% share (2026-11-15, Matthew: "alert me when we are profitable"). Source: traverse/app/tools/profit-check.php
 # (sixfold-tools on the server). --alert emails him once, and only after the unknown costs are set (profit-costs.json unknownMonthly).

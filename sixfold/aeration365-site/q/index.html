@@ -73,6 +73,8 @@
   .btn{background:var(--act)}.btn:hover{background:var(--act-d)}
   footer .fmark{width:60px;height:60px;color:var(--cream);display:block}
 </style>
+<!-- our own cookie-free visit counting (2026-11-20): shared/site-analytics, served from /sv/ -->
+<script src="/sv/v.js" defer></script>
 </head>
 <body>
 <header><div class="wrap">
@@ -154,6 +156,7 @@
       fetch(API + '?action=a365accept', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: key, note: nt.value }) })
         .then(function (r) { return r.json(); }).then(function (j) {
           if (!j || !j.ok) { go.disabled = false; go.textContent = label; err.textContent = (j && j.error) || 'That did not go through. Try again, or call or text us.'; return; }
+          if (window.sa) window.sa('quote_accepted');   /* counted as a conversion (2026-11-20, /sv/v.js) */
           c.replaceWith(j.booked ? booked(j.booked) : thanks(Q, false, !!j.gone)); window.scrollTo(0, 0);
         }).catch(function () { go.disabled = false; go.textContent = label; err.textContent = 'No connection. Try again, or call or text us.'; });
     });

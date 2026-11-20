@@ -58,6 +58,18 @@ const NOINDEX = /<meta name="robots" content="noindex, nofollow">\s*/g;
 for (const rel of ['index.html', 'editions/index.html', 'demo/index.html', 'demo/index.php', 'terms/index.html', 'terms-of-use/index.html', 'privacy/index.html', 'cancellation/index.html']) {
   const p = path.join(OUT, rel); if (!fs.existsSync(p)) continue; const t = fs.readFileSync(p, 'utf8'); if (NOINDEX.test(t)) fs.writeFileSync(p, t.replace(NOINDEX, '')); NOINDEX.lastIndex = 0;
 }
+/* 20 Nov 2026 (Matthew: "Lets track traverse and sixfold analytics as well"): our own cookie-free visit counting on every public page,
+   shared/site-analytics/v.js + c.php served from /sv/ (the collector's lib, config and data sit outside public_html in site-analytics/).
+   Pages call window.sa('demo_booked' | 'checkout_start' | 'app_link_request') when a form finishes; see shared/site-analytics/lib.php. */
+const SA = path.join(here, '..', '..', 'shared', 'site-analytics'), SV_TAG = '<script src="/sv/v.js" defer></script>';
+fs.mkdirSync(path.join(OUT, 'sv'), { recursive: true });
+for (const f of ['v.js', 'c.php']) fs.copyFileSync(path.join(SA, f), path.join(OUT, 'sv', f));
+for (const rel of ['index.html', 'editions/index.html', 'demo/index.html', 'terms/index.html', 'terms-of-use/index.html', 'privacy/index.html', 'cancellation/index.html', 'start/index.html', 'start/welcome/index.html', 'find/index.html']) {
+  const p = path.join(OUT, rel); const t = fs.readFileSync(p, 'utf8');
+  if (t.includes(SV_TAG)) continue;
+  if (t.split('</head>').length !== 2) throw new Error(rel + ': expected one </head> for the visit-counting script');
+  fs.writeFileSync(p, t.replace('</head>', SV_TAG + '</head>'));
+}
 /* bsdtar (Windows' own tar) writes forward-slash zips; Compress-Archive's backslash paths do not extract on the host */
-execFileSync('C:/Windows/System32/tar.exe', ['-a', '-c', '-f', path.join(here, 'site', 'extract-in-traverseplatforms-public_html.zip'), 'index.html', 'editions', '.htaccess', ...EXTRA], { cwd: OUT });
+execFileSync('C:/Windows/System32/tar.exe', ['-a', '-c', '-f', path.join(here, 'site', 'extract-in-traverseplatforms-public_html.zip'), 'index.html', 'editions', '.htaccess', 'sv', ...EXTRA], { cwd: OUT });
 console.log('wrote site/public_html and site/extract-in-traverseplatforms-public_html.zip');

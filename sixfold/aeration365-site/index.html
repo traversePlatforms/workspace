@@ -173,6 +173,8 @@
     section{padding:48px 0}
   }
 </style>
+<!-- our own cookie-free visit counting (2026-11-20): shared/site-analytics, served from /sv/ -->
+<script src="/sv/v.js" defer></script>
 </head>
 <body>
 
@@ -401,6 +403,7 @@
       .then(function (j) {
         if (!j.ok) { btn.disabled = false; btn.textContent = 'Send my request'; err.textContent = j.error || 'That did not go through. Please call or text (720) 830-4553.'; return; }
         var first = body.name.split(' ')[0];
+        if (window.sa) window.sa('quote_request');   /* a conversion for the site's visit counting (2026-11-20) */
         f.innerHTML = '<div class="done"><b>Thanks, ' + first.replace(/[<>&"]/g, '') + '!</b>We have your request and will be in touch soon.<br>Need us sooner? Call or text <a href="tel:+17208304553">(720) 830-4553</a>.</div>';
       })
       .catch(function () { btn.disabled = false; btn.textContent = 'Send my request'; err.textContent = 'No connection. Please try again, or call or text (720) 830-4553.'; });

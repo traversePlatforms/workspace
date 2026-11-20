@@ -62,7 +62,7 @@ aside{position:sticky;top:16px}
 .edsel select:focus{outline:2px solid var(--flag);outline-offset:1px}
 @media (max-width:880px){main{grid-template-columns:minmax(0,1fr)}aside{position:static}.plans{grid-template-columns:minmax(0,1fr)}h1{font-size:32px}#eds{display:none}.edsel{display:block}}
 </style>
-</head>
+<script src="/sv/v.js" defer></script></head>
 <body>
 <header><div class="hin">
   <a class="brand" href="../"><svg width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#13294b"/><g transform="translate(8.5 8.5) scale(0.734)"><polyline points="9,47 24,31 37,40 53,17" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="47" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="24" cy="31" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="37" cy="40" r="5.2" fill="#13294b" stroke="#fff" stroke-width="3.6"/><circle cx="53" cy="17" r="8" fill="#d6400c"/></g></svg><span><b>Traverse</b> <span>Platforms</span></span></a>
@@ -177,7 +177,7 @@ aside{position:sticky;top:16px}
     var b = $('pay'); b.disabled = true; b.textContent = 'Opening Stripe…'; $('err').textContent = '';
     fetch(API + '?action=checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ edition: st.edition, plan: st.plan, iv: st.iv, seats: st.people, agree: $('agree').checked, terms: P.terms, agreement: P.agreement }) })
       .then(function (r) { return r.json(); }).then(function (j) {
-        if (j.ok && j.url) { location.href = j.url; return; }
+        if (j.ok && j.url) { if (window.sa) window.sa('checkout_start'); location.href = j.url; return; }   /* counted as a conversion (2026-11-20, /sv/v.js) */
         $('err').textContent = j.error || 'That did not work. Try again.'; draw();
       }).catch(function () { $('err').textContent = 'No connection. Try again.'; draw(); });
   });

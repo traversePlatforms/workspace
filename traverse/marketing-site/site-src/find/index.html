@@ -71,7 +71,7 @@ input:focus{outline:2px solid var(--flag);outline-offset:1px}
     b.disabled = true; say('Sending…');
     fetch('../api/traverse-findapp.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: v, hp: document.getElementById('website').value, t: Date.now() - T0 }) })
       .then(function (r) { return r.json(); })
-      .then(function (j) { b.disabled = false; if (j && j.ok) { say(j.said || "If that address is on an app, the link is on its way. Nothing arrived? Check the spelling, or ask your admin.", 'ok'); f.reset(); } else say((j && j.error) || 'That did not go through. Try again.', 'bad'); })
+      .then(function (j) { b.disabled = false; if (j && j.ok) { if (window.sa) window.sa('app_link_request'); say(j.said || "If that address is on an app, the link is on its way. Nothing arrived? Check the spelling, or ask your admin.", 'ok'); f.reset(); } else say((j && j.error) || 'That did not go through. Try again.', 'bad'); })
       .catch(function () { b.disabled = false; say('No connection. Try again.', 'bad'); });
   });
 })();

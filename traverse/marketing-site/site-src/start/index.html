@@ -177,7 +177,7 @@ aside{position:sticky;top:16px}
     var b = $('pay'); b.disabled = true; b.textContent = 'Opening Stripe…'; $('err').textContent = '';
     fetch(API + '?action=checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ edition: st.edition, plan: st.plan, iv: st.iv, seats: st.people, agree: $('agree').checked, terms: P.terms, agreement: P.agreement }) })
       .then(function (r) { return r.json(); }).then(function (j) {
-        if (j.ok && j.url) { location.href = j.url; return; }
+        if (j.ok && j.url) { if (window.sa) window.sa('checkout_start'); location.href = j.url; return; }   /* counted as a conversion (2026-11-20, /sv/v.js) */
         $('err').textContent = j.error || 'That did not work. Try again.'; draw();
       }).catch(function () { $('err').textContent = 'No connection. Try again.'; draw(); });
   });

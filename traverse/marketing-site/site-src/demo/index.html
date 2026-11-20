@@ -236,6 +236,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{out
           return;
         }
         $('s1').hidden = true; $('s2').hidden = true; $('s3').hidden = true; $('s4').hidden = false;
+        if (window.sa) window.sa('demo_booked');   /* the site's own visit counting (2026-11-20, /sv/v.js): a booking is a conversion */
         $('doneline').textContent = 'Your demo is on ' + j.when + '. ' + (meet === 'phone' ? "We'll call you at " + body.phone + '.' : "We'll email you a video call link before it starts.");
         $('mailline').textContent = 'A confirmation with a calendar invite is on its way to ' + body.email + '. Need to change it? Use the link in that email, or call (303) 596-9515.';
         $('booker').scrollIntoView({ behavior: 'smooth', block: 'start' });
