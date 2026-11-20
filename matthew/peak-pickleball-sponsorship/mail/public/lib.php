@@ -650,16 +650,24 @@ function pmRender(array $p, array $tpl, array $set, bool $save = false): array {
     $body = $main . "\n\n" . ($sig !== '' ? $sig . "\n" : '') . trim((string) $set['address'])
           . "\n\nIf you'd rather not hear from us again, reply STOP or use this link: " . pmUnsubUrl($p['rid']);
     $m = ['to' => $p['to'], 'name' => $p['person'], 'subject' => $subject, 'body' => $body, 'links' => $links, 'fallbacks' => $miss];
-    if (!empty($set['opens'])) $m['html'] = pmHtml($body, pmOpenUrl($p['rid']));
+    if (!empty($set['opens'])) $m['html'] = pmHtml($body, pmOpenUrl($p['rid']), $sig);
     if (preg_match('/\{[a-z_]+\}/i', $subject . "\n" . $main, $ph)) $m['badph'] = $ph[0];
     return $m;
 }
 /** the HTML part: the same words as the plain text, its web addresses as links, and the 1x1 open image at the end */
-function pmHtml(string $text, string $pixel): string {
+const PM_LOGO = 'peak-logo.png';   /* Peak's own logo (from peakpickleball.us, 852x90), served from this folder */
+function pmHtml(string $text, string $pixel, string $sig = ''): string {
     $h = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     $h = (string) preg_replace('~\bhttps?://[^\s<>"\']+[^\s<>().,;:!?"\']~i', '<a href="$0">$0</a>', $h);
+    /* Peak's logo under the signature (2026-11-20, Matthew: "does the signature have the peak logo? because it should"); HTML part only,
+       the plain-text part is unchanged */
+    $hs = htmlspecialchars($sig, ENT_QUOTES, 'UTF-8');
+    if ($hs !== '' && ($i = strrpos($h, $hs)) !== false)
+        $h = substr($h, 0, $i + strlen($hs)) . "\x01" . substr($h, $i + strlen($hs));
+    $h = str_replace("\n", "<br>\n", $h);
+    $h = str_replace("\x01", '<img src="' . htmlspecialchars(pmBase() . '/' . PM_LOGO, ENT_QUOTES, 'UTF-8') . '" width="220" alt="Peak Pickleball" style="display:block;border:0;width:220px;max-width:100%;height:auto;margin:8px 0 2px">', $h);
     return '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.45;color:#111">'
-        . str_replace("\n", "<br>\n", $h) . '</div><img src="' . htmlspecialchars($pixel, ENT_QUOTES, 'UTF-8') . '" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px"></body></html>';
+        . $h . '</div><img src="' . htmlspecialchars($pixel, ENT_QUOTES, 'UTF-8') . '" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px"></body></html>';
 }
 function pmOpenUrl(string $rid): string { return pmBase() . '/o.php?r=' . $rid . '&s=' . pmSig('o|' . $rid); }
 function pmBookUrl(string $rid): string { return pmBase() . '/b.php?r=' . $rid . '&s=' . pmSig('b|' . $rid); }
