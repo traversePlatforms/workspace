@@ -26,6 +26,7 @@ case "${1:-status}" in
           [ -z "$need" ] || { sudo -n apt-get update -qq && sudo -n DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $need > /dev/null && echo "installed:$need"; }
           mkdir -p ~/jarvis/bin ~/jarvis/incoming ~/jarvis/outbox/changes ~/jarvis/outbox/jobs ~/jarvis/outbox/merged ~/jarvis/state; chmod 700 ~/jarvis
           [ -d ~/jarvis/repo.git ] || { git init -q --bare ~/jarvis/repo.git && echo "bare repo made"; }
+          git -C ~/jarvis/repo.git symbolic-ref HEAD refs/heads/main   # 20 Nov: it said master, so a fresh clone of it came out empty
           git -C ~/jarvis/repo.git rev-parse -q --verify main > /dev/null || { echo "the bare repo is empty: run  bash traverse/ops/jarvis-cloud.sh sync  on the laptop, then init again"; exit 0; }
           if [ ! -d ~/workspace/.git ]; then git clone -q ~/jarvis/repo.git ~/workspace && echo "workspace cloned"; fi
           cd ~/workspace && git config core.autocrlf false && git config user.name "Matthew Sharpe" && git config user.email "m.sharpe@surgeftw.com"

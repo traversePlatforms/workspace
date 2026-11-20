@@ -57,7 +57,9 @@ mode_now() { local m; m=$(sed -n 's/^MODE=\([a-z]*\)[[:space:]]*$/\1/p' "$J/conf
 MODE="${JARVIS_MODE:-$(mode_now)}"
 
 # ---- the guard -------------------------------------------------------------------------------------------------------------------------
-TID='h[0-9]{14}[0-9a-f]{4}'; AUD='a[0-9]{10}[0-9a-f]{6}\.(webm|ogg|m4a|mp3|aac)'; PHO='p[0-9]{10}[0-9a-f]{6}\.(jpg|png|webp)'
+# RX_AUD, not AUD (20 Nov): one_ticket and the desk handler declare `local ... AUD`, and bash's dynamic scope made allowed() see that empty
+# local under set -u ("AUD: unbound variable"), so every guarded call inside a ticket died. Keep the guard's patterns on names no function uses.
+TID='h[0-9]{14}[0-9a-f]{4}'; RX_AUD='a[0-9]{10}[0-9a-f]{6}\.(webm|ogg|m4a|mp3|aac)'; PHO='p[0-9]{10}[0-9a-f]{6}\.(jpg|png|webp)'
 inst_ok() { local x; for x in $INSTALLS; do [ "$1" = "$x" ] && return 0; done; return 1; }
 allowed() {   # allowed '<command>' [mode]: 0 = this script may send it in that mode
   local c="$1" m="${2:-$MODE}" i
@@ -69,8 +71,8 @@ allowed() {   # allowed '<command>' [mode]: 0 = this script may send it in that 
   # the practice copy (every mode but off): as in the 12 Nov trial
   [[ "$c" =~ ^"$TOOLS"help-next\.php(\ --peek)?\ --practice$ ]] && return 0
   [[ "$c" =~ ^"$TOOLS"help-reply\.php\ $TID\ answered\ --practice$ ]] && return 0
-  [[ "$c" =~ ^"$TOOLS"help-transcript\.php\ $TID\ $AUD(\ --failed)?\ --practice$ ]] && return 0
-  [[ "$c" =~ ^cat\ \'/[A-Za-z0-9/_.-]*/sixfold-practice-data/rounds/help-files/$TID/$AUD\'$ ]] && return 0
+  [[ "$c" =~ ^"$TOOLS"help-transcript\.php\ $TID\ $RX_AUD(\ --failed)?\ --practice$ ]] && return 0
+  [[ "$c" =~ ^cat\ \'/[A-Za-z0-9/_.-]*/sixfold-practice-data/rounds/help-files/$TID/$RX_AUD\'$ ]] && return 0
   [ "$m" = practice ] && return 1
   # shadow and live: look only
   [[ "$c" =~ ^"$TOOLS"help-next\.php\ --peek$ ]] && return 0
@@ -82,15 +84,15 @@ allowed() {   # allowed '<command>' [mode]: 0 = this script may send it in that 
   [[ "$c" =~ ^"$TOOLS"help-next\.php\ --install=(c-[a-z0-9-]{1,40})$ ]] && inst_ok "${BASH_REMATCH[1]}" && return 0
   [[ "$c" =~ ^"$TOOLS"help-reply\.php\ $TID\ (answered|matthew)$ ]] && return 0
   [[ "$c" =~ ^"$TOOLS"help-reply\.php\ $TID\ (answered|matthew)\ --install=(c-[a-z0-9-]{1,40})$ ]] && inst_ok "${BASH_REMATCH[2]}" && return 0
-  [[ "$c" =~ ^"$TOOLS"help-transcript\.php\ $TID\ $AUD(\ --failed)?$ ]] && return 0
-  [[ "$c" =~ ^"$TOOLS"help-transcript\.php\ $TID\ $AUD(\ --failed)?\ --install=(c-[a-z0-9-]{1,40})$ ]] && inst_ok "${BASH_REMATCH[3]}" && return 0
+  [[ "$c" =~ ^"$TOOLS"help-transcript\.php\ $TID\ $RX_AUD(\ --failed)?$ ]] && return 0
+  [[ "$c" =~ ^"$TOOLS"help-transcript\.php\ $TID\ $RX_AUD(\ --failed)?\ --install=(c-[a-z0-9-]{1,40})$ ]] && inst_ok "${BASH_REMATCH[3]}" && return 0
   [[ "$c" =~ ^"$JD"\ next$ ]] && return 0
-  [[ "$c" =~ ^"$JD"\ transcript\ $TID\ $AUD(\ --failed)?$ ]] && return 0
+  [[ "$c" =~ ^"$JD"\ transcript\ $TID\ $RX_AUD(\ --failed)?$ ]] && return 0
   [[ "$c" =~ ^"$JD"\ reply\ $TID\ (answered|matthew)$ ]] && return 0
   [[ "$c" =~ ^"$JD"\ final-since\ $TID\ [0-9]{10}$ ]] && return 0
   [[ "$c" =~ ^grep\ \'\"id\":\"$TID\"\'\ "$SITE"/sixfold-data/rounds/help\.log$ ]] && return 0
-  [[ "$c" =~ ^cat\ \'/[A-Za-z0-9/_.-]*/(sixfold-data|c-[a-z0-9-]{1,40}-data)/rounds/help-files/$TID/($AUD|$PHO)\'$ ]] && { i="${BASH_REMATCH[1]}"; [ "$i" = sixfold-data ] || inst_ok "${i%-data}"; } && return 0
-  [[ "$c" =~ ^cat\ \'/[A-Za-z0-9/_.-]*/assistant-private/data/jarvis/desk/files/$TID/($AUD|$PHO)\'$ ]] && return 0
+  [[ "$c" =~ ^cat\ \'/[A-Za-z0-9/_.-]*/(sixfold-data|c-[a-z0-9-]{1,40}-data)/rounds/help-files/$TID/($RX_AUD|$PHO)\'$ ]] && { i="${BASH_REMATCH[1]}"; [ "$i" = sixfold-data ] || inst_ok "${i%-data}"; } && return 0
+  [[ "$c" =~ ^cat\ \'/[A-Za-z0-9/_.-]*/assistant-private/data/jarvis/desk/files/$TID/($RX_AUD|$PHO)\'$ ]] && return 0
   return 1
 }
 SSH_OK_AT=0
@@ -318,7 +320,7 @@ get_audio() {
   esac
   printf '%s' "$T" | jq -r '.conversation | to_entries[] | .key as $i | .value.from as $w | (.value.audio // [])[] | [($i + 1), .n, (.secs // 0), (if .text then "1" elif .failed then "f" else "0" end), (.text // "" | gsub("[\t\n\r]"; " ")), ($w // "" | gsub("[\t\n\r]"; " "))] | @tsv' 2>/dev/null |
   while IFS=$'\t' read -r I N SECS HAS TXT WHO; do
-    [[ "$N" =~ ^$AUD$ ]] || continue
+    [[ "$N" =~ ^$RX_AUD$ ]] || continue
     if [ "$HAS" = 1 ]; then printf '%s' "$TXT" > "$OUT/$N.txt"
     elif [ "$HAS" = f ]; then TXT=""
     else
@@ -488,8 +490,9 @@ $(cat "$WS/traverse/ops/jarvis-cloud-prompt.md" 2>/dev/null || cat "$OPS/jarvis-
   rm -f "$ST/write-ok"
   capture "$ID" > /dev/null
   [ "$RC" = 10 ] && { DID=1; return 0; }
-  if final_since "$ID" "$SS" "$K"; then log "$ID: done (exit $RC)"
-  elif [ -f "$OUTBOX/jobs/$ID.json" ] && [ "$(jq -r '.at // 0' "$OUTBOX/jobs/$ID.json")" -ge "$SS" ]; then log "$ID: queued for the laptop (exit $RC)"
+  # a job this session queued comes first (20 Nov): an answer a few seconds earlier falls inside final_since's 5 s slack and read as "done"
+  if [ -f "$OUTBOX/jobs/$ID.json" ] && [ "$(jq -r '.at // 0' "$OUTBOX/jobs/$ID.json")" -ge "$SS" ]; then log "$ID: queued for the laptop (exit $RC)"
+  elif final_since "$ID" "$SS" "$K"; then log "$ID: done (exit $RC)"
   else
     if [ "$K" = jarvis ]; then printf "I couldn't finish this one, sir: the session on the cloud machine ended without a final answer (exit %s). I've left it for the laptop; send it again if it's urgent." "$RC" | srv "$JD reply $ID matthew" >> "$LOG" 2>&1
     else printf "I couldn't finish looking into this one, so I've passed it to Matthew. He'll get back to you." | srv "${TOOLS}help-reply.php $ID matthew" >> "$LOG" 2>&1; fi
@@ -554,6 +557,7 @@ shadow_look() {   # shadow_look <staff|jarvis|c-slug> <how>
   ID=$(printf '%s' "$T" | jq -r '.id // ""' 2>/dev/null); [[ "$ID" =~ ^$TID$ ]] || return 0
   N=$(printf '%s' "$T" | jq '.conversation | length' 2>/dev/null); [[ "$N" =~ ^[0-9]+$ ]] || N=0
   [ -n "${SEEN[$K:$ID:$N]:-}" ] && return 0; SEEN[$K:$ID:$N]=1
+  grep -qF "$(printf '\t%s\t%s\t%s\t' "$K" "$ID" "$N")" "$ST/shadow/shadow.tsv" 2>/dev/null && return 0   # seen before a restart (20 Nov)
   BY=$(printf '%s' "$T" | jq -r '.by // ""'); MM=0; [ "$BY" = "Matthew Sharpe" ] && [ "$(only_matthew "$T")" = 1 ] && MM=1
   case "$K" in c-*) W=install; WHAT="restricted read-only session (sonnet)";; *) if [ "$MM" = 1 ]; then W=matthew; WHAT="quick pass then opus"; else W=office; WHAT="office session (sonnet)"; fi;; esac
   local WT=no; case "$K" in c-*) WT=n/a;; *) ws_ok && write_turn "$ID" && WT=yes; rm -f "$ST/write-ok";; esac
