@@ -14,5 +14,6 @@ try { $rm = jvRemindersRun(); } catch (\Throwable $e) { $rm = ['error' => mb_sub
 if (in_array('--reminders', $argv ?? [], true)) { echo json_encode(['reminders' => $rm], JSON_UNESCAPED_SLASHES) . "\n"; exit; }
 if (in_array('--brief', $argv ?? [], true)) { $b = brRefresh('cron'); echo json_encode(['brief' => ['at' => (int) ($b['at'] ?? 0), 'failed' => $b['failed'] ?? [], 'by' => $b['spoken']['by'] ?? '']], JSON_UNESCAPED_SLASHES) . "\n"; exit; }
 try { $br = brCronMaybe(); } catch (\Throwable $e) { $br = ['error' => mb_substr($e->getMessage(), 0, 200)]; }
+try { $sa = spendAlertMaybe(); } catch (Throwable $e) { $sa = ['error' => mb_substr($e->getMessage(), 0, 200)]; }   /* 21 Nov: a push at 75/90/100% of the API budget */
 $r = checkAll();
-echo json_encode(['reminders' => $rm, 'brief' => $br] + $r, JSON_UNESCAPED_SLASHES) . "\n";
+echo json_encode(['reminders' => $rm, 'brief' => $br, 'spendAlert' => $sa] + $r, JSON_UNESCAPED_SLASHES) . "\n";

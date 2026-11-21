@@ -30,6 +30,24 @@ function trackUsage(string $kind, $r): void {
         });
     } catch (\Throwable $e) { /* the count is a convenience: never let it stop the work */ }
 }
+/** 21 Nov (Matthew: "just notify me instead when we are getting close to the budget"): one push to his phones as this month's API spend
+    passes 75%, 90% and 100% of the budget (settings budget, $100), each once a month. Run from cron.php. Returns the levels just sent. */
+function spendAlertMaybe(): array {
+    $s = spendSummary(); $b = (float) $s['budget']; if ($b <= 0 || !function_exists('jvPush')) return [];
+    $pct = $s['usd'] / $b * 100; $sent = [];
+    jedit('spend-alerts.json', function ($a) use ($s, $pct, $b, &$sent) {
+        $done = (array) ($a[$s['month']] ?? []);
+        foreach ([75, 90, 100] as $lv) if ($pct >= $lv && !in_array($lv, $done, true)) $sent[] = $lv;
+        if (!$sent) return $a;
+        $top = max($sent);
+        $msg = 'The Assistant has used $' . number_format($s['usd'], 2) . ' of its $' . number_format($b, 0) . ' monthly API budget (' . (int) floor($pct) . '%).'
+            . ($top >= 100 ? ' Over budget: change it in Settings, or it keeps going.' : ' It resets on the 1st.');
+        if (jvPush($top >= 100 ? 'API budget reached' : 'API budget at ' . $top . '%', $msg, '/a-e018bb82/jarvis/', 'jv-budget-' . $s['month'])) $a[$s['month']] = array_values(array_unique(array_merge($done, $sent)));
+        else $sent = [];
+        return array_slice($a, -13, null, true);
+    });
+    return $sent;
+}
 /** this month's spending, for the page */
 function spendSummary(): array {
     $month = (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m');

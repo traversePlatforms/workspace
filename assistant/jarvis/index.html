@@ -423,7 +423,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     close: '<path d="M6 6l12 12M18 6L6 18"/>',
     chev: '<path d="M9 6l6 6-6 6"/>',
     fold: '<path d="M5 12h14"/>',
-    cog: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+    cog: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',   /* 21 Nov: a real gear (it looked like Today's sun) */
     pen: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
     open: '<path d="M14 4h6v6M20 4l-9 9"/><path d="M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/>',
     swap: '<path d="M7 7h11l-3-3M17 17H6l3 3"/>',
@@ -905,14 +905,22 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   }
 
   /* ------------------------------------------------------------ drawing the screen */
+  /* 21 Nov: Settings (the gear on the laptop): Phone alerts, Talk without Siri, and the Assistant's own settings page */
+  function settingsSheet() {
+    var sh = sheet('Settings', 'Alerts, voice and the Assistant'), w = el('div', 'vlist');
+    var al = btn(null, 'bell', null, function () { sh.force(); notifySheet(); }), ax = el('span'); add(ax, 'Phone alerts and the app', el('small', null, S.pushOn ? 'On for this device' : 'Off on this device: tap to turn on')); al.appendChild(ax); al.id = 'notifybtn'; if (!S.pushOn) al.style.color = 'var(--warn)';
+    var vb = btn(null, 'wave', null, function () { sh.force(); voiceSheet(); }), vx = el('span'); add(vx, 'Talk without Siri', el('small', null, '“Hey Jarvis”, the iPhone Shortcut, voice keys and the natural voice')); vb.appendChild(vx); vb.id = 'voicebtn';
+    var as = btn(null, 'cog', null, function () { sh.force(); openView('settings'); }), sx = el('span'); add(sx, 'Assistant settings', el('small', null, 'Inboxes, sorting, signatures and keys')); as.appendChild(sx); as.id = 'asettings';
+    add(w, al, vb, as); add(sh.body, w);
+  }
   function topBar() {
-    var t = el('header', 'top'), lp = laptop(), sp = S.home && S.home.spend;
+    var t = el('header', 'top'), lp = laptop();
     var st = el('span', 'st' + (lp.on ? '' : ' off')); add(st, el('i'), lp.text); st.title = 'From the overnight check, which reports from your laptop every 30 minutes';
-    add(t, el('span', 'wm', 'J.A.R.V.I.S.'), st, S.home ? el('span', null, plural(accts().length, 'inbox', 'inboxes') + ' linked') : null, sp ? el('span', null, 'API $' + sp.usd.toFixed(2) + ' / $' + Math.round(sp.budget)) : null);
+    /* 21 Nov (Matthew): no "4 inboxes linked" and no API cost here ("just notify me instead when we are getting close to the budget": cron.php
+       pushes at 75%, 90% and 100%); Phone alerts and Talk without Siri now sit inside Settings, the gear */
+    add(t, el('span', 'wm', 'J.A.R.V.I.S.'), st);
     var vw = el('div', 'vw');
-    [['inbox', 'Full inbox'], ['cart', 'Groceries'], ['out', 'Outbox'], ['peak', 'Peak desk'], ['posts', 'Posts'], ['leaf', 'Sixfold app'], ['cog', 'Settings']].forEach(function (v) { var b = btn(null, v[0], null, function () { openView({ inbox: 'inbox', cart: 'groceries', out: 'outbox', peak: 'peak', posts: 'posts', leaf: 'sixfold', cog: 'settings' }[v[0]]); }); b.title = v[1]; b.setAttribute('aria-label', v[1]); b.setAttribute('data-view', v[0]); vw.appendChild(b); });
-    var nb = btn(null, 'bell', null, function () { notifySheet(); }); nb.id = 'notifybtn'; nb.title = 'Phone alerts and the app'; nb.setAttribute('aria-label', 'Phone alerts and the app'); if (!S.pushOn) nb.style.color = 'var(--warn)'; vw.insertBefore(nb, vw.firstChild);
-    var vs = btn(null, 'wave', null, function () { voiceSheet(); }); vs.id = 'voicebtn'; vs.title = 'Talk without Siri'; vs.setAttribute('aria-label', 'Talk without Siri'); vw.insertBefore(vs, vw.firstChild);
+    [['inbox', 'Full inbox'], ['cart', 'Groceries'], ['out', 'Outbox'], ['peak', 'Peak desk'], ['posts', 'Posts'], ['leaf', 'Sixfold app'], ['cog', 'Settings']].forEach(function (v) { var b = btn(null, v[0], null, v[0] === 'cog' ? function () { settingsSheet(); } : function () { openView({ inbox: 'inbox', cart: 'groceries', out: 'outbox', peak: 'peak', posts: 'posts', leaf: 'sixfold', cog: 'settings' }[v[0]]); }); b.title = v[1]; b.setAttribute('aria-label', v[1]); b.setAttribute('data-view', v[0]); vw.appendChild(b); });
     /* 21 Nov: no Drive button on the laptop (Matthew: "we should remove the driving button up top on the laptop version that way the banner has less"); the phone header keeps it */
     add(t, vw, el('span', 'clock mono', nowLine()));
     return t;

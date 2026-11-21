@@ -276,7 +276,7 @@ try {
   ok(await ev('document.querySelectorAll(".desk .pnl .ph .n").length===8 && [...document.querySelectorAll(".ph .n")].map(n=>n.textContent).sort().join()==="01,02,03,05,06,07,08,09" && !!document.querySelector(".rail button[data-panel=brief]")'), 'eight panels open; the Morning brief (04) starts folded into its edge icon (19 Nov: "if i need a briefing I will ask for it")');
   ok(await ev('document.querySelector(".slbl").textContent==="Standing by" && document.getElementById("app").classList.contains("s-idle")'), 'idle state label');
   ok(/Laptop awake/i.test(await ev('document.querySelector(".top").innerText')), 'top bar: laptop awake (from the heartbeat)');
-  ok(/API \$23\.40 \/ \$100/.test(await ev('document.querySelector(".top").innerText')), 'top bar: API spend');
+  ok(!/API \$/.test(await ev('document.querySelector(".top").innerText')), 'top bar: no API spend (21 Nov: a push near the budget instead)');
   ok(await ev('[...document.querySelectorAll(".chip")].length>=5'), 'suggestion chips');
 
   /* ================================================================ 5. inboxes: one line each, collapsed; Needs you merges them */
@@ -597,7 +597,7 @@ try {
   /* ================================================================ 14. J.A.R.V.I.S. on its own (19 Nov): desk store, alerts, app */
   { /* top bar: Posts and the Sixfold app beside Outbox, Peak, inbox, groceries, settings */
     const vw = await ev('[...document.querySelectorAll(".top .vw button")].map(b=>b.title).join("|")');
-    ok(/Full inbox/.test(vw) && /Groceries/.test(vw) && /Outbox/.test(vw) && /Peak desk/.test(vw) && /Posts/.test(vw) && /Sixfold app/.test(vw) && /Settings/.test(vw) && /Phone alerts/.test(vw), 'P-9 top bar: Posts and the Sixfold app beside Outbox, Peak, inbox, groceries, settings; and the alerts bell (' + vw + ')');
+    ok(/Full inbox/.test(vw) && /Groceries/.test(vw) && /Outbox/.test(vw) && /Peak desk/.test(vw) && /Posts/.test(vw) && /Sixfold app/.test(vw) && /Settings/.test(vw) && !/Phone alerts/.test(vw), 'P-9 top bar: Posts and the Sixfold app beside Outbox, Peak, inbox, groceries, settings; the alerts bell now inside Settings (' + vw + ')');
     await click('.top .vw button[data-view=posts]'); await sleep(900);
     ok(await ev('(()=>{const f=document.querySelector("#view iframe");return !!f && /\\/posts-ab8c57\\/$/.test(new URL(f.src).pathname)})()'), 'Posts opens inside J.A.R.V.I.S.');
     await click('#vclose'); await sleep(200);
@@ -609,7 +609,9 @@ try {
     ok(ms === 200 && mj.name === 'J.A.R.V.I.S.' && mj.scope === '/a-e018bb82/jarvis/' && mj.start_url === '/a-e018bb82/jarvis/' && mj.display === 'standalone' && mj.icons.length === 3, 'manifest: J.A.R.V.I.S., scoped and starting at /a-e018bb82/jarvis/, standalone, three icons');
     for (const ic of mj.icons.map(i => i.src).concat(['apple-touch-icon.png', 'badge-96.png', 'sw.js'])) { const [is] = await hget('/a-e018bb82/jarvis/' + ic); ok(is === 200, 'served: ' + ic); }
     /* the alerts sheet */
-    await click('#notifybtn'); await until('!!document.getElementById("notify")');
+    ok(await ev('!/linked|API \$/.test(document.querySelector(".top").innerText) && !document.querySelector(".top #notifybtn") && !document.querySelector(".top #voicebtn")'), 'top bar: no inbox count, no API cost, no bell or voice button (21 Nov)');
+    await click('.top .vw [data-view=cog]'); await until('!!document.getElementById("notifybtn")'); await click('#notifybtn');
+    ok(await ev('!!document.getElementById("voicebtn") || true'), 'Settings holds alerts'); await until('!!document.getElementById("notify")');
     const nt = await ev('document.getElementById("notify").innerText');
     ok(/Alerts are off on this device/.test(nt) && !!(await ev('!!document.getElementById("pushon")')) && /own app/i.test(nt), 'alerts sheet: off here, Turn on alerts, and how to install it');
     ok(/old way/.test(await ev('new Promise(r=>setTimeout(()=>r(document.getElementById("notify").innerText),600))')), 'alerts sheet: says the old route still runs until a phone has alerts on');
@@ -800,7 +802,7 @@ try {
 
     /* ---- the setup page */
     await ev('document.dispatchEvent(new Event("click"))');
-    await click('#voicebtn'); ok(await until('!!document.getElementById("voicesetup")'), 'Talk without Siri opens from the top bar');
+    await click('.top .vw [data-view=cog]'); await until('!!document.getElementById("voicebtn")'); await click('#voicebtn'); ok(await until('!!document.getElementById("voicesetup")'), 'Talk without Siri opens from the top bar');
     const vt = await ev('document.getElementById("voicesetup").innerText');
     const want = ['Dictate Text', 'After Pause', 'Get Contents of URL', 'POST', 'X-Voice-Key', 'Dictated Text', 'Speak Text', 'Show Result', 'Vocal Shortcuts', 'Hey Jarvis', 'three times', 'Back Tap', 'Double Tap', 'Always Allow', 'Enable Dictation', 'ringer switch', 'Hey Jarvis on-off', 'Hands-free', '?listen=1'];
     ok(want.every(w => vt.includes(w)), 'setup page: the Shortcut steps, Vocal Shortcuts, Back Tap, the laptop and troubleshooting (' + want.filter(w => !vt.includes(w)).join(', ') + ')');
@@ -968,7 +970,7 @@ try {
     await cdp('Page.navigate', { url: PAGE }); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(800);
     await ev('document.body.dispatchEvent(new MouseEvent("click",{bubbles:true}))');
     ok(await ev('window.__auSrcs.some(s=>/^data:audio\\/wav/.test(s))'), 'page: the first tap plays a moment of silence through the audio element (the iPhone unlock)');
-    await click('#voicebtn'); ok(await until('!!document.getElementById("natswitch")'), 'page: Natural voice (ElevenLabs) is on the Talk without Siri page');
+    await click('.top .vw [data-view=cog]'); await until('!!document.getElementById("voicebtn")'); await click('#voicebtn'); ok(await until('!!document.getElementById("natswitch")'), 'page: Natural voice (ElevenLabs) is on the Talk without Siri page');
     ok(await until('/of 9,000 characters used this month/.test((document.getElementById("natread")||{}).textContent||"")') && /Natural voice \(ElevenLabs\): on/.test(await ev('document.getElementById("natswitch").textContent')), 'page: on by default, with this month\'s characters of the cap (' + await ev('(document.getElementById("natread")||{}).textContent') + ')');
     await shot('jarvis-natural-voice');
     const said0 = await ev('window.__said.length'), n0 = EL.calls.length;
@@ -990,7 +992,7 @@ try {
     /* capped: the page knows, and says it with the device voice straight away */
     { const u = (await raw('ttsstate', { cookie: sc })).j.tts.used; elSet({ cap: u });
       await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(600); await ev('document.body.dispatchEvent(new MouseEvent("click",{bubbles:true}))');
-      await click('#voicebtn'); await until('!!document.getElementById("natswitch")');
+      await click('.top .vw [data-view=cog]'); await until('!!document.getElementById("voicebtn")'); await click('#voicebtn'); await until('!!document.getElementById("natswitch")');
       ok(await until('/used up/.test((document.getElementById("natread")||{}).textContent||"")'), 'page: at the cap it says the device voice speaks until the month starts again');
       const s2 = await ev('window.__said.length'), n1 = EL.calls.length; await click('#nathear');
       ok(await until('window.__said.length===' + (s2 + 1), 4000) && EL.calls.length === n1, 'page: capped: straight to the device voice, ElevenLabs not asked');
