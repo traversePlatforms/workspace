@@ -39,9 +39,9 @@ LOG = os.path.join(HOME, 'wake.log')
 CHIME = os.path.join(HOME, 'chime.wav')
 CONFIG = os.path.join(HOME, 'config.json')
 DEFAULTS = {
-    'threshold': 0.5,                 # openWakeWord's own suggested starting point; raise it in config.json if it wakes by mistake
+    'threshold': 0.7,                 # 21 Nov: 0.5 -> 0.7 (Matthew: "maybe it needs to refine it more"; it woke at 2 am and 5 am, and once on a 0.70 guess)
     'cooldown': 3.0,                  # seconds after a detection before it can fire again
-    'patience': 3,                    # frames in a row at or over the threshold (3 = 240 ms): a real "hey jarvis" holds 8 or more,
+    'patience': 5,                    # 21 Nov: 3 -> 5 (400 ms). Frames in a row at or over the threshold (3 = 240 ms): a real "hey jarvis" holds 8 or more,
                                       # a sound-alike ("hey Charles", "hey Travis") spikes for one (tested 19 Nov)
     'url': 'https://traverseplatforms.com/a-e018bb82/jarvis/?listen=1',
     'chrome': r'C:\Program Files\Google\Chrome\Application\chrome.exe',
@@ -49,6 +49,8 @@ DEFAULTS = {
     'title': 'J.A.R.V.I.S.',          # the page's <title>: how its window is found
     'battery_floor': 20,              # on battery below this percent, rest (mic closed)
     'chime': True,
+    'ignore_when_playing': True,      # 21 Nov: not while the laptop itself is playing sound (a video, music, J.A.R.V.I.S.'s own voice): those
+    'play_level': 0.03,               # were the likely false wakes. The speakers' peak level (0..1, Windows' own meter) above this = playing
 }
 FRAME = 1280                          # 80 ms at 16 kHz: what openWakeWord takes at a time
 
@@ -402,6 +404,27 @@ def below_normal():
         pass
 
 
+# ---------------------------------------------------------------- 21 Nov: is the laptop itself making sound? (Windows' output meter)
+_METER = None
+
+
+def speaker_level():
+    """the default speakers' peak level now (0..1), or -1 when it cannot be read (pycaw missing, no device): then nothing is ignored"""
+    global _METER
+    try:
+        if _METER is None:
+            from ctypes import cast, POINTER
+            from comtypes import CLSCTX_ALL
+            from pycaw.pycaw import AudioUtilities, IAudioMeterInformation
+            d = AudioUtilities.GetSpeakers()
+            dev = getattr(d, '_dev', d)
+            _METER = cast(dev.Activate(IAudioMeterInformation._iid_, CLSCTX_ALL, None), POINTER(IAudioMeterInformation))
+        return float(_METER.GetPeakValue())
+    except Exception:
+        _METER = None
+        return -1.0
+
+
 def run(once=False):
     import numpy as np
     if not once and single_instance() is None:
@@ -452,6 +475,11 @@ def run(once=False):
                 chunk = np.frombuffer(buf[:FRAME * 2], dtype=np.int16)
                 buf = buf[FRAME * 2:]
                 hit = det.feed(chunk, time.monotonic())
+                if hit is not None and c.get('ignore_when_playing', True):
+                    lv = speaker_level()
+                    if lv > float(c.get('play_level', 0.03)):
+                        log('ignored "hey jarvis" (%.2f): the laptop was playing sound (level %.2f)' % (hit, lv))
+                        continue
                 if hit is not None:
                     st = read_state()
                     write_state('listening', lastHeard=int(time.time()), heard=int(st.get('heard', 0)) + 1)
