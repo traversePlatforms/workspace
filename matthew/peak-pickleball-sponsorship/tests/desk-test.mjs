@@ -1029,6 +1029,64 @@ try {
     await as('Test Admin', 'templates', { world: 'sponsor', reset: true });   /* the starters back for the screens below */
   }
 
+  console.log('The research account (2026-11-21, Claire: looks companies up, notes what she finds, reaches nobody)');
+  {
+    const RES = addAccount('Test Research', 'research'), rs = client();
+    ok((await rs('signin', { code: RES })).role === 'research', 'research: the account signs in');
+    const RD = await rs('data'), RK = RD.sponsor && RD.sponsor.recs.find((r) => r.id === K.id);
+    ok(RD.ok && RD.sponsor.recs.length === D.sponsor.recs.length && RD.expo.recs.length === D.expo.recs.length && !!RK, 'research: it sees every sponsor and expo card');
+    ok(!RD.inbox && RD.sponsor.proposals.length === 0 && RD.sponsor.packages.length === 0 && RD.sponsor.hunterLeft === null && RD.sponsor.tours.length === 0 && RD.expo.tours.length === 0 && RD.sponsor.templates.length === 0,
+      'research: no Inbox, proposals, packages, prices, Hunter count, tours or templates in its data');
+    ok(!JSON.stringify(RD).includes('"dmails"') && !RD.sponsor.recs.some((r) => (r.touches || []).some((t) => t.mail)), 'research: no desk emails or the words of emails received');
+    ok(!RD.sponsor.owners.includes('Test Research') && !RD.expo.owners.includes('Test Research'), 'research: it never owns a company');
+    /* what it may do */
+    ok((await rs('note', { world: 'sponsor', id: K.id, note: 'Looked up: main phone from their contact page' })).ok && (await rs('note', { world: 'expo', id: XB.id, note: 'Looked up: website from the chamber listing' })).ok, 'research: notes on sponsor and expo cards');
+    ok((await rs('contact', { world: 'sponsor', id: K.id, name: '', role: 'General inbox', email: 'info@research-test.example', phone: '', keep: 1 })).ok, 'research: adds a general email to a sponsor card');
+    ok((await rs('contact', { world: 'expo', id: XB.id, name: '', role: 'Main line', email: '', phone: '(719) 555-0142', notes: 'From their own website', keep: 1 })).ok, 'research: adds a main phone to an expo card');
+    const RK2 = (await rs('data')).sponsor.recs.find((r) => r.id === K.id), mine = RK2.people.find((p) => p.email === 'info@research-test.example');
+    ok(!!mine && (await rs('contactedit', { world: 'sponsor', id: K.id, key: mine.key, n: mine.kn, email: 'hello@research-test.example', keep: 1 })).ok, 'research: corrects a contact');
+    const RD2 = await rs('data'), NS = RD2.sponsor.recs.find((r) => !r.site && r.id !== K.id);
+    ok((await rs('site', { world: 'sponsor', id: NS.id, site: 'research-test.example' })).ok, 'research: adds a website to a sponsor card');
+    const NOS = RD2.sponsor.recs.find((r) => !r.site && !r.callSrc && r.id !== NS.id);
+    const sc = await rs('scan', { world: 'sponsor', id: NOS.id });
+    ok(sc._status === 400 && /website/i.test(sc.error || ''), 'research: the free look-up is open to it (a card with no website says to add one first)');
+    ok((await rs('jvlist')).ok && (await rs('jvlist')).tickets.length === 0, 'research: the chat list answers, empty');
+    const rows = lines('events.log').concat(lines('expo-events.log')).map((l) => JSON.parse(l)).filter((r) => r.by === 'Test Research');
+    const RT = ['note', 'contact', 'contactedit', 'site', 'xnote', 'xcontact', 'xcontactedit'];
+    ok(rows.length >= 6 && rows.every((r) => RT.includes(r.t)), 'research: every row it wrote is a note, a contact, a contact edit or a website, signed with its name (' + [...new Set(rows.map((r) => r.t))].join(', ') + ')');
+    /* what it may not do: every one refused by the server */
+    const st0 = (await b('data')).sponsor.recs.find((r) => r.id === K.id).stage;
+    const nk = ((await rs('data')).sponsor.recs.find((r) => r.id === K.id).notes.find((n) => n.by === 'Test Research') || {}).k || 'x';
+    const RNO = [['touch', { world: 'sponsor', id: K.id, m: 'call', out: 'talked' }], ['touch', { world: 'expo', id: XB.id, m: 'email', out: 'sent' }], ['touchdel', { id: K.id, k: 'x' }],
+      ['stage', { world: 'sponsor', id: K.id, stage: 'lost', why: 'x' }], ['stage', { world: 'expo', id: XB.id, stage: 'quote', amount: 500 }], ['status', { id: K.id, status: 'no' }], ['xstage', { id: XB.id, stage: 'lost' }],
+      ['owner', { world: 'sponsor', id: K.id, owner: 'Test Seller' }], ['next', { world: 'sponsor', id: K.id, date: later(3), what: 'x' }],
+      ['tour', { world: 'sponsor', id: K.id, date: later(5), time: '10:00' }], ['tourmove', { tid: 'x', date: later(6), time: '10:00' }], ['tourdel', { tid: 'x' }], ['tourout', { tid: 'x', out: 'toured' }],
+      ['proposal', { id: K.id, lines: [{ name: 'Court', price: 12000 }] }], ['signed', { id: K.id, start: today(), months: 12 }], ['sponsor', { name: 'New Co', start: today() }], ['packages', { packages: [{ name: 'x', price: 1 }] }], ['pl', { services: [] }],
+      ['del', { world: 'sponsor', id: K.id }], ['del', { world: 'expo', id: XB.id }], ['back', { id: K.id }], ['notedel', { world: 'sponsor', id: K.id, nk }], ['contactdel', { world: 'sponsor', id: K.id, key: mine.key, n: 0 }], ['dnc', { world: 'sponsor', id: K.id, key: mine.key, on: true }],
+      ['add', { world: 'sponsor', name: 'Research Added Co' }], ['add', { world: 'expo', name: 'Research Added Expo' }], ['todo', { id: K.id, text: 'x' }],
+      ['dmsend', { world: 'sponsor', id: K.id, to: 0, subject: 'x', text: 'x' }], ['dmretry', { id: K.id, ref: 'x' }], ['dmpreview', { id: K.id, subject: 'x', text: 'x' }], ['tourmail', { tid: 'x' }], ['tourpreview', { id: K.id, date: later(5), time: '10:00' }],
+      ['tourmailtest', { email: 'x@example.com' }], ['tourmailset', { on: true }], ['dmset', { on: true }], ['bookset', { on: true }], ['bookgeneric', {}], ['booklink', {}], ['settings', { on: false, to: [] }], ['templates', { world: 'sponsor', reset: true }], ['eodpreview', {}],
+      ['inbox', null], ['inboxone', null], ['inboxreply', { iid: 'x', text: 'x' }], ['inboxclaim', { iid: 'x', on: true }], ['inboxdone', { iid: 'x', on: true }], ['inboxattach', { iid: 'x', w: 'sponsor', id: K.id }],
+      ['emailed', { world: 'sponsor', id: K.id, to: 'x@example.com' }], ['emailreply', { world: 'sponsor', id: K.id, from: 'x@example.com' }], ['emailbounce', { world: 'sponsor', id: K.id, to: 'x@example.com' }],
+      ['scan', { world: 'sponsor', id: K.id, hunter: true }], ['myset', { sig: 'x' }], ['callink', {}], ['pushkey', null], ['pushsub', { subscription: {} }], ['alertset', { inbox: true }], ['alerttest', {}],
+      ['jvsend', { text: 'Please send an email to Kaiser for me' }], ['jvclose', { id: 'h00000000000000abcd' }]];
+    let rn = 0; const rbad = [];
+    for (const [act, body] of RNO) { const z = await rs(act, body); if (z._status === 403) rn++; else rbad.push(act + ':' + z._status); }
+    ok(rn === RNO.length, `research: the server refuses everything else (403 on ${rn} of ${RNO.length}: touches, stages, owners, follow-ups, tours, proposals, prices, removing, Don’t contact, adding companies, emails, the Inbox, templates, settings, Hunter, alerts, the chat)` + (rbad.length ? ' ' + rbad.join(' ') : ''));
+    const KA = (await b('data')).sponsor.recs.find((r) => r.id === K.id);
+    ok(KA.stage === st0 && lines('events.log').concat(lines('expo-events.log')).map((l) => JSON.parse(l)).filter((r) => r.by === 'Test Research').every((r) => RT.includes(r.t)), 'research: and nothing else was written (the stage is unchanged)');
+    /* the same limits through J.A.R.V.I.S. (php desk.php as runs as the person, with their role) */
+    const asR = (act, body = {}) => new Promise((r) => { const p = execFile('php', [join(WEB, 'api/desk.php'), 'as', 'Test Research', act], { env }, (e, so) => { let j = null; try { j = JSON.parse(so); } catch {} r({ code: e ? e.code : 0, out: so, j }); }); p.stdin.end(JSON.stringify(body)); });
+    let z = await asR('note', { id: K.id, note: 'Looked up: via the chat' }); ok(z.code === 0 && z.j && z.j.ok, 'research via J.A.R.V.I.S.: a note goes through');
+    let jn = 0; const jbad = [];
+    const jlist = [['touch', { id: K.id, m: 'call', out: 'talked' }], ['stage', { id: K.id, stage: 'lost', why: 'x' }], ['owner', { id: K.id, owner: 'Test Seller' }], ['tour', { id: K.id, date: later(5), time: '10:00' }], ['del', { id: K.id }], ['templates', { world: 'sponsor', reset: true }], ['contactdel', { id: K.id, key: mine.key }], ['add', { name: 'Via chat Co' }], ['next', { id: K.id, date: later(2) }]];
+    for (const [act, body] of jlist) { z = await asR(act, body); if (z.code === 1 && z.j && z.j.code === 403) jn++; else jbad.push(act + ':' + z.code); }
+    ok(jn === jlist.length, `research via J.A.R.V.I.S.: touches, stages, owners, tours, follow-ups, removing, templates and adding are refused (${jn} of ${jlist.length})` + (jbad.length ? ' ' + jbad.join(' ') : ''));
+    z = await asR('scan', { id: K.id, hunter: true }); ok(z.code === 3, 'research via J.A.R.V.I.S.: Hunter refused');
+    z = await asR('dmsend', { id: K.id }); ok(z.code === 3, 'research via J.A.R.V.I.S.: sending email refused');
+    globalThis.__RES = RES;
+  }
+
   console.log('Several people at once');
   D = await b('data'); const ids = NEW.filter((l) => find('sponsor', l.id).stage === 'new').slice(0, 12).map((l) => l.id);   /* companies nobody has touched yet */
   const conc = await Promise.all(ids.map((id, i) => new Promise((res) => execFile('php', [join(WEB, 'api/desk.php'), 'emailed', 'sponsor', id, `p${i}@example.com`], { env }, (e, so, se) => res(e ? 'cli err ' + (se || so || e.message).slice(0, 200) : 'ok')))).concat(
@@ -1557,6 +1615,19 @@ try {
   ok(xo.hidden && xo.world === 'expo' && !xo.leak, 'the expo-only account: no Sponsors switch, the Expo leads only' + (xo.hidden && xo.world === 'expo' && !xo.leak ? '' : ' ' + JSON.stringify(xo)));
   await js(`location.hash='#sponsor/pipe'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
   ok(await js(`document.querySelector('main').dataset.world==='expo'`), 'a sponsor address still lands on the Expo leads');
+  /* the research account in the browser (2026-11-21, Claire) */
+  await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
+  await js(`(()=>{const i=document.querySelector('.signin input');i.value='${globalThis.__RES}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
+  await waitFor(`!!document.querySelector('.shead')`, 'the research account\u2019s page'); await sleep(400);
+  const rv = await js(`({tabs:[...document.querySelectorAll('#tabs [data-tab]')].map(b=>b.dataset.tab).join(),add:[...document.querySelectorAll('.shead button')].some(b=>/Add a/.test(b.textContent)),world:!document.getElementById('world').hidden})`);
+  ok(rv.tabs === 'list,more' && !rv.add && rv.world, 'research in the browser: Companies and More only, both lists, no Add a company' + (rv.tabs === 'list,more' && !rv.add ? '' : ' ' + JSON.stringify(rv)));
+  await js(`(()=>{const r=[...document.querySelectorAll('.row[data-id]')].find(x=>x.dataset.id===${JSON.stringify(K.id)})||document.querySelector('.row[data-id]');r.click();return 1})()`); await sleep(700);
+  const rc = await js(`(()=>{const d=document.querySelector('.detail');return {touch:!!d.querySelector('.touchp'),stage:!!d.querySelector('.stagesec'),dm:!!d.querySelector('.dmsec'),looked:!!d.querySelector('[data-act="looked"]'),tel:d.querySelectorAll('a[href^="tel:"],a[href^="sms:"],a[href^="mailto:"]').length,rm:[...d.querySelectorAll('button')].some(b=>/^Remove/.test(b.textContent.trim())),dnc:!!d.querySelector('[data-dnc]'),edit:!!d.querySelector('[data-act="cedit"]'),owner:d.querySelector('.ownerpick').disabled,hunter:/Find people \\(Hunter/.test(d.textContent)}})()`);
+  ok(rc && !rc.touch && !rc.stage && !rc.dm && rc.looked && rc.tel === 0 && !rc.rm && !rc.dnc && rc.edit && rc.owner && !rc.hunter, 'research card: no touch, stage, email, Remove or Don\u2019t contact; phones and emails as text only; Edit and Mark looked up there; the owner can\u2019t be changed ' + JSON.stringify(rc));
+  await js(`(()=>{const t=document.querySelector('.lookedsec textarea');t.value='Main phone from their contact page';document.querySelector('[data-act="looked"]').click();return 1})()`); await sleep(1200);
+  ok(await js(`/Looked up by Test Research/.test((document.querySelector('.detail .lookedsec')||{}).textContent||'')`), 'research card: Mark looked up saves a note and shows who looked it up');
+  ok(await js(`!document.body.classList.contains('jvchat-on')`), 'research in the browser: no J.A.R.V.I.S. button');
+  await shot('research-card.png');
   ok(!errors.length, 'no page errors' + (errors.length ? ': ' + errors[0] : ''));
 } catch (e) { failN++; console.log('  FAIL threw: ' + e.stack); }
 finally {

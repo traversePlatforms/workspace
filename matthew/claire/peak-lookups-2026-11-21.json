@@ -1,0 +1,229 @@
+[
+ {
+  "w": "sponsor",
+  "id": "4596f07f38",
+  "name": "Kaiser Permanente",
+  "kind": "Health insurer / care",
+  "score": 8,
+  "pri": null,
+  "missing": [
+   "website",
+   "main phone"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "3dd3f486c9",
+  "name": "UCHealth (Memorial Hospital; Memorial North)",
+  "kind": "Hospital system",
+  "score": 7,
+  "pri": null,
+  "missing": [
+   "website"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "661cff49c7",
+  "name": "BOK Financial",
+  "kind": "Bank",
+  "score": 6,
+  "pri": null,
+  "missing": [
+   "website"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "fbe0b56cf6",
+  "name": "Molson Coors",
+  "kind": "Beverage",
+  "score": 6,
+  "pri": null,
+  "missing": [
+   "website"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "df789d75c8",
+  "name": "OrangeTheory",
+  "kind": "Fitness",
+  "score": 6,
+  "pri": null,
+  "missing": [
+   "website"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "a04ec8d03e",
+  "name": "Cheyenne Mountain Resort",
+  "kind": "Resort",
+  "score": 5,
+  "pri": null,
+  "missing": [
+   "website",
+   "general email"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "1c5c2bf8c4",
+  "name": "Climax Molybdenum",
+  "kind": "Mining",
+  "score": 5,
+  "pri": null,
+  "missing": [
+   "website",
+   "main phone"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "ee682c7406",
+  "name": "Great Range Bison",
+  "kind": "Food",
+  "score": 4,
+  "pri": null,
+  "missing": [
+   "website",
+   "general email"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "739ba8372e",
+  "name": "McLane Company",
+  "kind": "Distribution",
+  "score": 5,
+  "pri": null,
+  "missing": [
+   "website"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "ccc15dfbcc",
+  "name": "Republic Services",
+  "kind": "Waste and recycling",
+  "score": 5,
+  "pri": null,
+  "missing": [
+   "website"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "36957bd59c",
+  "name": "PCL Construction",
+  "kind": "Construction",
+  "score": 5,
+  "pri": null,
+  "missing": [
+   "website"
+  ]
+ },
+ {
+  "w": "sponsor",
+  "id": "5d403ce2e4",
+  "name": "Concept Restaurants",
+  "kind": "Restaurant group",
+  "score": 5,
+  "pri": null,
+  "missing": [
+   "website"
+  ]
+ },
+ {
+  "w": "expo",
+  "id": "x5572b674f",
+  "name": "American Consumer Shows",
+  "kind": "Bridal & family expos",
+  "score": null,
+  "pri": 1,
+  "missing": [
+   "general email"
+  ]
+ },
+ {
+  "w": "expo",
+  "id": "x1f5fbb949",
+  "name": "Colorado Cosmic Con (volunteer-run, local)",
+  "kind": "Comic, anime, gaming & esports",
+  "score": null,
+  "pri": 1,
+  "missing": [
+   "main phone",
+   "general email"
+  ]
+ },
+ {
+  "w": "expo",
+  "id": "x92c210e88",
+  "name": "Just Between Friends Colorado Springs (franchise)",
+  "kind": "Consumer & lifestyle expos",
+  "score": null,
+  "pri": 1,
+  "missing": [
+   "main phone",
+   "general email"
+  ]
+ },
+ {
+  "w": "expo",
+  "id": "xb28d4fde7",
+  "name": "Front Range Makers Market",
+  "kind": "Craft, holiday & vintage markets",
+  "score": null,
+  "pri": 1,
+  "missing": [
+   "main phone"
+  ]
+ },
+ {
+  "w": "expo",
+  "id": "xd60f5f31c",
+  "name": "Vintage Market Days of Colorado Springs (franchise of Vintage Market Days)",
+  "kind": "Craft, holiday & vintage markets",
+  "score": null,
+  "pri": 1,
+  "missing": [
+   "main phone"
+  ]
+ },
+ {
+  "w": "expo",
+  "id": "x4cc5d567c",
+  "name": "Body Mind Spirit Expo (BMSE)",
+  "kind": "Fitness & wellness expos",
+  "score": null,
+  "pri": 1,
+  "missing": [
+   "general email"
+  ]
+ },
+ {
+  "w": "expo",
+  "id": "x7f46e091e",
+  "name": "Colorado Springs Mineralogical Society",
+  "kind": "Hobby, collectibles & gun shows",
+  "score": null,
+  "pri": 1,
+  "missing": [
+   "main phone",
+   "general email"
+  ]
+ },
+ {
+  "w": "expo",
+  "id": "x8dd4f942d",
+  "name": "Nationwide Expos",
+  "kind": "Home & garden shows",
+  "score": null,
+  "pri": 1,
+  "missing": [
+   "general email"
+  ]
+ }
+]

@@ -14,7 +14,9 @@
  *
  * Sign-in: a 6-digit code per person, kept hashed. admin = Matthew; seller = Brandon, Nneka, Lance, Cai: the same screens and powers; expo =
  * the Expo leads only, enforced here; Claude Check reads and saves nothing. Who can sign in is changed on the server only:
- *   php desk.php addaccount "Name" admin|seller|expo     (prints the code once)
+ *   php desk.php addaccount "Name" admin|seller|expo|research   (prints the code once)
+ * research (2026-11-21, Claire; Matthew: "start her on ... the peak lead research"): looks companies up and writes down what she finds,
+ * and nothing else (RESEARCH_OK below, enforced here for the page and for php desk.php as).
  *   php desk.php newcode "Name"                          (a lost code: a new one, same role)
  * Look-ups (2026-10-24): php desk.php rescan [15] (hourly, from the morning-email cron) | scan <lead id> [--hunter]
  * The records: php desk.php rebuild | check
@@ -56,9 +58,11 @@
  *   php desk.php inboxcount  how many emails are open, done and Other (counts only) */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-20.3';
+const BUILD = '2026-11-21.2';
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
+/* what the research account may do (2026-11-21, handleIn explains) */
+const RESEARCH_OK = ['data', 'note', 'site', 'scan', 'contact', 'contactedit', 'jvlist'];
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
 require __DIR__ . '/desk-store.php';
 if (!is_dir(DATA_DIR)) { if ($LOCAL) @mkdir(DATA_DIR, 0770, true); else { http_response_code(500); exit('{"ok":false,"error":"No data folder."}'); } }
@@ -78,7 +82,7 @@ function sesCookie(string $tok, string $name, int $now): void {
 if (PHP_SAPI === 'cli') {
     [$cmd, $name, $role] = [$argv[1] ?? '', $argv[2] ?? '', $argv[3] ?? 'seller'];
     $json = fn($v) => print(json_encode($v, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
-    if ($cmd === 'addaccount' && $name !== '' && in_array($role, ['admin', 'seller', 'expo'], true)) {
+    if ($cmd === 'addaccount' && $name !== '' && in_array($role, ['admin', 'seller', 'expo', 'research'], true)) {
         $acc = jread('accounts.json', ['codes' => []]);
         do { $code = (string) random_int(100000, 999999); } while (isset($acc['codes'][codeHash($code)]));
         $acc['codes'][codeHash($code)] = ['name' => clean($name, 40), 'role' => $role, 'at' => time()];
@@ -175,7 +179,7 @@ if (PHP_SAPI === 'cli') {
         try { $r = handleIn($act, !$read, $body, (string) $who['name'], (string) $who['role']); $json($r); exit(empty($r['ok']) ? 1 : 0); }
         catch (DeskFail $e) { $json(['ok' => false, 'error' => $e->getMessage(), 'code' => $e->getCode()]); exit(1); }
     }
-    fwrite(STDERR, "usage: php desk.php as \"Name\" <action> < body.json | addaccount \"Name\" admin|seller|expo | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note] | contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by \"Name\"]\n");
+    fwrite(STDERR, "usage: php desk.php as \"Name\" <action> < body.json | addaccount \"Name\" admin|seller|expo|research | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note] | contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by \"Name\"]\n");
     exit(1);
 }
 
@@ -235,6 +239,15 @@ function handle(string $action, bool $isPost, array $body): array {
 }
 /* everything after the sign-in: the page's calls, and (2026-11-21) J.A.R.V.I.S. doing a person's desk work from the server (php desk.php as) */
 function handleIn(string $action, bool $isPost, array $body, string $ME, string $ROLE): array {
+    /* the research account (2026-11-21, Claire): she sees the sponsor and expo cards, adds or corrects a website (site), a phone or a general
+       email (contact, contactedit), adds notes ("Looked up: ..." is a note) and runs the free look-up of a company's own website (scan, never
+       Hunter). Nothing else, from the page or through J.A.R.V.I.S. (php desk.php as comes through here with her role): no touches, stages,
+       owners, follow-ups, tours, proposals, prices, emails or texts, the Inbox, removing anything, Don't contact, templates, settings, alerts,
+       the booking link or the chat (jvlist only answers her own, which is none). */
+    if ($ROLE === 'research') {
+        if (!in_array($action, RESEARCH_OK, true)) fail('This account looks companies up and notes what it finds. ' . ($action === '' ? '' : 'That is for the sellers.'), 403);
+        if ($action === 'scan' && !empty($body['hunter'])) fail('Paid look-ups (Hunter) are not part of this account.', 403);
+    }
     /* J.A.R.V.I.S. (2026-11-21, Matthew: "I need cai brandon and nneka to be able to make changes to the peak application"): the chat. Your
        own conversations; an admin sees everyone's. Every account with a desk sign-in may use it (Claude Check only looks). */
     if (in_array($action, ['jvlist', 'jvsend', 'jvclose', 'jvfile'], true)) return jvAction($action, $isPost, $body, $ME, $ROLE);
@@ -482,7 +495,21 @@ function dataOut(string $ME, string $ROLE): array {
        offer are admins only (2026-11-20, Matthew): a seller's page never gets them. The Report is worked out on the page from the cards. */
     $S += ['proposals' => propsOf('sponsor'), 'packages' => settingOf('sponsor', 'packages', []), 'hunterLeft' => hunterLeft()];
     if ($ROLE === 'admin') $S += ['pl' => settingOf('sponsor', 'pl', null), 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? []];
+    if ($ROLE === 'research') { $S = researchView($S); $X = researchView($X); $S['proposals'] = []; $S['packages'] = []; $S['hunterLeft'] = null; }
     return $base + ['sponsor' => $S, 'expo' => $X];
+}
+/* the research account's view of a list (2026-11-21): the cards, without what only the sellers work with: tours (visitors' names and
+   emails), message templates, the desk emails sent and the words of emails received (the Inbox's) */
+function researchView(array $V): array {
+    $V['tours'] = []; $V['tmFailed'] = []; $V['templates'] = []; $V['starters'] = [];
+    foreach ($V['recs'] as &$r) {
+        unset($r['dmails']);
+        foreach ($r['touches'] as &$t) if (isset($t['mail'])) { $t['note'] = ''; unset($t['mail']); }
+        unset($t);
+        if (isset($r['last']['mail'])) { unset($r['last']['mail']); $r['last']['note'] = ''; }
+    }
+    unset($r);
+    return $V;
 }
 
 /* ---- the Peak email sender's actions (key or a seller's sign-in) ---- */

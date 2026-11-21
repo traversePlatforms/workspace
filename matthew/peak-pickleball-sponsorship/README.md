@@ -43,3 +43,12 @@ changes go to Matthew.
 
 Upload since 21 Nov: `bash matthew/peak-pickleball-sponsorship/tools/deploy-desk.sh <label>` (page minified, api/*.php, jv-lib.php and the
 server tool jv-tools/jv.php).
+
+## The research account (built 2026-11-21, for Claire)
+
+Role `research` (`php desk.php addaccount "Name" research`). She sees the sponsor and expo cards and may only: add or correct a website
+(`site`, sponsors), a phone or a general email (`contact`, `contactedit`), add notes (Mark looked up = a note that starts "Looked up:"), and
+run the free look-up of a company's own website (`scan`, never Hunter). `RESEARCH_OK` in api/desk.php is the whole list; everything else
+answers 403, from the page and through `php desk.php as` (J.A.R.V.I.S.). Her data has no Inbox, tours, proposals, packages, templates, desk
+emails or the words of emails received, and she never owns a company. On the page: Companies and More (Look) only, phones and emails as
+text (no call, text or email links), no Remove, no Don't contact, no chat. Her how-to: `matthew/claire/`.

@@ -21,7 +21,11 @@ const seed = JSON.parse(readFileSync(join(SRC, 'desk-data-local', 'seed.json'), 
 const withMail = seed.leads.filter((l) => l.email);
 const badMail = withMail[5]; badMail.emailOk = 'no';
 writeFileSync(join(DATA, 'seed.json'), JSON.stringify(seed));
-const env = { ...process.env, DESK_DATA: DATA, DESK_MAIL_MOCK: MOCK, DESK_FOLDER: 'prospects-test' };
+/* the outreach account's warm-reply alert (2026-11-21): a stand-in for the Assistant's jvdesk.php that writes what it was given to a file */
+const JVMOCK = join(HERE, 'jv-mock.php'), JVOUT = join(HERE, 'jv-alerts.txt');
+writeFileSync(JVMOCK, '<?php file_put_contents(' + JSON.stringify(JVOUT.replace(/\\/g, '/')) + ', json_encode(["args" => array_slice($argv, 1), "text" => stream_get_contents(STDIN)]) . "\n", FILE_APPEND); exit(0);');
+rmSync(JVOUT, { force: true });
+const env = { ...process.env, DESK_DATA: DATA, DESK_MAIL_MOCK: MOCK, DESK_FOLDER: 'prospects-test', DESK_JV_TOOL: JVMOCK };
 const php = (args, extra = {}) => execFileSync('php', [join(APP, 'api', 'desk.php'), ...args], { env: { ...env, ...extra }, encoding: 'utf8' });
 const code = (php(['addaccount', 'Test Matthew', 'admin']).match(/: (\d{6})/) || [])[1];
 const srv = spawn('php', ['-S', `127.0.0.1:${PORT}`, '-t', WWW], { env, stdio: 'ignore' });
@@ -84,6 +88,50 @@ try {
   const q0 = await call('queue', { ids: [add.id, L0.id], tpl: 'roofing' });
   t(q0._status === 400 && /postal address/i.test(q0.error || ''), 'no postal address: queueing refused (' + (q0.error || '').slice(0, 40) + '...)');
   t(!existsSync(join(DATA, 'queue.json')) || JSON.parse(readFileSync(join(DATA, 'queue.json'), 'utf8')).length === 0, 'and nothing is waiting');
+  /* ---- the outreach account (2026-11-21, Claire): calls and messages by hand, notes, Not interested, a warm reply for Matthew ---- */
+  {
+    const OCODE = (php(['addaccount', 'Test Outreach', 'outreach']).match(/: (\d{6})/) || [])[1];
+    const ckA = ck; ck = '';
+    t((await call('signin', { code: OCODE })).role === 'outreach', 'outreach: the account signs in');
+    const OD = await call('data');
+    t(OD.ok && OD.leads.length === seed.leads.length + 1 && !Object.keys(OD.templates).length && !Object.keys(OD.settings).length && OD.queue.waiting === 0 && !OD.clickStats.length && OD.touchWays.facebook,
+      'outreach: it sees every company, and none of the templates, settings, queue or click numbers');
+    const OL = OD.leads.find((l) => l.id === L0.id), OL2 = OD.leads.find((l) => l.id !== L0.id && l.id !== add.id && l.status === 'new' && l.phone);
+    let r = await call('touch', { id: OL2.id, way: 'call', out: 'voicemail', note: 'Left the approved voicemail' });
+    t(r.ok, 'outreach: logs a call (left voicemail)');
+    t((await call('touch', { id: OL2.id, way: 'nextdoor', out: 'sent' })).ok && (await call('touch', { id: OL2.id, way: 'facebook', out: 'sent' })).ok && (await call('touch', { id: OL2.id, way: 'email', out: 'sent', note: 'From claire@' })).ok,
+      'outreach: logs a Nextdoor message, a Facebook message and an email sent by hand');
+    t((await call('touch', { id: OL2.id, way: 'facebook', out: 'voicemail' }))._status === 400 && (await call('touch', { id: OL2.id, way: 'smoke', out: 'sent' }))._status === 400, 'outreach: a way or outcome that does not fit is refused');
+    let X = (await call('data')).leads.find((l) => l.id === OL2.id);
+    t(X.touches.length === 4 && X.touches[0].by === 'Test Outreach' && ['called', 'nextdoor', 'emailed'].every((w) => X.reached.includes(w)) && X.status !== 'new', 'outreach: the touches show on the company and tick Called, Nextdoor and Emailed (' + X.reached.join(', ') + ')');
+    const H = await call('history', null, '&id=' + OL2.id);
+    t(H.ok && H.log.some((x) => /^Call: Left voicemail/.test(x.what)) && H.log.some((x) => /^Facebook message: Sent/.test(x.what)), 'outreach: and in its history');
+    t((await call('note', { id: OL2.id, note: 'Owner is out until Monday' })).ok, 'outreach: adds a note');
+    r = await call('warm', { id: OL2.id, note: 'Wants a demo next week, mornings are best' });
+    const al = existsSync(JVOUT) ? readFileSync(JVOUT, 'utf8').trim().split('\n').map((x) => JSON.parse(x)) : [];
+    t(r.ok && r.alerted && al.length === 1 && al[0].args.join(' ') === 'reply h202611181123486ccb answered' && /Warm reply on the prospect desk, flagged by Test Outreach/.test(al[0].text) && /Wants a demo next week/.test(al[0].text),
+      'outreach: a warm reply goes to Matthew through J.A.R.V.I.S. (his main thread, answered = an alert on his phone)');
+    X = (await call('data')).leads.find((l) => l.id === OL2.id);
+    t(X.warm && X.warm.by === 'Test Outreach' && X.notes.some((n) => /^Warm reply, for Matthew: Wants a demo/.test(n.note)), 'outreach: the warm reply is on the company as a note too');
+    t((await call('warm', { id: OL2.id, note: '' }))._status === 400, 'outreach: a warm reply needs what they said');
+    t((await call('status', { id: OL.id, status: 'no' })).ok && (await call('data')).leads.find((l) => l.id === OL.id).status === 'no', 'outreach: marks a company Not interested');
+    t((await call('unsubmark', { id: OL2.id })).ok, 'outreach: marks "no more emails"');
+    /* everything else: refused by the server */
+    const NO = [['status', { id: OL2.id, status: 'talking' }], ['status', { id: OL.id, status: 'new' }], ['status', { id: OL2.id, status: 'customer' }], ['reach', { id: OL2.id, way: 'called', on: true }], ['ndbad', { id: OL2.id, on: true }],
+      ['notedel', { id: OL2.id, nk: 'x' }], ['next', { id: OL2.id, date: '2030-01-01', what: 'x' }], ['edit', { id: OL2.id, phone: '7205550199' }], ['lead', { name: 'Outreach Added Co', trade: 'roofing', city: 'Denver' }],
+      ['template', { trade: 'roofing', subject: 'x', body: 'x' }], ['settings', { address: 'x' }], ['settings', { cap: 360 }], ['preview', { ids: [OL2.id] }], ['queue', { ids: [OL2.id] }], ['sendtest', { to: 'x@example.com', trade: 'roofing' }],
+      ['queueclear', {}], ['sendafter', {}], ['reseed', {}], ['nothing', {}]];
+    let n = 0; const bad = [];
+    for (const [a, b] of NO) { const z = await call(a, b); if (z._status === 403) n++; else bad.push(a + ':' + z._status); }
+    t(n === NO.length, `outreach: the server refuses the rest (403 on ${n} of ${NO.length}: other stages, ticks, Nextdoor removal, removing notes, next steps, editing, adding, templates, settings, preview, queue, test send, clearing the queue)` + (bad.length ? ' ' + bad.join(' ') : ''));
+    const rows = readFileSync(join(DATA, 'events.log'), 'utf8').trim().split('\n').map((x) => JSON.parse(x)).filter((x) => x.by === 'Test Outreach');
+    t(rows.every((x) => ['touch', 'note', 'warm', 'status', 'unsub'].includes(x.t)) && rows.filter((x) => x.t === 'status').every((x) => x.status === 'no'), 'outreach: and nothing else was written');
+    t(!existsSync(join(DATA, 'queue.json')) || JSON.parse(readFileSync(join(DATA, 'queue.json'), 'utf8')).length === 0, 'outreach: the queue is untouched');
+    await call('signout', {}); ck = ckA;
+    /* Matthew puts the Not interested one back (the test below uses it) */
+    await call('status', { id: L0.id, status: 'new' }); D = await call('data');
+    globalThis.__OCODE = OCODE; globalThis.__OL2 = OL2.name;
+  }
   /* the page, before an address is set */
   const CH = 'C:/Program Files/Google/Chrome/Application/chrome.exe', CP = 9481; prof = mkdtempSync(join(tmpdir(), 'pd-'));
   chrome = spawn(CH, ['--headless=new', '--disable-gpu', `--remote-debugging-port=${CP}`, `--user-data-dir=${prof}`, 'about:blank'], { stdio: 'ignore' });
@@ -360,6 +408,20 @@ try {
     t(await js(`(document.querySelector('[data-links]')||{getAttribute:function(){return ''}}).getAttribute('data-links')==='4'`) && /unsubscribe link is not tracked/.test(note), 'and says how many links are tracked: ' + note.slice(0, 140));
     await shot('pd-7-tracked-preview.png');
   }
+  /* the outreach account in the browser (2026-11-21) */
+  await js(`document.getElementById('signout').click()`); await until(`!!document.querySelector('.signin input')`);
+  await js(`(function(){var i=document.querySelector('.signin input');i.value='${globalThis.__OCODE}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));})()`);
+  await until(`!!document.querySelector('.row')`, 20000);
+  t(await js(`[...document.querySelectorAll('#tabs [data-tab]')].map(b=>b.dataset.tab).join()==='list' && ![...document.querySelectorAll('.shead button')].some(b=>/Email these|Add a company/.test(b.textContent))`), 'outreach in the browser: Prospects only, no Email these or Add a company');
+  await js(`(function(){var q=document.querySelector('.search');q.value=${JSON.stringify(globalThis.__OL2)};q.dispatchEvent(new Event('input'));})()`); await sleep(300);
+  await js(`document.querySelector('.row').click()`); await until(`!!document.querySelector('.detail .touchsec')`);
+  const oc = await js(`(function(){var d=document.querySelector('.detail');return {st:!!d.querySelector('[data-st]'),edit:/Edit the contact details/.test(d.textContent),mail:/Write the email/.test(d.textContent),warm:!!d.querySelector('[data-act="warm"]'),no:!!d.querySelector('[data-act="no"]'),fb:!!d.querySelector('[data-way="facebook"]'),rm:[...d.querySelectorAll('button')].some(b=>b.textContent==='Remove'),nd:/take it off the Nextdoor list/.test(d.textContent)}})()`);
+  t(!oc.st && !oc.edit && !oc.mail && oc.warm && oc.fb && !oc.rm && !oc.nd, 'outreach card: log a call or message (Facebook too), a warm reply for Matthew; no stages, editing, emailing from the desk, removing or Nextdoor removal ' + JSON.stringify(oc));
+  await js(`(function(){var d=document.querySelector('.detail');d.querySelector('[data-way="call"]').click();})()`); await sleep(100);
+  await js(`(function(){var d=document.querySelector('.detail');d.querySelector('[data-out="noanswer"]').click();d.querySelector('[data-act="touch"]').click();})()`);
+  await until(`/Call: No answer/.test(document.querySelector('.detail .touchsec')?.innerText||'')`);
+  t(true, 'outreach card: a call logged from the page shows on the company');
+  await shot('pd-8-outreach-card.png');
   t(!errs.length, 'no page errors' + (errs.length ? ': ' + errs[0] : ''));
 } catch (e) { t(false, 'stopped: ' + e.message); }
 finally {

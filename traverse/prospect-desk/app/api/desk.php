@@ -7,6 +7,11 @@
  * everything after is an append-only log (events.log), replayed on each read, so a new seed never drops what was done on the desk.
  * Sign-in: a 6-digit code per person, kept hashed. Make one from the command line (prints the code once):
  *   php desk.php addaccount "Matthew Sharpe" admin
+ * The outreach account (2026-11-21, Claire; Matthew: "she could also message people on my traverse prospect list"): she sees the
+ * companies and how to reach them, logs each touch she makes by hand (a call, a Nextdoor or Facebook message, an email from her own
+ * mailbox) with how it went, adds notes, marks a company Not interested or "no more emails", and flags a warm reply, which tells Matthew
+ * at once through J.A.R.V.I.S. Nothing else: never the email queue, the templates, the settings, the send hold, removing or re-seeding.
+ *   php desk.php addaccount "Claire" outreach
  * Email to many (2026-10-26): the desk writes one message per company from a template, Matthew previews them and queues them; the
  * hourly cron job (traverse/app/tools/morning-email.php starts it) drip-sends from his Traverse mailbox, one message per company,
  * any day and any hour (Matthew 2026-10-30: businesses run at all hours), about 2 minutes apart, at most the daily cap (default 40). Nothing is queued without his tap,
@@ -34,6 +39,16 @@ const STATUSES = ['new' => 'Not contacted', 'emailed' => 'Emailed', 'called' => 
 const OFF = ['notnow', 'no'];   /* knocked off the list: hidden unless asked for */
 const WAYS = ['emailed', 'called', 'nextdoor'];   /* ways we reached them (31 Oct, Matthew): ticks that can all be on at once; while a company is still at the first stage its status is the last one ticked, or Not contacted with none */
 const TRADES = ['roofing' => 'Roofing', 'roofing solar' => 'Roofing and solar', 'solar' => 'Solar', 'pest' => 'Pest control', 'security' => 'Security', 'yards' => 'Lawn and yards'];
+/* a touch made by hand (2026-11-21, the outreach account; Matthew's own page logs them too): how, and how it went. A call ticks Called, a
+   Nextdoor message ticks Messaged on Nextdoor, an email sent by hand ticks Emailed; a Facebook message is kept on its own. */
+const TOUCH_WAYS = ['call' => 'Call', 'nextdoor' => 'Nextdoor message', 'facebook' => 'Facebook message', 'email' => 'Email sent by hand'];
+const TOUCH_OUTS = ['noanswer' => 'No answer', 'voicemail' => 'Left voicemail', 'talked' => 'Talked', 'wrong' => 'Wrong number', 'sent' => 'Sent', 'replied' => 'They replied'];
+const TOUCH_OK = ['call' => ['noanswer', 'voicemail', 'talked', 'wrong'], 'nextdoor' => ['sent', 'replied'], 'facebook' => ['sent', 'replied'], 'email' => ['sent', 'replied']];
+const TOUCH_TICK = ['call' => 'called', 'nextdoor' => 'nextdoor', 'email' => 'emailed'];
+/* what the outreach account may do; everything else answers 403 */
+const OUTREACH_OK = ['data', 'history', 'note', 'touch', 'warm', 'status', 'unsubmark'];
+/* Matthew's main J.A.R.V.I.S. thread: a warm reply is said there, and his phone gets the alert */
+const JV_MAIN = 'h202611181123486ccb';
 const CAP_MAX = 360;   /* 15 an hour around the clock (Matthew 1 Nov: "up the email amount" to make up the days the picture emails lost to spam; was 10 an hour, 240) */
 
 /* the starting templates, one a trade (2026-10-26): drafts for Matthew to make his own in Settings. They say what the app does in
@@ -56,7 +71,7 @@ function defaultSettings(): array { return ['address' => '', 'signature' => "Mat
 function noteKey(array $r): string { return substr(sha1($r['at'] . '|' . $r['by'] . '|' . (string) ($r['note'] ?? '')), 0, 8); }   /* a bounce row has no 'note' (its key is at|by|, the same as before; 2026-11-06: it warned on every replay) */
 function state(): array {
     $seed = jread('seed.json', ['leads' => []]);
-    $base = ['status' => 'new', 'reached' => [], 'notes' => [], 'next' => null, 'log' => [], 'person' => '', 'unsub' => false, 'sent' => []];
+    $base = ['status' => 'new', 'reached' => [], 'notes' => [], 'next' => null, 'log' => [], 'person' => '', 'unsub' => false, 'sent' => [], 'touches' => []];
     $L = []; foreach ($seed['leads'] as $l) $L[$l['id']] = $l + $base;
     $tpl = defaultTemplates(); $set = defaultSettings(); $team = [];
     foreach (logRows() as $r) {
@@ -68,6 +83,16 @@ function state(): array {
             case 'reach': if (isset($L[$id]) && in_array($r['way'] ?? '', WAYS, true)) { $w = $r['way']; $R = array_values(array_diff($L[$id]['reached'], [$w])); if (!empty($r['on'])) $R[] = $w; $L[$id]['reached'] = $R;
                  if ($L[$id]['status'] === 'new' || in_array($L[$id]['status'], WAYS, true)) $L[$id]['status'] = $R ? end($R) : 'new';
                  $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => (!empty($r['on']) ? 'Ticked: ' : 'Unticked: ') . STATUSES[$w]]; } break;   /* 31 Oct */
+            case 'touch': if (isset($L[$id], TOUCH_WAYS[$r['way'] ?? ''])) {   /* 2026-11-21 */
+                $w = (string) $r['way']; $L[$id]['touches'][] = ['at' => (int) $r['at'], 'by' => (string) $r['by'], 'way' => $w, 'out' => (string) ($r['out'] ?? ''), 'note' => (string) ($r['note'] ?? '')];
+                if (isset(TOUCH_TICK[$w]) && !in_array(TOUCH_TICK[$w], $L[$id]['reached'], true)) { $L[$id]['reached'][] = TOUCH_TICK[$w]; if ($L[$id]['status'] === 'new' || in_array($L[$id]['status'], WAYS, true)) $L[$id]['status'] = TOUCH_TICK[$w]; }
+                $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => TOUCH_WAYS[$w] . ': ' . (TOUCH_OUTS[$r['out'] ?? ''] ?? '') . (($r['note'] ?? '') !== '' ? ' (' . $r['note'] . ')' : '')];
+            } break;
+            case 'warm': if (isset($L[$id])) {   /* 2026-11-21: a warm reply, for Matthew at once */
+                $L[$id]['warm'] = ['at' => (int) $r['at'], 'by' => (string) $r['by'], 'note' => (string) ($r['note'] ?? '')];
+                $L[$id]['notes'][] = ['k' => noteKey($r), 'at' => $r['at'], 'by' => $r['by'], 'note' => 'Warm reply, for Matthew: ' . ((string) ($r['note'] ?? '') ?: 'they want to hear more')];
+                $L[$id]['log'][] = ['at' => $r['at'], 'by' => $r['by'], 'what' => 'Flagged a warm reply for Matthew' . (!empty($r['alerted']) ? ' (J.A.R.V.I.S. told him)' : '')];
+            } break;
             case 'note': if (isset($L[$id])) $L[$id]['notes'][] = ['k' => noteKey($r), 'at' => $r['at'], 'by' => $r['by'], 'note' => $r['note']]; break;
             case 'notedel': if (isset($L[$id])) $L[$id]['notes'] = array_values(array_filter($L[$id]['notes'], fn($n) => $n['k'] !== ($r['nk'] ?? ''))); break;
             case 'next': if (isset($L[$id])) $L[$id]['next'] = $r['next']; break;
@@ -444,14 +469,14 @@ function sendQueue(int $max): int {
 /* ---- the command line: accounts, the send job ---- */
 if (PHP_SAPI === 'cli') {
     [$cmd, $name, $role] = [$argv[1] ?? '', $argv[2] ?? '', $argv[3] ?? 'admin'];
-    if ($cmd === 'addaccount' && $name !== '' && in_array($role, ['admin', 'seller'], true)) {
+    if ($cmd === 'addaccount' && $name !== '' && in_array($role, ['admin', 'seller', 'outreach'], true)) {
         $acc = jread('accounts.json', ['codes' => []]);
         do { $code = (string) random_int(100000, 999999); } while (isset($acc['codes'][codeHash($code)]));
         $acc['codes'][codeHash($code)] = ['name' => clean($name, 40), 'role' => $role, 'at' => time()];
         jwrite('accounts.json', $acc); echo "Code for $name ($role): $code\n"; exit(0);
     }
     if ($cmd === 'sendqueue') exit(sendQueue(max(1, min(20, (int) ($name ?: 10)))));
-    fwrite(STDERR, "usage: php desk.php addaccount \"Name\" admin|seller | sendqueue [max]\n"); exit(1);
+    fwrite(STDERR, "usage: php desk.php addaccount \"Name\" admin|seller|outreach | sendqueue [max]\n"); exit(1);
 }
 
 $action = (string) ($_GET['action'] ?? '');
@@ -546,7 +571,24 @@ if (!$me) fail('Signed out.', 401);
 $ME = (string) $me['name'];
 if ($action === 'signout') { unset($ses[$tokH]); jwrite('sessions.json', $ses); setcookie('prospectdesk', '', ['expires' => 1, 'path' => '/']); out(['ok' => true]); }
 if ($action === 'me') out(['ok' => true, 'name' => $ME, 'role' => $me['role']]);
+$OUTREACH = (string) ($me['role'] ?? '') === 'outreach';
+if ($OUTREACH) {   /* 2026-11-21: the outreach account (the header says what it may do) */
+    if (!in_array($action, OUTREACH_OK, true)) fail('This account logs calls and messages and adds notes. That part of the desk is Matthew\'s.', 403);
+    if ($action === 'status' && (string) ($body['status'] ?? '') !== 'no') fail('This account can mark a company Not interested; the other stages are Matthew\'s.', 403);
+}
 
+/** tell Matthew now: a reply in his main J.A.R.V.I.S. thread, which alerts his phone (2026-11-21). The Assistant's tool beside the site
+    (assistant-private/jvdesk.php); DESK_JV_TOOL points the tests at a stand-in. true when it landed */
+function jvAlert(string $text): bool {
+    $tool = (string) (getenv('DESK_JV_TOOL') ?: dirname(__DIR__, 3) . '/assistant-private/jvdesk.php');
+    if (!is_file($tool)) return false;
+    /* the web server's PHP has no PHP_BINARY (apache2handler: empty, checked 2026-11-21), so the site's command-line php instead */
+    $bin = PHP_BINARY !== '' && is_executable(PHP_BINARY) && in_array(PHP_SAPI, ['cli', 'cli-server'], true) ? PHP_BINARY : (is_executable('/usr/local/bin/php') ? '/usr/local/bin/php' : 'php');
+    $p = @proc_open([$bin, $tool, 'reply', JV_MAIN, 'answered'], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (!is_resource($p)) return false;
+    fwrite($pipes[0], $text); fclose($pipes[0]); stream_get_contents($pipes[1]); fclose($pipes[1]); fclose($pipes[2]);
+    return proc_close($p) === 0;
+}
 function needLead(array $S, string $id): array { if (!preg_match('/^[a-z0-9]{6,24}$/', $id) || !isset($S['leads'][$id])) fail('No such company.', 404); return $S['leads'][$id]; }
 function okDay(string $d): bool { return (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $d); }
 function okPhone(string $p): string { $d = preg_replace('/\D/', '', $p); if ($p === '') return ''; if (strlen($d) === 11 && $d[0] === '1') $d = substr($d, 1); if (strlen($d) !== 10) fail('That phone number does not look right.'); return '(' . substr($d, 0, 3) . ') ' . substr($d, 3, 3) . '-' . substr($d, 6); }
@@ -561,7 +603,9 @@ function queueView(array $S): array {
 if ($action === 'data') {
     $S = state(); $queued = array_flip(array_column(jread('queue.json', []), 'id'));
     $leads = []; foreach ($S['leads'] as $l) { $l['queued'] = isset($queued[$l['id']]); $l['nomail'] = noMail($l); unset($l['log']); $leads[] = $l; }
-    out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'trades' => TRADES, 'leads' => $leads, 'templates' => $S['templates'], 'settings' => $S['settings'], 'queue' => queueView($S), 'capMax' => CAP_MAX, 'clickStats' => clickStats()]);
+    if ($OUTREACH) out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'statuses' => STATUSES, 'trades' => TRADES, 'leads' => $leads, 'templates' => [], 'settings' => [],
+        'queue' => ['waiting' => 0, 'next' => [], 'sentToday' => 0, 'recent' => [], 'mailbox' => ''], 'capMax' => 0, 'clickStats' => [], 'touchWays' => TOUCH_WAYS, 'touchOuts' => TOUCH_OUTS, 'touchOk' => TOUCH_OK]);
+    out(['ok' => true, 'me' => ['name' => $ME, 'role' => $me['role']], 'touchWays' => TOUCH_WAYS, 'touchOuts' => TOUCH_OUTS, 'touchOk' => TOUCH_OK, 'statuses' => STATUSES, 'trades' => TRADES, 'leads' => $leads, 'templates' => $S['templates'], 'settings' => $S['settings'], 'queue' => queueView($S), 'capMax' => CAP_MAX, 'clickStats' => clickStats()]);
 }
 if ($action === 'history') { $S = state(); $L = needLead($S, (string) ($_GET['id'] ?? '')); out(['ok' => true, 'log' => array_slice(array_reverse($L['log']), 0, 30)]); }
 if ($ME === 'Claude Check') fail('This account only looks, so nothing is saved.', 403);
@@ -583,6 +627,25 @@ switch ($action) {
         if ($on && empty($L['nextdoor']) && !array_filter((array) ($L['socials'] ?? []), fn($x) => stripos((string) $x, 'nextdoor.com') !== false)) fail('This company has no Nextdoor page on the desk.');
         if (!$on && empty($L['ndBad'])) out(['ok' => true, 'same' => true]);
         logAdd(['t' => 'ndbad', 'id' => $id, 'on' => $on, 'by' => $ME, 'at' => time()]); out(['ok' => true]);
+    }
+    case 'touch': {   /* one call or message made by hand, and how it went (2026-11-21) */
+        $id = (string) ($body['id'] ?? ''); needLead($S, $id); $w = (string) ($body['way'] ?? ''); $o = (string) ($body['out'] ?? '');
+        if (!isset(TOUCH_WAYS[$w])) fail('Pick how you reached them: a call, Nextdoor, Facebook or an email you sent.');
+        if (!in_array($o, TOUCH_OK[$w], true)) fail('Pick how it went.');
+        logAdd(['t' => 'touch', 'id' => $id, 'way' => $w, 'out' => $o, 'note' => clean($body['note'] ?? '', 600), 'by' => $ME, 'at' => time()]); out(['ok' => true]);
+    }
+    case 'warm': {   /* a warm reply: a note on the company, and J.A.R.V.I.S. tells Matthew at once (2026-11-21) */
+        $id = (string) ($body['id'] ?? ''); $L = needLead($S, $id); $n = clean($body['note'] ?? '', 600);
+        if ($n === '') fail('Say what they said, so Matthew knows where it stands.');
+        $txt = 'Warm reply on the prospect desk, flagged by ' . $ME . ': ' . spokenName((string) $L['name']) . ((string) ($L['city'] ?? '') !== '' ? ' (' . $L['city'] . ')' : '') . ".
+
+" . $n
+             . "
+
+Phone: " . ((string) ($L['phone'] ?? '') ?: 'none on the desk') . '. Open the desk: ' . deskBase() . '/';
+        $al = jvAlert($txt);
+        logAdd(['t' => 'warm', 'id' => $id, 'note' => $n, 'alerted' => $al, 'by' => $ME, 'at' => time()]);
+        out(['ok' => true, 'alerted' => $al]);
     }
     case 'note': {
         $id = (string) ($body['id'] ?? ''); needLead($S, $id); $n = clean($body['note'] ?? '', 1000); if ($n === '') fail('Write the note first.');

@@ -384,7 +384,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-20.3';
+  var BUILD = '2026-11-21.2';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -534,7 +534,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       if (j._status === 401) return signin();
       if (!j.ok) { main.textContent = ''; main.appendChild(el('div', 'empty', j.error || 'Could not load.')); return; }
       S.data = j; $('bar').hidden = false; $('ubar').hidden = !j.build || j.build === BUILD;
-      $('whoName').textContent = j.me.name + (j.me.role === 'admin' ? ' (admin)' : '');
+      $('whoName').textContent = j.me.name + (j.me.role === 'admin' ? ' (admin)' : j.me.role === 'research' ? ' (look-ups)' : '');
       $('whoAv').textContent = ''; $('whoAv').appendChild(avatar(j.me.name, 'lg'));
       if (expoOnly()) S.world = 'expo';
       $('brandSub').textContent = expoOnly() ? 'Peak Pickleball · expo leads' : 'Peak Pickleball · sponsors and expo leads';
@@ -579,7 +579,15 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   var ADMIN_SUBS = { settings: 1, report: 1, pl: 1, pk: 1, offer: 1, better: 1 };
   var isAdmin = function () { return !!(S.data && S.data.me.role === 'admin'); };
   var DESC_SELLER = { sponsor: 'Your email and booking link, your alerts (a notice on your phone or computer when an email comes in), your calendar link and the look.', expo: 'The questions for Peak and the competing venues, your email and booking link, your alerts, your calendar link and the look.' };
-  var subList = function (t) { var L = SUBS[S.world][t]; return L && S.data && !isAdmin() ? L.filter(function (x) { return !(t === 'more' ? ADMIN_SUBS[x[0]] : x[0] === 'settings'); }) : L; };
+  /* the research account (2026-11-21, Claire): Companies (or Organisations) and Look only; on a card, what she found and where (the server
+     refuses everything else, desk.php RESEARCH_OK) */
+  var research = function () { return !!(S.data && S.data.me.role === 'research'); };
+  var RESEARCH_TABS = { list: 1, more: 1 };
+  var subList = function (t) {
+    var L = SUBS[S.world][t];
+    if (L && research()) return L.filter(function (x) { return t === 'more' ? x[0] === 'look' : x[0] !== 'removed'; });
+    return L && S.data && !isAdmin() ? L.filter(function (x) { return !(t === 'more' ? ADMIN_SUBS[x[0]] : x[0] === 'settings'); }) : L;
+  };
   var subOf = function (t) { var L = subList(t); return L ? (S.sub[S.world + t] && L.some(function (x) { return x[0] === S.sub[S.world + t]; }) ? S.sub[S.world + t] : L[0][0]) : ''; };
   function tabCount(t) {
     if (t === 'today') { var n = recs().filter(function (r) { return isDue(r) && ownerOk(r); }).length; return n ? [n, 1] : null; }
@@ -602,6 +610,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var t = $('tabs'); t.textContent = '';
     TABS[S.world].forEach(function (x) {
       if (x[0] === 'inbox' && !inboxOn()) return;   /* sellers and admins only (2026-11-20) */
+      if (research() && !RESEARCH_TABS[x[0]]) return;
       var b = el('button'); b.type = 'button'; b.setAttribute('data-tab', x[0]); b.appendChild(ic({ inbox: 'mail', today: 'home', pipe: 'board', list: 'list', deals: 'deal', more: 'more' }[x[0]])); b.appendChild(el('span', 'tl', x[1]));
       var n = tabCount(x[0]); if (n) b.appendChild(el('b', 'tn' + (n[1] ? ' hot' : ''), String(n[0])));
       if (S.tab === x[0]) b.setAttribute('aria-current', 'page');
@@ -615,6 +624,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     if (S.print && S.print.kind === 'report' && !isAdmin()) S.print = null;   /* the report: admins only (2026-11-20) */
     if (S.print) return S.print.kind === 'proposal' ? printProposal(S.print.pid) : printReport();
     if (!TABS[S.world].some(function (x) { return x[0] === S.tab; }) || (S.tab === 'inbox' && !inboxOn())) S.tab = 'today';
+    if (research() && !RESEARCH_TABS[S.tab]) S.tab = 'list';
     main.setAttribute('data-world', S.world); main.setAttribute('data-section', S.tab);
     head();
     var sub = subOf(S.tab);
@@ -623,8 +633,9 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   function head() {
     var x = TABS[S.world].filter(function (s) { return s[0] === S.tab; })[0], h = el('div', 'shead'), top = el('div', 'shtop');
     var h1 = el('h1'); if (!expoOnly() && S.tab !== 'inbox') h1.appendChild(document.createTextNode((isX() ? 'Expo leads' : 'Sponsors') + ' · ')); h1.appendChild(el('span', null, x[1])); top.appendChild(h1);
-    if (S.tab === 'list' || S.tab === 'pipe') { var add = el('button', 'btn ghost small', isX() ? '+ Add an expo lead' : '+ Add a company'); add.type = 'button'; add.addEventListener('click', isX() ? expoAddForm : addForm); top.appendChild(add); }
-    var desc = S.tab === 'more' && !isAdmin() ? DESC_SELLER[S.world] : DESC[S.world][S.tab]; if (S.tab === 'more' && isAdmin()) desc = desc.replace(/ and the look\.$/, ', the look, and the settings (message templates, the end-of-day email).');
+    if ((S.tab === 'list' || S.tab === 'pipe') && !research()) { var add = el('button', 'btn ghost small', isX() ? '+ Add an expo lead' : '+ Add a company'); add.type = 'button'; add.addEventListener('click', isX() ? expoAddForm : addForm); top.appendChild(add); }
+    var desc = S.tab === 'more' && !isAdmin() ? DESC_SELLER[S.world] : DESC[S.world][S.tab];
+    if (research()) desc = S.tab === 'more' ? 'The look of the desk on this device.' : 'Open a ' + (isX() ? 'lead' : 'company') + ', look up its website, phone and general email from public sources, and note where each came from. This account never emails, texts or calls anyone.'; if (S.tab === 'more' && isAdmin()) desc = desc.replace(/ and the look\.$/, ', the look, and the settings (message templates, the end-of-day email).');
     h.appendChild(top); h.appendChild(el('p', 'sdesc', desc));
     var L = subList(S.tab);
     if (L) {
@@ -964,6 +975,13 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     if (r.why) { var w = el('div'); w.style.fontSize = '14px'; if (X) w.appendChild(el('b', null, 'Why Peak: ')); w.appendChild(document.createTextNode(r.why)); d.appendChild(w); }
     d.appendChild(strip(r));
     if (X) d.appendChild(eventsSec(r));
+    if (research()) {   /* the research account (2026-11-21): who to reach, the look-up, what she found and where; nothing that reaches anyone */
+      d.appendChild(contactsSec(r));
+      if (!X) d.appendChild(scanSec(r));
+      d.appendChild(lookedSec(r));
+      d.appendChild(activitySec(r));
+      return d;
+    }
     d.appendChild(touchPanel(r));
     var ts = tplSec(r); d.appendChild(ts); d._openTpl = ts._open;
     d.appendChild(dmSec(r));   /* Write an email (2026-11-19) */
@@ -979,6 +997,18 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     rmv.addEventListener('click', function () { removeRec(r); }); d.appendChild(rmv);
     return d;
   }
+  /* Looked up (2026-11-21, the research account): a note that starts "Looked up:", with what was found and where */
+  var LOOKED = /^Looked up:/;
+  function lookedSec(r) {
+    var s = el('div', 'sec lookedsec'); s.appendChild(el('h3', null, 'Mark it looked up'));
+    var prev = (r.notes || []).filter(function (n) { return LOOKED.test(n.note || ''); }).sort(function (a, b) { return b.at - a.at; })[0];
+    if (prev) s.appendChild(el('div', 'fuhint', 'Looked up by ' + prev.by + ', ' + ago(prev.at) + '.'));
+    var ta = el('textarea'); ta.rows = 3; ta.placeholder = 'What you found and where, e.g. Website from their Google listing; main phone from their contact page; no general email on the site';
+    ta.style.cssText = 'width:100%;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--bg)'; ta.setAttribute('aria-label', 'What you found and where');
+    var b = el('button', 'btn small', 'Mark looked up'); b.type = 'button'; b.setAttribute('data-act', 'looked'); b.style.marginTop = '6px';
+    b.addEventListener('click', function () { var t = ta.value.trim(); if (!t) { toast('Say what you found and where, even if it was nothing.'); return; } save('note', { id: r.id, note: 'Looked up: ' + t }, 'Marked looked up'); });
+    s.appendChild(ta); s.appendChild(b); return s;
+  }
   /* stage, owner, last contacted, next follow-up: on every card */
   function strip(r) {
     var s = el('div', 'strip'), row = function (k) { var x = el('div', 'sr'); x.appendChild(el('span', 'k', k)); s.appendChild(x); return x; };
@@ -992,6 +1022,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var o0 = el('option', null, 'Open (nobody yet)'); o0.value = ''; sel.appendChild(o0);
     W().owners.forEach(function (n) { var x = el('option', null, n === me() ? n + ' (me)' : n); x.value = n; sel.appendChild(x); });
     sel.value = r.owner || ''; sel.addEventListener('change', function () { save('owner', { id: r.id, owner: sel.value }, sel.value ? 'Owner: ' + sel.value : 'Open again'); }); o.appendChild(sel);
+    if (research()) sel.disabled = true;
     if (!r.owner && W().owners.indexOf(me()) >= 0) { var tk = el('button', 'btn small', 'Take it'); tk.type = 'button'; tk.addEventListener('click', function () { save('owner', { id: r.id, owner: me() }, 'It is yours: ' + r.name); }); o.appendChild(tk); }
     var l = row('Last contact');
     if (r.last) { var tt = touchTone(r.last), lc = el('span', 'tch h-' + tt[0]); lc.appendChild(icBox(tt[1], 'ti')); lc.appendChild(document.createTextNode(touchName(r.last))); l.appendChild(lc); l.appendChild(el('span', null, when(r.last.when) + ' · ' + r.last.by)); }
@@ -1082,11 +1113,12 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     b.appendChild(sg);
   }
   var telLink = function (r, phone, who, into) {
+    if (research()) { var pw = el('span', 'links', phone); into.appendChild(pw); return pw; }   /* the research account never calls or texts: the number as text */
     var w = el('span', 'links'), a = el('a', null, phone); a.href = 'tel:' + phone.replace(/[^\d+]/g, ''); a.addEventListener('click', function () { promptAfter(r, 'call', who); }); w.appendChild(a);
     var t = el('a', null, 'Text'); t.href = 'sms:' + phone.replace(/[^\d+]/g, ''); t.addEventListener('click', function () { promptAfter(r, 'text', who); }); w.appendChild(t);
     into.appendChild(w); return w;
   };
-  var mailLink = function (r, email, who, into) { var a = el('a', null, email); a.href = 'mailto:' + email; a.addEventListener('click', function () { promptAfter(r, 'email', who); }); into.appendChild(a); return a; };
+  var mailLink = function (r, email, who, into) { if (research()) { var es = el('span', null, email); into.appendChild(es); return es; } var a = el('a', null, email); a.href = 'mailto:' + email; a.addEventListener('click', function () { promptAfter(r, 'email', who); }); into.appendChild(a); return a; };
 
   /* ---- the stage: Not now asks the day to come back, Lost asks why, a tour or Signed opens its form ---- */
   var LOSTWHY = ['Not interested', 'No budget this year', 'Went with someone else', 'Not a fit', 'No reply after many tries'];
@@ -1126,6 +1158,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     while ((m = re.exec(s))) {
       if (m.index > at) into.appendChild(document.createTextNode(s.slice(at, m.index)));
       var raw = m[0], tail = ''; if (m[1]) { var t = raw.match(/[.]+$/); if (t) { tail = t[0]; raw = raw.slice(0, -tail.length); } }
+      if (!m[1] && research()) { into.appendChild(document.createTextNode(raw)); at = m.index + m[0].length; continue; }   /* the research account: emails and phones as text */
       var a = el('a', null, raw); if (m[1]) { a.href = raw; a.target = '_blank'; a.rel = 'noopener'; } else if (m[2]) a.href = 'mailto:' + raw; else a.href = 'tel:' + raw.replace(/[^\d+]/g, '');
       into.appendChild(a); if (tail) into.appendChild(document.createTextNode(tail)); at = m.index + m[0].length;
     }
@@ -1165,7 +1198,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       ct.appendChild(el('small', null, 'From: ' + p.src + (p.more ? ' · ' + p.more : '')));
       srcLinks(p.srcs, ct);
       var cb = p.ed ? contactActs(r, p, nm, ct) : null;
-      if (p.key) dncLink(r, p, nm, ct, cb);
+      if (p.key && !research()) dncLink(r, p, nm, ct, cb);
       (more || s).appendChild(ct);
     });
     if (!P.length && !r.route && !r.callHow && !r.phone) s.appendChild(el('div', null, 'No contact yet.'));
@@ -1230,7 +1263,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var bar = el('div', 'cacts');
     var eb = el('button', 'lnk'); eb.type = 'button'; eb.appendChild(ic('pen')); eb.appendChild(document.createTextNode('Edit')); eb.setAttribute('data-act', 'cedit'); eb.setAttribute('aria-label', 'Edit ' + nm);
     var rb = el('button', 'lnk'); rb.type = 'button'; rb.appendChild(ic('trash')); rb.appendChild(document.createTextNode('Remove')); rb.setAttribute('data-act', 'cdel'); rb.setAttribute('aria-label', 'Remove ' + nm);
-    bar.appendChild(eb); bar.appendChild(rb); ct.appendChild(bar);
+    bar.appendChild(eb); if (!research()) bar.appendChild(rb); ct.appendChild(bar);   /* the research account corrects, never removes */
     eb.addEventListener('click', function () { var o = ct.querySelector('.cform'); if (o) { o.remove(); return; } ct.appendChild(editForm(r, p, nm)); var i = ct.querySelector('.cform input'); if (i) i.focus(); });
     rb.addEventListener('click', function () {
       if (!confirm('Remove ' + nm + ' from ' + r.name + '?\n\nThey come off the card and the email lists. The record keeps a note of who they were' + (p.dnc ? ', and they stay on the Don’t contact list.' : '.'))) return;
@@ -1538,10 +1571,10 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
           body.appendChild(dd); body.appendChild(pr);
         }
         var sm = el('small', null, x.t.by + ', ' + when(x.t.when) + (x.t.fu ? ' · follow-up set for ' + fmtDay(x.t.fu) : '') + ' · ');
-        var u = el('button', 'lnk', 'Remove'); u.type = 'button'; u.style.fontSize = '12px'; u.addEventListener('click', function () { if (confirm('Remove this ' + touchName(x.t).toLowerCase() + ' from the card? The record keeps it.')) save('touchdel', { id: r.id, k: x.t.k }, 'Removed'); }); sm.appendChild(u); body.appendChild(sm);
+        var u = el('button', 'lnk', 'Remove'); u.type = 'button'; u.style.fontSize = '12px'; u.addEventListener('click', function () { if (confirm('Remove this ' + touchName(x.t).toLowerCase() + ' from the card? The record keeps it.')) save('touchdel', { id: r.id, k: x.t.k }, 'Removed'); }); if (!research()) sm.appendChild(u); body.appendChild(sm);
       } else if (x.k === 'n') {
         body.appendChild(el('div', null, x.n.note));
-        var sm2 = el('small', null, 'Note · ' + x.n.by + ', ' + when(x.n.at) + ' · '), rm = el('button', 'lnk', 'Remove'); rm.type = 'button'; rm.style.fontSize = '12px'; rm.addEventListener('click', function () { if (confirm('Remove this note?')) save('notedel', { id: r.id, nk: x.n.k }, 'Note removed'); }); sm2.appendChild(rm); body.appendChild(sm2);
+        var sm2 = el('small', null, 'Note · ' + x.n.by + ', ' + when(x.n.at) + ' · '), rm = el('button', 'lnk', 'Remove'); rm.type = 'button'; rm.style.fontSize = '12px'; rm.addEventListener('click', function () { if (confirm('Remove this note?')) save('notedel', { id: r.id, nk: x.n.k }, 'Note removed'); }); if (!research()) sm2.appendChild(rm); body.appendChild(sm2);
       } else if (x.k === 'c') {
         body.appendChild(el('b', null, (x.c.do === 'del' ? 'Contact removed: ' : 'Contact edited: ') + x.c.name));
         if (x.c.do === 'del' && x.c.role) body.appendChild(el('div', null, x.c.role));
@@ -2183,7 +2216,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
      Each person sees their own chats; an admin sees everyone's (the server decides). A reply's alert opens it (#jarvis/<id>). */
   var jvOn = false;
   function jvMount() {
-    if (jvOn || !window.JVChat || !S.data) return; jvOn = true;
+    if (jvOn || !window.JVChat || !S.data || research()) return; jvOn = true;   /* not for the research account (2026-11-21) */
     JVChat.mount({ call: function (a, b) { return api(a, b); }, fileUrl: function (id, n) { return API + '?action=jvfile&id=' + encodeURIComponent(id) + '&f=' + encodeURIComponent(n); },
       me: me, dark: function () { return !isLight(); }, seenKey: 'peakdesk.jvSeen', offsetPhone: 86,
       greeting: 'J.A.R.V.I.S. at your service. Tell me what needs doing on the desk, a fix, a change, a new column, and I’ll see to it myself.',

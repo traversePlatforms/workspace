@@ -185,7 +185,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
       if (j._status === 401) return signin();
       if (!j.ok) { main.textContent = ''; main.appendChild(el('div', 'empty', j.error || 'Could not load.')); return; }
       S.data = j; S.byId = {}; j.leads.forEach(function (l) { S.byId[l.id] = l; });
-      $('bar').hidden = false; $('whoName').textContent = j.me.name;
+      $('bar').hidden = false; $('whoName').textContent = j.me.name + (j.me.role === 'outreach' ? ' (calls and messages)' : '');
       tabs(); (then || draw)();
     }).catch(function () { main.textContent = ''; main.appendChild(el('div', 'empty', 'No connection. Try again when you have signal.')); });
   }
@@ -199,6 +199,9 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
 
   /* ---- sections ---- */
   var SECS = [['list', 'Prospects'], ['due', 'Follow-ups'], ['email', 'Email'], ['settings', 'Settings']];
+  /* the outreach account (2026-11-21, Claire): Prospects only; on a company, log a call or message, notes, Not interested, a warm reply for
+     Matthew. The server refuses everything else (desk.php OUTREACH_OK). */
+  var outreach = function () { return !!(S.data && S.data.me && S.data.me.role === 'outreach'); };
   function tabCount(t) {
     var L = S.data.leads;
     if (t === 'list') return L.filter(function (l) { return !isOff(l) && (reachN(l) || hasSoc(l)); }).length;
@@ -209,6 +212,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   function tabs() {
     var t = $('tabs'); t.textContent = '';
     SECS.forEach(function (x) {
+      if (outreach() && x[0] !== 'list') return;
       var b = el('button'); b.type = 'button'; b.setAttribute('data-tab', x[0]); b.appendChild(el('span', null, x[1]));
       var n = tabCount(x[0]); if (n != null) b.appendChild(el('b', 'tn', String(n)));
       if (S.tab === x[0]) b.setAttribute('aria-current', 'page');
@@ -218,6 +222,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   function go(t) { S.tab = t; S.sel = null; try { history.replaceState(null, '', '#' + t); } catch (e) {} tabs(); draw(); window.scrollTo(0, 0); }
   function draw() {
     main.textContent = ''; document.documentElement.classList.remove('lock');
+    if (outreach() && S.tab !== 'list') S.tab = 'list';
     main.setAttribute('data-section', S.tab);
     ({ list: drawList, due: drawDue, email: drawEmail, settings: drawSettings })[S.tab]();
   }
@@ -255,7 +260,8 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     var D = S.data, f = S.f, L = D.leads;
     var add = el('button', 'btn ghost small', '+ Add a company'); add.type = 'button'; add.addEventListener('click', addForm);
     var mail = el('button', 'btn ghost small', 'Email these'); mail.type = 'button';
-    head('Prospects', 'Colorado companies by trade, the ones in our towns first. Tap one to work it; No and Not now take it off the list.', [add, mail]);
+    if (outreach()) head('Prospects', 'Colorado companies by trade, the best fit first. Open one, reach them with an approved script, and log every call and message here.', []);
+    else head('Prospects', 'Colorado companies by trade, the ones in our towns first. Tap one to work it; No and Not now take it off the list.', [add, mail]);
     var cnt = function (pred) { return L.filter(pred).length; };
     main.appendChild(chipRow('Trade', [['all', 'All']].concat(Object.keys(D.trades).map(function (k) { return [k, D.trades[k], cnt(function (l) { return l.trade === k && matchReach(l, f.reach) && matchSt(l, f.st); })]; })), f.trade, function (k) { f.trade = k; S.sel = null; S.shown = 150; draw(); }));
     main.appendChild(chipRow('Where', [['all', 'All']].concat(WHERE.map(function (w) { return [w[0], w[1], cnt(function (l) { return l.where === w[0] && (f.trade === 'all' || l.trade === f.trade) && matchReach(l, f.reach) && matchSt(l, f.st); })]; })), f.where, function (k) { f.where = k; S.sel = null; S.shown = 150; draw(); }));
@@ -305,12 +311,39 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
   }
 
   /* one company */
+  /* a call or message made by hand, and how it went (2026-11-21); the outreach account's card is built from it */
+  function touchSec(l) {
+    var s = el('div', 'sec touchsec'); s.appendChild(el('h3', null, 'Log a call or message'));
+    var D = S.data, way = 'call', out = '';
+    var ws = el('div', 'seg'), os = el('div', 'seg'); os.style.marginTop = '6px';
+    var nt = el('input'); nt.placeholder = 'Note (optional): who you spoke to, what they said'; nt.setAttribute('aria-label', 'Note'); nt.style.cssText = 'width:100%;margin-top:6px;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--bg)';
+    var go = el('button', 'btn small', 'Log it'); go.type = 'button'; go.setAttribute('data-act', 'touch'); go.style.marginTop = '6px';
+    var paint = function () {
+      [].forEach.call(ws.children, function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-way') === way)); });
+      os.textContent = ''; (D.touchOk[way] || []).forEach(function (k) { var b = el('button', null, D.touchOuts[k]); b.type = 'button'; b.setAttribute('data-out', k); b.setAttribute('aria-pressed', String(out === k)); b.addEventListener('click', function () { out = k; paint(); }); os.appendChild(b); });
+    };
+    Object.keys(D.touchWays).forEach(function (k) { var b = el('button', null, D.touchWays[k]); b.type = 'button'; b.setAttribute('data-way', k); b.addEventListener('click', function () { way = k; out = ''; paint(); }); ws.appendChild(b); });
+    go.addEventListener('click', function () { if (!out) { toast('Pick how it went.'); return; } go.disabled = true; save('touch', { id: l.id, way: way, out: out, note: nt.value }, 'Logged: ' + D.touchWays[way] + ', ' + D.touchOuts[out]).then(function (j) { if (!j || !j.ok) go.disabled = false; }); });
+    paint(); s.appendChild(ws); s.appendChild(os); s.appendChild(nt); s.appendChild(go);
+    (l.touches || []).slice().reverse().slice(0, 8).forEach(function (x) { s.appendChild(el('div', 'note', D.touchWays[x.way] + ': ' + D.touchOuts[x.out] + (x.note ? ' · ' + x.note : ''))).appendChild(el('small', null, x.by + ', ' + agoT(x.at))); });
+    return s;
+  }
+  /* a warm reply: a note on the company and an alert to Matthew (2026-11-21) */
+  function warmSec(l) {
+    var s = el('div', 'sec warmsec'); s.appendChild(el('h3', null, 'Warm reply? Hand it to Matthew'));
+    if (l.warm) s.appendChild(el('div', 'note', 'Flagged by ' + l.warm.by + ', ' + agoT(l.warm.at) + ': ' + l.warm.note));
+    var ta = el('textarea'); ta.rows = 2; ta.placeholder = 'What they said, and the best way and time to reach them'; ta.setAttribute('aria-label', 'What they said'); ta.style.cssText = 'width:100%;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--bg)';
+    var b = el('button', 'btn small', 'Flag for Matthew now'); b.type = 'button'; b.setAttribute('data-act', 'warm'); b.style.marginTop = '6px';
+    b.addEventListener('click', function () { if (!ta.value.trim()) { toast('Say what they said first.'); return; } b.disabled = true; api('warm', { id: l.id, note: ta.value }).then(function (j) { if (!j.ok) { b.disabled = false; toast(j.error || 'Not saved.'); return; } load(function () { draw(); toast(j.alerted ? 'Matthew has been told' : 'Saved on the company. The alert did not go: text Matthew.'); }); }); });
+    s.appendChild(ta); s.appendChild(b); return s;
+  }
   function detail(l) {
     var d = el('aside', 'detail');
     var cx = el('button', 'lnk close', 'Close ×'); cx.type = 'button'; cx.addEventListener('click', function () { S.sel = null; draw(); window.scrollTo(0, S.listY || 0); }); d.appendChild(cx);
     d.appendChild(el('h2', null, l.name));
     d.appendChild(el('div', 'sub', [trName(l.trade), [l.city, l.zip].filter(Boolean).join(' '), l.where, l.formed ? 'since ' + l.formed : '', l.added ? 'added on the desk' : ''].filter(Boolean).join(' · ')));
     if (l.grade) { var fw = el('div', 'fitwhy'); fw.appendChild(el('span', 'grade g-' + l.grade, l.grade)); fw.appendChild(el('span', null, 'Fit ' + (l.score || 0) + ' of 100' + ((l.why || []).length ? ': ' + l.why.join(', ') : ''))); d.appendChild(fw); }
+    if (outreach()) return outreachCard(l, d);
     /* status: the working stages, then the two that knock it off the list */
     var s1 = el('div', 'sec'); s1.appendChild(el('h3', null, 'Status')); s1.appendChild(el('small', 'sub', 'Emailed, Called and Messaged on Nextdoor can all be ticked at once.'));
     var seg = el('div', 'seg'), seg2 = el('div', 'seg off'); seg2.style.marginTop = '6px';
@@ -369,6 +402,7 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     two.appendChild(nD); two.appendChild(nW); nf.appendChild(two);
     var nS = el('button', 'btn small', 'Save next step'); nS.type = 'button'; nS.addEventListener('click', function () { save('next', { id: l.id, date: nD.value, what: nW.value }, 'Next step saved'); }); nf.appendChild(nS);
     s3.appendChild(nf); d.appendChild(s3);
+    d.appendChild(touchSec(l));   /* calls and messages made by hand (2026-11-21) */
     /* notes */
     var s5 = el('div', 'sec'); s5.appendChild(el('h3', null, 'Notes')); var ta = el('textarea'); ta.rows = 2; ta.placeholder = 'What happened, what they said'; ta.setAttribute('aria-label', 'Note'); ta.style.cssText = 'width:100%;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--bg)';
     var nb = el('button', 'btn small', 'Save note'); nb.type = 'button'; nb.style.marginTop = '6px'; nb.addEventListener('click', function () { if (ta.value.trim()) save('note', { id: l.id, note: ta.value }, 'Note saved'); });
@@ -376,6 +410,39 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
     l.notes.slice().reverse().forEach(function (n) { var x = el('div', 'note', n.note), sm = el('small', null, n.by + ', ' + ago(n.at) + ' · '), rm = el('button', 'lnk', 'Remove'); rm.type = 'button'; rm.style.fontSize = '12px'; rm.addEventListener('click', function () { if (confirm('Remove this note?')) save('notedel', { id: l.id, nk: n.k }, 'Note removed'); }); sm.appendChild(rm); x.appendChild(sm); s5.appendChild(x); });
     d.appendChild(s5);
     var s6 = el('div', 'sec'); s6.appendChild(el('h3', null, 'History')); var hb = el('div', 'soft', 'Loading…'); s6.appendChild(hb); d.appendChild(s6);
+    api('history', null, '&id=' + l.id).then(function (j) { hb.textContent = ''; if (!j.ok || !j.log.length) { hb.appendChild(el('span', 'soft', 'Nothing yet.')); return; } j.log.forEach(function (n) { var x = el('div', 'note', n.what); x.appendChild(el('small', null, n.by + ', ' + agoT(n.at))); hb.appendChild(x); }); }).catch(function () { hb.textContent = ''; });
+    return d;
+  }
+  function outreachCard(l, d) {
+    d.appendChild(el('div', 'sub', 'Stage: ' + stLabel(l)));
+    var s2 = el('div', 'sec'); s2.appendChild(el('h3', null, 'How to reach them')); var ct = el('div', 'ct');
+    if (l.person) ct.appendChild(el('b', null, 'Ask for ' + l.person));
+    if (l.phone) { var pa = el('a', null, l.phone); pa.href = 'tel:' + l.phone.replace(/[^\d+]/g, ''); ct.appendChild(pa); }
+    if (l.email && !l.unsub && l.emailOk !== 'no') ct.appendChild(el('span', null, l.email));
+    if (l.unsub) ct.appendChild(el('small', 'warnline', 'Asked not to be emailed. Never email them.'));
+    if (l.emailOk === 'no') ct.appendChild(el('small', 'warnline', 'Their email does not work (' + (l.emailWhy || 'it bounced') + '). Don\u2019t email it.'));
+    if (l.site) { var sa = el('a', null, l.site.replace(/^https?:\/\//, '').replace(/\/$/, '')); sa.href = /^https?:/.test(l.site) ? l.site : 'https://' + l.site; sa.target = '_blank'; sa.rel = 'noopener'; ct.appendChild(sa); }
+    if (l.socials && l.socials.length) {
+      var SN = [[/facebook|fb\.com/i, 'Facebook'], [/instagram/i, 'Instagram'], [/linkedin/i, 'LinkedIn'], [/nextdoor/i, 'Nextdoor'], [/youtube/i, 'YouTube'], [/x\.com|twitter/i, 'X'], [/yelp/i, 'Yelp'], [/g\.page|goo\.gl|maps\.app/i, 'Google']];
+      var so = el('div', 'socials'), seen = {};
+      l.socials.forEach(function (u) { var nm = 'Page'; for (var i = 0; i < SN.length; i++) if (SN[i][0].test(u)) { nm = SN[i][1]; break; } if (seen[nm]) return; seen[nm] = 1; var a = el('a', 'soc', nm + ' \u203a'); a.href = /^https?:/.test(u) ? u : 'https://' + u; a.target = '_blank'; a.rel = 'noopener'; so.appendChild(a); });
+      ct.appendChild(so);
+    }
+    if (l.ndBad) ct.appendChild(el('small', 'warnline', 'Their Nextdoor page has an error or no owner. Don\u2019t message it.'));
+    s2.appendChild(ct); d.appendChild(s2);
+    d.appendChild(touchSec(l));
+    d.appendChild(warmSec(l));
+    var s4 = el('div', 'sec'); s4.appendChild(el('h3', null, 'They said no'));
+    if (l.status === 'no') s4.appendChild(el('div', 'soft', 'Marked Not interested. Matthew can put it back.'));
+    else { var no = el('button', 'btn ghost small', 'Not interested'); no.type = 'button'; no.setAttribute('data-act', 'no'); no.addEventListener('click', function () { if (confirm('Mark ' + l.name + ' Not interested? It comes off the list, and only Matthew can put it back.')) save('status', { id: l.id, status: 'no' }, l.name + ' marked Not interested'); }); s4.appendChild(no); }
+    if (!l.unsub) { var un = el('button', 'lnk', 'They said no more emails'); un.type = 'button'; un.setAttribute('data-act', 'unsub'); un.style.cssText = 'display:block;margin-top:8px;font-size:13px'; un.addEventListener('click', function () { if (confirm('Mark ' + l.name + ' as never to be emailed again?')) save('unsubmark', { id: l.id }, 'They won\u2019t be emailed again'); }); s4.appendChild(un); }
+    d.appendChild(s4);
+    var s5 = el('div', 'sec'); s5.appendChild(el('h3', null, 'Notes')); var ta = el('textarea'); ta.rows = 2; ta.placeholder = 'What happened, what they said'; ta.setAttribute('aria-label', 'Note'); ta.style.cssText = 'width:100%;padding:8px;border:1px solid var(--line);border-radius:9px;background:var(--bg)';
+    var nb = el('button', 'btn small', 'Save note'); nb.type = 'button'; nb.style.marginTop = '6px'; nb.addEventListener('click', function () { if (ta.value.trim()) save('note', { id: l.id, note: ta.value }, 'Note saved'); });
+    s5.appendChild(ta); s5.appendChild(nb);
+    l.notes.slice().reverse().forEach(function (n) { var x = el('div', 'note', n.note); x.appendChild(el('small', null, n.by + ', ' + ago(n.at))); s5.appendChild(x); });
+    d.appendChild(s5);
+    var s6 = el('div', 'sec'); s6.appendChild(el('h3', null, 'History')); var hb = el('div', 'soft', 'Loading\u2026'); s6.appendChild(hb); d.appendChild(s6);
     api('history', null, '&id=' + l.id).then(function (j) { hb.textContent = ''; if (!j.ok || !j.log.length) { hb.appendChild(el('span', 'soft', 'Nothing yet.')); return; } j.log.forEach(function (n) { var x = el('div', 'note', n.what); x.appendChild(el('small', null, n.by + ', ' + agoT(n.at))); hb.appendChild(x); }); }).catch(function () { hb.textContent = ''; });
     return d;
   }

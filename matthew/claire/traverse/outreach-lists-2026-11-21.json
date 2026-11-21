@@ -1,0 +1,716 @@
+{
+ "built": "2026-11-21T21:28:13.445Z",
+ "counts": {
+  "companies": 9019,
+  "skippedByRule": 1293,
+  "facebookLinks": 1126,
+  "nextdoorPages": 407,
+  "pool": {
+   "nextdoor": 141,
+   "facebook": 403,
+   "calls": 769,
+   "email": 35
+  },
+  "why": {
+   "Matthew messaged on Nextdoor": 45,
+   "messaged in the last 14 days": 1243,
+   "knocked off or further along": 1,
+   "clicked an email: Matthew follows up himself": 3,
+   "asked not to be emailed": 1
+  }
+ },
+ "lists": {
+  "nextdoor": [
+   {
+    "name": "Valor Roof and Solar Inc.",
+    "city": "Englewood",
+    "trade": "Roofing and solar",
+    "grade": "A",
+    "score": 100,
+    "formed": "2018",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Energy Advantage roofing and solar",
+    "city": "Denver",
+    "trade": "Roofing and solar",
+    "grade": "A",
+    "score": 80,
+    "formed": "2017",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "CO ROOFING AND SOLAR, LLC",
+    "city": "Colorado Springs",
+    "trade": "Roofing and solar",
+    "grade": "A",
+    "score": 65,
+    "formed": "2023",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Rex Roofing & Solar, LLC",
+    "city": "Castle Rock",
+    "trade": "Roofing and solar",
+    "grade": "A",
+    "score": 65,
+    "formed": "2024",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Landscapes 101",
+    "city": "Denver",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 55,
+    "formed": "2017",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "North Peak Roofing & Contracting",
+    "city": "Castle Rock",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 55,
+    "formed": "2018",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Timberline Landscaping, LLC",
+    "city": "Colorado Springs",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 55,
+    "formed": "2021",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "1776 Landscape & Maintenance LLC",
+    "city": "Castle Rock",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2022",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Capstone Roofing Colorado L.L.C.",
+    "city": "Morrison",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 50,
+    "formed": "2016",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Colorado Tree Experts LLC",
+    "city": "Lakewood",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2022",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Danley Tree Care Inc",
+    "city": "Morrison",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2016",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Diversified Roofing & Construction",
+    "city": "Colorado Springs",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 50,
+    "formed": "2018",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Great Western Tree Care LLC",
+    "city": "Larkspur",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2017",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Green Saw Tree Service LLC",
+    "city": "Boulder",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2019",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Home Grown Roofing and Contracting",
+    "city": "Conifer",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 50,
+    "formed": "2018",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Integrity Roofing & Repairs, LLC",
+    "city": "Broomfield",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 50,
+    "formed": "2021",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Majestic Roofing LLC",
+    "city": "Loveland",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 50,
+    "formed": "2016",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "NoCo Roofing, LLC",
+    "city": "Fort Collins",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 50,
+    "formed": "2017",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Peak Tree Service LLC",
+    "city": "Colorado Springs",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2019",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   },
+   {
+    "name": "Pro Roofing America LLC",
+    "city": "Windsor",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 50,
+    "formed": "2021",
+    "why": "Has a Nextdoor business page, not messaged yet"
+   }
+  ],
+  "facebook": [
+   {
+    "name": "Premier Roofing Ltd",
+    "city": "Carbondale",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 80,
+    "formed": "2025",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "3M AND G ROOFING COMPANY LLC",
+    "city": "Aurora",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 75,
+    "formed": "2019",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Right-On Roofing Inc",
+    "city": "Denver",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 75,
+    "formed": "2023",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Virtuous Roofing & Restoration LLC",
+    "city": "Denver",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 75,
+    "formed": "2021",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Armour Roofing Colorado LLC",
+    "city": "Evergreen",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 70,
+    "formed": "2018",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Avalanche Roofing, LLC",
+    "city": "Thornton",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 70,
+    "formed": "2017",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Bestroofandsolar LLC",
+    "city": "Golden",
+    "trade": "Roofing and solar",
+    "grade": "A",
+    "score": 70,
+    "formed": "2023",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Colorado Springs Roofing Company",
+    "city": "Littleton",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 70,
+    "formed": "2019",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "L A ROOFING LLC",
+    "city": "Aurora",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 70,
+    "formed": "2017",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "MBA Roofing Experts, LLC",
+    "city": "Denver",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 70,
+    "formed": "2023",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Native Roofing & Solar LLC.",
+    "city": "Colorado Springs",
+    "trade": "Roofing and solar",
+    "grade": "A",
+    "score": 70,
+    "formed": "2021",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "PJD Construction & Roofing, Inc",
+    "city": "Aurora",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 70,
+    "formed": "2018",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Recovery Roofing and Restoration Inc",
+    "city": "Colorado Springs",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 70,
+    "formed": "2021",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "5280 Construction and Roofing LLC",
+    "city": "Colorado Springs",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 65,
+    "formed": "2018",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "a-denver roofing, inc",
+    "city": "Lakewood",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 65,
+    "formed": "2018",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Altitude Roof Works LLC",
+    "city": "Colorado Springs",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 65,
+    "formed": "2026",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Baseline Roofing and Solar LLC",
+    "city": "Arvada",
+    "trade": "Roofing and solar",
+    "grade": "A",
+    "score": 65,
+    "formed": "2022",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Brazen Roofing and Restoration LLC",
+    "city": "Denver",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 65,
+    "formed": "2026",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Brazen Roofing of Colorado LLC",
+    "city": "Parker",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 65,
+    "formed": "2026",
+    "why": "Has a Facebook page link on its website"
+   },
+   {
+    "name": "Colorado Roofing Company Ltd",
+    "city": "Englewood",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 65,
+    "formed": "2020",
+    "why": "Has a Facebook page link on its website"
+   }
+  ],
+  "calls": [
+   {
+    "name": "Family Roofing Incorporated",
+    "city": "Westminster",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 65,
+    "formed": "2026",
+    "why": "Emailed 2026-10-31, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Retro Roofing L.L.C.",
+    "city": "Greenwood Village",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 65,
+    "formed": "2026",
+    "why": "Emailed 2026-10-31, no reply yet: a follow-up call"
+   },
+   {
+    "name": "RooflessSolar, LLC",
+    "city": "Erie",
+    "trade": "Roofing and solar",
+    "grade": "A",
+    "score": 65,
+    "formed": "2021",
+    "why": "Emailed 2026-11-03, no reply yet: a follow-up call"
+   },
+   {
+    "name": "West Point Roofing LLC",
+    "city": "Centennial",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 65,
+    "formed": "2024",
+    "why": "Emailed 2026-11-04, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Superior Roofing Colorado, LLC",
+    "city": "Aurora",
+    "trade": "Roofing",
+    "grade": "A",
+    "score": 60,
+    "formed": "2026",
+    "why": "Emailed 2026-10-31, no reply yet: a follow-up call"
+   },
+   {
+    "name": "BLACK ROOFING & CONSTRUCTION LLC",
+    "city": "Aurora",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 55,
+    "formed": "2025",
+    "why": "Emailed 2026-10-31, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Commercial Roofing Academy LLC",
+    "city": "Parker",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 55,
+    "formed": "2021",
+    "why": "Emailed 2026-11-04, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Ski Town Roofing LLC",
+    "city": "Denver",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 55,
+    "formed": "2019",
+    "why": "Emailed 2026-11-01, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Arbor Wise LLC",
+    "city": "Broomfield",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2019",
+    "why": "Emailed 2026-11-02, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Eddys Lawn & Landscaping Services LLC",
+    "city": "Longmont",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2017",
+    "why": "Emailed 2026-11-01, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Highlands Landscaping LLC",
+    "city": "Arvada",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2020",
+    "why": "Emailed 2026-10-31, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Leyva Painting & Landscaping, LLC",
+    "city": "Denver",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2022",
+    "why": "Emailed 2026-11-01, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Supreme Landscapers Denver LLC",
+    "city": "Denver",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2026",
+    "why": "Emailed 2026-11-05, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Vail Creek Landscaping CO LLC",
+    "city": "Aurora",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 50,
+    "formed": "2025",
+    "why": "Emailed 2026-10-31, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Arbor Anglers Outfitters LLC",
+    "city": "Lafayette",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 45,
+    "formed": "2026",
+    "why": "Emailed 2026-11-02, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Clarkson Lawn Care LLC",
+    "city": "Denver",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 45,
+    "formed": "2025",
+    "why": "Emailed 2026-11-02, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Colorado Tree Services Unltd. LLC",
+    "city": "Lakewood",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 45,
+    "formed": "2025",
+    "why": "Emailed 2026-11-02, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Friends Landscaping Designs, LLC",
+    "city": "Commerce City",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 45,
+    "formed": "2024",
+    "why": "Emailed 2026-10-31, no reply yet: a follow-up call"
+   },
+   {
+    "name": "Patriot Roofing LLC",
+    "city": "Pueblo",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 45,
+    "formed": "2024",
+    "why": "Emailed 2026-11-01, no reply yet: a follow-up call"
+   },
+   {
+    "name": "JPL Landscapes, LLC",
+    "city": "Atwood",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 40,
+    "formed": "2023",
+    "why": "Emailed 2026-11-02, no reply yet: a follow-up call"
+   }
+  ],
+  "email": [
+   {
+    "name": "Greater Grounds Landscaping LLC",
+    "city": "Palmer Lake",
+    "trade": "Lawn and yards",
+    "grade": "B",
+    "score": 45,
+    "formed": "2017",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "Best Roof and Solar Inc",
+    "city": "Lakewood",
+    "trade": "Roofing and solar",
+    "grade": "B",
+    "score": 40,
+    "formed": "2023",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "L & E. ROOFING LLC",
+    "city": "Commerce City",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 40,
+    "formed": "2018",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "Precise Roofing LTD.",
+    "city": "Parker",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 40,
+    "formed": "2021",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "Colorado irrigation and landscaping",
+    "city": "Silt",
+    "trade": "Lawn and yards",
+    "grade": "C",
+    "score": 30,
+    "formed": "2020",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "E&R LANDSCAPING LLC",
+    "city": "Northglenn",
+    "trade": "Lawn and yards",
+    "grade": "C",
+    "score": 30,
+    "formed": "2026",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "AG.Landscaping LLC",
+    "city": "Pueblo",
+    "trade": "Lawn and yards",
+    "grade": "C",
+    "score": 25,
+    "formed": "2025",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "Colorado Tree Care LLC",
+    "city": "Kremmling",
+    "trade": "Lawn and yards",
+    "grade": "C",
+    "score": 25,
+    "formed": "2024",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "L.L.C. Irrigation Solutions",
+    "city": "Avon",
+    "trade": "Lawn and yards",
+    "grade": "C",
+    "score": 15,
+    "formed": "2023",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "tree service LLC",
+    "city": "Pueblo",
+    "trade": "Lawn and yards",
+    "grade": "C",
+    "score": 10,
+    "formed": "2026",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "GENERAL ROOFING SOLUTIONS LLC",
+    "city": "Steamboat Springs",
+    "trade": "Roofing",
+    "grade": "",
+    "score": 0,
+    "formed": "2026",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "LOZANO CG ROOFING LLC",
+    "city": "Silverthorne",
+    "trade": "Roofing",
+    "grade": "",
+    "score": 0,
+    "formed": "2017",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "Salida Turf LLC",
+    "city": "Salida",
+    "trade": "Lawn and yards",
+    "grade": "",
+    "score": 0,
+    "formed": "2025",
+    "why": "Not emailed by the desk yet"
+   },
+   {
+    "name": "HIGHLAND ROOFING LLC",
+    "city": "Rifle",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 45,
+    "formed": "2023",
+    "why": "Emailed by the desk, no reply: a personal follow-up"
+   },
+   {
+    "name": "Superior Roofing and Exteriors LLC",
+    "city": "Conifer",
+    "trade": "Roofing",
+    "grade": "B",
+    "score": 40,
+    "formed": "2024",
+    "why": "Emailed by the desk, no reply: a personal follow-up"
+   },
+   {
+    "name": "FREEDOM LANDSCAPES LLC",
+    "city": "Ignacio",
+    "trade": "Lawn and yards",
+    "grade": "C",
+    "score": 30,
+    "formed": "2022",
+    "why": "Emailed by the desk, no reply: a personal follow-up"
+   }
+  ]
+ }
+}
