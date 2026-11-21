@@ -907,8 +907,12 @@ console.log('roll forward');
   await runner(new Date(now * 1000).toISOString()); ok(state().posts[PA].at === s1.posts[PA].at, 'the next run: already ahead, nothing moves');
   await runner(new Date((s1.posts[PA].at - 3600) * 1000).toISOString()); const s2 = state();
   ok(s2.posts[PA].at - s1.posts[PA].at === s2.posts[PB].at - s1.posts[PB].at && s2.posts[PA].at > s1.posts[PA].at && s2.posts[PA].status === 'draft', 'the runner keeps moving them as each date comes close, never posting them');
+  { const pr = await runPhp(['pin', PB, 'on', 'Matthew 21 Nov: keep the Thanksgiving posts for Thanksgiving']); const pb0 = state().posts[PB].at, pa0 = state().posts[PA].at;
+    await runner(new Date((pa0 - 3600) * 1000).toISOString()); const s3 = state();
+    ok(pr.code === 0 && s3.posts[PB].at === pb0 && s3.posts[PA].at > pa0 && /Keeps its date/.test(s3.posts[PB].log.map((l) => l.what).join('|')), 'a pinned post keeps its date while the rest roll on');
+    ok((await runPhp(['pin', PB, 'on'])).code !== 0 && (await runPhp(['pin', 'pnope', 'on', 'x'])).code !== 0 && (await runPhp(['pin', PB, 'off'])).code === 0 && !state().posts[PB].pinned, 'pin needs a reason and a real post; off un-pins'); }
   ok((await runPhp(['roll', 'surge', 'off'])).code === 0, 'roll off');
-  await runner(new Date((s2.posts[PA].at - 3600) * 1000).toISOString()); ok(state().posts[PA].at === s2.posts[PA].at, 'off: they stay where they are');
+  { const pa1 = state().posts[PA].at; await runner(new Date((pa1 - 3600) * 1000).toISOString()); ok(state().posts[PA].at === pa1, 'off: they stay where they are'); }
 }
 
 console.log('check (read-only)');

@@ -20,6 +20,8 @@ declare(strict_types=1);
  *                                        earliest unposted dated post is less than a day away, every unposted dated post of that client
  *                                        moves forward by the same whole number of weeks (same weekday and clock time, gaps and order kept,
  *                                        nothing deleted; each move written in the post's history)
+ *   php runner.php pin <post id> on "why" | off   a post that roll forward never moves (2026-11-21: Thanksgiving and toy-drive posts keep
+ *                                        their own dates)
  *   php runner.php linkedin              read-only: each LinkedIn client's connection (state, Page, expiry; never tokens)
  *
  * Once each: a post is claimed ("publishing") under the state lock before any call to Meta, each platform is recorded the moment it goes,
@@ -96,6 +98,19 @@ if ($cmd === 'roll') {
     if ($r < 0) { fwrite(STDERR, "no such client\n"); exit(1); }
     $n = $on === 'on' ? pcRollForward(pcNow()) : 0;
     echo $on === 'on' ? 'rolling forward: ' . $cid . ' (' . $n . ' post(s) moved now)' : 'roll forward off: ' . $cid, "\n"; exit(0);
+}
+if ($cmd === 'pin') {   /* 21 Nov, Matthew: "Keep the thanksgiving posts for thanksgivig"; dated posts keep their date while the rest roll */
+    $pid = (string) ($args[1] ?? ''); $on = (string) ($args[2] ?? ''); $why = trim((string) ($args[3] ?? ''));
+    if ($pid === '' || !in_array($on, ['on', 'off'], true) || ($on === 'on' && $why === '')) { fwrite(STDERR, "usage: php runner.php pin <post id> on \"why\"  |  pin <post id> off\n"); exit(1); }
+    $r = pcMutate(function (array &$S) use ($pid, $on, $why) {
+        if (!isset($S['posts'][$pid])) return -1;
+        $p = &$S['posts'][$pid];
+        if ($on === 'on') { $p['pinned'] = ['why' => $why, 'at' => pcNow()]; pcLog($p, 'server (pin)', 'Keeps its date while the schedule rolls forward: ' . $why); }
+        else { unset($p['pinned']); pcLog($p, 'server (pin)', 'Moves with the schedule again'); }
+        unset($p); return 0;
+    });
+    if ($r < 0) { fwrite(STDERR, "no such post\n"); exit(1); }
+    echo ($on === 'on' ? 'pinned: ' : 'unpinned: '), $pid, "\n"; exit(0);
 }
 if ($cmd === 'linkedin') {   /* what the page shows, never tokens */
     $S = pcState(); echo 'LinkedIn app keys on the server: ', pcLiApp() ? 'yes' : 'no', "\n";
@@ -320,7 +335,7 @@ function pcRollForward(int $now): int {
         foreach ($S['clients'] as $cid => $c) {
             if (empty($c['roll']) || !empty($c['archived'])) continue;
             $ids = []; $min = PHP_INT_MAX;
-            foreach ($S['posts'] as $id => $p) if ($p['client'] === $cid && in_array($p['status'], ['draft', 'approved'], true) && (int) ($p['at'] ?? 0) > 0) { $ids[] = $id; $min = min($min, (int) $p['at']); }
+            foreach ($S['posts'] as $id => $p) if ($p['client'] === $cid && in_array($p['status'], ['draft', 'approved'], true) && (int) ($p['at'] ?? 0) > 0 && empty($p['pinned'])) { $ids[] = $id; $min = min($min, (int) $p['at']); }
             if (!$ids || $min >= $now + 86400) continue;
             $weeks = (int) ceil(($now + 86400 - $min) / (7 * 86400));
             foreach ($ids as $id) {
