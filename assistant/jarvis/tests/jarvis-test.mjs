@@ -450,6 +450,8 @@ try {
     ok(await ev('![...document.querySelectorAll(".chip")].some(c=>/Team requests|Peak follow-ups/.test(c.textContent))'), 'Chips: no Team requests or Peak follow-ups chip (21 Nov)');
     await tap('/Record meeting/'); ok(await until('!!document.getElementById("mrconsent") && !document.querySelector("#meetrec.live")', 3000), 'Chips: Record meeting opens the Record screen, waiting for the tap');
     await click('#mrcancel'); await sleep(150); }
+  { const n0 = await ev('document.querySelectorAll(".chat > .msg").length'); await click('#chatclearbtn'); await sleep(150);
+    ok(n0 > 0 && await ev('document.querySelectorAll(".chat > .msg").length === 0 && !!document.querySelector(".chat > .sp")'), 'Clear: the conversation leaves the screen (' + n0 + ' messages before)'); }
   await click('.ib.mic'); await sleep(150);
   ok(await ev('document.getElementById("app").classList.contains("s-listen") && /Listening/.test(document.querySelector(".slbl").textContent)'), 'the mic: the core listens');
   await sleep(500);

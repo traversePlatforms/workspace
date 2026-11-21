@@ -984,7 +984,11 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     /* 19 Nov: Hands-free: the mic opens again after each spoken answer, for a follow-up (kept per device) */
     var hf = btn('Hands-free', null, 'sw hf' + (S.hands ? '' : ' off'), function () { S.hands = !S.hands; store('jarvis.hands', S.hands); if (!S.hands) { S.convo = false; clearTimeout(followUp.t); } toast(S.hands ? 'Hands-free: after each answer the mic opens again. Say “that’s all” or stay quiet to stop.' : 'Hands-free off.'); paintBrain(); });
     hf.id = 'handsswitch'; hf.title = S.hands ? 'Hands-free is on: after each spoken answer the mic opens again. Tap to turn off.' : 'Hands-free is off. Tap so the mic opens again after each spoken answer, for a follow-up.'; hf.setAttribute('aria-pressed', String(S.hands));
-    add(brainBar, l, vo, hf);
+    /* 21 Nov (Matthew: "how do i minimize or clear out the text?"): Clear empties the conversation on screen. Nothing is deleted: desk chats stay
+       in their threads, and new answers show here as they come. */
+    var cl = btn('Clear', null, 'sw cl', function () { [].slice.call(chatLog.children).forEach(function (n) { if (!n.classList.contains('sp')) n.remove(); }); S.chipAns = null; [].forEach.call(document.querySelectorAll('.chip.on'), function (c) { c.classList.remove('on'); c.setAttribute('aria-pressed', 'false'); }); hush(); setState('idle'); });
+    cl.id = 'chatclearbtn'; cl.title = 'Clear the conversation off the screen (nothing is deleted)';
+    add(brainBar, l, vo, hf, cl);
     if (field) field.placeholder = isPhone ? 'Ask, or tap the mic' : 'Ask, or tap the mic (“desk:” sends it to your laptop)';
   }
 
