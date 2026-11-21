@@ -1260,5 +1260,278 @@
  ],
  "g3-lake-city": [
   "Hinsdale"
+ ],
+ "g3-gardner-rural": [
+  "Huerfano"
+ ],
+ "g3-huerfano-other": [
+  "Huerfano"
+ ],
+ "g3-la-veta": [
+  "Huerfano"
+ ],
+ "g3-la-veta-rural": [
+  "Huerfano"
+ ],
+ "g3-walsenburg": [
+  "Huerfano"
+ ],
+ "g3-walsenburg-rural": [
+  "Huerfano"
+ ],
+ "g4-adams-other": [
+  "Adams"
+ ],
+ "g4-arapahoe-other": [
+  "Arapahoe"
+ ],
+ "g4-archuleta-other": [
+  "Archuleta"
+ ],
+ "g4-bennett": [
+  "Arapahoe"
+ ],
+ "g4-boulder-other": [
+  "Boulder"
+ ],
+ "g4-byers": [
+  "Arapahoe"
+ ],
+ "g4-calhan": [
+  "Elbert"
+ ],
+ "g4-carr": [
+  "Larimer"
+ ],
+ "g4-castle-rock": [
+  "Douglas"
+ ],
+ "g4-clear-creek-other": [
+  "Clear Creek"
+ ],
+ "g4-como": [
+  "Park"
+ ],
+ "g4-crook": [
+  "Logan"
+ ],
+ "g4-debeque": [
+  "Garfield"
+ ],
+ "g4-deer-trail": [
+  "Arapahoe"
+ ],
+ "g4-del-norte": [
+  "Rio Grande"
+ ],
+ "g4-dolores-other": [
+  "Dolores"
+ ],
+ "g4-eckley": [
+  "Yuma"
+ ],
+ "g4-egnar": [
+  "San Miguel"
+ ],
+ "g4-el-paso-other": [
+  "El Paso"
+ ],
+ "g4-elbert": [
+  "Douglas"
+ ],
+ "g4-elbert-other": [
+  "Elbert"
+ ],
+ "g4-elizabeth": [
+  "Elbert"
+ ],
+ "g4-fleming": [
+  "Logan"
+ ],
+ "g4-fort-morgan": [
+  "Morgan"
+ ],
+ "g4-franktown": [
+  "Douglas"
+ ],
+ "g4-garfield-other": [
+  "Garfield"
+ ],
+ "g4-glade-park": [
+  "Mesa"
+ ],
+ "g4-grand-other": [
+  "Grand"
+ ],
+ "g4-grover": [
+  "Weld"
+ ],
+ "g4-guffey": [
+  "Park"
+ ],
+ "g4-gunnison-other": [
+  "Gunnison"
+ ],
+ "g4-gypsum": [
+  "Garfield"
+ ],
+ "g4-hartsel": [
+  "Park"
+ ],
+ "g4-hayden": [
+  "Routt"
+ ],
+ "g4-hesperus": [
+  "La Plata"
+ ],
+ "g4-hinsdale-other": [
+  "Hinsdale"
+ ],
+ "g4-idalia": [
+  "Yuma"
+ ],
+ "g4-ignacio": [
+  "La Plata"
+ ],
+ "g4-jasper": [
+  "Rio Grande"
+ ],
+ "g4-jefferson-other": [
+  "Jefferson"
+ ],
+ "g4-kiowa": [
+  "Elbert"
+ ],
+ "g4-la-plata-other": [
+  "La Plata"
+ ],
+ "g4-laporte": [
+  "Larimer"
+ ],
+ "g4-larimer-other": [
+  "Larimer"
+ ],
+ "g4-larkspur": [
+  "Douglas"
+ ],
+ "g4-limon": [
+  "Elbert"
+ ],
+ "g4-littleton": [
+  "Douglas"
+ ],
+ "g4-livermore": [
+  "Larimer"
+ ],
+ "g4-logan-other": [
+  "Logan"
+ ],
+ "g4-mancos": [
+  "Montezuma"
+ ],
+ "g4-meeker": [
+  "Rio Blanco"
+ ],
+ "g4-mesa-other": [
+  "Mesa"
+ ],
+ "g4-monte-vista": [
+  "Rio Grande"
+ ],
+ "g4-montezuma-other": [
+  "Montezuma"
+ ],
+ "g4-montrose": [
+  "Ouray"
+ ],
+ "g4-morgan-other": [
+  "Morgan"
+ ],
+ "g4-new-raymer": [
+  "Morgan"
+ ],
+ "g4-norwood": [
+  "San Miguel"
+ ],
+ "g4-oak-creek": [
+  "Routt"
+ ],
+ "g4-ouray-other": [
+  "Ouray"
+ ],
+ "g4-park-other": [
+  "Park"
+ ],
+ "g4-phippsburg": [
+  "Routt"
+ ],
+ "g4-pitkin-other": [
+  "Pitkin"
+ ],
+ "g4-placerville": [
+  "Ouray"
+ ],
+ "g4-ramah": [
+  "Elbert"
+ ],
+ "g4-rio-blanco-other": [
+  "Rio Blanco"
+ ],
+ "g4-rio-grande-other": [
+  "Rio Grande"
+ ],
+ "g4-routt-other": [
+  "Routt"
+ ],
+ "g4-san-juan-other": [
+  "San Juan"
+ ],
+ "g4-san-miguel-other": [
+  "San Miguel"
+ ],
+ "g4-sedalia": [
+  "Douglas"
+ ],
+ "g4-sedgwick-other": [
+  "Sedgwick"
+ ],
+ "g4-steamboat-springs": [
+  "Routt"
+ ],
+ "g4-sterling": [
+  "Logan"
+ ],
+ "g4-strasburg": [
+  "Arapahoe"
+ ],
+ "g4-summit-other": [
+  "Summit"
+ ],
+ "g4-teller-other": [
+  "Teller"
+ ],
+ "g4-weld": [
+  "Weld"
+ ],
+ "g4-weld-other": [
+  "Weld"
+ ],
+ "g4-wellington": [
+  "Larimer"
+ ],
+ "g4-woodland-park": [
+  "Douglas"
+ ],
+ "g4-wray": [
+  "Yuma"
+ ],
+ "g4-yampa": [
+  "Routt"
+ ],
+ "g4-yuma": [
+  "Yuma"
+ ],
+ "g4-yuma-other": [
+  "Yuma"
  ]
 }

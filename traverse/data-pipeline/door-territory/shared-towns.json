@@ -212,5 +212,117 @@
   ],
   "g3-victor": [
     "g3-cripple-creek-rural"
+  ],
+  "hou-houston-southwest": [
+    "hou-meadows-place",
+    "hou-stafford",
+    "hou-sugar-land"
+  ],
+  "hou-sugar-land": [
+    "hou-houston-southwest",
+    "hou-houston-west-far"
+  ],
+  "hou-meadows-place": [
+    "hou-houston-southwest",
+    "hou-stafford"
+  ],
+  "hou-stafford": [
+    "hou-houston-southwest",
+    "hou-meadows-place",
+    "hou-missouri-city"
+  ],
+  "hou-houston-west-far": [
+    "hou-sugar-land"
+  ],
+  "hou-houston-northwest-far": [
+    "hou-tomball"
+  ],
+  "hou-tomball": [
+    "hou-houston-northwest-far"
+  ],
+  "hou-katy-south": [
+    "hou-fort-bend-county-other"
+  ],
+  "hou-fort-bend-county-other": [
+    "hou-beasley",
+    "hou-fresno",
+    "hou-katy-south",
+    "hou-needville",
+    "hou-richmond",
+    "hou-rosenberg",
+    "hou-rosharon"
+  ],
+  "hou-richmond": [
+    "hou-fort-bend-county-other"
+  ],
+  "hou-pearland": [
+    "hou-alvin"
+  ],
+  "hou-alvin": [
+    "hou-pearland"
+  ],
+  "hou-missouri-city": [
+    "hou-stafford"
+  ],
+  "hou-pasadena": [
+    "hou-deer-park",
+    "hou-south-houston"
+  ],
+  "hou-deer-park": [
+    "hou-pasadena"
+  ],
+  "hou-south-houston": [
+    "hou-pasadena"
+  ],
+  "hou-baytown": [
+    "hou-highlands"
+  ],
+  "hou-highlands": [
+    "hou-baytown"
+  ],
+  "hou-rosenberg": [
+    "hou-fort-bend-county-other"
+  ],
+  "hou-iowa-colony": [
+    "hou-rosharon"
+  ],
+  "hou-rosharon": [
+    "hou-fort-bend-county-other",
+    "hou-fresno",
+    "hou-iowa-colony"
+  ],
+  "hou-angleton": [
+    "hou-freeport"
+  ],
+  "hou-freeport": [
+    "hou-angleton",
+    "hou-clute"
+  ],
+  "hou-fresno": [
+    "hou-fort-bend-county-other",
+    "hou-rosharon"
+  ],
+  "hou-clute": [
+    "hou-freeport"
+  ],
+  "hou-west-columbia": [
+    "hou-brazoria",
+    "hou-brazoria-county-other",
+    "hou-sweeny"
+  ],
+  "hou-brazoria-county-other": [
+    "hou-west-columbia"
+  ],
+  "hou-sweeny": [
+    "hou-west-columbia"
+  ],
+  "hou-brazoria": [
+    "hou-west-columbia"
+  ],
+  "hou-needville": [
+    "hou-fort-bend-county-other"
+  ],
+  "hou-beasley": [
+    "hou-fort-bend-county-other"
   ]
 }
