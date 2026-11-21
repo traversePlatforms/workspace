@@ -193,11 +193,15 @@ function voDesk(string $t, array $k, string $kind): array {
 }
 /** a question: the instant Assistant, the same conversation as Ask, told it is being heard. If it cannot answer, the desk gets it. */
 function voAsk(string $t, array $k): array {
-    $r = function_exists('chatTurn') ? chatTurn($t, ['voice' => true]) : ['ok' => false];
+    $r = function_exists('chatTurn') ? chatTurn($t, ['voice' => true, 'k' => $k]) : ['ok' => false];
     if (empty($r['ok'])) {
         $d = voDesk($t, $k, 'desk');
         if (isset($d['thread'])) $d['say'] = 'The Assistant couldn’t answer just now, so I sent it to the desk. I’ll alert you when it’s done.';
         $d['intent'] = 'ask-desk'; return $d;
+    }
+    /* 21 Nov (P-13): the Assistant decided it is laptop work and handed it to the desk itself (send_to_desk) */
+    foreach ((array) ($r['actions'] ?? []) as $a) if (($a['type'] ?? '') === 'desk') {
+        return ['intent' => 'desk', 'say' => 'Sent to the desk; I’ll alert you when it’s done.' . (voLaptopAwake() ? '' : ' Your laptop is asleep, so it starts when the laptop wakes.'), 'thread' => (string) $a['id']];
     }
     $say = voSpeakable((string) $r['reply']);
     foreach ((array) ($r['actions'] ?? []) as $a) if (($a['type'] ?? '') === 'review') { $say .= ' The reply is saved as a Gmail draft. Nothing was sent.'; break; }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendor)) require $vendor;
-foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk', 'voice', 'tts', 'meet'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk', 'voice', 'tts', 'meet', 'brief'] as $f) require __DIR__ . '/lib/' . $f . '.php';
 
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -82,7 +82,7 @@ if ($action === 'jvvoicekeynew') { if (!$isPost) out(['ok' => false], 405); out(
 if ($action === 'jvvoicekeydrop') { if (!$isPost) out(['ok' => false], 405); out(voKeyDrop((string) ($body['id'] ?? ''))); }
 /* 20 Nov (P-11): the natural voice for the page: its state, step 1 (the words, kept privately), step 2 (play, streamed), or all in one */
 if ($action === 'ttsstate') out(['ok' => true, 'tts' => ttsState()]);
-if ($action === 'ttsprep') { if (!$isPost) out(['ok' => false], 405); out(ttsPrep((string) ($body['text'] ?? ''))); }
+if ($action === 'ttsprep') { if (!$isPost) out(['ok' => false], 405); out(ttsPrep((string) ($body['text'] ?? ''), max(0, (int) ($body['left'] ?? 0)))); }
 if ($action === 'ttsplay') { session_write_close(); @set_time_limit(60); ttsPlay((string) ($_GET['id'] ?? '')); }
 if ($action === 'tts') { if (!$isPost) out(['ok' => false], 405); session_write_close(); @set_time_limit(60); ttsDirect((string) ($body['text'] ?? '')); }
 if ($action === 'voicetry') { if (!$isPost) out(['ok' => false], 405); @set_time_limit(90); out(voiceTry((string) ($body['text'] ?? ''))); }
@@ -98,6 +98,9 @@ if ($action === 'home') {
     out(['ok' => true, 'accounts' => $accts, 'items' => $items, 'settings' => settings(), 'spend' => spendSummary(), 'tts' => ttsState(),
         'setup' => ['anthropic' => !empty($c['anthropicKey']), 'google' => !empty($c['googleClientId']) && !empty($c['googleClientSecret']), 'redirect' => gRedirect()]]);
 }
+/* 21 Nov (P-13): the full morning brief's weather and news (lib/brief.php): the copy made at 5:30 am, or made now when it is over 2 hours
+   old (&fresh=1: his Refresh, at most every 10 minutes). The session is let go first, so the page keeps working while the feeds are read. */
+if ($action === 'jvbrief') { session_write_close(); @set_time_limit(90); out(brGet(!empty($_GET['fresh'])) + ['tts' => ttsState()]); }
 /* J.A.R.V.I.S., the merged page (2026-11-18): the laptop's pushed status (overnight check, builds) and the calendar placeholder; lib/jarvis.php */
 if ($action === 'jvstatus') out(jvStatus());
 if ($action === 'jvteamhide') { if (!$isPost) out(['ok' => false], 405); out(jvTeamHide((string) ($body['key'] ?? ''), (int) ($body['updated'] ?? 0))); }

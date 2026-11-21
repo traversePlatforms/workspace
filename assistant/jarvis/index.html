@@ -322,6 +322,16 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
 .ri .ra{display:flex;gap:4px;flex:none}
 .ri .ra button{font:10px "JetBrains Mono",monospace;color:var(--c);border:1px solid #3ee8ff33;border-radius:4px;padding:3px 6px}
 .bl2{font-size:13px;line-height:1.5;padding:3px 0;color:#cfeef7}
+/* 21 Nov (P-13): the full morning brief: sections, linked headlines, the voice note; the Assistant's "Send this to the desk instead" */
+.bsub{font:500 10px "JetBrains Mono",monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--c);margin:10px 0 3px}
+.hl{display:block;font-size:12.5px;line-height:1.45;padding:3px 0;color:#cfeef7;text-decoration:none;white-space:normal}
+.hl:hover{color:var(--c)}.hl .ho{font:10px "JetBrains Mono",monospace;letter-spacing:.06em;color:var(--mut);margin-right:6px;text-transform:uppercase}
+.hl .hs{color:var(--mut);font-size:11px;margin-left:6px}
+.msg .bp{margin:0 0 6px}.msg .bp b{color:var(--c);font-weight:500}
+.msg details.blinks{margin-top:6px;white-space:normal}.msg details.blinks summary{cursor:pointer;font:10px "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.msg .bnote{margin-top:6px;white-space:normal}
+.desk .brain .bl{white-space:normal;line-height:1.35}   /* 21 Nov: the label wraps rather than clips */
+.rmb.todesk{margin-left:6px}.rmb.todesk[disabled]{opacity:.6}
 .mrow{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;border-top:1px solid #3ee8ff12}.mrow:first-child{border-top:0}
 .mrow b{font:600 15px Rajdhani,sans-serif;letter-spacing:.02em;white-space:nowrap}
 /* driving mode: big buttons, little else */
@@ -455,9 +465,10 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
 
   /* ------------------------------------------------------------ state */
   var app = document.getElementById('app');
-  var S = { home: null, st: null, team: {}, jd: null, outbox: null, desk: null, gro: null, brain: store('jarvis.brain') === 'desk' ? 'desk' : 'assistant', tab: 'home',
+  var S = { home: null, st: null, team: {}, jd: null, outbox: null, desk: null, gro: null, brain: 'assistant', tab: 'home',   /* 21 Nov (P-13): no switch; the Assistant routes each request itself */
     fold: Object.assign({ brief: true }, store('jarvis.fold') || {}),   /* 19 Nov: the Morning brief starts folded (Matthew: "if i need a briefing I will ask for it") */ open: store('jarvis.open') || {}, needsAll: false, closedOpen: false, mineOpen: false, state: 'idle', briefed: false, pending: {},
     drive: !!store('jarvis.drive'), relisten: !!store('jarvis.relisten'), notes: {} };
+  try { localStorage.removeItem('jarvis.brain'); } catch (e) {}   /* the old Assistant / desk switch's stored choice (21 Nov) */
   var phoneMq = window.matchMedia('(max-width: 979px)'), isPhone = phoneMq.matches;
   var chatLog = el('div', 'chat'); chatLog.setAttribute('aria-live', 'polite'); chatLog.appendChild(el('div', 'sp'));
   var field, micB, sendB, brainBar, stateLbl, coreBox;
@@ -729,11 +740,28 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       out.push(el('div', 'hint', 'Each tap covers that one item only. Posts are approved in the post calendar, and emails go out only from Outbox or your own Send.'));
       return out;
     },
-    /* 19 Nov (P-8 step 4): the morning brief, from what is already on screen; read aloud on a tap */
+    /* 19 Nov (P-8 step 4): the morning brief; 21 Nov (P-13): the full brief: the weather, things to do, things happening, world and tech
+       news, every headline linked and named by its outlet. Fetched when the panel is open or he asks (never on load). */
     brief: function () {
-      var out = [], L = briefLines();
-      L.forEach(function (l) { out.push(el('div', 'bl2', l)); });
-      var b = btn('Read it to me', 'brief', 'btn sec', function () { localBrief(); }); b.id = 'briefread'; b.style.marginTop = '8px'; out.push(b);
+      var out = [], B = S.brief;
+      if (!B && !S.briefLoading && Date.now() - (S.briefTried || 0) > 60000) setTimeout(function () { briefLoad(false).then(draw); }, 0);
+      out.push(el('div', 'bsub', 'Weather · Englewood'));
+      if (!B) out.push(el('div', 'empty', S.briefLoading || !S.briefTried ? 'Getting the weather and news…' : (S.briefErr || 'The weather and news did not come through.')));
+      else weatherRows(B.weather).forEach(function (n) { out.push(n); });
+      out.push(el('div', 'bsub', 'To do'));
+      briefLines().forEach(function (l) { out.push(el('div', 'bl2', l)); });
+      if (B) Object.keys(B.titles || {}).forEach(function (k) {
+        out.push(el('div', 'bsub', B.titles[k]));
+        var l = (B.sections && B.sections[k]) || [];
+        if (!l.length) out.push(el('div', 'empty', 'Nothing came through.'));
+        l.forEach(function (i) { var h = hlRow(i); if (h) out.push(h); });
+      });
+      if (B && B.failed && B.failed.length) out.push(el('div', 'hint', 'Not reached this time: ' + B.failed.join(', ') + '.'));
+      if (B) out.push(el('div', 'lm', 'Fetched ' + whenStr(B.at) + ' · each outlet’s own feed · the forecast from the National Weather Service'));
+      var row = el('div', 'acts'); row.style.marginTop = '8px';
+      var b = btn('Read it to me', 'brief', 'btn sec', function () { localBrief(); }); b.id = 'briefread';
+      var rf = btn('Refresh', null, 'btn gh', function () { rf.disabled = true; briefLoad(true).then(draw); }); rf.id = 'briefrefresh';
+      add(row, b, rf); out.push(row);
       return out;
     },
     /* 19 Nov (P-8 step 3): reminders, pushed to his phone on the day */
@@ -816,6 +844,50 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var ob = outboxSum(); if (ob) L.push('Outbox: ' + ob.sent + ' sent today, ' + ob.waiting + ' waiting, ' + ob.failed + ' failed' + (ob.bounces ? ', ' + ob.bounces + ' bounced in 30 days' : '') + '.');
     return L;
   }
+  /* 21 Nov (P-13): the brief's weather and news (../api.php?action=jvbrief: fetched by the server at 5:30 am, or now when over 2 hours old) */
+  function briefLoad(fresh) {
+    if (S.briefP && !fresh) return S.briefP;
+    S.briefLoading = true; S.briefTried = Date.now();
+    var p = new Promise(function (res) {
+      var t = setTimeout(function () { res({ ok: false, error: 'The news is taking too long. Try again in a minute.' }); }, 70000);
+      aget('jvbrief' + (fresh ? '&fresh=1' : '')).then(function (j) { clearTimeout(t); res(j); }, function () { clearTimeout(t); res({ ok: false, error: 'No connection: the weather and news did not come through.' }); });
+    }).then(function (j) {
+      S.briefLoading = false; S.briefP = null;
+      if (j._status === 401) { signin(); return null; }
+      if (j.ok) { S.brief = j; S.briefErr = ''; } else S.briefErr = j.error || 'The weather and news did not come through.';
+      if (j.tts && S.home) S.home.tts = j.tts;
+      return S.brief;
+    });
+    S.briefP = p; return p;
+  }
+  function safeLink(u) { return /^https?:\/\/[^\s"<>]+$/i.test(String(u || '')) ? String(u) : ''; }
+  function hlRow(i) {
+    var u = safeLink(i.link); if (!u) return null;
+    var a = el('a', 'hl'); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    add(a, el('span', 'ho', i.outlet), i.title, i.site ? el('span', 'hs', i.site) : null);
+    return a;
+  }
+  function weatherRows(w) {
+    var out = [];
+    if (!w || !w.ok) { out.push(el('div', 'empty', 'The National Weather Service did not answer this time.')); return out; }
+    (w.periods || []).slice(0, 2).forEach(function (p) { var r = el('div', 'mrow'); add(r, el('span', null, p.name + ' · ' + p.short), el('b', null, p.temp != null ? (p.day ? 'High ' : 'Low ') + p.temp + '°' + (p.unit || 'F') : '')); out.push(r); });
+    (w.alerts || []).forEach(function (a) { var x = el('div', 'ls', 'Alert: ' + a.event + (a.headline ? ' · ' + a.headline : '')); x.style.color = 'var(--warn)'; out.push(x); });
+    if (w.alertsOk && !(w.alerts || []).length) out.push(el('div', 'ls', 'No active weather alerts.'));
+    var u = safeLink(w.link); if (u) { var a = el('a', 'hl'); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer'; add(a, el('span', 'ho', 'National Weather Service'), 'The full forecast for Englewood'); out.push(a); }
+    return out;
+  }
+  /* the brief's parts, in order: hello, weather, to do (from the screen, no model), things happening, world, tech, what failed */
+  function briefCompose(B) {
+    var hr = new Date().getHours(), P = [], sp = B && B.spoken;
+    P.push({ t: (hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening') + ', Matthew.' });
+    if (sp && sp.weather) P.push({ h: 'Weather', t: sp.weather });
+    P.push({ h: 'To do', say: 'Your day. ', t: briefLines().join(' ') });
+    var SAY = { local: 'Around Denver. ', world: 'In world news. ', tech: 'In tech. ' };
+    if (sp) ['local', 'world', 'tech'].forEach(function (k) { if (sp[k]) P.push({ h: (B.titles && B.titles[k]) || k, say: SAY[k], t: sp[k] }); });
+    if (!B) P.push({ t: 'I couldn’t get the weather and news just now.' });
+    else if (B.failed && B.failed.length) P.push({ t: 'I couldn’t reach ' + B.failed.join(', ').replace(/, ([^,]*)$/, ' or $1') + ' this time.' });
+    return P;
+  }
   function mailRow(i, withInbox) {
     var a = acctOf(i.acct), r = btn(null, null, 'li', function () { openMail(i); }); r.setAttribute('data-key', i.acct + ':' + i.id);
     var d = el('span', 'dot'); d.style.background = colorOf(a); d.style.boxShadow = '0 0 8px ' + colorOf(a) + '88';
@@ -866,7 +938,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var w = el('div', 'cmd');
     var ch = el('div', 'chips');
     [['Brief me', localBrief], ['What’s waiting?', localWaiting], ['Record meeting', function () { mrOpen({}); }], ['Meeting notes', function () { meetingSheet(); }], ['Remind me…', function () { remindSheet(); }], ['Remember this…', function () { rememberSheet(''); }],
-     ['Morning check', localCheck], ['What’s building?', localBuilds], ['Add to groceries…', function () { field.value = 'Add  to groceries'; field.focus(); field.setSelectionRange(4, 4); if (S.brain === 'desk') setBrain('assistant'); }]]
+     ['Morning check', localCheck], ['What’s building?', localBuilds], ['Add to groceries…', function () { field.value = 'Add  to groceries'; field.focus(); field.setSelectionRange(4, 4); }]]
       .forEach(function (c) { ch.appendChild(chipBtn(c[0], c[1])); });
     /* 21 Nov: Record meeting is built in (Matthew: "should that just be built into the jarvis app"); Team requests and Peak follow-ups left the
        chips ("Remove team request ... Peak followups can leave as well"). The fade shows only while chips are hidden to the right. */
@@ -884,27 +956,27 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     return w;
   }
   var lpLine = null;
-  function paintLp() {   /* near the desk switch, only while the desk is the brain (19 Nov) */
+  function paintLp() {   /* under the bar (19 Nov); 21 Nov (P-13): always, since any request may go to the desk */
     if (!lpLine) return; var lp = laptop(); lpLine.textContent = '';
-    lpLine.className = 'lpline' + (lp.on ? '' : ' off'); lpLine.style.display = S.brain === 'desk' ? '' : 'none';
+    lpLine.className = 'lpline' + (lp.on ? '' : ' off'); lpLine.style.display = '';
     add(lpLine, el('i'), el('span', null, lp.desk));
   }
   function paintBrain() {
     if (!brainBar) return;
-    brainBar.className = 'brain' + (S.brain === 'desk' ? ' bdesk' : '');   /* not 'desk': that is the desktop layout's class (18 Nov: the bar grew 112 px) */ brainBar.textContent = '';
-    var l = el('span', 'bl'); add(l, el('i'), 'Answering: ' + BRAINS[S.brain]); l.id = 'brainlabel';
+    brainBar.className = 'brain'; brainBar.textContent = '';
+    /* 21 Nov (P-13; Matthew: "Yeah go ahead and do the assistant vs desk build"): no switch. Every request goes to the Assistant first, which
+       answers quick things itself and hands real work to the desk (send_to_desk); each answer says which one did it. */
+    var l = el('span', 'bl'); add(l, el('i'), 'Answering: ' + BRAINS.assistant + (isPhone ? ' · work goes to the desk' : ' · real work goes to the desk')); l.id = 'brainlabel';
+    l.title = 'Quick things (inbox, reminders, calendar, groceries, the brief, lookups, reply drafts) the Assistant answers at once. Building or fixing apps, changing files, research and meeting notes go to the desk on your laptop. Start with “desk:” to send it there yourself.';
     paintLp();
-    var sw = btn(S.brain === 'desk' ? 'Use the Assistant' : 'Send to the desk', null, 'sw', function () { setBrain(S.brain === 'desk' ? 'assistant' : 'desk'); });
-    sw.id = 'brainswitch';
     var vo = btn(S.speak ? 'Voice on' : 'Voice off', null, 'sw vo' + (S.speak ? '' : ' off'), function () { S.speak = !S.speak; store('jarvis.speak', S.speak); if (!S.speak) hush(); paintBrain(); });
     vo.id = 'voiceswitch'; vo.title = S.speak ? 'Replies are read aloud. Tap to stop.' : 'Tap to have replies read aloud'; vo.setAttribute('aria-pressed', String(S.speak));
     /* 19 Nov: Hands-free: the mic opens again after each spoken answer, for a follow-up (kept per device) */
     var hf = btn('Hands-free', null, 'sw hf' + (S.hands ? '' : ' off'), function () { S.hands = !S.hands; store('jarvis.hands', S.hands); if (!S.hands) { S.convo = false; clearTimeout(followUp.t); } toast(S.hands ? 'Hands-free: after each answer the mic opens again. Say “that’s all” or stay quiet to stop.' : 'Hands-free off.'); paintBrain(); });
     hf.id = 'handsswitch'; hf.title = S.hands ? 'Hands-free is on: after each spoken answer the mic opens again. Tap to turn off.' : 'Hands-free is off. Tap so the mic opens again after each spoken answer, for a follow-up.'; hf.setAttribute('aria-pressed', String(S.hands));
-    add(brainBar, l, vo, hf, sw);
-    if (field) field.placeholder = S.brain === 'desk' ? (isPhone ? 'For the desk on your laptop' : 'Write it for J.A.R.V.I.S. desk on your laptop (answers in a few minutes)') : (isPhone ? 'Ask, or tap the mic' : 'Ask J.A.R.V.I.S., or tap the mic to talk');
+    add(brainBar, l, vo, hf);
+    if (field) field.placeholder = isPhone ? 'Ask, or tap the mic' : 'Ask, or tap the mic (“desk:” sends it to your laptop)';
   }
-  function setBrain(b) { S.brain = b; store('jarvis.brain', b); paintBrain(); }
 
   function draw() {
     if (!S.home) return;
@@ -933,7 +1005,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     talk.setAttribute('data-drive', 'Talk'); talk.id = 'drivetalk'; g.appendChild(talk); app.appendChild(g);
     var o = el('div', 'dopts'), rl = btn(S.relisten ? 'Listen again after replies: on' : 'Listen again after replies: off', null, 'sw' + (S.relisten ? '' : ' off'), function () { S.relisten = !S.relisten; store('jarvis.relisten', S.relisten); draw(); });
     rl.id = 'relisten'; rl.setAttribute('aria-pressed', String(S.relisten));
-    add(o, rl, el('span', null, 'Answering: ' + (S.brain === 'desk' ? 'the desk on your laptop' : 'the Assistant, instant') + '. Replies are read aloud. iPhone: if you hear nothing, check the ringer switch is not on silent and the volume is up.'));
+    add(o, rl, el('span', null, 'Quick things: the Assistant, instant. Real work goes to the desk on your laptop. Replies are read aloud. iPhone: if you hear nothing, check the ringer switch is not on silent and the volume is up.'));
     app.appendChild(o);
     /* the command bar stays (hidden), so typed and spoken words go through the same path */
     var c = cmd(); c.style.display = 'none'; app.appendChild(c);
@@ -1068,12 +1140,14 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   function natStop() { var was = natBusy; natGen++; natQ = []; natBusy = false; clearTimeout(natDog); if (AU && was) { try { AU.pause(); } catch (e) {} } }   /* the element stays (it is the unlocked one) */
   function natNext() {
     var it = natQ.shift(); clearTimeout(natDog); if (!it) { natBusy = false; return; }
+    if (it.dev) { natBusy = true; var g0 = ++natGen; sySay(it.s, function () { if (g0 !== natGen) return; it.done(); natNext(); }); return; }   /* 21 Nov: the rest of a brief after a fallback */
     natBusy = true; var gen = ++natGen, started = false, over = false, startT = null;
     var next = function () { if (gen !== natGen) return; clearTimeout(natDog); it.done(); natNext(); };
     var finish = function () { if (over) return; over = true; clearTimeout(startT); next(); };
-    var fallback = function (why) { if (over || gen !== natGen) return; over = true; clearTimeout(startT); if (AU) try { AU.pause(); } catch (e) {} S.natLast = why || 'failed'; if (why !== 'off') ttsRefresh(); sySay(it.s, next); };
+    var fallback = function (why) { if (over || gen !== natGen) return; over = true; clearTimeout(startT); if (AU) try { AU.pause(); } catch (e) {} S.natLast = why || 'failed';
+      if (it.left) natQ.forEach(function (q) { if (q.left) q.dev = true; }); if (why !== 'off') ttsRefresh(); sySay(it.s, next); };
     natDog = setTimeout(function () { if (gen === natGen && !over) fallback('slow'); }, 20000 + it.s.length * 120);   /* never stuck */
-    var prep = new Promise(function (res) { var t = setTimeout(function () { res({ ok: false, why: 'slow' }); }, 3500); apost('ttsprep', { text: it.s }).then(function (j) { clearTimeout(t); res(j); }, function () { clearTimeout(t); res({ ok: false, why: 'offline' }); }); });
+    var prep = new Promise(function (res) { var t = setTimeout(function () { res({ ok: false, why: 'slow' }); }, 3500); apost('ttsprep', { text: it.s, left: it.left || 0 }).then(function (j) { clearTimeout(t); res(j); }, function () { clearTimeout(t); res({ ok: false, why: 'offline' }); }); });
     prep.then(function (j) {
       if (gen !== natGen || over) return;
       if (!j.ok) { if (j.state && S.home) { S.home.tts = j.state; paintNat(); } fallback(j.why); return; }
@@ -1114,11 +1188,40 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var s = speakable(t), nat = natOk();
     if (!(S.speak || force || S.drive || S.convo) || !(SY || nat) || !touched || !s) { if (S.convo && S.hands) followUp(1200); return; }   /* hands-free, but it cannot talk here: still listen again */
     if (!S.convo) hush();   /* in a voice conversation, answers queue rather than cut each other off */
-    var done = function () {
-      if ((S.drive && S.relisten && S.lastReply && Date.now() - S.lastReply < 120000) || (S.convo && S.hands)) { S.lastReply = 0; followUp(450); }
-      else if (S.convo && !rec) S.convo = false;
-    };
-    if (nat) natSay(s, done); else sySay(s, done);
+    if (nat) natSay(s, afterSay); else sySay(s, afterSay);
+  }
+  function afterSay() {
+    if ((S.drive && S.relisten && S.lastReply && Date.now() - S.lastReply < 120000) || (S.convo && S.hands)) { S.lastReply = 0; followUp(450); }
+    else if (S.convo && !rec) S.convo = false;
+  }
+  /* 21 Nov (P-13): the full brief is about 2 to 3 minutes, longer than one answer: said in pieces of a few sentences, one after another.
+     The natural voice only while the month's characters left are more than the whole brief plus a reserve (lib/tts.php TTS_BRIEF_RESERVE,
+     2,000, checked again by the server for each piece); otherwise all of it in the device voice, with a one-line note. Returns the note. */
+  function sayClean(t) { return String(t || '').replace(/https?:\/\/\S+/g, 'the link').replace(/[*_`#>]+/g, '').replace(/\s*\n+\s*[-•]\s*/g, '. ').replace(/\s+/g, ' ').trim(); }
+  function sayChunks(s, n) {
+    var out = [], cur = '', parts = s.match(/[^.!?]+[.!?]+["'’”)\]]*\s*|[^.!?]+$/g) || [s];
+    parts.forEach(function (p) {
+      while (p.length > n) { var k = p.lastIndexOf(', ', n); if (k < n / 2) k = p.lastIndexOf(' ', n); if (k < 1) k = n; if (cur) { out.push(cur.trim()); cur = ''; } out.push(p.slice(0, k + 1).trim()); p = p.slice(k + 1); }
+      if ((cur + p).length > n && cur) { out.push(cur.trim()); cur = ''; }
+      cur += p;
+    });
+    if (cur.trim()) out.push(cur.trim());
+    return out;
+  }
+  function nfmt(n) { return (+n || 0).toLocaleString('en-US'); }
+  function briefSay(text) {
+    if (MR && !MR.over && isPhoneUa()) return '';
+    var s = sayClean(text); if (!s || !touched) return '';
+    var ch = sayChunks(s, 480), total = ch.reduce(function (a, c) { return a + c.length; }, 0), t = ttsSt(), res = (t && t.briefReserve) || 2000;
+    var nat = natOk() && (t.cap - t.used) > total + res, note = '';
+    if (!nat && S.natural && t && t.on) note = t.avail ? 'Read in the device voice, to save the natural voice: ' + nfmt(Math.max(0, t.cap - t.used)) + ' characters left this month, and this brief needs ' + nfmt(total) + ' plus ' + nfmt(res) + ' kept spare.'
+      : 'Read in the device voice: the natural voice is ' + (t.why === 'cap' ? 'used up' : 'off') + ' this month.';
+    if (!(SY || nat)) return note;
+    hush();
+    var left = total;
+    ch.forEach(function (c, i) { var done = i === ch.length - 1 ? afterSay : function () {}; if (nat) natQ.push({ s: c, left: left, done: done }); else sySay(c, done); left -= c.length; });
+    if (nat && !natBusy) natNext();
+    return note;
   }
   /* 19 Nov (talk without Siri): hands-free. After a spoken answer the mic opens again for a follow-up (Hands-free on, or Listen again in
      driving mode); it stops after about 8 seconds of quiet, or "that's all" / "thanks Jarvis". S.convo: this turn started by voice, so its
@@ -1219,10 +1322,28 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   }
 
   /* 19 Nov (P-8 step 4): Brief me, read aloud (even with Voice off: he asked for it) */
+  /* 21 Nov (P-13): the full brief. The weather and news come from the server (fetched at 5:30 am, or now when over 2 hours old); the to-do
+     part from the screen, as before. Shown in parts with every headline linked, and read aloud (the natural voice only if the month can spare it). */
   function localBrief() {
-    var hr = new Date().getHours(), L = briefLines();
-    msgAi((hr < 12 ? 'Good morning, Matthew. ' : hr < 17 ? 'Good afternoon, Matthew. ' : 'Good evening, Matthew. ') + L.join(' '), 'J.A.R.V.I.S. · brief', true);
-    setState('answer');
+    var m = el('div', 'msg ai'), body = el('div'), gen = (localBrief.n = (localBrief.n || 0) + 1);
+    add(m, el('div', 'who', 'J.A.R.V.I.S. · brief'), body); body.textContent = 'Getting today’s weather and news…'; pushChat(m); setState('think');
+    briefLoad(false).then(function () {
+      if (gen !== localBrief.n || !m.parentNode) return;   /* closed or asked again meanwhile */
+      var B = S.brief, P = briefCompose(B); body.textContent = '';
+      P.forEach(function (p) { var d = el('div', 'bp'); if (p.h) d.appendChild(el('b', null, p.h + '. ')); d.appendChild(document.createTextNode(p.t)); body.appendChild(d); });
+      if (B) {
+        var dt = el('details', 'blinks'), n = 0, sm = el('summary'); dt.appendChild(sm);
+        Object.keys(B.titles || {}).forEach(function (k) { var l = (B.sections && B.sections[k]) || []; if (!l.length) return; dt.appendChild(el('div', 'bsub', B.titles[k])); l.forEach(function (i) { var h = hlRow(i); if (h) { dt.appendChild(h); n++; } }); });
+        var wl = safeLink(B.weather && B.weather.link); if (wl) { var a = el('a', 'hl'); a.href = wl; a.target = '_blank'; a.rel = 'noopener noreferrer'; add(a, el('span', 'ho', 'National Weather Service'), 'The full forecast for Englewood'); dt.appendChild(a); n++; }
+        sm.textContent = 'Headlines and links (' + n + ')'; if (n) m.appendChild(dt);
+      }
+      var spoken = P.map(function (p) { return (p.say || '') + p.t; }).join(' ');
+      m.appendChild(rmbBtn(spoken));
+      S.lastReply = Date.now();
+      var note = briefSay(spoken); if (note) m.appendChild(el('div', 'hint bnote', note));
+      chatLog.scrollTop = chatLog.scrollHeight; setState('answer');
+      if (!S.fold.brief && document.getElementById('p-brief')) draw();   /* the open panel shows the fetched news too */
+    });
   }
   /* driving mode's What's new: what changed since he last asked (kept per device) */
   function localNew() {
@@ -1715,16 +1836,18 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     if (MR && !MR.over && /^(?:stop|end|finish)\s+(?:the\s+)?(?:meeting\s+)?recording\b|^(?:stop|end|finish)\s+(?:the|this)\s+meeting\b/i.test(tb)) { msgMe(t); say('Stopping the recording.', true); mrStop(); return; }
     if (MR && !MR.over && /^pause\s+(?:the\s+)?(?:meeting\s+)?recording\b|^pause$/i.test(tb)) { msgMe(t); mrPause(); say('Paused.', true); return; }
     if (MR && !MR.over && /^(?:resume|continue|carry on)(?:\s+(?:the\s+)?(?:meeting\s+)?recording)?$/i.test(tb)) { msgMe(t); mrResume(); return; }
-    /* 19 Nov: these answer here, whichever brain is chosen (a reminder lives on the server, not on the laptop) */
+    /* 21 Nov (P-13): "desk: …" (or "to the desk: …") sends it straight to the desk, the typed override for the Assistant's routing */
+    var dk = /^\s*(?:(?:send\s+(?:this\s+|it\s+)?)?to\s+the\s+desk|desk)\s*[:,\u2013\u2014-]\s*([\s\S]{2,})$/i.exec(t);
+    if (dk) { deskSend(dk[1].trim()); return; }
+    /* 19 Nov: these answer here at once (a reminder lives on the server, not on the laptop) */
     if (/^(brief me|morning brief|give me the brief)\W*$/i.test(t)) { msgMe(t); localBrief(); return; }
     if (/^what'?s\s+new\W*$/i.test(t)) { msgMe(t); localNew(); return; }
     if (/^(hey\s+)?(jarvis[,\s]+)?(please\s+)?remind\s+me\b/i.test(t)) {
       msgMe(t); var p = parseRemind(t);
       if (p) { remindAdd(p); return; }
-      if (S.brain === 'desk' || (S.home.setup && !S.home.setup.anthropic)) { remindSheet({ text: t.replace(/^.*?remind\s+me\s*(to|about)?\s*/i, '') }); return; }
+      if (S.home.setup && !S.home.setup.anthropic) { remindSheet({ text: t.replace(/^.*?remind\s+me\s*(to|about)?\s*/i, '') }); return; }
       askAssistant(t, true); return;   /* the Assistant has add_reminder for the dates this cannot read */
     }
-    if (S.brain === 'desk') { deskSend(t); return; }
     var g = /^add\s+(.+?)\s+to\s+(?:my\s+|the\s+)?(?:grocer(?:y|ies)(?:\s+list)?|shopping\s+list)[.!]?$/i.exec(t);
     if (g) { msgMe(t); apost('groadd', { text: g[1].split(/\s*,\s*|\s+and\s+/).join('\n') }).then(function (r) { if (r.ok) { S.gro = r; msgAi('Added to the grocery list: ' + g[1] + '. ' + groCount() + ' on the list now.'); draw(); } else msgAi(r.error || 'The list did not take it.'); setState('answer'); }); return; }
     if (/^(what'?s|what is)\s+waiting\??$/i.test(t)) { msgMe(t); localWaiting(); return; }
@@ -1739,8 +1862,11 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var w = el('div', 'msg ai'); add(w, el('div', 'who', 'Assistant · instant')); var dots = el('span', 'tdots'); add(dots, el('i'), el('i'), el('i')); add(w, dots, ' Looking through your inboxes…'); pushChat(w);
     apost('chat', { text: t }).then(function (r) {
       asking = false; sendB.disabled = false; w.remove();
-      if (!r.ok) { var e = msgAi(r.error || 'No answer came back.', 'Assistant · instant'); e.classList.add('bad'); setState('idle'); return; }
-      msgAi(r.reply, 'Assistant · instant');
+      if (!r.ok) { var e = msgAi(r.error || 'No answer came back.', 'Assistant · instant'); e.classList.add('bad'); toDeskLink(e, t); setState('idle'); return; }
+      /* 21 Nov (P-13): the Assistant handed it to the desk (send_to_desk): say so, show the desk card, watch for its answer */
+      var dk = (r.actions || []).filter(function (ac) { return ac.type === 'desk' && ac.thread && ac.thread.id; })[0];
+      if (dk) { msgAi(r.reply, 'Assistant · sent it to the desk'); deskSent(dk.thread, { title: 'The Assistant sent this to the desk', why: dk.why, quiet: true }); refresh(); return; }
+      toDeskLink(msgAi(r.reply, 'Assistant · instant'), t);
       (r.actions || []).forEach(function (ac) {
         if (ac.type === 'reminder' && ac.reminder) { S.st = S.st || {}; S.st.reminders = (S.st.reminders || []).filter(function (x) { return x.id !== ac.reminder.id; }).concat([ac.reminder]).sort(function (a, b) { return a.due - b.due; }); return; }
         if (ac.type !== 'review' || !ac.item) return;
@@ -1751,21 +1877,32 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       setState('answer'); refresh();
     }, function () { asking = false; sendB.disabled = false; w.remove(); msgAi('No connection. Try again.', 'Assistant · instant').classList.add('bad'); setState('idle'); });
   }
+  /* 21 Nov (P-13): under every Assistant answer, the override: the same words to the desk on his laptop, once */
+  function toDeskLink(m, t) {
+    var b = btn('Send this to the desk instead', null, 'rmb todesk', function (e) { e.stopPropagation(); if (b.disabled) return; b.disabled = true; b.textContent = 'Sent to the desk'; deskSend(t, { show: 'To the desk instead: ' + oneLine(t, 140) }); });
+    b.title = 'The Assistant answered this. Send the same words to the desk on your laptop instead (a few minutes).';
+    m.appendChild(b); return m;
+  }
   /* the desk: since 19 Nov a message in J.A.R.V.I.S.'s own desk store (../api.php?action=jvdesksend), never the Sixfold app; the session on
      his laptop takes it from there (no limits, Opus, as before) and answers. Nothing is answered here. */
   /* 19 Nov: o.show (what his own bubble says, for meeting notes, Remember and decisions) and o.title; resolves with the ticket or null */
   function deskSend(t, o) {
-    o = o || {}; var lp = laptop();
+    o = o || {};
     msgMe(o.show || t); setState('think');
     return apost('jvdesksend', { text: t, ctx: { screen: 'jarvis' } }).then(function (r) {
       if (r._status === 401) { signin(); return null; }
       if (!r.ok || !r.thread) { msgAi(r.error || 'The desk did not take it. Try again.', 'J.A.R.V.I.S. desk').classList.add('bad'); setState('idle'); return null; }
-      var tk = r.thread; S.pending[tk.id] = { seen: (tk.msgs || []).length, at: Date.now() }; jdPut(tk);
-      card({ id: 'dk-' + tk.id, icon: 'help', title: o.title || 'Sent to J.A.R.V.I.S. desk', badge: ['On your laptop', 'nm'], noRemember: true, noSpeak: true, warn: !lp.on, quote: (lp.on ? 'It usually answers in a few minutes.' : lp.desk + '.') + ' The answer appears here and in your desk chats.',
-        meta: 'J.A.R.V.I.S. desk · sent to your laptop, a few minutes', acts: [['Open the thread', 'help', 'sec', function () { openDesk(tk.id); }]] });
-      if (S.drive || S.convo) say(lp.on ? 'Sent to the desk; I’ll alert you when it’s done.' : 'Sent. Your laptop is asleep, so the desk answers when it wakes.', true);
-      setState('idle'); pollDesk(); return tk;
+      return deskSent(r.thread, o);
     }, function () { msgAi('No connection: the desk did not get it. Try again.', 'J.A.R.V.I.S. desk').classList.add('bad'); setState('idle'); return null; });
+  }
+  /* a desk thread just made (by deskSend, or by the Assistant's send_to_desk): its card, and watch for the answer. o.quiet: already said aloud */
+  function deskSent(tk, o) {
+    o = o || {}; var lp = laptop();
+    S.pending[tk.id] = { seen: (tk.msgs || []).length, at: Date.now() }; jdPut(tk);
+    card({ id: 'dk-' + tk.id, icon: 'help', title: o.title || 'Sent to J.A.R.V.I.S. desk', badge: ['On your laptop', 'nm'], noRemember: true, noSpeak: true, warn: !lp.on, quote: (lp.on ? 'It usually answers in a few minutes.' : lp.desk + '.') + ' The answer appears here and in your desk chats.',
+      meta: 'J.A.R.V.I.S. desk · sent to your laptop, a few minutes' + (o.why ? ' · ' + o.why : ''), acts: [['Open the thread', 'help', 'sec', function () { openDesk(tk.id); }]] });
+    if (!o.quiet && (S.drive || S.convo)) say(lp.on ? 'Sent to the desk; I’ll alert you when it’s done.' : 'Sent. Your laptop is asleep, so the desk answers when it wakes.', true);
+    setState('idle'); pollDesk(); return tk;
   }
   function jdPut(th) { S.jd = S.jd || { ok: true, threads: [] }; S.jd.threads = [th].concat((S.jd.threads || []).filter(function (x) { return x.id !== th.id; })); }
   function loadDesk() { return aget('jvdesk').then(function (r) { if (r.ok) S.jd = r; }, function () {}); }

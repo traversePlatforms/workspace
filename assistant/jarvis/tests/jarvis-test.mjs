@@ -1,4 +1,4 @@
-// J.A.R.V.I.S., the merged page (2026-11-18): end-to-end (19 Nov: section 15, talk without Siri: the voice API, its keys, the setup page, hands-free; 20 Nov: section 16, the natural voice, with an ElevenLabs mock) on a throwaway copy of the server's layout, in headless Chrome.
+// J.A.R.V.I.S., the merged page (2026-11-18): end-to-end (21 Nov: section 18, P-13: the full morning brief with a news/weather mock and a Claude mock, and the Assistant routing to the desk; 19 Nov: section 15, talk without Siri: the voice API, its keys, the setup page, hands-free; 20 Nov: section 16, the natural voice, with an ElevenLabs mock) on a throwaway copy of the server's layout, in headless Chrome.
 // NOTHING here reaches Google, Anthropic or the live site: Gmail is a mock on 127.0.0.1 (every call it gets is counted), the Assistant
 // has no Anthropic key, and the Field app, the Houston install, Outbox and the Peak desk are small stub files that answer like them.
 //   node assistant/jarvis/tests/jarvis-test.mjs            (SHOTS=<folder> to also save screenshots; default assistant/jarvis/shots)
@@ -117,6 +117,23 @@ const PUSHDEC = body => { const { ec, auth } = PUSHKEYS, salt = body.subarray(0,
   return JSON.parse(pt.subarray(0, pt.lastIndexOf(2)).toString()); };
 const EL_KEY = 'sk_' + 'mockelevenlabskey'.padEnd(48, 'q'), EL = { calls: [], mode: 'ok' };   /* 20 Nov (P-11): the ElevenLabs mock's key: 51 characters, like his */
 const b64u = s => Buffer.from(s).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+/* 21 Nov (P-13): the morning brief's sources (BRIEF_MOCK: every feed and api.weather.gov, by its real address in ?u=) and Claude (ANTHROPIC_MOCK) */
+const BR = { calls: [] }, AN = { calls: [] };
+const rssDoc = (items) => '<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Feed</title>' + items.map(i => '<item><title>' + i.t + '</title><link>' + i.l + '</link><description>' + (i.d || '') + '</description><pubDate>' + new Date((i.at || now - 3600) * 1000).toUTCString() + '</pubDate>' + (i.c ? '<comments>' + i.c + '</comments>' : '') + '</item>').join('') + '</channel></rss>';
+const BRF = {
+  'https://www.cpr.org/feed/': rssDoc([{ t: '&lt;img src=x onerror=window.__xss2=1&gt;Light rail closure on the D Line', l: 'https://www.cpr.org/2026/11/21/d-line/', d: 'RTD says the D Line closes this weekend for track work.' },
+    { t: 'Opinion: The case for more bike lanes', l: 'https://www.cpr.org/op/' }, { t: 'A story with a bad link', l: 'javascript:alert(1)' }, { t: 'Three days old story', l: 'https://www.cpr.org/old/', at: now - 3 * 86400 }]),
+  'https://denverite.com/feed/': rssDoc([{ t: 'Denver opens two new warming centers', l: 'https://denverite.com/2026/11/21/warming/' }]),
+  'https://coloradosun.com/feed/': rssDoc([{ t: 'Colorado PERA board approves new limits on staff bonuses', l: 'https://coloradosun.com/2026/11/21/pera/' }]),
+  'https://feeds.bbci.co.uk/news/world/rss.xml': rssDoc([{ t: 'Climate talks run into a second weekend', l: 'https://www.bbc.co.uk/news/world-1' }, { t: 'Ferry service resumes after storm', l: 'https://www.bbc.co.uk/news/world-2' }]),
+  'https://feeds.npr.org/1004/rss.xml': rssDoc([{ t: 'U.N. talks on autonomous weapons end without rules', l: 'https://www.npr.org/2026/11/21/un' }]),
+  'https://feeds.arstechnica.com/arstechnica/index': '<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Ars</title><entry><title type="html"><![CDATA[New chip fabs announced in Arizona]]></title><link rel="alternate" type="text/html" href="https://arstechnica.com/2026/11/fabs/"/><published>' + new Date((now - 7200) * 1000).toISOString() + '</published><summary>Two plants were announced.</summary></entry></feed>',
+  'https://news.ycombinator.com/rss': rssDoc([{ t: 'Show HN: A tiny weather station', l: 'https://example.org/post', c: 'https://news.ycombinator.com/item?id=1' }])
+};
+const NWS = { 'points': { properties: { forecast: 'https://api.weather.gov/gridpoints/BOU/63,57/forecast' } },
+  'forecast': { properties: { updateTime: new Date().toISOString(), periods: [{ name: 'Today', isDaytime: true, temperature: 47, temperatureUnit: 'F', shortForecast: 'Chance Snow Showers', detailedForecast: 'A chance of snow showers before 2pm. High near 47.' },
+    { name: 'Tonight', isDaytime: false, temperature: 21, temperatureUnit: 'F', shortForecast: 'Clear', detailedForecast: 'Clear. Low around 21.' }, { name: 'Sunday', isDaytime: true, temperature: 46, temperatureUnit: 'F', shortForecast: 'Mostly Sunny', detailedForecast: 'Mostly sunny.' }] } },
+  'alerts': { features: [{ properties: { event: 'Winter Weather Advisory', headline: 'Winter Weather Advisory until 5 PM MST', severity: 'Moderate' } }] } };
 const gsrv = http.createServer((req, res) => {
   const chunks = []; req.on('data', c => chunks.push(c)); req.on('end', () => {
     const raw = Buffer.concat(chunks), body = raw.toString();
@@ -129,6 +146,20 @@ const gsrv = http.createServer((req, res) => {
       if (req.headers['xi-api-key'] !== EL_KEY) return E(401, 'invalid_api_key');
       if (EL.mode === '402') return E(402, 'payment_required'); if (EL.mode === '429quota') return E(429, 'quota_exceeded'); if (EL.mode === '429busy') return E(429, 'too_many_concurrent_requests'); if (EL.mode === '500') return E(500, 'internal');
       res.writeHead(200, { 'Content-Type': 'audio/mpeg' }); res.write('ID3' + 'A'.repeat(400)); setTimeout(() => res.end('FAKE-MP3:' + (jb.text || '')), 30); return; }
+    if (p === 'brief') { const tu = u.searchParams.get('u') || ''; BR.calls.push({ u: tu, ua: req.headers['user-agent'] || '' });
+      const k = /api\.weather\.gov\/points\//.test(tu) ? 'points' : /\/gridpoints\/BOU\/63,57\/forecast$/.test(tu) ? 'forecast' : /\/alerts\/active\?point=/.test(tu) ? 'alerts' : '';
+      if (k) { res.writeHead(200, { 'Content-Type': 'application/geo+json' }); res.end(JSON.stringify(NWS[k])); return; }
+      if (BRF[tu]) { res.writeHead(200, { 'Content-Type': 'application/rss+xml' }); res.end(BRF[tu]); return; }
+      res.writeHead(500); res.end('down'); return; }   /* The Verge (and anything else): down, so the brief must skip it and say so */
+    if (p === 'anthropic') { let jb = {}; try { jb = JSON.parse(body); } catch {}
+      const msgs = jb.messages || [], last = msgs[msgs.length - 1] || {};
+      const R = o => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ model: jb.model, usage: { inputTokens: 2400, outputTokens: 300, cacheReadInputTokens: 0, cacheCreationInputTokens: 0 }, ...o })); };
+      if (jb.outputConfig && jb.outputConfig.format) { AN.calls.push({ kind: 'brief', jb }); const raw = String(last.content || ''); let d = {}; try { d = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1)); } catch {}
+        const first = k => ((d[k] || [])[0] || {}).title || '';
+        return R({ stopReason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ weather: 'The National Weather Service says there is a chance of snow showers today, with a high of 47 and a low of 21, and a Winter Weather Advisory is in effect.', local: 'Colorado Public Radio reports: ' + first('local') + '.', world: 'BBC News reports: ' + first('world') + '.', tech: 'Ars Technica reports: ' + first('tech') + '.' }) }] }); }
+      const txt = typeof last.content === 'string' ? last.content : ''; AN.calls.push({ kind: 'chat', jb, txt });
+      if (txt && /\b(fix|build|deploy)\b/i.test(txt)) return R({ stopReason: 'tool_use', content: [{ type: 'tool_use', id: 'toolu_mock1', name: 'send_to_desk', input: { why: 'changes an app' } }] });
+      return R({ stopReason: 'end_turn', content: [{ type: 'text', text: txt ? 'Mock Assistant: two emails need an answer from you.' : 'Done.' }] }); }
     G.calls.push(req.method + ' ' + p);
     const J = (o, c = 200) => { res.writeHead(c, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(o)); };
     if (auth !== 'Bearer ' + SECRETS[2]) return J({ error: { message: 'bad token' } }, 401);
@@ -151,7 +182,7 @@ await new Promise(r => gsrv.listen(GPORT, '127.0.0.1', r));
 /* 19 Nov: the phone alert a due reminder makes, as a stub that logs what it was given (the real one is jvpush.php, the Field app's alert) */
 const PUSHLOG = path.join(R, 'push.log');
 mk(path.join(R, 'push-stub.php'), `<?php file_put_contents(${JSON.stringify(PUSHLOG.replace(/\\/g, '/'))}, stream_get_contents(STDIN) . "\\n", FILE_APPEND); echo "pushed\\n";`);
-const ENVX = { JARVIS_PUSH_ALLOW_HTTP: '1', ASSISTANT_PRIVATE: PRIV, ASSISTANT_GMAIL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_CAL_MOCK: 'http://127.0.0.1:' + GPORT + '/', ELEVENLABS_MOCK: 'http://127.0.0.1:' + GPORT + '/eleven/', JARVIS_PUSH_CMD: 'php ' + JSON.stringify(path.join(R, 'push-stub.php').replace(/\\/g, '/')) };
+const ENVX = { JARVIS_PUSH_ALLOW_HTTP: '1', ASSISTANT_PRIVATE: PRIV, ASSISTANT_GMAIL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_CAL_MOCK: 'http://127.0.0.1:' + GPORT + '/', ELEVENLABS_MOCK: 'http://127.0.0.1:' + GPORT + '/eleven/', BRIEF_MOCK: 'http://127.0.0.1:' + GPORT + '/brief', ANTHROPIC_MOCK: 'http://127.0.0.1:' + GPORT + '/anthropic', JARVIS_PUSH_CMD: 'php ' + JSON.stringify(path.join(R, 'push-stub.php').replace(/\\/g, '/')) };
 const srv = spawn('php', ['-S', '127.0.0.1:' + PORT, '-t', PUB], { stdio: 'ignore', env: { ...process.env, ...ENVX } });
 /* async: the calendar mock lives in this same process, so a blocking spawn would starve it */
 const cronReminders = () => new Promise(res => { let o = ''; const p = spawn('php', [path.join(PRIV, 'cron.php'), '--reminders'], { env: { ...process.env, ...ENVX } }); p.stdout.on('data', d => o += d); p.on('close', () => { try { res(JSON.parse(o.trim().split('\n').pop() || '{}')); } catch { res({}); } }); });
@@ -329,23 +360,27 @@ try {
   ok(/Anthropic key/.test(await ev('window.__said[window.__said.length-1] || ""')), 'Voice: the reply is read aloud');
   ok(/Voice on/.test(await ev('document.getElementById("voiceswitch").textContent')), 'Voice: on by default, named beside the desk switch');
   ok(/ASSISTANT · INSTANT/i.test(await ev('[...document.querySelectorAll(".msg.ai .who")].pop().textContent')) && /Anthropic key/.test(await ev('[...document.querySelectorAll(".msg.ai")].pop().textContent')), 'the answer is labelled Assistant, instant (here: no key, so it says so)');
+  ok(/Send this to the desk instead/i.test(await ev('[...document.querySelectorAll(".msg.ai")].pop().innerText')), 'P-13: the Assistant\'s answer (even an error) offers "Send this to the desk instead"');
   { await click('#voiceswitch'); const said0 = await ev('window.__said.length'); const mc = '[...document.querySelectorAll(".chip")].find(c=>/Morning check/.test(c.textContent)).click()';
     await ev(mc); await sleep(300);
     ok(/Voice off/.test(await ev('document.getElementById("voiceswitch").textContent')) && await ev('window.__said.length') === said0, 'Voice: off means silent');
     await ev(mc); await sleep(200);   /* tap the chip again to close its answer */
     /* 19 Nov: Brief me reads aloud even with Voice off (he asked for it) */
-    await ev('[...document.querySelectorAll(".chip")].find(c=>/Brief me/.test(c.textContent)).click()'); await sleep(300);
-    const said1 = await ev('window.__said[window.__said.length-1] || ""');
-    ok(await ev('window.__said.length') === said0 + 1 && /Today on your calendar: 2:30pm Peak meeting with Tyler/.test(said1) && /Outbox: 37 sent today, 12 waiting, 1 failed/.test(said1) && !/Peak desk/.test(said1), 'Brief me: read aloud with Voice off, calendar and Outbox in it, no Peak desk line (21 Nov) (' + said1.slice(0, 160) + ')');
+    await ev('[...document.querySelectorAll(".chip")].find(c=>/Brief me/.test(c.textContent)).click()');
+    /* 21 Nov (P-13): the full brief, in pieces: the weather and news from the server (the feed mock; no key here, so the plain version) */
+    await until('window.__said.length>' + said0 + ' && /this time\./.test(window.__said.slice(' + said0 + ').join(" "))', 12000);
+    const said1 = await ev('window.__said.slice(' + said0 + ').join(" ")');
+    ok(await ev('window.__said.length') > said0 + 1 && /Today on your calendar: 2:30pm Peak meeting with Tyler/.test(said1) && /Outbox: 37 sent today, 12 waiting, 1 failed/.test(said1) && !/Peak desk/.test(said1), 'Brief me: read aloud with Voice off, in pieces; calendar and Outbox in it, no Peak desk line (21 Nov) (' + said1.slice(0, 160) + ')');
+    ok(/National Weather Service forecast for Englewood: Today, chance snow showers, high 47 degrees\. Tonight, clear, low 21 degrees\. Active alert: Winter Weather Advisory\./.test(said1) && /Around Denver\. Colorado Public Radio: Light rail closure on the D Line\./.test(said1) && /In world news\. BBC News: /.test(said1) && /In tech\. Ars Technica: New chip fabs/.test(said1) && /I couldn’t reach The Verge this time\./.test(said1), 'P-13 Brief me: the weather, then things happening, world and tech news, every item with its outlet, and one line for the source that failed');
+    ok(await ev('window.__said.slice(' + said0 + ').every(t=>t.length<=600)') && said1.indexOf('Weather') < said1.indexOf('Your day') && said1.indexOf('Your day') < said1.indexOf('Around Denver'), 'P-13 Brief me: weather first, then the day, then the news; each piece short enough for one voice call');
+    ok(await ev('(()=>{const m=[...document.querySelectorAll(".msg.ai")].pop();const a=[...m.querySelectorAll("details.blinks a.hl")];return a.length>=7 && a.every(x=>/^https?:/.test(x.href) && x.target==="_blank" && /noopener/.test(x.rel)) && /Headlines and links/.test(m.querySelector("summary").textContent)})()'), 'P-13 Brief me: the answer carries every headline as a link (new tab, no opener), under "Headlines and links"');
     ok(!/click|repl|unsub|open rate/i.test(said1) && /2 decisions waiting on you/.test(said1) && /team request/.test(said1) && /build/.test(said1), 'Brief me: Outbox gives sent, waiting and failed only (no clicks, replies or unsubscribes); decisions, team and builds are in it');
     await ev('[...document.querySelectorAll(".chip")].find(c=>/Brief me/.test(c.textContent)).click()'); await sleep(150);
     await click('#voiceswitch'); }
-  const brainH0 = await ev('Math.round(document.getElementById("brain").getBoundingClientRect().height)');
-  await click('#brainswitch');
-  ok(Math.abs(await ev('Math.round(document.getElementById("brain").getBoundingClientRect().height)') - brainH0) <= 2, 'switching to the desk does not move the screen (18 Nov: the bar grew 112 px)');
-  ok(/Answering: J\.A\.R\.V\.I\.S\. desk, sent to your laptop, a few minutes/.test(await ev('document.getElementById("brainlabel").textContent')), 'switched: J.A.R.V.I.S. desk, sent to your laptop, a few minutes');
+  /* 21 Nov (P-13): no Assistant / desk switch; the bar says the Assistant answers and real work goes to the desk; "desk:" sends it there */
+  ok(await ev('!document.getElementById("brainswitch") && !/Send to the desk|Use the Assistant/.test(document.getElementById("brain").innerText) && /real work goes to the desk/.test(document.getElementById("brainlabel").textContent)'), 'P-13: no brain switch on the bar; it says real work goes to the desk');
   reqs.length = 0;
-  await ev('document.getElementById("ask").value="Check the Houston lot lines are live"'); await click('.cmdbar .snd');
+  await ev('document.getElementById("ask").value="desk: Check the Houston lot lines are live"'); await click('.cmdbar .snd');
   ok(await until('/Sent to J\\.A\\.R\\.V\\.I\\.S\\. desk/.test(document.querySelector(".chat").innerText)'), 'the desk: a card says it went to the laptop');
   const dm = deskMsgs();
   ok(dm.length === 1 && dm[0].from === 'Matthew Sharpe' && /^h\d{14}[0-9a-f]{4}$/.test(dm[0].id) && dm[0].text === 'Check the Houston lot lines are live', '19 Nov: the desk message is in J.A.R.V.I.S.\'s own store, as Matthew');
@@ -372,8 +407,7 @@ try {
   await ev('document.getElementById("deskreply").value="And the Denver ones?"'); await click('#desksend');
   ok(await nodeUntil0(() => deskMsgs().length === 2 && deskMsgs()[1].id === nx.id && deskMsgs()[1].text === 'And the Denver ones?'), 'a reply from the sheet goes into the same thread');
   await click('#shclose'); await sleep(200);
-  await click('#brainswitch');
-  ok(/Assistant, instant/.test(await ev('document.getElementById("brainlabel").textContent')), 'and back to the Assistant');
+  ok(/Assistant, instant/.test(await ev('document.getElementById("brainlabel").textContent')), 'after a desk message the bar still names the Assistant (nothing to switch back)');
 
   /* ================================================================ 9. a team request: open, reply into it (with a yes) */
   await click('#p-team [data-ticket="h20261118090000aaaa"]');
@@ -527,16 +561,14 @@ try {
     ok(await ev('document.querySelectorAll(".msg .rmb").length') >= 4 && await ev('[...document.querySelectorAll(".chip")].some(c=>/Remember this/.test(c.textContent))'), 'Remember: on every message, and as a chip'); }
 
   /* ---- 1. Laptop asleep */
-  { await click('#brainswitch');
-    ok(await ev('getComputedStyle(document.getElementById("lpline")).display!=="none" && /Laptop awake: desk requests run now/.test(document.getElementById("lpline").innerText)'), 'Laptop: beside the desk switch, awake');
+  { ok(await ev('getComputedStyle(document.getElementById("lpline")).display!=="none" && /Laptop awake: desk requests run now/.test(document.getElementById("lpline").innerText)'), 'Laptop: under the bar, awake');
     const sf = path.join(DATA, 'jarvis', 'status.json'), st0 = fs.readFileSync(sf, 'utf8'), stj = JSON.parse(st0); stj.pushedAt = now - 7200; fs.writeFileSync(sf, JSON.stringify(stj)); fs.writeFileSync(path.join(DATA, 'jarvis', 'beat.txt'), String(now - 5400));
     await ev('document.dispatchEvent(new Event("visibilitychange"))');
-    ok(await until('/Laptop asleep since .+: desk requests will run when it wakes/.test(document.getElementById("lpline").innerText) && /Laptop asleep since/i.test(document.querySelector(".top").innerText)'), 'Laptop: asleep since the last heartbeat, said beside the desk switch and on top');
-    await ev('document.getElementById("ask").value="Check the overnight log"'); await click('.cmdbar .snd');
+    ok(await until('/Laptop asleep since .+: desk requests will run when it wakes/.test(document.getElementById("lpline").innerText) && /Laptop asleep since/i.test(document.querySelector(".top").innerText)'), 'Laptop: asleep since the last heartbeat, said under the bar and on top');
+    await ev('document.getElementById("ask").value="desk: Check the overnight log"'); await click('.cmdbar .snd');
     ok(await until('/desk requests will run when it wakes/.test([...document.querySelectorAll(".acard")].pop().innerText)'), 'Laptop: sending to the desk while it sleeps says so on the card');
     fs.writeFileSync(sf, st0); fs.writeFileSync(path.join(DATA, 'jarvis', 'beat.txt'), String(Math.floor(Date.now() / 1000)));
-    await click('#brainswitch');
-    ok(await ev('getComputedStyle(document.getElementById("lpline")).display==="none"'), 'Laptop: the line hides with the Assistant (it works either way)'); }
+    ok(await ev('getComputedStyle(document.getElementById("lpline")).display!=="none"'), 'P-13 Laptop: the line stays (any request may go to the desk now)'); }
 
   /* ---- 8. Driving mode */
   { await click('#voiceswitch');   /* Voice off: driving mode reads aloud anyway */
@@ -1152,6 +1184,80 @@ try {
     /* the voice door says to use the screen */
     ok(errs.length === 0, 'no script errors while recording (' + errs.join(' | ') + ')');
     fs.rmSync(MEETST, { recursive: true, force: true });
+  }
+
+  /* ================================================================ 18. P-13 (21 Nov): the full morning brief, and the Assistant routing each request */
+  {
+    const BF = path.join(DATA, 'jarvis', 'brief.json'), CFG = path.join(DATA, 'config.json'), cfg0 = fs.readFileSync(CFG, 'utf8'), ELF = path.join(DATA, 'elevenlabs.json');
+    const bj = () => JSON.parse(fs.readFileSync(BF, 'utf8'));
+    const apiGet = a => ev('fetch("../api.php?action=' + a + '").then(r=>r.json())');
+    const cronBrief = () => new Promise(res => { let o = ''; const p = spawn('php', [path.join(PRIV, 'cron.php'), '--brief'], { env: { ...process.env, ...ENVX } }); p.stdout.on('data', d => o += d); p.on('close', () => { try { res(JSON.parse(o.trim().split('\n').pop() || '{}')); } catch { res({ raw: o }); } }); });
+    /* the copy the Brief me chip made (section 8) */
+    let b = bj(); const all = JSON.stringify(b.sections);
+    ok(['Colorado Public Radio', 'Denverite', 'The Colorado Sun'].every(o => b.sections.local.some(i => i.outlet === o)) && ['BBC News', 'NPR'].every(o => b.sections.world.some(i => i.outlet === o)) && b.sections.tech.some(i => i.outlet === 'Ars Technica' && i.title === 'New chip fabs announced in Arizona') && b.sections.tech.some(i => i.outlet === 'Hacker News' && i.site === 'example.org'), 'brief: headlines from each named outlet, RSS and Atom (Ars), Hacker News with the site it links to');
+    ok(b.failed.join() === 'The Verge', 'brief: the source that failed is skipped and named (' + b.failed.join() + ')');
+    ok(!/javascript:|Opinion:|Three days old|onerror|<img/.test(all) && b.sections.local.some(i => i.title === 'Light rail closure on the D Line' && i.link === 'https://www.cpr.org/2026/11/21/d-line/'), 'brief: no javascript: links, no opinion pieces, nothing over 36 hours old, HTML stripped from titles');
+    ok(b.weather.ok && b.weather.high === 47 && b.weather.low === 21 && b.weather.alerts[0].event === 'Winter Weather Advisory' && /forecast\.weather\.gov/.test(b.weather.link), 'brief: the NWS forecast for Englewood: high, low and the active alert');
+    ok(b.spoken.by === 'plain' && !AN.calls.length, 'brief: with no key, the plain version from the headlines (no model call)');
+    ok(BR.calls.length >= 10 && BR.calls.every(c => /^JarvisMorningBrief\/1\.0 \(/.test(c.ua) && !/matthew|sharpe|@|traverse|surge|sixfold/i.test(c.ua)) && BR.calls.some(c => c.u === 'https://api.weather.gov/points/39.6478,-104.9878'), 'brief: a generic User-Agent with no name or email; Englewood\'s coordinates');
+    /* the copy is used for 2 hours, then fetched again when asked */
+    let n0 = BR.calls.length; const r1 = await apiGet('jvbrief');
+    ok(r1.ok && BR.calls.length === n0 && r1.tts && r1.tts.briefReserve === 2000 && !('forecastUrl' in r1.weather) && !JSON.stringify(r1).includes('cronDay'), 'brief: within 2 hours the copy is used, nothing fetched; the page gets only what it shows');
+    b.at = now - 3 * 3600; fs.writeFileSync(BF, JSON.stringify(b)); await apiGet('jvbrief');
+    ok(BR.calls.length > n0 && bj().at >= now - 5, 'brief: over 2 hours old, fetched again when asked');
+    /* the Claude version: Haiku, JSON, the rules; and the 5:30 am run (cron.php --brief here) */
+    fs.writeFileSync(CFG, JSON.stringify({ ...JSON.parse(cfg0), anthropicKey: 'test-anthropic-key-mock' }));
+    const cb = await cronBrief(); const bc = AN.calls.filter(c => c.kind === 'brief').pop(), sys = JSON.stringify(bc ? bc.jb.system : '');
+    ok(cb.brief && cb.brief.by === 'claude' && bj().spoken.by === 'claude' && /Colorado Public Radio reports: /.test(bj().spoken.local) && bj().cronDay === bj().day, 'brief: the morning run writes it with Claude (' + JSON.stringify(cb) + ')');
+    ok(bc && bc.jb.model === 'claude-haiku-5-5' && bc.jb.outputConfig.format.type === 'json_schema' && /Use ONLY the items given/.test(sys) && /Name the outlet every time/.test(sys) && /No opinions/.test(sys) && /Under 60 words/.test(sys) && /instructions/.test(sys), 'brief: the cheap model (Haiku 5.5), JSON out, and the prompt says: only the fetched items, name the outlet, no opinions, short');
+    ok(!/test-anthropic-key-mock/.test(JSON.stringify(bc.jb)) && JSON.parse(fs.readFileSync(path.join(DATA, 'usage.json'), 'utf8'))[new Date().toISOString().slice(0, 7)].by.briefCalls >= 1, 'brief: counted in this month\'s spending (kind brief); the key never goes in a call body');
+    /* the panel: sections with linked headlines, the failed line, Refresh */
+    await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(400);
+    if (await ev('!document.getElementById("p-brief")')) await click('.rail button[data-panel=brief]');
+    ok(await until('document.querySelectorAll("#p-brief a.hl").length>=9', 9000), 'brief panel: the headlines, each a link');
+    const pt = await ev('document.getElementById("p-brief").innerText');
+    ok(/WEATHER · ENGLEWOOD/i.test(pt) && /High 47°F/.test(pt) && /Low 21°F/.test(pt) && /Winter Weather Advisory/.test(pt) && /TO DO/i.test(pt) && /THINGS HAPPENING AROUND DENVER/i.test(pt) && /WORLD NEWS/i.test(pt) && /TECH NEWS/i.test(pt) && /Not reached this time: The Verge/.test(pt), 'brief panel: weather, to do, things happening, world and tech news, and what was not reached');
+    ok(await ev('[...document.querySelectorAll("#p-brief a.hl")].every(a=>/^https:/.test(a.href) && a.target==="_blank" && /noopener/.test(a.rel)) && window.__xss2===undefined'), 'brief panel: every link opens in a new tab with no opener; a title with HTML in it never runs');
+    /* the voice: the natural one only while the month can spare the whole brief plus 2,000 */
+    fs.writeFileSync(ELF, JSON.stringify({ key: EL_KEY, cap: (JSON.parse(fs.readFileSync(path.join(DATA, 'jarvis', 'tts-usage.json'), 'utf8'))[Object.keys(JSON.parse(fs.readFileSync(path.join(DATA, 'jarvis', 'tts-usage.json'), 'utf8')))[0]] || { chars: 0 }).chars + 2500 }));
+    await ev('document.body.dispatchEvent(new MouseEvent("click",{bubbles:true}))');
+    let s0 = await ev('window.__said.length'), e0 = EL.calls.length;
+    await ev('document.getElementById("ask").value="brief me"'); await click('.cmdbar .snd');
+    ok(await until('/Read in the device voice, to save the natural voice: [\\d,]+ characters left this month, and this brief needs [\\d,]+ plus 2,000 kept spare\\./.test(([...document.querySelectorAll(".msg.ai .bnote")].pop()||{}).textContent||"")', 9000) && await until('window.__said.length>' + (s0 + 2), 6000) && EL.calls.length === e0, 'brief voice: too little left this month: the device voice reads it, ElevenLabs is not asked, and a one-line note says why');
+    const st = (await apiGet('ttsstate')).tts; const rz = await apiPost('ttsprep', { text: 'One piece of a long brief.', left: st.cap });
+    ok(rz.ok === false && rz.why === 'reserve' && EL.calls.length === e0, 'brief voice: the server refuses a piece too (reserve) when the rest of the brief would eat into the 2,000 spare');
+    fs.writeFileSync(ELF, JSON.stringify({ key: EL_KEY }));
+    s0 = await ev('window.__said.length'); const p0 = await ev('window.__played.length');
+    await ev('document.getElementById("ask").value="brief me"'); await click('.cmdbar .snd');
+    ok(await until('window.__played.length>' + (p0 + 2) + ' && window.__played.slice(' + p0 + ').some(p=>/I couldn’t reach The Verge/.test(p.body))', 15000) && await ev('window.__said.length') === s0, 'brief voice: plenty left: the whole brief in the natural voice, piece after piece, none in the device voice');
+    ok(EL.calls.slice(e0).length >= 3 && EL.calls.slice(e0).every(c => (c.body.text || '').length <= 600 && !/The rest is on screen/.test(c.body.text)), 'brief voice: each piece under 600 characters, none cut short');
+    ok(await ev('!([...document.querySelectorAll(".msg.ai")].pop().querySelector(".bnote"))'), 'brief voice: no note when the natural voice reads it');
+    fs.rmSync(ELF);
+    /* routing: the Assistant first; laptop work goes to the desk by itself; the override; "desk:"; the voice door */
+    AN.calls.length = 0; reqs.length = 0; let d0 = deskMsgs().length;
+    await ev('document.getElementById("ask").value="Fix the yards edition map colours"'); await click('.cmdbar .snd');
+    ok(await until('/THE ASSISTANT SENT THIS TO THE DESK/i.test(document.querySelector(".chat").innerText)', 9000), 'routing: laptop work: the Assistant sends it to the desk and the desk card shows');
+    const ch1 = AN.calls.filter(c => c.kind === 'chat');
+    ok(ch1.length === 1 && ch1[0].jb.tools.some(t => t.name === 'send_to_desk') && /Send it to the desk with send_to_desk/.test(JSON.stringify(ch1[0].jb.system)) && /Answer it yourself, never sending it to the desk/.test(JSON.stringify(ch1[0].jb.system)), 'routing: one Assistant call (no second call after the hand-off), with send_to_desk and the rule list in its prompt');
+    ok(deskMsgs().length === d0 + 1 && deskMsgs().pop().text === 'Fix the yards edition map colours' && deskMsgs().pop().from === 'Matthew Sharpe' && !reqs.some(r => /action=jvdesksend/.test(r)), 'routing: his exact words went to the desk store, by the server (the same path as deskSend)');
+    ok(/ASSISTANT · SENT IT TO THE DESK/i.test(await ev('[...document.querySelectorAll(".msg.ai .who")].pop().textContent')) && /Sent to the desk; it’ll take a few minutes\./.test(await ev('[...document.querySelectorAll(".msg.ai")].pop().innerText')) && /changes an app/.test(await ev('[...document.querySelectorAll(".acard")].pop().innerText')), 'routing: it says plainly who did it ("Assistant · sent it to the desk") and why');
+    d0 = deskMsgs().length;
+    await ev('document.getElementById("ask").value="What needs me today?"'); await click('.cmdbar .snd');
+    ok(await until('/Mock Assistant: two emails/.test(document.querySelector(".chat").innerText)', 9000) && deskMsgs().length === d0 && /ASSISTANT · INSTANT/i.test(await ev('[...document.querySelectorAll(".msg.ai .who")].pop().textContent')), 'routing: a quick question: the Assistant answers itself, labelled Assistant, instant; nothing goes to the desk');
+    await ev('[...document.querySelectorAll(".msg.ai")].pop().querySelector(".todesk").click()');
+    ok(await nodeUntil0(() => deskMsgs().length === d0 + 1 && deskMsgs().pop().text === 'What needs me today?') && await until('/To the desk instead: What needs me today\?/.test(document.querySelector(".chat").innerText)'), 'override: "Send this to the desk instead" sends the same words to the desk');
+    ok(await ev('(()=>{const b=[...document.querySelectorAll(".todesk")].find(x=>x.disabled);return !!b && /Sent to the desk/.test(b.textContent)})()'), 'override: the link turns into "Sent to the desk" (once only)');
+    d0 = deskMsgs().length; const a0 = AN.calls.length;
+    await ev('document.getElementById("ask").value="desk: Draft the Peak sponsor one-pager"'); await click('.cmdbar .snd');
+    ok(await nodeUntil0(() => deskMsgs().length === d0 + 1 && deskMsgs().pop().text === 'Draft the Peak sponsor one-pager') && AN.calls.length === a0, 'override: "desk:" goes straight to the desk, with no Assistant call');
+    const vk = await apiPost('jvvoicekeynew', { name: 'Route test' }); d0 = deskMsgs().length;
+    const vr = await (await fetch(BASE + '/a-e018bb82/api.php?action=voice&format=json', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Voice-Key': vk.key }, body: JSON.stringify({ text: 'the roof edition needs a build tonight' }) })).json();
+    ok(vr.intent === 'desk' && /^Sent to the desk/.test(vr.say) && deskMsgs().length === d0 + 1 && /^\[VOICE\] the roof edition needs a build tonight/.test(deskMsgs().pop().text) && vr.thread === deskMsgs().pop().id, 'routing by voice: the Assistant hands laptop work to the desk, marked as a voice request (' + vr.say + ')');
+    /* the old switch's stored choice is cleared, and nothing reads it */
+    await ev('localStorage.setItem("jarvis.brain", JSON.stringify("desk"))'); await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 9000);
+    ok(await ev('localStorage.getItem("jarvis.brain")===null && !document.getElementById("brainswitch") && /Answering: Assistant, instant/.test(document.getElementById("brainlabel").textContent)'), 'P-13: the old switch\'s stored choice is cleared on load');
+    fs.writeFileSync(CFG, cfg0);   /* the rest of the run: no key, as before */
+    ok(errs.length === 0, 'no script errors in the brief and routing (' + errs.join(' | ') + ')');
   }
 
   /* ---- desktop idle shot: a fresh load */

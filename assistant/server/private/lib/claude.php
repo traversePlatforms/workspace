@@ -37,12 +37,34 @@ function spendSummary(): array {
     return ['month' => $month, 'usd' => round((float) $m['usd'], 4), 'calls' => (int) $m['calls'], 'by' => $m['by'], 'budget' => (float) settings()['budget']];
 }
 
-function claude(): ?Client {
+function claude(): ?object {
     $key = (string) (cfg()['anthropicKey'] ?? '');
     if ($key === '') return null;
     static $c = null;
-    if ($c === null) $c = new Client(apiKey: $key);
+    if ($c === null) {
+        /* 21 Nov (P-13): PHP's own test server, or the test's CLI run, may point Claude at a mock (ANTHROPIC_MOCK). Never on the host. */
+        $m = in_array(PHP_SAPI, ['cli-server', 'cli'], true) ? (string) getenv('ANTHROPIC_MOCK') : '';
+        $c = $m !== '' ? new ClaudeMock($m) : new Client(apiKey: $key);
+    }
     return $c;
+}
+/** the test copy's stand-in: the same create(...) call shape as the SDK's $c->beta->messages, answered by a mock on 127.0.0.1 */
+final class ClaudeMock {
+    public object $beta;
+    public function __construct(string $url) { $this->beta = (object) ['messages' => new ClaudeMockMessages($url)]; }
+}
+final class ClaudeMockMessages {
+    public function __construct(private string $url) {}
+    public function create(mixed ...$a): object {
+        $h = curl_init($this->url);
+        curl_setopt_array($h, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_TIMEOUT => 20, CURLOPT_HTTPHEADER => ['Content-Type: application/json'], CURLOPT_POSTFIELDS => json_encode($a, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)]);
+        $raw = curl_exec($h); $code = (int) curl_getinfo($h, CURLINFO_RESPONSE_CODE); curl_close($h);
+        $j = is_string($raw) ? json_decode($raw) : null;
+        if ($code !== 200 || !is_object($j)) throw new \RuntimeException('mock Claude answered ' . $code);
+        $j->usage = (object) ((array) ($j->usage ?? []) + ['inputTokens' => 0, 'outputTokens' => 0, 'cacheReadInputTokens' => 0, 'cacheCreationInputTokens' => 0]);
+        $j->model = (string) ($j->model ?? ($a['model'] ?? C_MODEL)); $j->content = (array) ($j->content ?? []);
+        return $j;
+    }
 }
 const SORT_SYSTEM = <<<TXT
 You sort Matthew Sharpe's incoming email so he can see at a glance what needs him. Each email comes with which of his inboxes it reached and what that inbox is for.

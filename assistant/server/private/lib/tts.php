@@ -19,6 +19,7 @@ const TTS_CAP = 9000;                       /* characters per ElevenLabs month: 
 const TTS_RESET_DAY = 20;                   /* the day ElevenLabs' month starts (the account was made 20 Nov); set resetDay if it shows another */
 const TTS_MAX = 600;                        /* characters per answer; a longer one is cut at a sentence */
 const TTS_CACHE_MB = 60;
+const TTS_BRIEF_RESERVE = 2000;             /* P-13: the full morning brief uses the natural voice only while the month keeps this many characters spare after it */
 
 function ttsDir(string $sub = ''): string { $d = aDataDir() . '/jarvis' . ($sub !== '' ? '/' . $sub : ''); if (!is_dir($d)) @mkdir($d, 0700, true); return $d; }
 /** the settings, with the key; never returned to a page */
@@ -60,7 +61,7 @@ function ttsState(): array {
     $why = !$on ? 'off' : (is_array($u['stop']) ? 'stopped' : ((int) $u['chars'] >= $c['cap'] ? 'cap' : ''));
     $next = (new DateTime(ttsPeriod($c), jvTz()))->modify('+1 month')->format('Y-m-d');
     return ['on' => $on, 'avail' => $on && $why === '', 'why' => $why, 'used' => (int) $u['chars'], 'cap' => $c['cap'], 'since' => ttsPeriod($c), 'resets' => $next,
-        'hits' => (int) $u['hits'], 'stopNote' => is_array($u['stop']) ? (string) ($u['stop']['why'] ?? '') : '', 'max' => TTS_MAX];
+        'hits' => (int) $u['hits'], 'briefReserve' => TTS_BRIEF_RESERVE, 'stopNote' => is_array($u['stop']) ? (string) ($u['stop']['why'] ?? '') : '', 'max' => TTS_MAX];
 }
 /** the words, ready to say: no markdown or links, at most TTS_MAX characters, cut at a sentence */
 function ttsText(string $t): string {
@@ -100,12 +101,16 @@ function ttsFallback(string $why, int $code = 503): never {
 
 /** the page, step 1 (signed in): POST {text}. Keeps the words beside the cache and gives back where to play them (step 2, ttsplay), or
     says to use the built-in voice. The words never go in an address, so they never reach the web server's access log. */
-function ttsPrep(string $text): array {
+function ttsPrep(string $text, int $left = 0): array {
     $t = ttsText($text); if ($t === '') return ['ok' => false, 'fallback' => true, 'why' => 'empty'];
     if (!ttsState()['on']) return ['ok' => false, 'fallback' => true, 'why' => 'off', 'state' => ttsState()];
     $c = ttsCfg(); $id = ttsHash($t, $c);
     if (is_file(ttsCacheFile($id))) return ['ok' => true, 'id' => $id, 'cached' => true, 'url' => 'api.php?action=ttsplay&id=' . $id];
     $why = ttsCan($t); if ($why !== '') return ['ok' => false, 'fallback' => true, 'why' => $why, 'state' => ttsState()];
+    /* P-13: one piece of the morning brief, with $left = the characters of the brief still to say, this piece included. The natural voice
+       only while the month keeps TTS_BRIEF_RESERVE spare after all of it; otherwise the page says the rest in the device voice. A piece
+       already in the cache (above) costs nothing, so it still plays. */
+    if ($left > 0) { $st = ttsState(); if ($st['used'] + max($left, mb_strlen($t)) + TTS_BRIEF_RESERVE > $st['cap']) return ['ok' => false, 'fallback' => true, 'why' => 'reserve', 'state' => $st]; }
     $f = ttsPendFile($id); $tmp = $f . '.' . bin2hex(random_bytes(3)) . '.w';
     file_put_contents($tmp, $t); @chmod($tmp, 0600); rename($tmp, $f);
     return ['ok' => true, 'id' => $id, 'cached' => false, 'url' => 'api.php?action=ttsplay&id=' . $id];
