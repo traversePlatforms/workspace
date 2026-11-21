@@ -16,6 +16,10 @@ declare(strict_types=1);
  *   php runner.php hold <client> fb,ig "why"     put Facebook and/or Instagram on hold for a client (2026-11-18): those can't be approved and
  *                                        the runner never sends to them; approved posts that use them go back to draft
  *   php runner.php unhold <client> fb,ig  lift it (only on Matthew's word)
+ *   php runner.php roll <client> on "why" | off    keep that client's waiting posts moving forward (2026-11-21): while on, whenever its
+ *                                        earliest unposted dated post is less than a day away, every unposted dated post of that client
+ *                                        moves forward by the same whole number of weeks (same weekday and clock time, gaps and order kept,
+ *                                        nothing deleted; each move written in the post's history)
  *   php runner.php linkedin              read-only: each LinkedIn client's connection (state, Page, expiry; never tokens)
  *
  * Once each: a post is claimed ("publishing") under the state lock before any call to Meta, each platform is recorded the moment it goes,
@@ -78,6 +82,21 @@ if ($cmd === 'hold' || $cmd === 'unhold') {
     if ($n < 0) { fwrite(STDERR, "no such client\n"); exit(1); }
     echo ($cmd === 'hold' ? 'on hold: ' : 'hold lifted: '), $cid, ' ', implode(',', $tg), $cmd === 'hold' ? " ($n approved post(s) back to draft)" : '', "\n"; exit(0);
 }
+/* 21 Nov 2026, Matthew: "dont get rid of post that havent been posted yet, instead keep moving the schedule further and further to the next
+   dates until we have the sign ins that we need" */
+if ($cmd === 'roll') {
+    $cid = (string) ($args[1] ?? ''); $on = (string) ($args[2] ?? ''); $why = trim((string) ($args[3] ?? ''));
+    if ($cid === '' || !in_array($on, ['on', 'off'], true) || ($on === 'on' && $why === '')) { fwrite(STDERR, "usage: php runner.php roll <client> on \"why\"  |  roll <client> off\n"); exit(1); }
+    $r = pcMutate(function (array &$S) use ($cid, $on, $why) {
+        if (!isset($S['clients'][$cid])) return -1;
+        if ($on === 'on') $S['clients'][$cid]['roll'] = ['why' => $why, 'by' => 'server (roll)', 'at' => pcNow()]; else unset($S['clients'][$cid]['roll']);
+        pcEvent(['t' => 'client', 'id' => $cid, 'by' => 'server (roll)', 'what' => $on === 'on' ? 'waiting posts roll forward (' . $why . ')' : 'roll forward off']);
+        return 0;
+    });
+    if ($r < 0) { fwrite(STDERR, "no such client\n"); exit(1); }
+    $n = $on === 'on' ? pcRollForward(pcNow()) : 0;
+    echo $on === 'on' ? 'rolling forward: ' . $cid . ' (' . $n . ' post(s) moved now)' : 'roll forward off: ' . $cid, "\n"; exit(0);
+}
 if ($cmd === 'linkedin') {   /* what the page shows, never tokens */
     $S = pcState(); echo 'LinkedIn app keys on the server: ', pcLiApp() ? 'yes' : 'no', "\n";
     foreach (PC_LI_CLIENTS as $cid) {
@@ -94,6 +113,7 @@ if ($cmd !== '') { fwrite(STDERR, "unknown command\n"); exit(1); }
 /* ---- the run ---- */
 $lk = fopen(pcDir() . '/runner.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) exit(0);
 $now = pcNow();
+pcRollForward($now);   /* 21 Nov: a client waiting on its sign-ins keeps its posts ahead of today (roll <client> on) */
 /* the old runner (sixfold-tools/social-queue.php) owns its own posts until its queue file is retired: a post brought over from it is
    left alone while that file is still there, so the two can never both send one */
 $legacyLive = is_file(PC_SITE . '/sixfold-private/social-queue.json');
@@ -289,4 +309,29 @@ function pcMigrateQueue(string $file): int {
         return $made;
     });
     echo "brought over $n\n"; return 0;
+}
+
+/** 21 Nov 2026: for each client with roll on, when its earliest unposted dated post (draft, or approved but not yet sent) is under a day away,
+    every unposted dated post of that client moves forward by the same whole number of weeks, in Colorado time (same weekday and clock time
+    across daylight saving). Returns how many posts moved. Published, publishing and failed posts are never touched. */
+function pcRollForward(int $now): int {
+    return (int) pcMutate(function (array &$S) use ($now) {
+        $moved = 0; $tz = new DateTimeZone(PC_TZ);
+        foreach ($S['clients'] as $cid => $c) {
+            if (empty($c['roll']) || !empty($c['archived'])) continue;
+            $ids = []; $min = PHP_INT_MAX;
+            foreach ($S['posts'] as $id => $p) if ($p['client'] === $cid && in_array($p['status'], ['draft', 'approved'], true) && (int) ($p['at'] ?? 0) > 0) { $ids[] = $id; $min = min($min, (int) $p['at']); }
+            if (!$ids || $min >= $now + 86400) continue;
+            $weeks = (int) ceil(($now + 86400 - $min) / (7 * 86400));
+            foreach ($ids as $id) {
+                $p = &$S['posts'][$id]; $from = (int) $p['at'];
+                $p['at'] = (new DateTime('@' . $from))->setTimezone($tz)->modify('+' . $weeks . ' weeks')->getTimestamp();
+                if ($p['status'] === 'approved') { $p['status'] = 'draft'; $p['approval'] = null; }
+                pcLog($p, 'runner', 'Moved forward ' . $weeks . ' week' . ($weeks === 1 ? '' : 's') . ', from ' . pcWall($from, 'D j M') . ' to ' . pcWall((int) $p['at'], 'D j M') . ': ' . $c['roll']['why']);
+                unset($p); $moved++;
+            }
+            pcEvent(['t' => 'client', 'id' => $cid, 'by' => 'runner', 'what' => 'rolled ' . count($ids) . ' waiting post(s) forward ' . $weeks . ' week(s)']);
+        }
+        return $moved;
+    });
 }

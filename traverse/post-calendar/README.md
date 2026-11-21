@@ -82,6 +82,8 @@ surge. I am still putting surge facebook on hold until i gain access to the appr
 approved posts using it go back to draft, and the runner never sends to it or asks Meta about it. **Surge fb,ig is on hold since 18 Nov**
 (Matthew: until he has access to the right Surge account). Lift only on his word.
 
+**Roll forward (21 Nov 2026; Matthew: "dont get rid of post that havent been posted yet, instead keep moving the schedule further and further to the next dates until we have the sign ins that we need"):** `php runner.php roll <client> on "why"` / `roll <client> off`. While it is on, every runner pass checks that client. When its earliest unposted dated post (draft or approved) is under a day away, ALL its unposted dated posts move forward by the same whole number of weeks in Colorado time, keeping the weekday, the clock time, the gaps and the order. Approved posts go back to draft. Undated, published, publishing and failed posts are never touched, and nothing is deleted. Each move is written in the post history. **Surge: ON since 21 Nov** (until the Surge Facebook ownership and sign-ins are in). Watch dated wording: countdowns and holiday greetings stay as written when they move.
+
 ## Designed cards: Change photo, and photos on a change request (19 Nov 2026)
 
 Matthew, 19 Nov: Jen "wanted to put her own photo as the background of today's designed post card, and couldn't ... Is there a way we can

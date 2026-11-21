@@ -889,6 +889,28 @@ console.log('designed cards: Change photo, and photos on a change request (2026-
   ok(!Object.values(state().posts).some((p) => [CP, PNC, PNO, ic && ic.id].includes(p.id) && p.status === 'approved'), 'none of these posts is approved by the tools');
 }
 
+/* 21 Nov: roll forward (Matthew: "dont get rid of post that havent been posted yet, instead keep moving the schedule further and further") */
+console.log('roll forward');
+{
+  const now = Math.floor(Date.now() / 1000), W = 7 * 86400;
+  const PA = await mk('surge', { fb: 'roll A', targets: ['fb'] }), PB = await mk('surge', { fb: 'roll B', targets: ['fb'] }), PU = await mk('surge', { fb: 'roll undated', targets: ['fb'] });
+  const raw = state(); const A0 = now - 3 * 86400, B0 = now + 4 * 86400; raw.posts[PA].at = A0; raw.posts[PB].at = B0; raw.posts[PU].at = 0;
+  writeFileSync(join(SITE, 'post-calendar-data', 'state.json'), JSON.stringify(raw));
+  const fixed = Object.values(raw.posts).filter((p) => p.client !== 'surge' || !['draft', 'approved'].includes(p.status)).map((p) => [p.id, p.at, p.status]);
+  ok((await runPhp(['roll', 'surge', 'on'])).code !== 0, 'roll on needs a reason');
+  const rr = await runPhp(['roll', 'surge', 'on', 'Matthew 21 Nov: waiting on the Surge sign-ins'], { PC_NOW: String(now) });
+  const s1 = state(), dA = s1.posts[PA].at - A0, dB = s1.posts[PB].at - B0;
+  ok(rr.code === 0 && /rolling forward: surge/.test(rr.out) && dA > 0 && dA === dB && Math.abs(dA % W) <= 3600 && s1.posts[PA].at >= now + 86400 - 3600, 'roll on: the waiting posts move forward together by whole weeks, the earliest past tomorrow (' + rr.out.trim() + ')');
+  ok(s1.posts[PU].at === 0 && Object.values(s1.posts).length === Object.values(raw.posts).length, 'nothing deleted; an undated draft stays undated');
+  ok(fixed.every(([id, at, st]) => s1.posts[id].at === at && s1.posts[id].status === st), 'other clients and published, failed or publishing posts are never moved');
+  ok(/Moved forward \d+ weeks?, from .* to .*: Matthew 21 Nov: waiting on the Surge sign-ins/.test(s1.posts[PA].log.at(-1).what), 'each move is written in the post\'s history');
+  await runner(new Date(now * 1000).toISOString()); ok(state().posts[PA].at === s1.posts[PA].at, 'the next run: already ahead, nothing moves');
+  await runner(new Date((s1.posts[PA].at - 3600) * 1000).toISOString()); const s2 = state();
+  ok(s2.posts[PA].at - s1.posts[PA].at === s2.posts[PB].at - s1.posts[PB].at && s2.posts[PA].at > s1.posts[PA].at && s2.posts[PA].status === 'draft', 'the runner keeps moving them as each date comes close, never posting them');
+  ok((await runPhp(['roll', 'surge', 'off'])).code === 0, 'roll off');
+  await runner(new Date((s2.posts[PA].at - 3600) * 1000).toISOString()); ok(state().posts[PA].at === s2.posts[PA].at, 'off: they stay where they are');
+}
+
 console.log('check (read-only)');
 t1 = await runPhp(['check']);
 ok(/Sixfold 365 \(1418675127985724\) Instagram @365aeration -> sixfold/.test(t1.out) && /Surge Inc \(1323606360836132\) no Instagram -> surge/.test(t1.out) && !/PT-|PIPE-TOKEN/.test(t1.out), 'check lists the Pages, which client holds each, no tokens');
