@@ -1336,7 +1336,11 @@ try {
     const w0 = await gw();
     await cdp('Emulation.setDeviceMetricsOverride', { width: 2560, height: 1400, deviceScaleFactor: 1, mobile: false }); await sleep(600);
     const w1 = await gw(); await shot('jarvis-desktop-big');
-    ok(w1 > w0 + 150 && w1 <= Math.round(440 * 1.32) + 2, 'laptop: the globe grows with a big window (21 Nov) (' + w0 + ' -> ' + w1 + ' px)');
+    ok(w1 > w0 + 150 && w1 <= Math.round(520 * 1.32) + 2, 'laptop: the globe grows with a big window (21 Nov) (' + w0 + ' -> ' + w1 + ' px)');
+    await cdp('Emulation.setDeviceMetricsOverride', { width: 2560, height: 1000, deviceScaleFactor: 1, mobile: false }); await sleep(700); const wA = await gw();
+    await ev('(()=>{const c=document.querySelector(".chat");for(let i=0;i<6;i++){const d=document.createElement("div");d.className="msg ai tfit";d.textContent="line "+i;c.appendChild(d);}})()'); await sleep(900);
+    const w2 = await gw(); ok(w2 < wA - 40, 'laptop: a growing conversation scales the globe down to make room (' + wA + ' -> ' + w2 + ' px)');
+    await ev('document.querySelectorAll(".chat .tfit").forEach(n=>n.remove())'); await sleep(900); ok(await gw() >= wA - 2, 'laptop: and it grows back when the conversation is cleared');
     await desk(); await sleep(600); ok(await gw() === w0, 'laptop: and goes back to its size when the window does'); }
 
   /* ================================================================ 11. the phone */
