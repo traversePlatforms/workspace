@@ -6,7 +6,7 @@ ACCESS
 1. Facebook and Instagram: add me in Meta Business Suite (Settings > People) with full control of the Peak Pickleball Facebook page and the Instagram account. My Facebook profile is Matthew Sharpe; if it asks for an email, use m.sharpe@traverseplatforms.com.
 2. Google Business Profile (the Google Maps listing): add me as a Manager. Please send the invite to m.sharpe@traverseplatforms.com.
 3. YouTube: add me as a Manager in YouTube Studio (Settings > Permissions). Same address, m.sharpe@traverseplatforms.com.
-4. LinkedIn page: add me as an admin (Super admin if you can). It needs my LinkedIn profile.
+4. LinkedIn page: add me as an admin (Super admin if you can). My profile is linkedin.com/in/mcsharpe (Matthew Sharpe).
 5. Facebook group: make me an admin.
 6. TikTok and Paage: these may not allow extra users. If they don't, let me know who holds the login and we'll work out the safest way.
 
