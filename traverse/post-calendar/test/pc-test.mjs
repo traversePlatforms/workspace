@@ -135,6 +135,9 @@ mkdirSync(join(SITE, 'public_html', PUB, 'media'), { recursive: true });
 cpSync(join(ROOT, 'app', 'api'), join(SITE, 'public_html', PUB, 'api'), { recursive: true });
 cpSync(join(ROOT, 'app', 'index.html'), join(SITE, 'public_html', PUB, 'index.html'));
 cpSync(join(ROOT, 'server'), join(SITE, 'post-calendar-tools'), { recursive: true });
+/* J.A.R.V.I.S. (2026-11-21): the chat code beside lib.php and the watcher's tool in jv-tools/, as deploy.sh puts them */
+cpSync(join(ROOT, '..', '..', 'shared', 'jv-chat', 'jv-lib.php'), join(SITE, 'post-calendar-tools', 'jv-lib.php'));
+mkdirSync(join(SITE, 'jv-tools')); cpSync(join(ROOT, '..', '..', 'shared', 'jv-chat', 'jv.php'), join(SITE, 'jv-tools', 'jv.php'));
 mkdirSync(join(SITE, 'post-calendar-data', 'private'), { recursive: true });
 writeFileSync(join(SITE, 'post-calendar-data', 'private', 'meta-token.json'), JSON.stringify({ system_token: 'PIPE-TOKEN' }));
 const MAIL = join(T, 'mail.jsonl');
@@ -913,6 +916,80 @@ console.log('roll forward');
     ok((await runPhp(['pin', PB, 'on'])).code !== 0 && (await runPhp(['pin', 'pnope', 'on', 'x'])).code !== 0 && (await runPhp(['pin', PB, 'off'])).code === 0 && !state().posts[PB].pinned, 'pin needs a reason and a real post; off un-pins'); }
   ok((await runPhp(['roll', 'surge', 'off'])).code === 0, 'roll off');
   { const pa1 = state().posts[PA].at; await runner(new Date((pa1 - 3600) * 1000).toISOString()); ok(state().posts[PA].at === pa1, 'off: they stay where they are'); }
+}
+
+console.log('J.A.R.V.I.S. chat (2026-11-21)');
+{
+  const jv = (args, input = '', extra = {}) => new Promise((r) => { const p = execFile('php', [join(SITE, 'jv-tools', 'jv.php'), 'posts', ...args], { env: { ...env, JV_SITE: SITE, PC_LIB: join(SITE, 'post-calendar-tools', 'lib.php'), ...extra } }, (e, so, se) => r({ code: e ? e.code : 0, out: so, err: se })); p.stdin.end(input); });
+  const JVC = (await runPhp(['addaccount', 'Jen Chat', 'client', '--clients', 'sixfold', '--code-only'])).out.trim();
+  const JJ = client(); await JJ.call('signin', { code: JVC });
+  const AA = client(); await AA.call('signin', { code: ADMIN });
+  const EE = client(); await EE.call('signin', { code: EDITOR });
+  ok((await X.call('jvlist'))._status === 401, 'chat: signed out is refused');
+  let j = await JJ.call('jvsend', { text: 'Please change the Facebook words on the Fallen leaves post' });
+  ok(j.ok && /^h\d{14}[0-9a-f]{4}$/.test(j.ticket.id) && j.ticket.msgs[0].mine === true && j.ticket.status === 'new', 'chat: a client sign-in starts a conversation');
+  const TJ = j.ticket.id;
+  ok(!JSON.stringify(j).includes('acct') && !JSON.stringify(j).includes('scope'), 'chat: the page never gets the account key or scope');
+  ok((await JJ.call('jvsend', { text: 'x' }))._status === 400, 'chat: an empty message is refused');
+  j = await EE.call('jvsend', { text: 'Editor question' }); const TE = j.ticket.id;
+  ok((await JJ.call('jvlist')).tickets.map((t) => t.id).join() === TJ, 'chat: Jen sees only her own conversation');
+  ok((await EE.call('jvlist')).tickets.map((t) => t.id).join() === TE, 'chat: the editor sees only its own');
+  const al = await AA.call('jvlist'); ok(al.admin === true && [TJ, TE].every((id) => al.tickets.some((t) => t.id === id)), "chat: Matthew's admin sign-in sees everyone's");
+  ok((await JJ.call('jvsend', { id: TE, text: 'sneaking into another chat' }))._status === 404, "chat: writing into someone else's conversation answers no such");
+  ok((await JJ.call('jvclose', { id: TE }))._status === 404, "chat: closing someone else's conversation answers no such");
+  const PHOTO = IMG.toString('base64');
+  j = await JJ.call('jvsend', { id: TJ, text: 'Use this photo', photos: [PHOTO] }); const pn = j.ticket.msgs.at(-1).photos[0].n;
+  ok(j.ok && /^p\d{10}[0-9a-f]{6}\.png$/.test(pn), 'chat: a photo goes with a message');
+  let r = await fetch(ORIGIN + '/' + PUB + '/api/cal.php?action=jvfile&id=' + TJ + '&f=' + pn, { headers: { Cookie: JJ.ck() } });
+  ok(r.status === 200 && r.headers.get('content-type') === 'image/png', 'chat: the writer opens her photo');
+  r = await fetch(ORIGIN + '/' + PUB + '/api/cal.php?action=jvfile&id=' + TJ + '&f=' + pn, { headers: { Cookie: EE.ck() } });
+  ok(r.status === 404, "chat: someone else can't open it");
+  ok((await JJ.call('jvsend', { text: 'bad', photos: ['bm90IGEgcGljdHVyZQ=='] }))._status === 400, 'chat: a file that is not a picture is refused');
+  /* the watcher's side */
+  ok((await jv(['count'])).out.trim() === '2', 'jv.php count: two waiting');
+  const pk = JSON.parse((await jv(['next', '--peek'])).out); ok(pk.app === 'posts' && pk.conversation.length >= 1 && !JSON.stringify(pk).includes('acct'), 'jv.php next --peek: the oldest, no account key');
+  ok((await jv(['act', TJ, 'list'])).code === 3, 'act: refused while the conversation is not being worked on');
+  let nx = JSON.parse((await jv(['next'])).out); if (nx.id !== TJ) nx = JSON.parse((await jv(['next'])).out);
+  ok(nx.id === TJ, 'jv.php next: takes it (working)');
+  let L = JSON.parse((await jv(['act', TJ, 'list'])).out);
+  ok(L.person === 'Jen Chat' && L.posts.length > 0 && L.posts.every((p) => p.client === 'sixfold'), "act list: only the writer's own client's posts");
+  const sur = Object.values(state().posts).find((p) => p.client === 'surge' && p.status !== 'removed');
+  ok(sur && (await jv(['act', TJ, 'show', sur.id])).code === 3, "act: another client's post answers no such");
+  const six = Object.values(state().posts).find((p) => p.client === 'sixfold' && p.status === 'draft' && !p.card && !(p.images || []).some((i) => i.kind === 'video'));
+  r = await jv(['act', TJ, 'edit', six.id, 'fb'], 'New words from the chat');
+  let st = state().posts[six.id];
+  ok(r.code === 0 && st.fb === 'New words from the chat' && /Jen Chat \(by J\.A\.R\.V\.I\.S\.\)/.test(st.log.at(-1).by), 'act edit: the words change, the history says by J.A.R.V.I.S.');
+  r = await jv(['act', TJ, 'date', six.id, '2027-12-07', '15:00']); st = state().posts[six.id];
+  ok(r.code === 0 && st.at === ts('2027-12-07T15:00:00-07:00'), 'act date: the date and time change (Colorado time)');
+  ok((await jv(['act', TJ, 'date', six.id, '2020-01-01', '15:00'])).code === 3, 'act date: a time in the past is refused');
+  r = await jv(['act', TJ, 'photo', six.id, pn]); st = state().posts[six.id];
+  ok(r.code === 0 && st.images.length === 1 && /sent in the J\.A\.R\.V\.I\.S\. chat/.test(st.log.at(-1).what), 'act photo: a photo from the chat becomes the picture');
+  ok((await jv(['act', TJ, 'photo', six.id, 'p1234567890abcdef.png'])).code === 3, 'act photo: a photo not from this conversation is refused');
+  for (const bad of ['approve', 'publish', 'remove', 'hold', 'roll', 'pin', 'connect']) ok((await jv(['act', TJ, bad, six.id])).code === 3, 'act: ' + bad + ' is refused (goes to Matthew)');
+  /* an approved post: an edit drops the approval, never approves */
+  const raw = state(); raw.posts[six.id].status = 'approved'; raw.posts[six.id].approval = { by: 'Jen Chat', at: 1, hash: 'x' }; writeFileSync(join(SITE, 'post-calendar-data', 'state.json'), JSON.stringify(raw));
+  r = await jv(['act', TJ, 'edit', six.id, 'ig'], 'IG from the chat'); st = state().posts[six.id];
+  ok(r.code === 0 && st.status === 'draft' && st.approval === null && JSON.parse(r.out).approvalDropped === true, 'act on an approved post: back to draft for her tap (never approves)');
+  const raw2 = state(); raw2.posts[six.id].pinned = { why: 'test', at: 1 }; writeFileSync(join(SITE, 'post-calendar-data', 'state.json'), JSON.stringify(raw2));
+  ok((await jv(['act', TJ, 'date', six.id, '2027-12-08', '15:00'])).code === 3, "act date: a pinned post's date is refused");
+  const raw3 = state(); delete raw3.posts[six.id].pinned; raw3.posts[six.id].status = 'published'; writeFileSync(join(SITE, 'post-calendar-data', 'state.json'), JSON.stringify(raw3));
+  ok((await jv(['act', TJ, 'edit', six.id, 'fb'], 'late')).code === 3, 'act: a published post is refused');
+  const raw4 = state(); raw4.posts[six.id].status = 'draft'; writeFileSync(join(SITE, 'post-calendar-data', 'state.json'), JSON.stringify(raw4));
+  /* the reply */
+  const t0 = Math.floor(Date.now() / 1000);
+  r = await jv(['reply', TJ, 'answered', 'refresh'], 'Done. Refresh the page.');
+  ok(r.code === 0 && (await jv(['final-since', TJ, String(t0)])).code === 0, 'jv.php reply + final-since');
+  j = await JJ.call('jvlist'); const last = j.tickets[0].msgs.at(-1);
+  ok(j.tickets[0].status === 'answered' && last.jarvis && last.refresh && last.text === 'Done. Refresh the page.', 'chat: the reply shows with Refresh now');
+  ok((await jv(['act', TJ, 'list'])).code === 3, 'act: refused once the conversation is answered');
+  ok((await jv(['reply', TJ, 'approved'], 'x')).code !== 0, 'jv.php reply: only answered, matthew or working');
+  ok((await JJ.call('jvclose', { id: TJ })).ok && (await JJ.call('jvlist')).tickets[0].status === 'closed', 'chat: Clear closes it');
+  /* Surge is held: dates on a held client are Matthew's */
+  j = await AA.call('jvsend', { text: 'Move a Surge post' }); const TA = j.ticket.id; await jv(['next']); await jv(['next']);
+  const sd = Object.values(state().posts).find((p) => p.client === 'surge' && p.status === 'draft');
+  const hs = state(); hs.clients.surge.holds = { fb: { why: 'test' } }; writeFileSync(join(SITE, 'post-calendar-data', 'state.json'), JSON.stringify(hs));
+  ok(!sd || (await jv(['act', TA, 'date', sd.id, '2027-12-09', '15:00'])).code === 3, "act date: a held client's dates are refused even for Matthew's sign-in");
+  const hs2 = state(); delete hs2.clients.surge.holds; writeFileSync(join(SITE, 'post-calendar-data', 'state.json'), JSON.stringify(hs2));
 }
 
 console.log('check (read-only)');

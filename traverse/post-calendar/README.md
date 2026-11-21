@@ -134,3 +134,18 @@ blocks its approval; `pc.mjs requests` (or `php runner.php requests` on the serv
   `node traverse/post-calendar/test/pc-ui-test.mjs [shots-folder]`: the page in headless Chrome at phone size, 87 checks on 19 Nov (Change photo and request photos included; 68 on 18 Nov).
 - The old runner (`sixfold-tools/social-queue.php`, queue `sixfold-private/social-queue.json`) is folded in with `php runner.php
   migrate-queue <file>`: approvals kept; the new runner leaves migrated posts alone until the old queue file is retired.
+
+## J.A.R.V.I.S. (built 2026-11-21, TASKS JV-APPS)
+
+Matthew, 21 Nov: "I need Jarvis built into the post application ... That way everyone has access to a version of Jarvis they can use to
+make changes that they need." A blue chat button for every sign-in; your own chats, Matthew's admin sign-in sees everyone's. Kept in
+`post-calendar-data/jarvis/`; each message records the account it came from (its key, role and clients; never sent to the page). No
+alerts: the calendar has none for anyone, so the button's dot shows a reply. Code: `shared/jv-chat/` (README there), the `jv*` actions in
+api/cal.php, `jvMount()` in index.html; deploy.sh now also sends jv-chat.js (page) and jv-lib.php (tools).
+
+What it may do (traverse/ops/jarvis-posts-prompt.md, a restricted session): through `jv-tools/jv.php posts act` only, as the person who
+wrote and only while that chat is being worked on: list and show their posts; change a draft's words (fb, ig, li, li_comment), date and
+time, or take the date off; put a photo from the chat on a post. Never: approve (an edit to an approved post drops it to draft for their
+own tap), publish, remove, change a pinned post's date or the dates of a client that is rolling forward or held (Surge), touch holds,
+roll forward, pins or the Meta/LinkedIn connections, act on a client the person can't see, a designed card's photo (Change photo is
+theirs), video. Those go to Matthew. History lines read "<name> (by J.A.R.V.I.S.)".

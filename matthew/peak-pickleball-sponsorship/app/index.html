@@ -380,6 +380,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 </div>
 <main id="main"></main>
 <div class="toast" id="toast" hidden></div>
+<script src="jv-chat.js"></script>   <!-- J.A.R.V.I.S. (2026-11-21): the chat, one file shared with the post calendar (shared/jv-chat/jv-chat.js) -->
 <script>
 (function () {
   'use strict';
@@ -520,7 +521,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     b.addEventListener('submit', function (ev) { ev.preventDefault(); go.disabled = true; api('signin', { code: i.value }).then(function (j) { go.disabled = false; if (!j.ok) { er.textContent = j.error || 'That did not work.'; return; } load(); }).catch(function () { go.disabled = false; er.textContent = 'No connection.'; }); });
     main.appendChild(b); setTimeout(function () { i.focus(); }, 30);
   }
-  $('signout').addEventListener('click', function () { api('signout', {}).then(function () { S.data = null; signin(); }); });
+  $('signout').addEventListener('click', function () { api('signout', {}).then(function () { S.data = null; if (window.JVChat) JVChat.unmount(); signin(); }); });
   $('brandMk').innerHTML = MARK;   /* fixed markup */
   /* light or dark in one tap, kept on this device (dark is the default) */
   var isLight = function () { return document.documentElement.getAttribute('data-theme') === 'light'; };
@@ -539,6 +540,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       $('brandSub').textContent = expoOnly() ? 'Peak Pickleball · expo leads' : 'Peak Pickleball · sponsors and expo leads';
       if (S.owner !== 'all' && S.owner !== 'mine' && S.owner !== 'open' && W().owners.indexOf(S.owner) < 0) S.owner = 'all';
       bar(); if (!then) remember(); (then || draw)();
+      jvMount();
     }).catch(function () { main.textContent = ''; main.appendChild(el('div', 'empty', 'No connection. Try again when you have signal.')); });
   }
   function save(action, body, msg, keep) {
@@ -2176,8 +2178,20 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     pushSub().then(paint);
   }
   /* where an alert's tap lands: #inbox/<email>, #card/<list>/<company> */
+  /* J.A.R.V.I.S. (2026-11-21, Matthew: "I need cai brandon and nneka to be able to make changes to the peak application. The goal is to have
+     jarvis handle a lot of the tasks that they would reach out to me about"): the blue chat button on every screen, for every desk sign-in.
+     Each person sees their own chats; an admin sees everyone's (the server decides). A reply's alert opens it (#jarvis/<id>). */
+  var jvOn = false;
+  function jvMount() {
+    if (jvOn || !window.JVChat || !S.data) return; jvOn = true;
+    JVChat.mount({ call: function (a, b) { return api(a, b); }, fileUrl: function (id, n) { return API + '?action=jvfile&id=' + encodeURIComponent(id) + '&f=' + encodeURIComponent(n); },
+      me: me, dark: function () { return !isLight(); }, seenKey: 'peakdesk.jvSeen', offsetPhone: 86,
+      greeting: 'J.A.R.V.I.S. at your service. Tell me what needs doing on the desk, a fix, a change, a new column, and I’ll see to it myself.',
+      ctx: function () { return { screen: S.world + '/' + S.tab }; } });
+  }
   function route(hash) {
     var h = String(hash || '').replace(/^.*#/, '').split('/');
+    if (h[0] === 'jarvis' && window.JVChat) { jvMount(); JVChat.open(/^h[0-9]{14}[0-9a-f]{4}$/.test(h[1] || '') ? h[1] : null); return false; }
     if (h[0] === 'inbox' && inboxOn()) { S.inSel = h[1] || null; go('inbox', 'open'); return true; }
     if (h[0] === 'card' && (h[1] === 'sponsor' || h[1] === 'expo') && S.data && S.data[h[1]]) { if (S.world !== h[1]) S.world = h[1]; var r = rec(h[2] || ''); if (r) { bar(); openRec(r); return true; } }
     return false;
@@ -2523,7 +2537,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   /* the address keeps the place: #sponsor/pipe, #expo/list/removed; the old desk's addresses land on Today */
   (function () {
     var h = (location.hash || '').slice(1).split('/');
-    if (h[0] === 'inbox' || h[0] === 'card') S.route = location.hash;   /* an alert's tap (2026-11-20): routed once the data is in */
+    if (h[0] === 'inbox' || h[0] === 'card' || h[0] === 'jarvis') S.route = location.hash;   /* an alert's tap (2026-11-20; + J.A.R.V.I.S. 2026-11-21): routed once the data is in */
     else if (h[0] === 'sponsor' || h[0] === 'expo') { S.world = h[0]; if (h[1] && TABS[h[0]].some(function (x) { return x[0] === h[1]; })) { S.tab = h[1]; if (h[2]) S.sub[h[0] + h[1]] = h[2]; } }
   })();
   load(S.route ? function () { var r = S.route; S.route = null; if (!route(r)) { remember(); draw(); } } : undefined);

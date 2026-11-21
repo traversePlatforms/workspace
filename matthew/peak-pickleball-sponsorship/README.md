@@ -24,3 +24,22 @@ https://claude.ai/artifact/MSvAAG6Eay4uGbN84RtCaH (private until shared).
 staff, 5 checked outside prices, a short pitch + tour-invite draft (not sent), and a fact-check tab. Summary added to the Claude
 Doc as "Sponsor leads, employers and prices (21 Oct)". Most leads: Colorado Springs Sports Corp 2026 members. Contacts are
 mostly "to find"; a paid contact tool needs Matthew's go.
+
+## J.A.R.V.I.S. on the desk (built 2026-11-21, TASKS JV-APPS)
+
+Matthew, 21 Nov: "I need cai brandon and nneka to be able to make changes to the peak application. The goal is to have jarvis handle a
+lot of the tasks that they would reach out to me about". A blue chat button on every screen, for every desk sign-in (sellers, expo
+accounts, admins; Claude Check only looks). Each person sees their own chats; the admin sees everyone's. Photos (up to 4), voice notes (2
+minutes), PDFs in replies, Earlier, Clear, Refresh now. The reply reaches the writer through the desk's own alerts (push per device, the
+email heads-up if they turned it on); a tap opens `#jarvis/<id>`. Code: `shared/jv-chat/` (README there), `jvAction()` in api/desk.php,
+`jvMount()` in index.html; the chat lives in `peak-desk-data/jarvis/`.
+
+What J.A.R.V.I.S. does (traverse/ops/jarvis-peak-prompt.md): the person's desk work through `php desk.php as "<name>" <action> < body.json`
+(the same code as their button, with their role; rows marked `via: J.A.R.V.I.S.`; tours booked this way never email the visitor), bug
+fixes and normal changes (tested, then `bash tools/deploy-desk.sh <label>`, which checks live against git, backs up each file, uploads
+and compares md5; `--check` sends nothing). `desk.php as` refuses, whoever asks: sending email, the email, booking and desk settings,
+prices, packages, proposals, signed deals, P&L, Hunter, devices and alerts. Those, the blasts and Outbox, deleting, accounts and drastic
+changes go to Matthew.
+
+Upload since 21 Nov: `bash matthew/peak-pickleball-sponsorship/tools/deploy-desk.sh <label>` (page minified, api/*.php, jv-lib.php and the
+server tool jv-tools/jv.php).

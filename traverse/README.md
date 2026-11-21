@@ -87,6 +87,14 @@ next build keeps it, and makes `c-acme-roofing-private/rounds-codes.php` with th
 Matthew Sharpe): sign in, add the client's own admin under Accounts, and they set the rest on the Company screen and add
 their crew.
 
+### J.A.R.V.I.S. in a client install (`features.jarvis`; the Houston test install since 18 Nov 2026)
+
+The install's own chat (its own help.log; `sixfold-tools/help-*.php --install=c-<slug>`). Installs listed in the watchers' JV_FULL
+(`c-houston-lawn-test` since 21 Nov, TASKS JV-APPS) get a working session with their own prompt (`traverse/ops/jarvis-houston-prompt.md`):
+that install's data through its own rounds API, a backup before each write, never a code change (the code is shared by every edition),
+and money, prices, accounts, payment connections, sending and deleting go to Matthew. Others keep the read-only session (one_install).
+Replies: `bash traverse/ops/jv-reply.sh c-<slug> <ticket> <status>`. More: `shared/jv-chat/README.md`.
+
 ## Roofing data (admins, `features.hail` / `features.roof`)
 
 - **Hail per door:** NOAA's radar estimate of the largest hail within about 1 km of each house, per day, April to

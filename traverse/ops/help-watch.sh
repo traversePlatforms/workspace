@@ -14,6 +14,12 @@ LOG="$ST/help-watch.log"; SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; LOCK="$ST
 KEY=$(cat /c/Users/SURGEI~1/.ssh/help-poll-key.txt 2>/dev/null); CHECK="https://traverseplatforms.com/api/help-pending.php?k=$KEY"
 MODEL="${HELP_MODEL:-sonnet}"   # Sonnet: quick and light on the plan; HELP_MODEL=opus for a heavier one
 JV_INSTALLS="${JARVIS_INSTALLS:-c-houston-lawn-test}"   # client installs with their own J.A.R.V.I.S. (18 Nov), see one_install
+# 21 Nov (TASKS JV-APPS, Matthew: "I need Jarvis built into the post application, I need it built into the peak application ... Also go ahead
+# and build Jarvis into the Houston version"): the Peak desk and the post calendar have their own J.A.R.V.I.S. chats (jv-tools/jv.php on the
+# server, help-pending.php?a=<app>), and the installs in JV_FULL get a working session (data changes) instead of the read-only one. See one_app.
+JV_APPS="${JARVIS_APPS:-peak posts}"
+JV_FULL="${JARVIS_FULL_INSTALLS:-c-houston-lawn-test}"
+JV_TOOL='$HOME/www/traverseplatforms.com/jv-tools/jv.php'
 # 19 Nov (Matthew: "go ahead with moving the desk chats off sixfold app completely. Jarvis for me needs to be in stand alone thing entirely"):
 # HIS desk chats are in J.A.R.V.I.S.'s own store on the Assistant's server (assistant-private/lib/desk.php), not in the Sixfold app. The 5 s
 # look asks a-e018bb82/api.php?action=jvdpending with the laptop's key (~/.ssh/jarvis-desk-key.txt, in a header file made at start, never on
@@ -128,10 +134,12 @@ get_audio() {
       if [ -n "$TXT" ]; then
         printf '%s' "$TXT" > "$OUT/$N.txt"
         if [ "$PX" = --jarvis ]; then printf '%s' "$TXT" | $SG "php $JD_TOOL transcript $ID $N" >> "$LOG" 2>&1   # his J.A.R.V.I.S. desk (19 Nov)
+        elif [[ "$PX" == --app=* ]]; then printf '%s' "$TXT" | $SG "php $JV_TOOL ${PX#--app=} transcript $ID $N" >> "$LOG" 2>&1   # the Peak desk / post calendar (21 Nov)
         else printf '%s' "$TXT" | $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-transcript.php $ID $N $PX" >> "$LOG" 2>&1; fi
         log "$ID: voice note $N transcribed in $(( $(date +%s) - T0 )) s"
       else
         if [ "$PX" = --jarvis ]; then $SG "php $JD_TOOL transcript $ID $N --failed" < /dev/null >> "$LOG" 2>&1
+        elif [[ "$PX" == --app=* ]]; then $SG "php $JV_TOOL ${PX#--app=} transcript $ID $N --failed" < /dev/null >> "$LOG" 2>&1
         else $SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-transcript.php $ID $N --failed $PX" < /dev/null >> "$LOG" 2>&1; fi
         log "$ID: voice note $N could not be transcribed"
       fi
@@ -144,7 +152,9 @@ get_audio() {
 # true when a final reply (status answered or matthew) to ticket $1 was written at or after unix time $2 (a few seconds' slack for clocks)
 final_since() {
   [ "${3:-}" = jarvis ] && { $SG "php $JD_TOOL final-since $1 $2" < /dev/null > /dev/null 2>&1; return $?; }   # his J.A.R.V.I.S. desk (19 Nov)
-  local R; R=$($SG "grep '\"id\":\"$1\"' \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log | grep '\"t\":\"reply\"'" < /dev/null 2>/dev/null) || return 1
+  case "${3:-}" in peak|posts) $SG "php $JV_TOOL $3 final-since $1 $2" < /dev/null > /dev/null 2>&1; return $?;; esac   # the apps (21 Nov)
+  local HL='sixfold-data'; [[ "${3:-}" =~ ^c-[a-z0-9-]{1,40}$ ]] && HL="$3-data"   # an install's own chat (21 Nov)
+  local R; R=$($SG "grep '\"id\":\"$1\"' \$HOME/www/traverseplatforms.com/$HL/rounds/help.log | grep '\"t\":\"reply\"'" < /dev/null 2>/dev/null) || return 1
   printf '%s\n' "$R" | SINCE="$2" node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const t=+process.env.SINCE;const ok=s.split('\n').some(l=>{try{const r=JSON.parse(l);return (r.status==='answered'||r.status==='matthew')&&+r.at>=t-5}catch(e){return false}});process.exit(ok?0:1)})"
 }
 
@@ -321,6 +331,145 @@ $AUD"
   rm -f "$LOCK"
 }
 
+# The apps' own J.A.R.V.I.S. (21 Nov, TASKS JV-APPS): one_app <peak|posts|c-slug in JV_FULL>.
+#  - peak (Cai, Brandon, Nneka, Lance; Matthew 21 Nov: "the goal is to have jarvis handle a lot of the tasks that they would reach out to me
+#    about"): a working session like Jen's (permission mode auto, the repo, the server) with traverse/ops/jarvis-peak-prompt.md: the desk's data
+#    as that person (php desk.php as), fixes and normal app changes, tested and deployed; the short never-list goes to Matthew.
+#  - c-houston-lawn-test: a working session with jarvis-houston-prompt.md: that install's data only, backups first, no code changes.
+#  - posts (Jen and the client approvers): NOT a working session. A restricted one (no settings, no MCP, from a folder holding only this
+#    chat's photos) whose only tool is ./jv-posts.sh, which runs `jv.php posts act` on the server as the person who wrote (their account's
+#    role and clients, while the chat is being worked on): a draft's words, date and photo. It can never approve, publish, remove or touch
+#    holds, roll forward, pins or connections. Its text is the reply (first line STATUS: answered|matthew), as for the installs.
+#  Matthew's own conversations (every person-written message his) get his treatment in every app: Opus, jarvis-matthew-prompt.md, a working
+#  session (the post calendar's approving stays his tap: CLAUDE.md). Everyone else: Sonnet, the app's rules, JARVIS_APP_DAY_CAP (40) sessions a
+#  day per app, then "passed to Matthew". STATUS: matthew alerts him in his J.A.R.V.I.S. desk (jv-reply.sh, jarvis-status.sh alert).
+#    bash traverse/ops/help-watch.sh --app peak|posts|c-houston-lawn-test     one look at that app's chat
+jv_app_prompt() { case "$1" in peak) echo "$REPO/traverse/ops/jarvis-peak-prompt.md";; posts) echo "$REPO/traverse/ops/jarvis-posts-prompt.md";; c-houston-lawn-test) echo "$REPO/traverse/ops/jarvis-houston-prompt.md";; *) echo "";; esac; }
+jv_app_name() { case "$1" in peak) echo "the Peak Sponsor Desk";; posts) echo "the post calendar";; c-houston-lawn-test) echo "the Houston Lawn (test) install of Traverse";; *) echo "$1";; esac; }
+jv_learned() { case "$1" in peak) echo "$REPO/traverse/ops/jarvis-learned-peak.md";; posts) echo "$REPO/traverse/ops/jarvis-learned-posts.md";; c-*) echo "$REPO/traverse/ops/jarvis-learned-houston.md";; esac; }
+one_app() {
+  local Q="$1" T ID BY ONLYM MM=0 CF N CLAUDE PF M PICS AUD PROMPT SYS LF SS RC AX
+  case "$Q" in peak|posts) ;; *) [[ " $JV_FULL " == *" $Q "* ]] || { log "$Q: not an app with its own J.A.R.V.I.S."; return 1; };; esac
+  PF=$(jv_app_prompt "$Q"); [ -n "$PF" ] && [ -f "$PF" ] || { log "$Q: no prompt file"; return 1; }
+  CLAUDE=$(claude_bin); [ -n "$CLAUDE" ] && [ -f "$CLAUDE" ] || { log "no claude.exe found"; return 1; }
+  if [[ "$Q" == c-* ]]; then T=$($SG "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-next.php --install=$Q" < /dev/null 2>>"$LOG"); AX="--install=$Q"
+  else T=$($SG "php $JV_TOOL $Q next" < /dev/null 2>>"$LOG"); AX="--app=$Q"; fi || { log "$Q: server not reachable"; return 0; }
+  [ -n "$T" ] || return 0
+  ID=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).id)}catch(e){}})")
+  [[ "$ID" =~ ^h[0-9]{14}[0-9a-f]{4}$ ]] || { log "$Q: could not read the ticket"; return 1; }
+  BY=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{console.log(JSON.parse(s).by||'')}catch(e){}})")
+  ONLYM=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const c=JSON.parse(s).conversation||[];const p=c.filter(m=>!/^(claude|j\.?a\.?r\.?v\.?i\.?s\.?)$/i.test(String(m.from||'').trim()));console.log(p.length&&p.every(m=>m.from==='Matthew Sharpe')?1:0)}catch(e){console.log(0)}})")
+  [ "$BY" = "Matthew Sharpe" ] && [ "$ONLYM" = 1 ] && MM=1
+  if [ "$MM" = 0 ]; then
+    CF="$ST/$Q-sessions-$(date +%F).count"; N=$(cat "$CF" 2>/dev/null || echo 0); [[ "$N" =~ ^[0-9]+$ ]] || N=0
+    if [ "$N" -ge "${JARVIS_APP_DAY_CAP:-40}" ]; then
+      printf "I've handled a great many messages today, so this one goes to Matthew. He'll get back to you here." | bash "$REPO/traverse/ops/jv-reply.sh" "$Q" "$ID" matthew >> "$LOG" 2>&1
+      log "$Q $ID: day cap ($N) reached: passed to Matthew"; return 0
+    fi
+    echo $(( N + 1 )) > "$CF"
+  fi
+  touch "$LOCK"; SS=$(date +%s)
+  PICS=$(get_photos "$T" "$ID")
+  AUD=$(get_audio "$T" "$ID" "$AX")
+  if [ "$Q" = posts ] && [ "$MM" = 0 ]; then run_posts "$T" "$ID" "$PF" "$AUD"; rm -f "$LOCK"; return 0; fi
+  M="${HELP_MODEL:-sonnet}"; [ "$MM" = 1 ] && M="${HELP_MODEL_MATTHEW:-opus}"
+  log "$Q $ID: session started ($M, from $BY)"
+  PROMPT="A new message in the J.A.R.V.I.S. chat of $(jv_app_name "$Q") (queue $Q). Handle it now under the rules appended to your instructions, and reply with:
+  bash traverse/ops/jv-reply.sh $Q $ID <answered|working|matthew> [refresh] [--pdf <file.pdf>] <<'EOF'
+  ...
+  EOF
+Never help-reply.sh or jarvis-reply.sh for this chat.
+
+Ticket (JSON from the server):
+$T"
+  [ -n "$PICS" ] && PROMPT="$PROMPT
+
+Photos sent in this conversation, copied to this laptop. Look at each one with the Read tool before you answer:
+$PICS"
+  [ -n "$AUD" ] && PROMPT="$PROMPT
+
+Voice notes sent in this conversation, turned into text on this laptop (whisper.cpp; a word here and there may be off). Treat each as if they had typed it:
+$AUD"
+  SYS="$(cat "$PF")"
+  # the post calendar's rules are for the restricted session; Matthew's own chat there is a working session (21 Nov)
+  [ "$Q" = posts ] && [ "$MM" = 1 ] && SYS="This message came from the post calendar's J.A.R.V.I.S. chat (traverse/post-calendar/README.md). You are a working session for Matthew, not the restricted one: reply with jv-reply.sh as the prompt says. Approving a post stays his own tap, and the Surge posts stay on hold."
+  if [ "$MM" = 1 ]; then
+    [ -f "$REPO/traverse/ops/jarvis-matthew-prompt.md" ] && SYS="$SYS
+
+$(cat "$REPO/traverse/ops/jarvis-matthew-prompt.md")"
+    PROMPT="$PROMPT
+
+(Watcher note: every message here is Matthew's own, so none of this app's limits apply to him: his standing rules (CLAUDE.md, memory) do. Reply in this app's chat with jv-reply.sh as above.)"
+    LF="$REPO/traverse/ops/jarvis-learned.md"
+  else
+    [ "$BY" = "Matthew Sharpe" ] && PROMPT="$PROMPT
+
+(Watcher note: someone other than Matthew has written in this conversation, so it gets this app's limits, not his.)"
+    LF=$(jv_learned "$Q")
+  fi
+  [ -f "$LF" ] && SYS="$SYS
+
+$(tail -n 150 "$LF")"
+  printf '%s' "$SYS" > "$ST/$ID.sys.md"
+  (cd "$REPO" && printf '%s' "$PROMPT" | "$CLAUDE" -p --model "$M" --permission-mode auto --append-system-prompt-file "$ST/$ID.sys.md" --output-format text > "$ST/$ID.out" 2>&1); RC=$?
+  if ! final_since "$ID" "$SS" "$Q"; then
+    printf "I couldn't finish looking into this one, so I've passed it to Matthew. He'll get back to you here." | bash "$REPO/traverse/ops/jv-reply.sh" "$Q" "$ID" matthew >> "$LOG" 2>&1
+    log "$Q $ID: no final reply from the session (exit $RC): passed to Matthew"
+  else log "$Q $ID: done (exit $RC)"; fi
+  rm -f "$LOCK"
+}
+# run_posts <ticket JSON> <id> <prompt file> <voice note lines>: the post calendar's restricted session (see one_app). The only tool it may run
+# is ./jv-posts.sh in its folder (made here, the ticket id written in); words for an edit go in a .txt file it writes there first.
+run_posts() {
+  local T="$1" ID="$2" PF="$3" AUD="$4" W CLAUDE OUT STL BODY STS RF="" CONV PR p PICS=""
+  CLAUDE=$(claude_bin); W="$ST/jvposts/$ID"; rm -rf "$W"; mkdir -p "$W"
+  local JVT='\$HOME/www/traverseplatforms.com/jv-tools/jv.php'   # written into the tool as \$HOME: the server's home, not this laptop's
+  for p in "$ST/photos/$ID"/*; do [ -f "$p" ] && cp "$p" "$W/" && PICS="$PICS
+- $(basename "$p")"; done
+  cat > "$W/jv-posts.sh" <<EOF
+#!/bin/bash
+# The post calendar J.A.R.V.I.S.'s one tool for ticket $ID (made by help-watch.sh run_posts). Runs jv-tools/jv.php posts act on the server
+# as the person who wrote this chat. Usage: list [client] | show <post> | edit <post> <fb|ig|li|li_comment> <words.txt> | date <post> <YYYY-MM-DD> <HH:MM>
+#   | undate <post> | photo <post> <p....jpg|png from this chat> [picture number from 0]
+set -u
+cd "\$(dirname "\$0")"
+case "\${1:-}" in list|show|edit|date|undate|photo) ;; *) echo "use: list [client] | show <post> | edit <post> <fb|ig|li|li_comment> <words.txt> | date <post> <YYYY-MM-DD> <HH:MM> | undate <post> | photo <post> <photo> [index]"; exit 2;; esac
+for a in "\$@"; do [[ "\$a" =~ ^[A-Za-z0-9._:-]{0,60}\$ ]] || { echo "bad argument: \$a"; exit 2; }; done
+if [ "\$1" = edit ]; then
+  F="\${4:-}"; [[ "\$F" =~ ^[A-Za-z0-9._-]+\.txt\$ ]] && [ -f "\$F" ] || { echo "write the words to a .txt file in this folder first, then: edit <post> <fb|ig|li|li_comment> <file.txt>"; exit 2; }
+  $SG "php $JVT posts act $ID edit '\$2' '\$3'" < "\$F"; RC=\$?
+else $SG "php $JVT posts act $ID \$*" < /dev/null; RC=\$?; fi
+case "\$1" in edit|date|undate|photo) [ "\$RC" = 0 ] && touch changed;; esac
+exit \$RC
+EOF
+  CONV=$(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const t=JSON.parse(s);console.log(t.conversation.map(m=>m.from+' ('+m.when+'): '+(m.text||'')+((m.photos||[]).length?' [sent '+m.photos.length+' photo(s): '+m.photos.join(', ')+']':'')+((m.audio||[]).length?' [voice note]':'')).join('\n\n'))}catch(e){}})")
+  PR="The person writing: $(printf '%s' "$T" | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const t=JSON.parse(s);console.log(t.by+' ('+t.role+')')}catch(e){}})")
+
+The chat so far (answer the last message):
+
+$CONV"
+  [ -n "$PICS" ] && PR="$PR
+
+Photos in this conversation, in your working folder (open each with Read; a photo can go on a post with ./jv-posts.sh photo):$PICS"
+  [ -n "$AUD" ] && PR="$PR
+
+Voice notes, turned into text:
+$AUD"
+  log "posts $ID: session started (restricted)"
+  OUT=$(cd "$W" && printf '%s' "$PR" | timeout 600 "$CLAUDE" -p --restricted --tools "Read,Write,Bash" --allowedTools "Bash(bash jv-posts.sh *)" "Bash(bash ./jv-posts.sh *)" "Edit(./*.txt)" \
+        --strict-mcp-config --setting-sources project --permission-mode dontAsk --model "${HELP_MODEL_INSTALL:-sonnet}" --system-prompt-file "$PF" --output-format text 2>>"$ST/posts-$ID.err")
+  printf '%s' "$OUT" > "$ST/posts-$ID.out"
+  STL=$(printf '%s\n' "$OUT" | sed -n '1p' | tr -d '\r'); BODY=$(printf '%s\n' "$OUT" | sed '1d' | sed -e '/./,$!d')
+  STS=answered; case "$STL" in *STATUS:*matthew*|*STATUS:*MATTHEW*) STS=matthew;; *STATUS:*) ;; *) BODY="$OUT";; esac
+  if [ -z "$(printf '%s' "$BODY" | tr -d '[:space:]')" ]; then STS=matthew; BODY="I couldn't finish looking into this one, so I've passed it to Matthew. He'll get back to you here."; fi
+  [ -f "$W/changed" ] && RF=refresh
+  printf '%s' "$BODY" | bash "$REPO/traverse/ops/jv-reply.sh" posts "$ID" "$STS" $RF >> "$LOG" 2>&1
+  log "posts $ID: done ($STS${RF:+, changed a post})"
+}
+
+# an install's chat: a working session (one_app) for those in JV_FULL, the read-only one (one_install) for the rest (21 Nov)
+inst_round() { if [[ " $JV_FULL " == *" $1 "* ]]; then one_app "$1"; else one_install "$1"; fi; }
+
 # a test of the transcription alone (11 Nov): prints the text of one audio file
 if [ "${1:-}" = "--transcribe" ]; then transcribe "${2:?file}" && echo; exit $?; fi
 if [ -f "$LOCK" ]; then
@@ -328,7 +477,8 @@ if [ -f "$LOCK" ]; then
   log "stale lock removed"; rm -f "$LOCK"
 fi
 if [ "${1:-}" = "--once" ]; then [ -f "$ST/pause" ] || one_ticket; exit 0; fi
-if [ "${1:-}" = "--install" ]; then [ -f "$ST/pause" ] || one_install "${2:?install id, c-<slug>}"; exit 0; fi   # one look at a client install's chat (18 Nov)
+if [ "${1:-}" = "--install" ]; then [ -f "$ST/pause" ] || inst_round "${2:?install id, c-<slug>}"; exit 0; fi
+if [ "${1:-}" = "--app" ]; then [ -f "$ST/pause" ] || one_app "${2:?peak, posts or c-<slug>}"; exit 0; fi   # one look at an app's own chat (21 Nov)   # one look at a client install's chat (18 Nov)
 # When the quick HTTPS check stops answering a number (9 Nov 2026: SiteGround's bot captcha answered this laptop's address with a 202 HTML
 # page for hours, so the loop saw nothing and no ticket was picked up), the count is read over SSH instead (sixfold-tools/help-next.php
 # --peek, which only looks), every 30 seconds, until HTTPS answers a number again. Logged once each way so it is seen.
@@ -338,7 +488,7 @@ BAD=0; VIA=https; JBAD=0
 # to the old fresh look every 30 s until HTTPS answers again. bash sets STREAM_PID and STREAM[0] for the coproc.
 SFAIL=0
 stream_open() {
-  coproc STREAM { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && for i in $(seq 1 720); do L=$(php help-next.php --peek | grep -c "\"waiting\""); P=$(php help-next.php --peek --practice | grep -c "\"waiting\""); H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; J=$(php '"$JD_TOOL"' count 2>/dev/null || echo 0); echo "$L|$P|$H|$J"; sleep 5; done' < /dev/null 2>>"$LOG"; }   # + |H: the client installs (18 Nov); + |J: his J.A.R.V.I.S. desk (19 Nov)
+  coproc STREAM { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && for i in $(seq 1 720); do L=$(php help-next.php --peek | grep -c "\"waiting\""); P=$(php help-next.php --peek --practice | grep -c "\"waiting\""); H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; for x in '"$JV_APPS"'; do c=$(php ../jv-tools/jv.php $x count 2>/dev/null | tr -cd 0-9); H=$((H + ${c:-0})); done; J=$(php '"$JD_TOOL"' count 2>/dev/null || echo 0); echo "$L|$P|$H|$J"; sleep 5; done' < /dev/null 2>>"$LOG"; }   # + |H: the client installs (18 Nov); + |J: his J.A.R.V.I.S. desk (19 Nov)
 }
 stream_close() { [ -n "${STREAM_PID:-}" ] && kill "$STREAM_PID" 2>/dev/null; wait "${STREAM_PID:-}" 2>/dev/null; unset STREAM_PID; }
 stream_read() {   # the newest "L|P" line; fails if the stream is gone or silent for 20 s
@@ -348,7 +498,7 @@ stream_read() {   # the newest "L|P" line; fails if the stream is gone or silent
   while read -r -t 0.2 -u "$fd" x; do line="$x"; done   # skip lines that piled up during a session
   printf '%s' "$line"
 }
-peek_ssh() { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && { php help-next.php --peek | grep -c "\"waiting\""; echo "|"; php help-next.php --peek --practice | grep -c "\"waiting\""; echo "|"; H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; echo $H; echo "|"; php '"$JD_TOOL"' count 2>/dev/null || echo 0; }' < /dev/null 2>>"$LOG" | tr -d '\n'; }
+peek_ssh() { $SG 'cd $HOME/www/traverseplatforms.com/sixfold-tools && { php help-next.php --peek | grep -c "\"waiting\""; echo "|"; php help-next.php --peek --practice | grep -c "\"waiting\""; echo "|"; H=0; for x in '"$JV_INSTALLS"'; do H=$((H + $(php help-next.php --peek --install=$x | grep -c "\"waiting\""))); done; for x in '"$JV_APPS"'; do c=$(php ../jv-tools/jv.php $x count 2>/dev/null | tr -cd 0-9); H=$((H + ${c:-0})); done; echo $H; echo "|"; php '"$JD_TOOL"' count 2>/dev/null || echo 0; }' < /dev/null 2>>"$LOG" | tr -d '\n'; }
 END=$(( $(date +%s) + 3480 ))
 # 19 Nov (J.A.R.V.I.S. P-8, "Laptop asleep warning"): a heartbeat to the Assistant's server every 5 minutes while this copy runs and the
 # watcher is not paused, so his J.A.R.V.I.S. page can say "Laptop asleep since 6:32 pm: desk requests will run when it wakes". Its own
@@ -375,7 +525,9 @@ while [ "$(date +%s)" -lt "$END" ]; do
       if [ "$J" -gt 0 ]; then one_ticket jarvis; continue; fi
       P=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&p=1" 2>/dev/null)
       if [[ "$P" =~ ^[0-9]+$ ]] && [ "$P" -gt 0 ]; then one_practice; continue; fi
-      HIT=""; for HI in $JV_INSTALLS; do H=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&i=$HI" 2>/dev/null); if [[ "$H" =~ ^[0-9]+$ ]] && [ "$H" -gt 0 ]; then one_install "$HI"; HIT=1; break; fi; done   # client installs (18 Nov)
+      HIT=""; for HI in $JV_INSTALLS; do H=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&i=$HI" 2>/dev/null); if [[ "$H" =~ ^[0-9]+$ ]] && [ "$H" -gt 0 ]; then inst_round "$HI"; HIT=1; break; fi; done
+      [ -n "$HIT" ] && continue
+      for A in $JV_APPS; do H=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&a=$A" 2>/dev/null); if [[ "$H" =~ ^[0-9]+$ ]] && [ "$H" -gt 0 ]; then one_app "$A"; HIT=1; break; fi; done   # the Peak desk, the post calendar (21 Nov)   # client installs (18 Nov)
       [ -n "$HIT" ] && continue
     else
       BAD=$(( BAD + 1 ))
@@ -393,7 +545,7 @@ while [ "$(date +%s)" -lt "$END" ]; do
         if [[ "$L" =~ ^[0-9]+$ ]] && [ "$L" -gt 0 ]; then one_ticket; continue; fi
         if [[ "$JR" =~ ^[0-9]+$ ]] && [ "$JR" -gt 0 ]; then one_ticket jarvis; continue; fi   # his J.A.R.V.I.S. desk (19 Nov)
         if [[ "$PR" =~ ^[0-9]+$ ]] && [ "$PR" -gt 0 ]; then one_practice; continue; fi
-        if [[ "$HR" =~ ^[0-9]+$ ]] && [ "$HR" -gt 0 ]; then for HI in $JV_INSTALLS; do one_install "$HI"; done; continue; fi   # client installs (18 Nov)
+        if [[ "$HR" =~ ^[0-9]+$ ]] && [ "$HR" -gt 0 ]; then for HI in $JV_INSTALLS; do inst_round "$HI"; done; for A in $JV_APPS; do one_app "$A"; done; continue; fi   # + the apps (21 Nov)   # client installs (18 Nov)
         continue
       fi
     fi

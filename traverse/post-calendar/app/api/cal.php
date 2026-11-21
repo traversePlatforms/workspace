@@ -64,6 +64,23 @@ function slotsFrom($raw): array {
 
 /* ---- reading ---- */
 if ($action === 'me') out(['ok' => true] + $MEVIEW);
+/* J.A.R.V.I.S. (2026-11-21, Matthew: "I need Jarvis built into the post application ... everyone has access to a version of Jarvis they can use
+   to make changes that they need"): the chat, kept in post-calendar-data/jarvis/ (shared/jv-chat/jv-lib.php). Your own conversations; Matthew's
+   admin sign-in sees everyone's. Each message records the account it came from (its key, role and clients), so the J.A.R.V.I.S. session can
+   change only what that account may change (jv-tools/jv.php posts act). */
+if (in_array($action, ['jvlist', 'jvsend', 'jvclose', 'jvfile'], true)) {
+    $e = in_array(PHP_SAPI, ['cli', 'cli-server'], true) ? (string) getenv('JV_LIB') : '';
+    $libDir = dirname((string) (getenv('PC_LIB') ?: dirname(__DIR__, 3) . '/post-calendar-tools/lib.php'));
+    require_once ($e !== '' ? $e : (is_file($libDir . '/jv-lib.php') ? $libDir . '/jv-lib.php' : dirname(__DIR__, 4) . '/shared/jv-chat/jv-lib.php'));
+    jvInit(PC_DATA . '/jarvis', 'posts');
+    $jvAll = $ADMIN;
+    if ($action === 'jvfile') { $x = jvServeFile($ME, $jvAll, (string) ($_GET['id'] ?? ''), (string) ($_GET['f'] ?? '')); fail($x['error'], (int) $x['code']); }
+    if ($action === 'jvlist') out(['ok' => true, 'admin' => $jvAll, 'tickets' => jvList($ME, $jvAll)]);
+    if (!$isPost) fail('POST required', 405);
+    if ($action === 'jvclose') { $x = jvClose($ME, $jvAll, (string) ($body['id'] ?? '')); if (isset($x['error'])) fail($x['error'], (int) $x['code']); out(['ok' => true]); }
+    $x = jvSend($ME, $jvAll, (array) $body, ['role' => $ROLE, 'scope' => $SCOPE, 'acct' => (string) ($me['acct'] ?? '')]); if (isset($x['error'])) fail($x['error'], (int) $x['code']);
+    out($x);
+}
 if ($action === 'data') {
     $S = pcState(); $cid = (string) ($_GET['client'] ?? '');
     $vis = array_filter($S['clients'], fn($c) => inScope((string) $c['id']));   /* a client sign-in: its own clients only */

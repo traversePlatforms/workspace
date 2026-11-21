@@ -33,6 +33,12 @@ case "\$C" in
   *"jvdesk.php count"*) [ -f "$W/srv/desk.json" ] && echo 1 || echo 0 ;;
   *"jvdesk.php reply"*) set -- \$C; echo "\$4 \$5 \$IN" >> "$W/srv/desk-replies.log"; echo "replied (\$5) in J.A.R.V.I.S." ;;
   *"jvdesk.php final-since"*) set -- \$C; grep -q "^\$4 \(answered\|matthew\)" "$W/srv/desk-replies.log" 2>/dev/null ;;
+  *"jv.php "*" next --peek") set -- \$C; cat "$W/srv/\$3.json" 2>/dev/null ;;   # the apps (21 Nov): peak / posts
+  *"jv.php "*" next") set -- \$C; [ -f "$W/srv/\$3.json" ] && { cat "$W/srv/\$3.json"; mv "$W/srv/\$3.json" "$W/srv/\$3.taken"; } ;;
+  *"jv.php "*" count") set -- \$C; [ -f "$W/srv/\$3.json" ] && echo 1 || echo 0 ;;
+  *"jv.php "*" reply "*) set -- \$C; echo "\$3 \$5 \$6 \$7 \$IN" >> "$W/srv/app-replies.log"; echo "replied (\$6)" ;;
+  *"jv.php "*" final-since "*) set -- \$C; grep -q "^\$3 \$5 \(answered\|matthew\)" "$W/srv/app-replies.log" 2>/dev/null ;;
+  *"jv.php posts act "*) echo "\$C" >> "$W/srv/acts.log"; echo '{"ok":true}' ;;
   *"jarvis-cloud/laptop.txt") cat "$W/srv/laptop.txt" 2>/dev/null ;;
   *"jarvis-cloud/beat.txt") printf '%s' "\$IN" > "$W/srv/beat.txt" ;;
   *) : ;;
@@ -44,8 +50,10 @@ cat > "$W/stub-claude.sh" <<'EOF'
 #!/bin/bash
 P=$(cat); echo "$*" >> "$STUBLOG"; echo "JARVIS_CLOUD=${JARVIS_CLOUD:-} SG=${JARVIS_SG:-}" >> "$STUBLOG"
 case " $* " in *" --tools Read,Grep,Glob "*) printf 'HANDOFF\nOn it, sir.\n'; exit 0;; esac
+case " $* " in *" --restricted "*) [ -f jv-posts.sh ] && { bash jv-posts.sh date p0123456789 2027-12-07 15:00 >> "$STUBLOG" 2>&1; printf 'STATUS: answered\nMoved it to Tuesday.\n'; exit 0; }; printf 'STATUS: matthew\nPassed it on.\n'; exit 0;; esac   # the post calendar / install sessions (21 Nov)
 ID=$(printf '%s' "$P" | grep -o 'h[0-9]\{14\}[0-9a-f]\{4\}' | head -1)
 RPL="bash traverse/ops/help-reply.sh"; printf '%s' "$P" | grep -q "J.A.R.V.I.S. desk" && RPL="bash assistant/jarvis/tools/jarvis-reply.sh"
+AQ=$(printf '%s' "$P" | grep -o 'jv-reply.sh [a-z0-9-]* ' | head -1 | cut -d' ' -f2); [ -n "$AQ" ] && RPL="bash traverse/ops/jv-reply.sh $AQ"   # the apps (21 Nov)
 printf '%s' "$P" | grep -q "holds the write turn" && echo "WRITE=yes" >> "$STUBLOG" || echo "WRITE=no" >> "$STUBLOG"
 case "${STUB:-reply}" in
   reply) printf 'Done, ma%sam.' "'" | $RPL "$ID" answered >> "$STUBLOG" 2>&1;;
@@ -149,6 +157,23 @@ echo "t $(date +%s)" > "$W/jarvis/state/write-ok"
 ( cd "$W/ws" && R="$W/ws/traverse" SG="bash $W/stub-srv.sh trav" JARVIS_CLOUD=1 bash -c '. traverse/ops/cloud-guard.sh; cloud_guard_before t' ) > "$W/g2" 2>&1
 ok 'grep -q "REFUSED (cloud): no record of the laptop" "$W/g2"' "deploy refused with no record of the laptop's last deploy"
 rm -f "$W/jarvis/state/write-ok"
+
+echo "--- 11b. the apps (21 Nov): Peak gets a working session that replies with jv-reply.sh; the post calendar a restricted one with jv-posts.sh"
+KD="/home/x/www/traverseplatforms.com/peak-desk-data/jarvis/help-files"; OD="/home/x/www/traverseplatforms.com/post-calendar-data/jarvis/help-files"
+PK=h20261121120000aa11; PO=h20261121120100bb22
+echo "{\"id\":\"$PK\",\"app\":\"peak\",\"by\":\"Cai Test\",\"role\":\"seller\",\"conversation\":[{\"from\":\"Cai Test\",\"when\":\"x\",\"text\":\"add a note\"}],\"photoDir\":\"$KD/$PK\",\"audioDir\":\"$KD/$PK\"}" > "$W/srv/peak.json"
+laptop_on; : > "$STUBLOG"; STUB=reply run live "L=0 peak=1"
+ok 'grep -q "^peak $PK answered" "$W/srv/app-replies.log"' "a Peak ticket is answered through jv-reply.sh peak"
+ok 'grep -q "peak $PK: done" "$W/jarvis/state/help-watch.log"' "the watcher saw the Peak reply"
+echo "{\"id\":\"$PO\",\"app\":\"posts\",\"by\":\"Jen Test\",\"role\":\"client\",\"conversation\":[{\"from\":\"Jen Test\",\"when\":\"x\",\"text\":\"move it to Tuesday\"}],\"photoDir\":\"$OD/$PO\",\"audioDir\":\"$OD/$PO\"}" > "$W/srv/posts.json"
+STUB=reply run live "L=0 posts=1"
+ok 'grep -q "posts act $PO date p0123456789 2027-12-07 15:00" "$W/srv/acts.log"' "the post calendar session acts only through jv-posts.sh (jv.php posts act, its own ticket)"
+ok 'grep -q "^posts $PO answered refresh Moved it" "$W/srv/app-replies.log"' "its text is the reply, with Refresh now after a change"
+ok 'grep -q -- "--restricted --tools Read,Write,Bash" "$STUBLOG"' "the post calendar session is the restricted one"
+echo "{\"id\":\"$PK\",\"app\":\"posts\",\"by\":\"Cai Test\",\"conversation\":[],\"photoDir\":\"$KD/$PK\",\"audioDir\":\"$KD/$PK\"}" > "$W/srv/posts.json"
+run live "L=0 posts=1"
+ok 'grep -q "GUARD: ticket $PK is not from posts" "$W/jarvis/state/help-watch.log"' "a ticket from another app's folder is left untouched"
+rm -f "$W/srv/posts.json"
 
 echo "--- 11. beat"
 echo 1 > "$W/jarvis/state/ready"; ( JARVIS_MODE=shadow bash -c ". <(sed -n '1,/^# ---- test modes/p' '$H'); beat_loop \$\$" & BP=$!; sleep 3; kill $BP 2>/dev/null ) > /dev/null 2>&1

@@ -46,6 +46,11 @@ TOOLS='php $HOME/www/traverseplatforms.com/sixfold-tools/'
 JD='php $HOME/www/traverseplatforms.com/assistant-private/jvdesk.php'
 SITE='$HOME/www/traverseplatforms.com'
 INSTALLS="${JARVIS_INSTALLS:-c-houston-lawn-test}"
+# 21 Nov (TASKS JV-APPS): the Peak desk's and the post calendar's own J.A.R.V.I.S. (jv-tools/jv.php), and the installs in FULL get a working
+# session (that install's data) instead of the read-only one. Same as the laptop's one_app (help-watch.sh).
+APPS="${JARVIS_APPS:-peak posts}"
+FULL="${JARVIS_FULL_INSTALLS:-c-houston-lawn-test}"
+JV='php $HOME/www/traverseplatforms.com/jv-tools/jv.php'
 BEATCMD='cat > $HOME/www/traverseplatforms.com/jarvis-cloud/beat.txt'
 LAPCMD='cat $HOME/www/traverseplatforms.com/jarvis-cloud/laptop.txt'   # the laptop's beat: "<unix time> <its HEAD>" every 5 min while it is on
 JSTREAM='cd $HOME/www/traverseplatforms.com/assistant-private && for i in $(seq 1 720); do php jvdesk.php count 2>/dev/null || echo x; sleep 5; done'
@@ -61,6 +66,8 @@ MODE="${JARVIS_MODE:-$(mode_now)}"
 # local under set -u ("AUD: unbound variable"), so every guarded call inside a ticket died. Keep the guard's patterns on names no function uses.
 TID='h[0-9]{14}[0-9a-f]{4}'; RX_AUD='a[0-9]{10}[0-9a-f]{6}\.(webm|ogg|m4a|mp3|aac)'; PHO='p[0-9]{10}[0-9a-f]{6}\.(jpg|png|webp)'
 inst_ok() { local x; for x in $INSTALLS; do [ "$1" = "$x" ] && return 0; done; return 1; }
+app_ok() { local x; for x in $APPS; do [ "$1" = "$x" ] && return 0; done; return 1; }
+RX_APPDIR='/[A-Za-z0-9/_.-]*/(peak-desk-data|post-calendar-data)/jarvis/help-files'
 allowed() {   # allowed '<command>' [mode]: 0 = this script may send it in that mode
   local c="$1" m="${2:-$MODE}" i
   [ "$m" = off ] && return 1
@@ -78,7 +85,16 @@ allowed() {   # allowed '<command>' [mode]: 0 = this script may send it in that 
   [[ "$c" =~ ^"$TOOLS"help-next\.php\ --peek$ ]] && return 0
   [[ "$c" =~ ^"$TOOLS"help-next\.php\ --peek\ --install=(c-[a-z0-9-]{1,40})$ ]] && inst_ok "${BASH_REMATCH[1]}" && return 0
   [[ "$c" =~ ^"$JD"\ (next\ --peek|count)$ ]] && return 0
+  [[ "$c" =~ ^"$JV"\ ([a-z]+)\ (next\ --peek|count)$ ]] && app_ok "${BASH_REMATCH[1]}" && return 0   # the apps (21 Nov)
   [ "$m" = live ] || return 1
+  # the apps' own chats (21 Nov): take, the watcher's own replies (day cap, no final reply, the post calendar session's text), transcripts, the
+  # final-reply check, a ticket's own photos and voice notes
+  [[ "$c" =~ ^"$JV"\ ([a-z]+)\ next$ ]] && app_ok "${BASH_REMATCH[1]}" && return 0
+  [[ "$c" =~ ^"$JV"\ ([a-z]+)\ reply\ $TID\ (answered|matthew)(\ refresh)?$ ]] && app_ok "${BASH_REMATCH[1]}" && return 0
+  [[ "$c" =~ ^"$JV"\ ([a-z]+)\ transcript\ $TID\ $RX_AUD(\ --failed)?$ ]] && app_ok "${BASH_REMATCH[1]}" && return 0
+  [[ "$c" =~ ^"$JV"\ ([a-z]+)\ final-since\ $TID\ [0-9]{10}$ ]] && app_ok "${BASH_REMATCH[1]}" && return 0
+  [[ "$c" =~ ^cat\ \'$RX_APPDIR/$TID/($RX_AUD|$PHO)\'$ ]] && return 0
+  [[ "$c" =~ ^grep\ \'\"id\":\"$TID\"\'\ "$SITE"/(c-[a-z0-9-]{1,40})-data/rounds/help\.log$ ]] && inst_ok "${BASH_REMATCH[1]}" && return 0   # an install's final-reply check (21 Nov)
   # live only: take, reply (the watcher's own notes and the install's answers), transcripts, the final-reply check, a ticket's own files
   [[ "$c" =~ ^"$TOOLS"help-next\.php$ ]] && return 0
   [[ "$c" =~ ^"$TOOLS"help-next\.php\ --install=(c-[a-z0-9-]{1,40})$ ]] && inst_ok "${BASH_REMATCH[1]}" && return 0
@@ -115,6 +131,8 @@ is_queue_ticket() {   # is_queue_ticket <json> <staff|jarvis|c-slug>
     staff) [[ "$D" =~ ^/[A-Za-z0-9/_.-]*/sixfold-data/rounds/help-files/$TID\|/[A-Za-z0-9/_.-]*/sixfold-data/rounds/help-files/$TID$ ]];;
     jarvis) [[ "$D" =~ ^/[A-Za-z0-9/_.-]*/assistant-private/data/jarvis/desk/files/$TID\|/[A-Za-z0-9/_.-]*/assistant-private/data/jarvis/desk/files/$TID$ ]] && [ "$(printf '%s' "$1" | jq -r '.desk // ""')" = jarvis ];;
     c-*) inst_ok "$2" && [[ "$D" =~ ^/[A-Za-z0-9/_.-]*/$2-data/rounds/help-files/$TID\|/[A-Za-z0-9/_.-]*/$2-data/rounds/help-files/$TID$ ]];;
+    peak) [[ "$D" =~ ^/[A-Za-z0-9/_.-]*/peak-desk-data/jarvis/help-files/$TID\|/[A-Za-z0-9/_.-]*/peak-desk-data/jarvis/help-files/$TID$ ]] && [ "$(printf '%s' "$1" | jq -r '.app // ""')" = peak ];;
+    posts) [[ "$D" =~ ^/[A-Za-z0-9/_.-]*/post-calendar-data/jarvis/help-files/$TID\|/[A-Za-z0-9/_.-]*/post-calendar-data/jarvis/help-files/$TID$ ]] && [ "$(printf '%s' "$1" | jq -r '.app // ""')" = posts ];;
     *) return 1;;
   esac
 }
@@ -317,6 +335,7 @@ get_audio() {
     staff) TC="${TOOLS}help-transcript.php $ID %s%s";;
     jarvis) TC="$JD transcript $ID %s%s";;
     c-*) TC="${TOOLS}help-transcript.php $ID %s%s --install=$Q";;
+    peak|posts) TC="$JV $Q transcript $ID %s%s";;   # the apps (21 Nov)
   esac
   printf '%s' "$T" | jq -r '.conversation | to_entries[] | .key as $i | .value.from as $w | (.value.audio // [])[] | [($i + 1), .n, (.secs // 0), (if .text then "1" elif .failed then "f" else "0" end), (.text // "" | gsub("[\t\n\r]"; " ")), ($w // "" | gsub("[\t\n\r]"; " "))] | @tsv' 2>/dev/null |
   while IFS=$'\t' read -r I N SECS HAS TXT WHO; do
@@ -393,9 +412,11 @@ session_env() {   # what every live session gets: this machine's server wrapper,
   export JARVIS_CLOUD=1 JARVIS_SG="bash $BIN/sg.sh trav" JARVIS_REPO="$WS" JARVIS_NO_STRIPE=1 LOCALAPPDATA="$J/localappdata"
   export JARVIS_DESK_KEYFILE="$SEC/no-desk-key" JARVIS_TICKET_DIR="$ST/cur" PATH="$BIN:$PATH"; mkdir -p "$J/localappdata"
 }
-final_since() {   # final_since <id> <unix time> <staff|jarvis>: a final reply (answered/matthew) written since then
+final_since() {   # final_since <id> <unix time> <staff|jarvis|peak|posts|c-slug>: a final reply (answered/matthew) written since then
   if [ "$3" = jarvis ]; then srv "$JD final-since $1 $2" < /dev/null > /dev/null 2>&1; return $?; fi
-  srv "grep '\"id\":\"$1\"' $SITE/sixfold-data/rounds/help.log" < /dev/null 2>/dev/null |
+  if app_ok "$3"; then srv "$JV $3 final-since $1 $2" < /dev/null > /dev/null 2>&1; return $?; fi   # the apps (21 Nov)
+  local HL=sixfold-data; [[ "$3" == c-* ]] && inst_ok "$3" && HL="$3-data"
+  srv "grep '\"id\":\"$1\"' $SITE/$HL/rounds/help.log" < /dev/null 2>/dev/null |
     SINCE="$2" jq -s -e --argjson t "$2" 'map(select(.t == "reply" and (.status == "answered" or .status == "matthew") and ((.at // 0) | tonumber) >= ($t - 5))) | length > 0' > /dev/null 2>&1
 }
 job_n() { jq -r '.n // 0' "$OUTBOX/jobs/$1.json" 2>/dev/null || echo 0; }
@@ -544,6 +565,137 @@ $AUD"
   log "$HI $ID: done ($STS)"; DID=1
 }
 
+# ---- live: the apps' own J.A.R.V.I.S. (21 Nov, TASKS JV-APPS): the laptop's one_app (help-watch.sh explains), ported ----------------------
+#  peak and the installs in FULL: a working session like the office's (the cloud's write-turn rules for repo work); posts: the restricted session
+#  whose only tool is ./jv-posts.sh (jv.php posts act as the writer). Matthew's own conversations: his treatment (opus, jarvis-matthew-prompt.md).
+app_prompt() { case "$1" in peak) echo "$WS/traverse/ops/jarvis-peak-prompt.md";; posts) echo "$WS/traverse/ops/jarvis-posts-prompt.md";; c-houston-lawn-test) echo "$WS/traverse/ops/jarvis-houston-prompt.md";; *) echo "";; esac; }
+app_name() { case "$1" in peak) echo "the Peak Sponsor Desk";; posts) echo "the post calendar";; c-houston-lawn-test) echo "the Houston Lawn (test) install of Traverse";; *) echo "$1";; esac; }
+app_learned() { case "$1" in peak) echo "$WS/traverse/ops/jarvis-learned-peak.md";; posts) echo "$WS/traverse/ops/jarvis-learned-posts.md";; c-*) echo "$WS/traverse/ops/jarvis-learned-houston.md";; esac; }
+full_ok() { local x; for x in $FULL; do [ "$1" = "$x" ] && return 0; done; return 1; }
+app_reply() {   # app_reply <queue> <id> <answered|matthew> [refresh] < text: the watcher's own reply (its alert to Matthew through jarvis-status.sh)
+  local Q="$1" ID="$2" S="$3" RF="${4:-}" TXT; TXT=$(cat)
+  if [[ "$Q" == c-* ]]; then printf '%s' "$TXT" | srv "${TOOLS}help-reply.php $ID $S --install=$Q" >> "$LOG" 2>&1
+  else printf '%s' "$TXT" | srv "$JV $Q reply $ID $S${RF:+ $RF}" >> "$LOG" 2>&1; fi
+  [ "$S" = matthew ] && ( session_env; cd "$WS" && bash assistant/jarvis/tools/jarvis-status.sh alert "J.A.R.V.I.S. ($(app_name "$Q") chat, $ID) passed this to you: $(printf '%s' "$TXT" | tr -s '\r\n\t ' ' ' | cut -c1-300)" ) > /dev/null 2>&1
+  return 0
+}
+one_app() {
+  local Q="$1" T ID BY MM=0 CF N PF M PICS AUD PROMPT SYS LF SS RC
+  app_ok "$Q" || { inst_ok "$Q" && full_ok "$Q"; } || return 1; ready || return 0
+  sync_workspace || { log "$Q: the repo copy could not be refreshed: nothing taken"; sleep 30; return 0; }
+  PF=$(app_prompt "$Q"); [ -n "$PF" ] && [ -f "$PF" ] || { log "$Q: no prompt file"; return 1; }
+  if [[ "$Q" == c-* ]]; then T=$(srv "${TOOLS}help-next.php --install=$Q" < /dev/null 2>>"$LOG"); else T=$(srv "$JV $Q next" < /dev/null 2>>"$LOG"); fi || { log "$Q: server not reachable"; sleep 25; return 0; }
+  [ -n "$T" ] || return 0
+  ID=$(printf '%s' "$T" | jq -r '.id // ""' 2>/dev/null); [[ "$ID" =~ ^$TID$ ]] || { log "$Q: could not read the ticket"; return 1; }
+  is_queue_ticket "$T" "$Q" || { log "GUARD: ticket $ID is not from $Q: left untouched"; return 1; }
+  mkdir -p "$ST/cur"; printf '%s' "$T" > "$ST/cur/$ID.json"
+  BY=$(printf '%s' "$T" | jq -r '.by // ""'); [ "$BY" = "Matthew Sharpe" ] && [ "$(only_matthew "$T")" = 1 ] && MM=1
+  if [ "$MM" = 0 ]; then
+    CF="$ST/$Q-sessions-$(date +%F).count"; N=$(cat "$CF" 2>/dev/null || echo 0); [[ "$N" =~ ^[0-9]+$ ]] || N=0
+    if [ "$N" -ge "${JARVIS_APP_DAY_CAP:-40}" ]; then
+      printf "I've handled a great many messages today, so this one goes to Matthew. He'll get back to you here." | app_reply "$Q" "$ID" matthew
+      log "$Q $ID: day cap ($N) reached: passed to Matthew"; DID=1; return 0
+    fi
+    echo $(( N + 1 )) > "$CF"
+  fi
+  SS=$(date +%s); PICS=$(get_photos "$T" "$ID"); AUD=$(get_audio "$T" "$ID" "$Q")
+  if [ "$Q" = posts ] && [ "$MM" = 0 ]; then posts_session "$T" "$ID" "$PF" "$AUD"; DID=1; return 0; fi
+  M="${HELP_MODEL:-sonnet}"; [ "$MM" = 1 ] && M="${HELP_MODEL_MATTHEW:-opus}"
+  log "$Q $ID: session started ($M, from $BY, cloud)"
+  PROMPT="A new message in the J.A.R.V.I.S. chat of $(app_name "$Q") (queue $Q). Handle it now under the rules appended to your instructions, and reply with:
+  bash traverse/ops/jv-reply.sh $Q $ID <answered|working|matthew> [refresh] [--pdf <file.pdf>] <<'EOF'
+  ...
+  EOF
+Never help-reply.sh or jarvis-reply.sh for this chat.
+
+Ticket (JSON from the server):
+$T"
+  [ -n "$PICS" ] && PROMPT="$PROMPT
+
+Photos sent in this conversation, copied to this machine. Look at each one with the Read tool before you answer:
+$PICS"
+  [ -n "$AUD" ] && PROMPT="$PROMPT
+
+Voice notes sent in this conversation, turned into text on this machine (whisper.cpp; a word here and there may be off). Treat each as if they had typed it:
+$AUD"
+  if write_turn "$ID"; then PROMPT="$PROMPT
+
+(Watcher note: this machine holds the write turn ($WHY). You may change the code, test, commit and deploy here, by the rules in jarvis-cloud-prompt.md.)"
+  else PROMPT="$PROMPT
+
+(Watcher note: this machine may NOT change the repo, build, commit or deploy now: $WHY. Do what needs only an answer or server work (the app's data); queue code changes for the laptop with laptop-job.sh, as jarvis-cloud-prompt.md says.)"; fi
+  SYS="$(cat "$PF")"
+  # the post calendar's rules are for the restricted session; Matthew's own chat there is a working session (21 Nov)
+  [ "$Q" = posts ] && [ "$MM" = 1 ] && SYS="This message came from the post calendar's J.A.R.V.I.S. chat (traverse/post-calendar/README.md). You are a working session for Matthew, not the restricted one: reply with jv-reply.sh as the prompt says. Approving a post stays his own tap, and the Surge posts stay on hold."
+  if [ "$MM" = 1 ]; then SYS="$SYS
+
+$(cat "$WS/traverse/ops/jarvis-matthew-prompt.md" 2>/dev/null)"; LF="$WS/traverse/ops/jarvis-learned.md"
+    PROMPT="$PROMPT
+
+(Watcher note: every message here is Matthew's own, so none of this app's limits apply to him: his standing rules (CLAUDE.md, memory) do.)"
+  else LF=$(app_learned "$Q"); [ "$BY" = "Matthew Sharpe" ] && PROMPT="$PROMPT
+
+(Watcher note: someone other than Matthew has written in this conversation, so it gets this app's limits, not his.)"; fi
+  [ -f "$LF" ] && SYS="$SYS
+
+$(tail -n 150 "$LF")"
+  SYS="$SYS
+
+$(cat "$WS/traverse/ops/jarvis-cloud-prompt.md" 2>/dev/null || cat "$OPS/jarvis-cloud-prompt.md")"
+  printf '%s' "$SYS" > "$ST/$ID.sys.md"
+  ( session_env; cd "$WS" && printf '%s' "$PROMPT" | timeout "${JARVIS_SESSION_MAX:-3600}" "$CLAUDE" -p --model "$M" --permission-mode auto --add-dir "$MEM" \
+      --append-system-prompt-file "$ST/$ID.sys.md" --output-format text > "$ST/$ID.out" 2>&1 ); RC=$?
+  rm -f "$ST/write-ok"; capture "$ID" > /dev/null
+  if [ -f "$OUTBOX/jobs/$ID.json" ] && [ "$(jq -r '.at // 0' "$OUTBOX/jobs/$ID.json")" -ge "$SS" ]; then log "$Q $ID: queued for the laptop (exit $RC)"
+  elif final_since "$ID" "$SS" "$Q"; then log "$Q $ID: done (exit $RC)"
+  else printf "I couldn't finish looking into this one, so I've passed it to Matthew. He'll get back to you here." | app_reply "$Q" "$ID" matthew
+    log "$Q $ID: no final reply from the session (exit $RC): passed to Matthew"; fi
+  DID=1
+}
+posts_session() {   # the post calendar's restricted session (help-watch.sh run_posts): ./jv-posts.sh is its only tool
+  local T="$1" ID="$2" PF="$3" AUD="$4" W OUT STL BODY STS RF="" CONV PR p PICS="" JVT='\$HOME/www/traverseplatforms.com/jv-tools/jv.php'
+  W="$ST/jvposts/$ID"; rm -rf "$W"; mkdir -p "$W"
+  for p in "$ST/photos/$ID"/*; do [ -f "$p" ] && cp "$p" "$W/" && PICS="$PICS
+- $(basename "$p")"; done
+  cat > "$W/jv-posts.sh" <<EOF
+#!/bin/bash
+# The post calendar J.A.R.V.I.S.'s one tool for ticket $ID (made by help-watch-cloud.sh). jv-tools/jv.php posts act, as the person who wrote.
+set -u
+cd "\$(dirname "\$0")"
+case "\${1:-}" in list|show|edit|date|undate|photo) ;; *) echo "use: list [client] | show <post> | edit <post> <fb|ig|li|li_comment> <words.txt> | date <post> <YYYY-MM-DD> <HH:MM> | undate <post> | photo <post> <photo> [index]"; exit 2;; esac
+for a in "\$@"; do [[ "\$a" =~ ^[A-Za-z0-9._:-]{0,60}\$ ]] || { echo "bad argument: \$a"; exit 2; }; done
+if [ "\$1" = edit ]; then
+  F="\${4:-}"; [[ "\$F" =~ ^[A-Za-z0-9._-]+\.txt\$ ]] && [ -f "\$F" ] || { echo "write the words to a .txt file in this folder first, then: edit <post> <fb|ig|li|li_comment> <file.txt>"; exit 2; }
+  bash $BIN/sg.sh trav "php $JVT posts act $ID edit '\$2' '\$3'" < "\$F"; RC=\$?
+else bash $BIN/sg.sh trav "php $JVT posts act $ID \$*" < /dev/null; RC=\$?; fi
+case "\$1" in edit|date|undate|photo) [ "\$RC" = 0 ] && touch changed;; esac
+exit \$RC
+EOF
+  CONV=$(NAMES=1 conversation "$T" "$ID")
+  PR="The person writing: $(printf '%s' "$T" | jq -r '"\(.by) (\(.role // ""))"')
+
+The chat so far (answer the last message):
+
+$CONV"
+  [ -n "$PICS" ] && PR="$PR
+
+Photos in this conversation, in your working folder (open each with Read; a photo can go on a post with ./jv-posts.sh photo):$PICS"
+  [ -n "$AUD" ] && PR="$PR
+
+Voice notes, turned into text:
+$AUD"
+  log "posts $ID: session started (restricted, cloud)"
+  OUT=$(cd "$W" && printf '%s' "$PR" | timeout 600 "$CLAUDE" -p --restricted --tools "Read,Write,Bash" --allowedTools "Bash(bash jv-posts.sh *)" "Bash(bash ./jv-posts.sh *)" "Edit(./*.txt)" \
+        --strict-mcp-config --setting-sources project --permission-mode dontAsk --model "${HELP_MODEL_INSTALL:-sonnet}" --system-prompt-file "$PF" --output-format text 2>>"$ST/posts-$ID.err")
+  printf '%s' "$OUT" > "$ST/posts-$ID.out"
+  STL=$(printf '%s\n' "$OUT" | sed -n '1p' | tr -d '\r'); BODY=$(printf '%s\n' "$OUT" | sed '1d' | sed -e '/./,$!d')
+  STS=answered; case "$STL" in *STATUS:*matthew*|*STATUS:*MATTHEW*) STS=matthew;; *STATUS:*) ;; *) BODY="$OUT";; esac
+  if [ -z "$(printf '%s' "$BODY" | tr -d '[:space:]')" ]; then STS=matthew; BODY="I couldn't finish looking into this one, so I've passed it to Matthew. He'll get back to you here."; fi
+  [ -f "$W/changed" ] && RF=refresh
+  printf '%s' "$BODY" | app_reply posts "$ID" "$STS" $RF
+  log "posts $ID: done ($STS${RF:+, changed a post})"
+}
+
 # ---- shadow: what it WOULD do, logged; nothing taken, nothing posted ---------------------------------------------------------------------
 # One row a ticket version (queue, id, messages) in shadow/shadow.tsv:
 #   <unix seen> <queue> <id> <messages> <writer: matthew|office|install> <would: model + quick pass> <how it saw it: stream|https|ssh>
@@ -552,14 +704,14 @@ $AUD"
 declare -A SEEN
 shadow_look() {   # shadow_look <staff|jarvis|c-slug> <how>
   local K="$1" HOW="$2" T ID N BY MM W WHAT QF QS Q
-  case "$K" in jarvis) T=$(srv "$JD next --peek" < /dev/null 2>>"$LOG");; staff) T=$(srv "${TOOLS}help-next.php --peek" < /dev/null 2>>"$LOG");; *) T=$(srv "${TOOLS}help-next.php --peek --install=$K" < /dev/null 2>>"$LOG");; esac || return 0
+  case "$K" in jarvis) T=$(srv "$JD next --peek" < /dev/null 2>>"$LOG");; peak|posts) T=$(srv "$JV $K next --peek" < /dev/null 2>>"$LOG");; staff) T=$(srv "${TOOLS}help-next.php --peek" < /dev/null 2>>"$LOG");; *) T=$(srv "${TOOLS}help-next.php --peek --install=$K" < /dev/null 2>>"$LOG");; esac || return 0
   [ -n "$T" ] || return 0
   ID=$(printf '%s' "$T" | jq -r '.id // ""' 2>/dev/null); [[ "$ID" =~ ^$TID$ ]] || return 0
   N=$(printf '%s' "$T" | jq '.conversation | length' 2>/dev/null); [[ "$N" =~ ^[0-9]+$ ]] || N=0
   [ -n "${SEEN[$K:$ID:$N]:-}" ] && return 0; SEEN[$K:$ID:$N]=1
   grep -qF "$(printf '\t%s\t%s\t%s\t' "$K" "$ID" "$N")" "$ST/shadow/shadow.tsv" 2>/dev/null && return 0   # seen before a restart (20 Nov)
   BY=$(printf '%s' "$T" | jq -r '.by // ""'); MM=0; [ "$BY" = "Matthew Sharpe" ] && [ "$(only_matthew "$T")" = 1 ] && MM=1
-  case "$K" in c-*) W=install; WHAT="restricted read-only session (sonnet)";; *) if [ "$MM" = 1 ]; then W=matthew; WHAT="quick pass then opus"; else W=office; WHAT="office session (sonnet)"; fi;; esac
+  case "$K" in posts) W=app; [ "$MM" = 1 ] && WHAT="opus working session" || WHAT="restricted posts session (sonnet)";; peak) W=app; [ "$MM" = 1 ] && WHAT="opus working session" || WHAT="working session (sonnet)";; c-*) W=install; if full_ok "$K"; then WHAT="working session (sonnet), that install's data"; else WHAT="restricted read-only session (sonnet)"; fi;; *) if [ "$MM" = 1 ]; then W=matthew; WHAT="quick pass then opus"; else W=office; WHAT="office session (sonnet)"; fi;; esac
   local WT=no; case "$K" in c-*) WT=n/a;; *) ws_ok && write_turn "$ID" && WT=yes; rm -f "$ST/write-ok";; esac
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$(date +%s)" "$K" "$ID" "$N" "$W" "$WHAT" "$HOW" "$WT${WHY:+ ($WHY)}" >> "$ST/shadow/shadow.tsv"
   log "SHADOW: would take $K $ID (message $N, $W): $WHAT; may change the repo: $WT${WHY:+ ($WHY)}"
@@ -594,13 +746,14 @@ jcount() {   # tests: from JARVIS_TEST_COUNTS
   line=$(srv "$JD count" < /dev/null 2>/dev/null | tr -d '\r\n'); [[ "$line" =~ ^[0-9]+$ ]] && echo "$line"
 }
 tcount() { local x; for x in ${JARVIS_TEST_COUNTS:-}; do [ "${x%%=*}" = "$1" ] && { echo "${x#*=}"; return 0; }; done; echo 0; }   # tests: "L=1 J=0 P=0 c-houston-lawn-test=0"
-hcount() { if [ -n "${JARVIS_TEST_COUNTS:-}" ]; then case "$1" in "") tcount L;; "&p=1") tcount P;; *) tcount "${1#&i=}";; esac; return 0; fi; local n; n=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK$1" 2>/dev/null); [[ "$n" =~ ^[0-9]+$ ]] && echo "$n"; }
+hcount() { if [ -n "${JARVIS_TEST_COUNTS:-}" ]; then case "$1" in "") tcount L;; "&p=1") tcount P;; "&a="*) tcount "${1#&a=}";; *) tcount "${1#&i=}";; esac; return 0; fi; local n; n=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK$1" 2>/dev/null); [[ "$n" =~ ^[0-9]+$ ]] && echo "$n"; }
 
 # ---- test modes -------------------------------------------------------------------------------------------------------------------------
 guard_test() {
   local ok=0 c m X='h20261111120000abcd' A='a1762900000abcdef.webm' P='p1762900000abcdef.jpg'
   local LD='/home/x/www/traverseplatforms.com/sixfold-data/rounds/help-files' PD='/home/x/www/traverseplatforms.com/sixfold-practice-data/rounds/help-files'
   local DD='/home/x/www/traverseplatforms.com/assistant-private/data/jarvis/desk/files' HD='/home/x/www/traverseplatforms.com/c-houston-lawn-test-data/rounds/help-files'
+  local KD='/home/x/www/traverseplatforms.com/peak-desk-data/jarvis/help-files' OD='/home/x/www/traverseplatforms.com/post-calendar-data/jarvis/help-files'
   # refused in EVERY mode
   local -a NEVER=("rm -rf \$HOME" "scp x y" "${TOOLS}help-next.php --practice; ${TOOLS}help-next.php" "${TOOLS}help-next.php --practice && cat /etc/passwd"
     "${TOOLS}help-next.php --practice"$'\n'"${TOOLS}help-next.php" "${TOOLS}help-attach.php $X 'x.pdf'" "${TOOLS}help-next.php --peek --install=c-other-co"
@@ -611,16 +764,21 @@ guard_test() {
     "cat '$LD/$X/x.php'" "cat '$DD/$X/x.pdf'" "cat '/home/x/www/traverseplatforms.com/c-other-co-data/rounds/help-files/$X/$A'" "grep '\"id\":\"$X\"' /etc/passwd"
     "grep '\"id\":\"$X\"' \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log | head" "php \$HOME/www/traverseplatforms.com/sixfold-tools/help-next.php --peek \$(id)"
     "$BEATCMD; id" "$BEATCMD && id" "${JSTREAM}; id" "cat > \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log" "$JD final-since $X 1 ; id"
-    "${TOOLS}help-transcript.php $X a1762900000abcdef.exe" "${TOOLS}help-next.php --peek --practice --live")
+    "${TOOLS}help-transcript.php $X a1762900000abcdef.exe" "${TOOLS}help-next.php --peek --practice --live"
+    "$JV peak reply $X working" "$JV peak act $X list" "$JV posts act $X edit p0123456789 fb" "$JV other next" "$JV peak attach $X x.pdf" "$JV posts reply $X answered extra"
+    "$JV peak next; id" "$JV peak count && id" "cat '$KD/../desk.sqlite'" "cat '/home/x/www/traverseplatforms.com/peak-desk-data/accounts.json'" "cat '$KD/$X/x.pdf'"
+    "grep '\"id\":\"$X\"' \$HOME/www/traverseplatforms.com/c-other-co-data/rounds/help.log" "$JV peak final-since $X 1 ; id")   # + the apps (21 Nov)
   # allowed in shadow (and live): looking only, and the practice copy
   local -a SHADOW=("${TOOLS}help-next.php --peek" "${TOOLS}help-next.php --peek --install=c-houston-lawn-test" "$JD next --peek" "$JD count" "$BEATCMD" "$JSTREAM" "$LAPCMD"
     "${TOOLS}help-next.php --practice" "${TOOLS}help-next.php --peek --practice" "${TOOLS}help-reply.php $X answered --practice"
-    "${TOOLS}help-transcript.php $X $A --practice" "cat '$PD/$X/$A'")
+    "${TOOLS}help-transcript.php $X $A --practice" "cat '$PD/$X/$A'" "$JV peak next --peek" "$JV posts next --peek" "$JV peak count" "$JV posts count")
   # allowed in live ONLY (each must be refused in shadow and practice)
   local -a LIVE=("${TOOLS}help-next.php" "${TOOLS}help-next.php --install=c-houston-lawn-test" "${TOOLS}help-reply.php $X answered" "${TOOLS}help-reply.php $X matthew"
     "${TOOLS}help-reply.php $X answered --install=c-houston-lawn-test" "${TOOLS}help-transcript.php $X $A" "${TOOLS}help-transcript.php $X $A --failed"
     "${TOOLS}help-transcript.php $X $A --install=c-houston-lawn-test" "$JD next" "$JD transcript $X $A" "$JD reply $X matthew" "$JD final-since $X 1763500000"
-    "grep '\"id\":\"$X\"' \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log" "cat '$LD/$X/$A'" "cat '$LD/$X/$P'" "cat '$DD/$X/$P'" "cat '$HD/$X/$A'")
+    "grep '\"id\":\"$X\"' \$HOME/www/traverseplatforms.com/sixfold-data/rounds/help.log" "cat '$LD/$X/$A'" "cat '$LD/$X/$P'" "cat '$DD/$X/$P'" "cat '$HD/$X/$A'"
+    "$JV peak next" "$JV posts next" "$JV peak reply $X matthew" "$JV posts reply $X answered refresh" "$JV posts reply $X answered" "$JV peak transcript $X $A" "$JV posts transcript $X $A --failed"
+    "$JV peak final-since $X 1763500000" "cat '$KD/$X/$P'" "cat '$OD/$X/$A'" "grep '\"id\":\"$X\"' \$HOME/www/traverseplatforms.com/c-houston-lawn-test-data/rounds/help.log")
   for m in practice shadow live off; do
     for c in "${NEVER[@]}"; do if allowed "$c" "$m"; then echo "FAIL ($m let through): $(printf '%s' "$c" | tr '\n' ' ')"; ok=1; else echo "PASS ($m) refused: $(printf '%s' "$c" | tr '\n' ' ' | cut -c1-110)"; fi; done
   done
@@ -650,6 +808,11 @@ guard_test() {
   is_queue_ticket "$L" jarvis && { echo "FAIL: staff ticket taken as desk"; ok=1; } || echo "PASS staff ticket not desk"
   is_queue_ticket "$H" c-houston-lawn-test && echo "PASS install ticket accepted" || { echo "FAIL: install ticket rejected"; ok=1; }
   is_queue_ticket "$L" c-houston-lawn-test && { echo "FAIL: staff ticket taken as install"; ok=1; } || echo "PASS staff ticket not install"
+  local K="{\"id\":\"$X\",\"app\":\"peak\",\"photoDir\":\"$KD/$X\",\"audioDir\":\"$KD/$X\"}" O="{\"id\":\"$X\",\"app\":\"posts\",\"photoDir\":\"$OD/$X\",\"audioDir\":\"$OD/$X\"}"
+  is_queue_ticket "$K" peak && echo "PASS Peak ticket accepted" || { echo "FAIL: Peak ticket rejected"; ok=1; }
+  is_queue_ticket "$O" posts && echo "PASS post calendar ticket accepted" || { echo "FAIL: post calendar ticket rejected"; ok=1; }
+  is_queue_ticket "$K" posts && { echo "FAIL: Peak ticket taken as posts"; ok=1; } || echo "PASS Peak ticket not posts"
+  is_queue_ticket "$L" peak && { echo "FAIL: staff ticket taken as Peak"; ok=1; } || echo "PASS staff ticket not Peak"
   [ "$ok" = 0 ] && echo "guard: all PASS" || echo "guard: FAILURES above"
   return "$ok"
 }
@@ -691,8 +854,8 @@ case "${1:-}" in
   --capture) capture "${2:-manual}"; exit 0;;           # tests and by hand
   --sync-workspace) sync_workspace; exit $?;;
   --peek) TEST=1
-          for q in staff jarvis practice $INSTALLS; do
-            case "$q" in staff) c="${TOOLS}help-next.php --peek";; jarvis) c="$JD next --peek";; practice) c="${TOOLS}help-next.php --peek --practice";; *) c="${TOOLS}help-next.php --peek --install=$q";; esac
+          for q in staff jarvis practice $INSTALLS $APPS; do
+            case "$q" in staff) c="${TOOLS}help-next.php --peek";; jarvis) c="$JD next --peek";; peak|posts) c="$JV $q next --peek";; practice) c="${TOOLS}help-next.php --peek --practice";; *) c="${TOOLS}help-next.php --peek --install=$q";; esac
             T=$(srv "$c" < /dev/null 2>/dev/null) || { echo "$q: server not reachable"; continue; }
             [ -n "$T" ] && echo "$q: $(printf '%s' "$T" | jq -r '"\(.id) (\(.conversation|length) messages, by \(.by))"')" || echo "$q: nothing waiting"
           done; exit 0;;
@@ -714,13 +877,13 @@ while true; do
   [ "${1:-}" = --once ] && [ "${ROUND:-0}" -ge 1 ] && break; ROUND=$(( ${ROUND:-0} + 1 ))
   if [ -f "$ST/pause" ]; then sleep 5; continue; fi
   P=$(hcount "&p=1"); L=""; H=""; JC=""; HOW=https
-  if [ "$MODE" != practice ]; then L=$(hcount ""); JC=$(jcount); for HI in $INSTALLS; do H="$H $HI:$(hcount "&i=$HI")"; done; fi
+  if [ "$MODE" != practice ]; then L=$(hcount ""); JC=$(jcount); for HI in $INSTALLS; do H="$H $HI:$(hcount "&i=$HI")"; done; for A in $APPS; do H="$H $A:$(hcount "&a=$A")"; done; fi   # + the apps (21 Nov)
   if [ -z "$P" ] || { [ "$MODE" != practice ] && [ -z "$L" ]; }; then
     BAD=$(( BAD + 1 ))
     if [ "$BAD" -ge 3 ]; then   # HTTPS captcha'd or down: a fresh SSH look every 30 s
       [ "$BAD" = 3 ] && log "https check is not answering a number: looking over SSH every 30 s"
       HOW=ssh; P=$(srv "${TOOLS}help-next.php --peek --practice" < /dev/null 2>/dev/null | grep -c '"waiting"')
-      [ "$MODE" != practice ] && { L=$(srv "${TOOLS}help-next.php --peek" < /dev/null 2>/dev/null | grep -c '"waiting"'); H=""; for HI in $INSTALLS; do H="$H $HI:$(srv "${TOOLS}help-next.php --peek --install=$HI" < /dev/null 2>/dev/null | grep -c '"waiting"')"; done; }
+      [ "$MODE" != practice ] && { L=$(srv "${TOOLS}help-next.php --peek" < /dev/null 2>/dev/null | grep -c '"waiting"'); H=""; for HI in $INSTALLS; do H="$H $HI:$(srv "${TOOLS}help-next.php --peek --install=$HI" < /dev/null 2>/dev/null | grep -c '"waiting"')"; done; for A in $APPS; do H="$H $A:$(srv "$JV $A count" < /dev/null 2>/dev/null | tr -cd '0-9')"; done; }
       sleep 25
     fi
   else [ "$BAD" -ge 3 ] && log "https check answers again"; BAD=0; fi
@@ -729,7 +892,7 @@ while true; do
       if [[ "${L:-0}" =~ ^[1-9] ]]; then take one_ticket staff; continue; fi
       if [[ "${JC:-0}" =~ ^[1-9] ]]; then take one_ticket jarvis; continue; fi
       if [[ "${P:-0}" =~ ^[1-9] ]]; then take one_practice; continue; fi
-      HIT=""; for x in $H; do [[ "${x#*:}" =~ ^[1-9] ]] && { take one_install "${x%%:*}"; HIT=1; break; }; done; [ -n "$HIT" ] && continue;;
+      HIT=""; for x in $H; do [[ "${x#*:}" =~ ^[1-9] ]] && { q="${x%%:*}"; if app_ok "$q" || full_ok "$q"; then take one_app "$q"; else take one_install "$q"; fi; HIT=1; break; }; done; [ -n "$HIT" ] && continue;;   # installs, then the apps (21 Nov)
     shadow)
       [[ "${L:-0}" =~ ^[1-9] ]] && shadow_look staff "$HOW"
       [[ "${JC:-0}" =~ ^[1-9] ]] && shadow_look jarvis stream

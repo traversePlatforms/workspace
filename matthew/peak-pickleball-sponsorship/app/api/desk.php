@@ -147,7 +147,35 @@ if (PHP_SAPI === 'cli') {
         });
         $json($res); exit($res['ok'] ? 0 : 1);
     }
-    fwrite(STDERR, "usage: php desk.php addaccount \"Name\" admin|seller|expo | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note] | contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by \"Name\"]\n");
+    /* J.A.R.V.I.S. does a person's desk work (2026-11-21, Matthew: "The goal is to have jarvis handle a lot of the tasks that they would reach
+       out to me about"): one desk action as that person, through the same code as their button, with their role and its limits:
+         php desk.php as "<Name>" <action> < body.json        (prints the action's answer as JSON; exit 0 when ok)
+       Every row it writes carries via: "J.A.R.V.I.S." (desk-store.php commit). Never here, whoever asks (exit 3, "REFUSED: ..."): sending any
+       email (desk emails, retries, tour confirmations, Inbox replies, tests), the booking-link and tour-confirmation and desk settings, the
+       email sender's own calls, prices and money (packages, proposals, signed deals, sponsors added as signed, profit and loss), paid look-ups
+       (Hunter), and a person's devices, alerts and calendar link. A tour booked, moved or cancelled through here never emails the visitor. */
+    if ($cmd === 'as' && $name !== '' && ($argv[3] ?? '') !== '') {
+        $act = (string) $argv[3]; $who = null;
+        foreach (jread('accounts.json', ['codes' => []])['codes'] as $a) if (strcasecmp((string) ($a['name'] ?? ''), $name) === 0) $who = $a;
+        $refuse = function (string $m) { echo 'REFUSED: ', $m, "\n"; exit(3); };
+        if (!$who || (string) $who['name'] === 'Claude Check') $refuse('no desk account named ' . $name);
+        $NO = ['dmsend' => 'sending an email', 'dmretry' => 'sending an email', 'tourmail' => 'sending a tour confirmation', 'tourmailtest' => 'sending a test email', 'inboxreply' => 'sending an email reply',
+            'dmset' => 'the desk email settings', 'bookset' => 'the booking-link rules', 'bookgeneric' => 'the booking links', 'booklink' => 'the booking links', 'tourmailset' => 'the tour confirmation settings', 'settings' => 'the desk settings',
+            'emailed' => 'the email sender\'s records', 'emailreply' => 'the email sender\'s records', 'emailbounce' => 'the email sender\'s records',
+            'packages' => 'prices and packages', 'proposal' => 'prices in a proposal', 'signed' => 'a signed deal\'s money', 'sponsor' => 'a signed deal\'s money', 'pl' => 'profit and loss',
+            'pushsub' => 'a person\'s devices', 'pushunsub' => 'a person\'s devices', 'alertset' => 'a person\'s alerts', 'alerttest' => 'a person\'s alerts', 'callink' => 'a person\'s calendar link', 'pushkey' => 'the alert key',
+            'signin' => 'signing in', 'signout' => 'signing out', 'jvsend' => 'the chat', 'jvclose' => 'the chat', 'jvlist' => 'the chat', 'jvfile' => 'the chat', 'calfeed' => 'the calendar feed', 'inboxfile' => 'downloads'];
+        if (isset($NO[$act])) $refuse($NO[$act] . ' stays with Matthew');
+        $body = json_decode((string) stream_get_contents(STDIN), true); $body = is_array($body) ? $body : [];
+        if ($act === 'scan' && !empty($body['hunter'])) $refuse('paid look-ups (Hunter) stay with Matthew');
+        if (in_array($act, ['tour', 'tourmove', 'tourdel'], true)) $body['mail'] = false;   /* never an email from here */
+        $read = in_array($act, ['data', 'inbox', 'inboxone', 'tourpreview', 'dmpreview', 'eodpreview'], true);
+        if ($read) foreach ($body as $k => $v) if (is_scalar($v)) $_GET[$k] = (string) $v;
+        define('DESK_VIA', 'J.A.R.V.I.S.');
+        try { $r = handleIn($act, !$read, $body, (string) $who['name'], (string) $who['role']); $json($r); exit(empty($r['ok']) ? 1 : 0); }
+        catch (DeskFail $e) { $json(['ok' => false, 'error' => $e->getMessage(), 'code' => $e->getCode()]); exit(1); }
+    }
+    fwrite(STDERR, "usage: php desk.php as \"Name\" <action> < body.json | addaccount \"Name\" admin|seller|expo | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note] | contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by \"Name\"]\n");
     exit(1);
 }
 
@@ -203,6 +231,13 @@ function handle(string $action, bool $isPost, array $body): array {
     $ME = (string) $me['name']; $ROLE = (string) ($me['role'] ?? '');
     if ($action === 'signout') { unset($ses[$tokH]); jwrite('sessions.json', $ses); setcookie('peakdesk', '', ['expires' => 1, 'path' => '/']); return ['ok' => true]; }
     if ($action === 'me') return ['ok' => true, 'name' => $ME, 'role' => $ROLE];
+    return handleIn($action, $isPost, $body, $ME, $ROLE);
+}
+/* everything after the sign-in: the page's calls, and (2026-11-21) J.A.R.V.I.S. doing a person's desk work from the server (php desk.php as) */
+function handleIn(string $action, bool $isPost, array $body, string $ME, string $ROLE): array {
+    /* J.A.R.V.I.S. (2026-11-21, Matthew: "I need cai brandon and nneka to be able to make changes to the peak application"): the chat. Your
+       own conversations; an admin sees everyone's. Every account with a desk sign-in may use it (Claude Check only looks). */
+    if (in_array($action, ['jvlist', 'jvsend', 'jvclose', 'jvfile'], true)) return jvAction($action, $isPost, $body, $ME, $ROLE);
 
     /* which list an action works on; the old desk's action names still work (a page left open from before) */
     $ALIAS = ['status' => ['stage', 'sponsor'], 'lead' => ['add', 'sponsor'], 'leaddel' => ['del', 'sponsor'], 'leadback' => ['back', 'sponsor'],
@@ -343,10 +378,29 @@ function handle(string $action, bool $isPost, array $body): array {
         if (!empty($res['ok'])) $res['mail'] = tmAfter($op, $w, $op === 'tour' ? (string) $res['tid'] : (string) ($body['tid'] ?? ''), array_key_exists('mail', $body) ? !empty($body['mail']) : null, $ME);
         return $res;
     }
-    if ($op === 'templates' && $ROLE !== 'admin') fail('Only an admin changes the templates.', 403);
+    if ($op === 'templates' && $ROLE !== 'admin' && !defined('DESK_VIA')) fail('Only an admin changes the templates.', 403);   /* J.A.R.V.I.S. may change one for a seller who asks (2026-11-21) */
     /* Packages and Profit & loss are admins only (2026-11-20, Matthew: More shows sellers only My email & booking link, My calendar, Look) */
     if (in_array($op, ['packages', 'pl'], true) && $ROLE !== 'admin') fail('Only an admin changes ' . ($op === 'pl' ? 'profit and loss' : 'the packages') . '.', 403);
     return withLock(fn() => act($op, $w, $body, $ME, $legacy));
+}
+
+/* ---- J.A.R.V.I.S. (2026-11-21) ---- */
+function jvBoot(): void {
+    static $done = false; if ($done) return; $done = true;
+    $e = in_array(PHP_SAPI, ['cli', 'cli-server'], true) ? (string) getenv('JV_LIB') : '';
+    require_once ($e !== '' ? $e : (is_file(__DIR__ . '/jv-lib.php') ? __DIR__ . '/jv-lib.php' : dirname(__DIR__, 4) . '/shared/jv-chat/jv-lib.php'));
+    jvInit(DATA_DIR . '/jarvis', 'peak');
+}
+function jvAction(string $action, bool $isPost, array $body, string $ME, string $ROLE): array {
+    jvBoot();
+    $all = $ROLE === 'admin' && $ME !== 'Claude Check';
+    if ($action === 'jvfile') { $x = jvServeFile($ME, $all, (string) ($_GET['id'] ?? ''), (string) ($_GET['f'] ?? '')); fail($x['error'], (int) $x['code']); }
+    if ($action === 'jvlist') return ['ok' => true, 'admin' => $all, 'tickets' => jvList($ME, $all)];
+    if (!$isPost) fail('POST required', 405);
+    if ($ME === 'Claude Check') fail('This account only looks, so nothing is sent.', 403);
+    if ($action === 'jvclose') { $x = jvClose($ME, $all, (string) ($body['id'] ?? '')); if (isset($x['error'])) fail($x['error'], (int) $x['code']); return ['ok' => true]; }
+    $x = jvSend($ME, $all, $body, ['role' => $ROLE]); if (isset($x['error'])) fail($x['error'], (int) $x['code']);
+    return $x;
 }
 
 /* ---- what the page gets ---- */

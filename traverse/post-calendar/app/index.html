@@ -133,6 +133,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
 <div id="sheet" class="sheet" hidden></div>
 <div id="menu" class="menu" hidden><div class="mbox" id="mbox"></div></div>
 <div id="toast" class="toast" hidden></div>
+<script src="jv-chat.js"></script>   <!-- J.A.R.V.I.S. (2026-11-21): one file shared with the Peak desk (shared/jv-chat/jv-chat.js) -->
 <script>
 (function () {
   'use strict';
@@ -176,6 +177,7 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   function showSignin() {   /* nothing of the last sign-in stays in the page (2026-11-16: two people may share a phone) */
     $('app').hidden = true; $('sheet').hidden = true; $('menu').hidden = true; $('main').innerHTML = ''; $('sheet').innerHTML = ''; $('mbox').innerHTML = ''; $('who').textContent = '';
     D.me = null; D.clients = []; D.client = null; D.posts = []; D.slots = []; D.counts = null; D.pages = null; D.video = null;
+    if (window.JVChat) JVChat.unmount(); jvOn = false;
     $('signin').hidden = false; $('code').focus();
   }
   $('sf').addEventListener('submit', function (e) {
@@ -184,13 +186,26 @@ textarea{min-height:120px;resize:vertical;line-height:1.45}
   });
 
   /* ---- loading ---- */
+  /* J.A.R.V.I.S. (2026-11-21, Matthew: "I need Jarvis built into the post application ... everyone has access to a version of Jarvis they can
+     use to make changes that they need"): the blue chat button for every sign-in. It edits a draft's words, date or photo for you (only posts
+     you can edit yourself) and answers how-to questions; approving stays your own tap. Your own chats; Matthew's sign-in sees everyone's. */
+  var jvOn = false;
+  function jvMount() {
+    if (jvOn || !window.JVChat || !D.me) return; jvOn = true;
+    JVChat.mount({ call: function (a, b) { return api(a, b).catch(function (e) { return { ok: false, error: e.message }; }); },
+      fileUrl: function (id, n) { return API + '?action=jvfile&id=' + encodeURIComponent(id) + '&f=' + encodeURIComponent(n); },
+      me: function () { return D.me ? D.me.name : ''; }, seenKey: 'postcal.jvSeen',
+      dark: function () { var t = document.documentElement.getAttribute('data-theme'); return t === 'dark' || (!t && !!(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches)); },
+      greeting: 'J.A.R.V.I.S. at your service. Tell me which post and what to change, the words, the date or the photo, and I’ll see to it. Approving stays your tap.',
+      ctx: function () { return { screen: D.client ? 'client' : 'clients', client: D.client || '' }; } });
+  }
   function load(cid) {
     if (scoped() && D.me.clients.indexOf(cid) < 0) cid = home();   /* a client sign-in never asks for another client (a remembered one from Matthew's use of this phone, say) */
     return api('data', null, cid ? '&client=' + encodeURIComponent(cid) : '').then(function (j) {
       D.me = j.me; D.clients = j.clients; D.statuses = j.statuses; D.pages = j.pages; D.client = j.client || null; D.posts = j.posts || []; D.slots = j.slots || []; D.counts = j.counts || null; D.video = j.video || null;
       $('who').textContent = j.me.name + (approver() ? '' : ' (drafts only)');
       if (D.client) store('postcal.client', D.client);
-      render();
+      render(); jvMount();
     });
   }
   /* where we are, kept in the browser's history (2026-10-31, Matthew: no way back to the client list from a client's calendar): the client

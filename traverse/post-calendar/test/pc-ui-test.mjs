@@ -26,6 +26,8 @@ mkdirSync(join(SITE, 'public_html', PUB, 'media'), { recursive: true });
 for (const f of ['index.html', 'manifest.json', 'sw.js', 'icon-192.png', 'apple-touch-icon.png']) cpSync(join(ROOT, 'app', f), join(SITE, 'public_html', PUB, f));
 cpSync(join(ROOT, 'app', 'api'), join(SITE, 'public_html', PUB, 'api'), { recursive: true });
 cpSync(join(ROOT, 'server'), join(SITE, 'post-calendar-tools'), { recursive: true });
+/* J.A.R.V.I.S. (2026-11-21): the chat, as deploy.sh places it */
+cpSync(join(ROOT, '..', '..', 'shared', 'jv-chat', 'jv-chat.js'), join(SITE, 'public_html', PUB, 'jv-chat.js')); cpSync(join(ROOT, '..', '..', 'shared', 'jv-chat', 'jv-lib.php'), join(SITE, 'post-calendar-tools', 'jv-lib.php'));
 mkdirSync(join(SITE, 'post-calendar-data', 'private'), { recursive: true });
 const port = 20000 + Math.floor(Math.random() * 2000), ORIGIN = 'http://127.0.0.1:' + port;
 /* a LinkedIn stand-in that counts every request (2026-11-18): opening pages must not reach it; only Connect does */
@@ -83,6 +85,15 @@ ok(await js(`!document.getElementById('signin').hidden`), 'opens on the sign-in'
 await shot('01-signin');
 await js(`document.getElementById('code').value=${JSON.stringify(ADMIN)};document.getElementById('sf').requestSubmit()`); await sleep(1000);
 ok(await js(`document.getElementById('app').hidden===false`), 'signed in');
+/* J.A.R.V.I.S. (2026-11-21): the blue button, the chat window full screen on a phone, a message sent and shown */
+ok(await js(`!!document.getElementById('jvfab') && getComputedStyle(document.getElementById('jvfab')).position==='fixed'`), 'J.A.R.V.I.S.: the chat button is on the page');
+await click(`document.getElementById('jvfab')`); await sleep(500);
+ok(await js(`(function(){var w=document.querySelector('.jvchat');if(!w)return false;var r=w.getBoundingClientRect();return r.width>=389&&r.top<=1&&w.textContent.indexOf('J.A.R.V.I.S. at your service')>=0})()`), 'J.A.R.V.I.S.: opens full screen on a phone with the greeting');
+ok(await js(`(function(){var h=document.querySelector('.jvhd');var c=getComputedStyle(h).backgroundColor;return c==='rgb(31, 95, 173)'||c==='rgb(125, 180, 238)'})()`), 'J.A.R.V.I.S.: stays blue');
+await js(`(function(){var t=document.querySelector('.jvbar textarea');t.value='Matthew test message for the chat';t.dispatchEvent(new Event('input'))})()`); await click(`document.querySelector('.jvsend')`); await sleep(900);
+ok(await js(`[].some.call(document.querySelectorAll('.jvmsg.me'),function(m){return m.textContent.indexOf('Matthew test message')>=0}) && document.querySelector('.jvwork')!==null`), 'J.A.R.V.I.S.: the message shows on the right, with the waiting line');
+await shot('20-jarvis-chat');
+await click(`document.querySelector('.jvx')`); await sleep(200); ok(await js(`!document.querySelector('.jvchat') && !!document.getElementById('jvfab')`), 'J.A.R.V.I.S.: closes back to the button');
 await click(`document.getElementById('pick')`); await sleep(200);
 await click(`[].find.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent==='Sixfold 365'})`); await sleep(800);
 ok(await js(`document.querySelector('.band h1').textContent.indexOf('Sixfold 365')>=0`), 'Sixfold 365 lane');
@@ -235,6 +246,9 @@ await click(`[].find.call(document.querySelectorAll('#mbox button'),function(b){
 ok(await js(`!document.getElementById('signin').hidden`), 'signed out');
 await js(`document.getElementById('code').value=${JSON.stringify(JEN)};document.getElementById('sf').requestSubmit()`); await sleep(1200);
 ok(await js(`!!document.querySelector('.band h1') && document.querySelector('.band h1').textContent.indexOf('Sixfold 365')>=0 && !document.getElementById('toall')`), 'client sign-in: opens on Sixfold 365 (remembered Surge ignored), no "All clients"');
+await click(`document.getElementById('jvfab')`); await sleep(700);
+ok(await js(`!!document.querySelector('.jvchat') && document.querySelector('.jvchat').textContent.indexOf('Matthew test message')<0`), "J.A.R.V.I.S.: Jen's chat never shows Matthew's conversation");
+await click(`document.querySelector('.jvx')`); await sleep(200);
 { const t = await js(`document.body.textContent`); const i = t.indexOf('Surge'); ok(t.indexOf('Building a sales team') < 0 && i < 0, 'client sign-in: no Surge anywhere on the page' + (i >= 0 ? ' (found: ...' + t.slice(Math.max(0, i - 60), i + 40) + ')' : '')); ok((await js(`document.body.innerText`)).indexOf('LinkedIn') < 0, 'client sign-in: no LinkedIn anywhere on the page'); }
 await click(`document.getElementById('pick')`); await sleep(200);
 ok(await js(`(function(){var t=[].map.call(document.querySelectorAll('#mbox button'),function(b){return b.textContent});return t.indexOf('Posting days')>=0 && t.indexOf('Manage clients')<0 && !t.some(function(x){return /All clients|Surge|Sixfold/.test(x)})})()`), 'menu: Posting days, no client list, no Manage clients');

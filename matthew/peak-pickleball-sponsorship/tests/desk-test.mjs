@@ -27,6 +27,8 @@ for (const f of ['seed.json', 'expo-seed.json', 'peak-records.json', 'accounts.j
 /* a web folder: the page under test plus the api */
 const WEB = join(LD, 'web'); mkdirSync(WEB); cpSync(join(ROOT, 'app/api'), join(WEB, 'api'), { recursive: true });
 copyFileSync(join(ROOT, PAGE), join(WEB, 'index.html')); for (const f of ['manifest.json', 'sw.js', 'icon-192.png']) copyFileSync(join(ROOT, 'app', f), join(WEB, f)); cpSync(join(ROOT, 'app/fonts'), join(WEB, 'fonts'), { recursive: true });
+/* J.A.R.V.I.S. (2026-11-21): the chat's code beside the api and its page script, as the deploy puts them (one source: shared/jv-chat/) */
+copyFileSync(join(ROOT, '..', '..', 'shared', 'jv-chat', 'jv-lib.php'), join(WEB, 'api', 'jv-lib.php')); copyFileSync(PAGE.startsWith('dist') ? join(ROOT, 'dist', 'jv-chat.js') : join(ROOT, '..', '..', 'shared', 'jv-chat', 'jv-chat.js'), join(WEB, 'jv-chat.js'));
 const env = { ...process.env, DESK_DATA: LD };
 /* tour confirmations (2026-11-19): the Peak email sender's code from the repo, a throwaway mail-data folder "connected" to a stand-in for
    Microsoft that only records what it is given */
@@ -962,6 +964,66 @@ try {
     /* left on for the screens; turned off at the end */
   }
 
+  console.log('J.A.R.V.I.S. (2026-11-21: the chat, who sees what, and the desk work it does for a person)');
+  {
+    const JV = join(ROOT, '..', '..', 'shared', 'jv-chat', 'jv.php');
+    const jv = (args, input = '') => new Promise((r) => { const p = execFile('php', [JV, 'peak', ...args], { env: { ...env, JV_PEAK_API: join(WEB, 'api'), DESK_MAIL_FILE: join(LD, 'jv-mail.jsonl') } }, (e, so, se) => r({ code: e ? e.code : 0, out: so, err: se })); p.stdin.end(input); });
+    const as = (who, act, body = {}) => new Promise((r) => { const p = execFile('php', [join(WEB, 'api/desk.php'), 'as', who, act], { env }, (e, so) => { let j = null; try { j = JSON.parse(so); } catch {} r({ code: e ? e.code : 0, out: so, j }); }); p.stdin.end(JSON.stringify(body)); });
+    ok((await x('jvlist'))._status === 401, 'chat: signed out is refused');
+    let j = await b('jvsend', { text: 'Please add a note on Kaiser: called back, wants a tour in January', ctx: { screen: 'sponsor/today' } });
+    ok(j.ok && /^h\d{14}[0-9a-f]{4}$/.test(j.ticket.id) && j.ticket.status === 'new' && j.ticket.msgs[0].mine, 'chat: a seller starts a conversation');
+    const TB = j.ticket.id;
+    j = await c2('jvsend', { text: 'Second seller question' }); const TC = j.ticket.id;
+    const ej = await ex('jvsend', { text: 'Expo account question' }); ok(ej.ok, 'chat: the expo-only account can use it too');
+    ok((await b('jvlist')).tickets.map((t) => t.id).join() === TB, 'chat: a seller sees only their own conversation');
+    ok((await ex('jvlist')).tickets.length === 1 && (await ex('jvlist')).tickets[0].by === 'Test Expo', 'chat: the expo account sees only its own');
+    const al = await a('jvlist'); ok(al.admin === true && [TB, TC, ej.ticket.id].every((id) => al.tickets.some((t) => t.id === id)), "chat: the admin sees everyone's");
+    const cl = await cc('jvlist'); ok(cl.ok && cl.admin === false && cl.tickets.length === 0, "chat: Claude Check sees no one's conversations");
+    ok((await cc('jvsend', { text: 'hello there' }))._status === 403, 'chat: Claude Check sends nothing');
+    ok((await c2('jvsend', { id: TB, text: 'into another chat' }))._status === 404 && (await c2('jvclose', { id: TB }))._status === 404, "chat: someone else's conversation answers no such");
+    ok((await b('jvsend', { text: 'x' }))._status === 400, 'chat: an empty message is refused');
+    const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64').toString('base64');
+    j = await b('jvsend', { id: TB, text: 'A screenshot', photos: [PNG] }); const pn = j.ticket.msgs.at(-1).photos[0].n;
+    let rr = await fetch(API + '?action=jvfile&id=' + TB + '&f=' + pn, { headers: { Cookie: b.cookie() } });
+    ok(rr.status === 200 && rr.headers.get('content-type') === 'image/png', 'chat: the writer opens their photo');
+    rr = await fetch(API + '?action=jvfile&id=' + TB + '&f=' + pn, { headers: { Cookie: c2.cookie() } }); ok(rr.status === 404, "chat: another seller can't");
+    ok(existsSync(join(LD, 'jarvis', 'help-files', TB, pn)) && !existsSync(join(WEB, 'jarvis')), "chat: files are kept in the desk's own data folder, outside the web folder");
+    /* the watcher's tool */
+    ok((await jv(['count'])).out.trim() === '3', 'jv.php count: three waiting');
+    const nx = JSON.parse((await jv(['next'])).out); ok(nx.id === TB && nx.app === 'peak' && nx.role === 'seller' && nx.conversation.length === 2 && nx.conversation[1].photos[0] === pn, 'jv.php next: the oldest, with its photo and the writer role');
+    /* the desk work, as the person (php desk.php as) */
+    let A1 = await as('Test Seller', 'note', { id: K.id, note: 'Called back, wants a tour in January' });
+    const lastRow = JSON.parse(readFileSync(join(LD, 'events.log'), 'utf8').trim().split('\n').at(-1));
+    ok(A1.code === 0 && A1.j.ok && lastRow.t === 'note' && lastRow.by === 'Test Seller' && lastRow.via === 'J.A.R.V.I.S.', 'as: a note goes on the card as the seller, marked via J.A.R.V.I.S.');
+    ok((await b('data')).sponsor.recs.find((r) => r.id === K.id).notes.some((n) => /wants a tour in January/.test(n.note)), 'as: the seller sees it on the card');
+    A1 = await as('Test Seller', 'templates', { world: 'sponsor', templates: [{ name: 'Quick hello', text: 'Hi {first}, it is {me} from Peak.' }] });
+    ok(A1.code === 0 && A1.j.ok, 'as: a template change a seller asks for goes through (coordinator, 21 Nov)');
+    ok((await b('templates', { world: 'sponsor', templates: [] }))._status === 403, 'but the seller still cannot change templates in the page');
+    A1 = await as('Test Expo', 'note', { id: K.id, note: 'x' }); ok(A1.code === 1 && /Expo leads only/.test(A1.j.error), "as: the expo account's limits still hold");
+    const T0 = (await b('data')).sponsor.tours.length;
+    A1 = await as('Test Seller', 'tour', { id: NEW[30].id, date: later(9), time: '10:00', email: 'visitor@example.com', mail: true });
+    const tr = (await b('data')).sponsor.tours.find((t) => t.tid === (A1.j || {}).tid);
+    ok(A1.code === 0 && tr && !tr.mail && (await b('data')).sponsor.tours.length === T0 + 1, 'as: a tour is booked, and never with a confirmation email');
+    for (const [act, body, why] of [['dmsend', { id: K.id }, 'email'], ['dmretry', { id: K.id }, 'email'], ['tourmail', {}, 'confirmation'], ['inboxreply', {}, 'email'], ['bookset', {}, 'booking'], ['dmset', { on: true }, 'email settings'], ['tourmailset', { on: true }, 'confirmation settings'], ['settings', {}, 'settings'],
+      ['packages', { packages: [] }, 'prices'], ['proposal', {}, 'prices'], ['signed', {}, 'money'], ['sponsor', {}, 'money'], ['pl', {}, 'profit'], ['pushsub', {}, 'devices'], ['alertset', {}, 'alerts'], ['callink', {}, 'calendar']]) {
+      const z = await as('Test Admin', act, body); ok(z.code === 3 && /^REFUSED: /.test(z.out), 'as: ' + act + ' is refused even for an admin (' + why + ' stays with Matthew)');
+    }
+    ok((await as('Test Seller', 'scan', { id: K.id, hunter: true })).code === 3, 'as: paid look-ups (Hunter) are refused');
+    ok((await as('Nobody Here', 'note', { id: K.id, note: 'x' })).code === 3 && (await as('Claude Check', 'note', { id: K.id, note: 'x' })).code === 3, 'as: no such person, and never Claude Check');
+    const dd = await as('Test Seller', 'data'); ok(dd.code === 0 && dd.j.me.name === 'Test Seller' && dd.j.sponsor.recs.length > 0, 'as: data reads the desk as that person');
+    /* the reply: the writer is told the desk's own way (alerts), the chat shows it */
+    const t0 = Math.floor(Date.now() / 1000);
+    rr = await jv(['reply', TB, 'answered', 'refresh'], 'Done: the note is on Kaiser. Refresh the page to see it.');
+    ok(rr.code === 0 && (await jv(['final-since', TB, String(t0)])).code === 0, 'jv.php reply + final-since');
+    j = await b('jvlist'); const last = j.tickets[0].msgs.at(-1);
+    ok(j.tickets[0].status === 'answered' && last.jarvis && last.refresh && /note is on Kaiser/.test(last.text), 'chat: the reply shows, with Refresh now');
+    const AL = JSON.parse(readFileSync(join(LD, 'alerts.json'), 'utf8')); ok(Object.keys(AL.keys).some((k) => k.startsWith('jv:' + TB + ':')), "jv.php reply: the writer's alert went through the desk's alert queue");
+    ok((await jv(['reply', TB, 'approved'], 'x')).code !== 0 && (await jv(['reply', 'h00000000000000abcd', 'answered'], 'x')).code !== 0, 'jv.php reply: only a real ticket and answered, matthew or working');
+    ok((await b('jvclose', { id: TB })).ok && (await b('jvlist')).tickets[0].status === 'closed', 'chat: Clear closes it');
+    ok((await jv(['act', TB, 'list'])).code !== 0, 'jv.php: act is the post calendar only');
+    await as('Test Admin', 'templates', { world: 'sponsor', reset: true });   /* the starters back for the screens below */
+  }
+
   console.log('Several people at once');
   D = await b('data'); const ids = NEW.filter((l) => find('sponsor', l.id).stage === 'new').slice(0, 12).map((l) => l.id);   /* companies nobody has touched yet */
   const conc = await Promise.all(ids.map((id, i) => new Promise((res) => execFile('php', [join(WEB, 'api/desk.php'), 'emailed', 'sponsor', id, `p${i}@example.com`], { env }, (e, so, se) => res(e ? 'cli err ' + (se || so || e.message).slice(0, 200) : 'ok')))).concat(
@@ -1020,6 +1082,16 @@ try {
   ok(await js(`['due','fresh','wait','tours','week'].every(k=>!!document.querySelector('[data-blk="'+k+'"]'))&&/Proposals waiting/.test(document.querySelector('[data-blk="wait"]').textContent)`), 'Today has follow-ups due, to contact next, proposals waiting, tours coming up, this week');
   ok(await js(`(()=>{const r=[...document.querySelectorAll('[data-blk="week"] tr')].find(r=>/Test Seller/.test(r.textContent));return !!r&&r.children[1].textContent===String(${(D.sponsor.week['Test Seller'] || {}).calls || 0})})()`) && (D.sponsor.week['Test Seller'] || {}).calls >= 3, 'This week shows the seller\u2019s calls');
   await shot('desk-today.png');
+  /* J.A.R.V.I.S. on the screen (2026-11-21) */
+  ok(await js(`!!document.getElementById('jvfab')&&getComputedStyle(document.getElementById('jvfab')).position==='fixed'`), 'J.A.R.V.I.S.: the blue chat button is on every screen');
+  await click('#jvfab', 700);
+  ok(await js(`(()=>{const w=document.querySelector('.jvchat');return !!w&&/J\.A\.R\.V\.I\.S\. at your service/.test(w.textContent)&&!/Kaiser: called back/.test(w.textContent)})()`), 'J.A.R.V.I.S.: opens with the greeting, the closed chat not reopened');
+  ok(await js(`['rgb(125, 180, 238)','rgb(31, 95, 173)'].includes(getComputedStyle(document.querySelector('.jvhd')).backgroundColor)`), 'J.A.R.V.I.S.: stays J.A.R.V.I.S. blue on the Night Session look');
+  await js(`(()=>{const t=document.querySelector('.jvbar textarea');t.value='Add a Region column to Companies please';t.dispatchEvent(new Event('input'));return 1})()`); await click('.jvsend', 900);
+  ok(await js(`[...document.querySelectorAll('.jvmsg.me')].some(m=>/Region column/.test(m.textContent))&&!!document.querySelector('.jvwork')`), 'J.A.R.V.I.S.: the message is sent and waits for the watcher');
+  await shot('desk-jarvis.png');
+  ok((await b('jvlist')).tickets.some((t) => /Region column/.test(t.msgs[0].text)), 'J.A.R.V.I.S.: the server has it, as the seller');
+  await click('.jvx', 300); ok(await js(`!document.querySelector('.jvchat')`), 'J.A.R.V.I.S.: closes back to the button');
 
   console.log('Priority 5 (Sixfold’s)');
   D = await b('data');

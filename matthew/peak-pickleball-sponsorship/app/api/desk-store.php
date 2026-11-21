@@ -400,7 +400,7 @@ function rebuild(string $w): int { return withLock(function () use ($w) { metaSe
 /* write rows to a world's log in one append, then read them in (call inside withLock) */
 function commit(string $w, array $rows): void {
     if (!$rows) return;
-    $s = ''; foreach ($rows as $r) $s .= jline($r + ['v' => 2]);
+    $s = ''; foreach ($rows as $r) $s .= jline($r + ['v' => 2] + (defined('DESK_VIA') ? ['via' => DESK_VIA] : []));   /* via: J.A.R.V.I.S. did it for that person (desk.php as, 2026-11-21) */
     if (file_put_contents(DATA_DIR . '/' . W($w)['log'], $s, FILE_APPEND | LOCK_EX) === false) throw new RuntimeException('The log could not be written.');
     sync($w, true);
 }
