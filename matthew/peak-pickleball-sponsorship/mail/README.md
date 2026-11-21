@@ -78,7 +78,15 @@ prospects and expo-space rental leads. Built on Matthew's ask of 17 Nov ("sendin
   - Links already sent keep working at their old addresses. Microsoft's redirect (oauth.php) and the admin page never move.
   - Tour invites: tours made from 21 Nov 2026 carry UID `peak-tour-<id>@peakpickleball.us`; older tours keep `@traverseplatforms.com` so a
     move or cancel still matches the invite already in the person's calendar (`tmUid()` in `app/api/tour-mail.php`).
-- **Commands (server):** `php cron.php run | stats | import | check | dns | links | links-on | links-off`. `setapp` and `setcode` read from a pipe.
+- **The desk's Inbox and reply alerts (X-17, 20 Nov 2026):** `php cron.php inbox` every 5 minutes (started in the background by the
+  5-minute SiteGround cron, `sixfold-tools/meta-leads.php`; source `traverse/app/tools/meta-leads.php`) reads Peak Partnerships' Inbox
+  only (the last 15 minutes plus anything not seen), puts every email on the desk's Inbox tab (`deskInboxIn`, desk-inbox.php) and replies
+  on their cards as before, then delivers the desk's alerts that are due. One lock (`peak-mail-data/scan.lock`) covers it and the hourly
+  read, so two reads never overlap; a 429 from Microsoft pauses reads for 10 minutes. It writes a run.log line only when something came in.
+  Emails that matched no card stay unread in Outlook until a seller opens them on the desk.
+  `php cron.php inbox-backfill [days]` (run once at go-live, 20 Nov) put the emails already in the Inbox (14 days) on the desk's Inbox:
+  read only, no alerts; the ones already read in Outlook went straight to Done. Counts only.
+- **Commands (server):** `php cron.php run | inbox | stats | import | check | dns | links | links-on | links-off`. `setapp` and `setcode` read from a pipe.
 - **Overnight check:** section 12 of `shared/tools/overnight-check.sh` prints `cron.php stats`.
 - **Test:** `node matthew/peak-pickleball-sponsorship/mail/tests/mail-test.mjs`. It mocks Microsoft and uses throwaway data, and
   sends nothing.

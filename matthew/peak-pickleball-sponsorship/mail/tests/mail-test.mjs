@@ -497,6 +497,44 @@ try {
   ok(KR.next && KR.next.date === today() && /answer them/.test(KR.next.what), '... and a follow-up today, so it is on Today');
   ok(lt && lt.out === 'auto' && lt.mail.auto === 1 && /out until Monday/.test(lt.mail.text) && !events().some(e => e.t === 'reply' && e.to === 'lee@replytest.com') && events().some(e => e.t === 'auto' && e.to === 'lee@replytest.com' && e.org === DR.id), 'an out-of-office: on the card as an auto-reply, not counted as a reply');
   ok(M.patched.some(p => p[1] === 'k1') && M.patched.some(p => p[1] === 'k2') && !M.patched.some(p => p[1] === 'k3') && /1 other email in Peak Partnerships not matched to the desk/.test(out), 'handled ones marked read in Peak Partnerships; a stranger’s left unread and counted: ' + out.trim().slice(-80));
+  /* the desk's Inbox (2026-11-20): every email in Peak Partnerships' Inbox goes there, matched or not; an auto-reply under Other */
+  const inb = () => JSON.parse(spawnSync('php', ['-r', 'define("DATA_DIR", getenv("PEAK_DESK_DATA")); require getenv("PEAK_DESK_STORE"); echo json_encode(inAll());'], { env: { ...process.env, PEAK_DESK_DATA: DESK, PEAK_DESK_STORE: STORE } }).stdout.toString() || '[]');
+  { const IB = inb(), i1 = IB.find(x => x.mid === 'k1'), i2 = IB.find(x => x.mid === 'k2'), i3 = IB.find(x => x.mid === 'k3');
+    ok(i1 && i1.cat === 'mail' && i1.card && i1.card.id === DR.id && i1.text === 'Yes, Thursday works.\n\nKim' && i1.att.length === 1 && i1.att[0].n === 'Sponsor terms.pdf' && i1.mb === 'partnerships@peakpickleball.us' && i1.imid === '<k1@replytest.com>', 'the desk’s Inbox: Kim’s reply, on her card, her own words, the file (not the inline image)');
+    ok(i2 && i2.cat === 'other' && i2.why === 'auto-reply' && i2.auto && i3 && i3.cat === 'mail' && !i3.card && i3.text === 'who is this', 'the out-of-office under Other; the stranger’s email to answer, on no card');
+    ok(/on the desk's Inbox/.test(out) && !M.patched.some(p => p[1] === 'k3'), 'the stranger’s stays unread in Outlook until a seller opens it on the desk');
+    const ot = JSON.parse(spawnSync('php', ['-r', 'require getenv("LIB"); echo json_encode([pmInboxOther(["from" => ["emailAddress" => ["address" => "noreply@microsoft.com"]], "subject" => "Your bill"]), pmInboxOther(["from" => ["emailAddress" => ["address" => "alerts@courtreserve.com"]], "subject" => "Court"]), pmInboxOther(["from" => ["emailAddress" => ["address" => "MicrosoftExchange329e71ec88ae4615bbc36ab6ce41109e@peakpickleball.us"]], "subject" => "Undeliverable: Hi"]), pmInboxOther(["from" => ["emailAddress" => ["address" => "sam@outlook.com"]], "subject" => "Sponsoring"]), pmInboxOther(["from" => ["emailAddress" => ["address" => "kim@x.com"]], "subject" => "RE: hi"], true)]);'], { env: { ...ENV, LIB: path.join(PUB, 'lib.php') } }).stdout.toString());
+    ok(JSON.stringify(ot) === JSON.stringify(['Microsoft or system notice', 'CourtReserve', 'bounce', '', 'STOP (handled by itself)']), 'Other: Microsoft notices, CourtReserve, bounces and STOP; a person on outlook.com is mail to answer ' + JSON.stringify(ot)); }
+  /* the 5-minute read (2026-11-20, cron.php inbox): Peak Partnerships' Inbox only, under one lock, so two reads never overlap */
+  {
+    const t5 = T(2026, 11, 24, 10, 40);
+    M.inbox = [{ id: 'q1', from: { emailAddress: { address: 'quinn@quick.com', name: 'Quinn' } }, subject: 'Quick one', bodyPreview: 'Are you open Sunday?', internetMessageId: '<q1@quick.com>', receivedDateTime: new Date().toISOString() }];
+    const holder = spawn('php', ['-r', '$f = fopen(getenv("L"), "c"); flock($f, LOCK_EX); echo "held\n"; sleep(5);'], { env: { ...ENV, L: path.join(DATA, 'scan.lock') } });
+    await new Promise(r => holder.stdout.once('data', r));
+    let q = await cron(t5, 'inbox');
+    ok(/another read is going/.test(q) && !inb().some(x => x.mid === 'q1'), 'the 5-minute read while another read holds the lock: it skips (never two at once)');
+    await new Promise(r => holder.on('close', r));
+    const c0 = M.calls.length; q = await cron(t5 + 300, 'inbox'); const qc = M.calls.slice(c0);
+    ok(inb().some(x => x.mid === 'q1' && x.cat === 'mail' && x.text === 'Are you open Sunday?') && /inbox: read mail/.test(q) && qc.some(c => /^GET \/graph\/v1\.0\/users\/partnerships(%40|@)peakpickleball\.us\/mailFolders\/inbox\/messages$/.test(c)) && !qc.some(c => /junkemail|\/me\/mailFolders/.test(c)), 'then it reads Peak Partnerships’ Inbox only (no Junk, not Matthew’s own) and the new email is on the desk’s Inbox: ' + q.trim().slice(0, 90));
+    const c1 = M.calls.length; q = await cron(t5 + 600, 'inbox');
+    ok(/inbox: nothing new/.test(q) && M.calls.slice(c1).filter(c => /mailFolders/.test(c)).length === 1, 'nothing new: one cheap look, no line in run.log');
+    ok(!/RT-SECRET|AT-\d/.test(fs.readFileSync(path.join(DESK, 'inbox.log'), 'utf8')), 'no token in the desk’s Inbox log');
+    M.inbox = [];
+  }
+  /* the one-time fill (2026-11-20, cron.php inbox-backfill): what was already in Peak Partnerships' Inbox before the desk's Inbox began */
+  {
+    const tb = T(2026, 11, 24, 10, 55);
+    M.inbox = [
+      { id: 'b1', from: { emailAddress: { address: 'una@fill.com', name: 'Una' } }, subject: 'Still waiting', bodyPreview: 'Did anyone see this?', internetMessageId: '<b1@fill.com>', receivedDateTime: new Date(Date.now() - 5 * 86400e3).toISOString(), isRead: false },
+      { id: 'b2', from: { emailAddress: { address: 'reed@fill.com' } }, subject: 'Seen', bodyPreview: 'Matthew read this one', internetMessageId: '<b2@fill.com>', receivedDateTime: new Date(Date.now() - 6 * 86400e3).toISOString(), isRead: true },
+      { id: 'b3', from: { emailAddress: { address: 'no-reply@microsoft.com' } }, subject: 'Notice', bodyPreview: 'x', internetMessageId: '<b3@microsoft.com>', receivedDateTime: new Date(Date.now() - 7 * 86400e3).toISOString(), isRead: false },
+      { id: 'q1', from: { emailAddress: { address: 'quinn@quick.com', name: 'Quinn' } }, subject: 'Quick one', bodyPreview: 'Are you open Sunday?', internetMessageId: '<q1@quick.com>', receivedDateTime: new Date().toISOString(), isRead: false }];
+    const pc = M.patched.length; let q = await cron(tb, 'inbox-backfill');
+    const IB = inb(), f1 = IB.find(x => x.mid === 'b1'), f2 = IB.find(x => x.mid === 'b2'), f3 = IB.find(x => x.mid === 'b3');
+    ok(/"read":4,"added":3,"already":1,"open":1,"done":1,"other":1/.test(q) && f1 && f1.cat === 'mail' && !f1.done && f1.text === 'Did anyone see this?' && f2 && f2.done && f2.done.by === 'Outlook' && f3 && f3.cat === 'other' && M.patched.length === pc, 'the one-time fill: the unread one to answer, the one read in Outlook under Done, the notice under Other, the one already there left alone; nothing in the mailbox changed: ' + q.trim());
+    q = await cron(tb + 60, 'inbox-backfill'); ok(/"added":0,"already":4/.test(q), 'run again: nothing twice');
+    M.inbox = [];
+  }
   /* Reply from the card: Microsoft's own reply on Kim's message, our words above hers */
   dr = await dsend({ ...dmsg, ref: 'dm00000000cc', to: 'kim@replytest.com', name: 'Kim Reyes', subject: 'RE: Following up', html: '<!DOCTYPE html><html><head></head><body><div>Great, see you Thursday.</div></body></html>', replyTo: '', org: DR.id, company: DR.name, reply: { k: kt.k, mid: 'k1', mb: 'partnerships@peakpickleball.us', imid: '<k1@replytest.com>' } });
   const rp = M.replies[M.replies.length - 1] || {};

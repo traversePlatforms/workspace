@@ -12,6 +12,7 @@
    2026-11-20: More for sellers is My email & booking link, My calendar, Look (and Questions and venues on the Expo leads); the Report,
    Profit & loss, Packages, What Peak offers and What we could offer are the admin's, and a seller's data has none of their figures. */
 import { spawn, execFileSync, execFile } from 'node:child_process';
+import crypto from 'node:crypto';
 import { readFileSync, writeFileSync, existsSync, rmSync, mkdtempSync, cpSync, mkdirSync, copyFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import http from 'node:http';
@@ -42,7 +43,9 @@ const gmock = http.createServer((req, res) => { let bd = ''; req.on('data', (d) 
   if (req.method === 'GET' && rest === '/mailFolders/inbox') return j(200, { id: 'inbox' });
   if (req.method === 'GET' && rest === '/mailFolders/sentitems/messages') return j(200, { value: [{ from: { emailAddress: { name: 'Peak Partnerships', address: 'partnerships@peakpickleball.us' } } }] });
   if (req.method === 'POST' && /^\/messages\/[^/]+\/createReply$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]), did = 'draft' + (Object.keys(GM.drafts).length + 1); GM.drafts[did] = { of: id, box, create: JSON.parse(bd || '{}') }; return j(201, { id: did, body: { contentType: 'html', content: '<html><body><div>Their email, quoted</div></body></html>' } }); }
-  if (req.method === 'PATCH' && /^\/messages\/[^/]+$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]); if (GM.drafts[id]) Object.assign(GM.drafts[id], JSON.parse(bd || '{}')); return j(200, { id }); }
+  if (req.method === 'PATCH' && /^\/messages\/[^/]+$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]); if (GM.drafts[id]) Object.assign(GM.drafts[id], JSON.parse(bd || '{}')); else (GM.patched ||= []).push([box, id, JSON.parse(bd || '{}')]); return j(200, { id }); }
+  /* an attachment, as the Inbox downloads one (2026-11-20) */
+  if (req.method === 'GET' && /^\/messages\/[^/]+\/attachments\/[^/]+$/.test(rest)) { const aid = decodeURIComponent(rest.split('/')[4]); return j(200, { '@odata.type': '#microsoft.graph.fileAttachment', name: 'x', contentBytes: Buffer.from('PNG-BYTES-' + aid).toString('base64') }); }
   if (req.method === 'POST' && /^\/messages\/[^/]+\/send$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]); if (!GM.drafts[id]) return j(404, { error: { code: 'ErrorItemNotFound' } }); GM.calls++; GM.replies.push(GM.drafts[id]); res.writeHead(202); return res.end(); }
   j(404, { error: { code: 'NotFound' } }); }); });
 await new Promise((r) => gmock.listen(0, '127.0.0.1', r));
@@ -68,8 +71,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let pass = 0, failN = 0; const ok = (c, m) => { if (c) { pass++; console.log('  ok  ' + m); } else { failN++; console.log('  FAIL ' + m); } };
 const PORT = 8790 + Math.floor(Math.random() * 400), ORIGIN = `http://127.0.0.1:${PORT}`, API = ORIGIN + '/api/desk.php';
 env.DESK_BOOK_BASE = ORIGIN + '/api/book.php';   /* the booking page (2026-11-19) on the test's own server */
-env.DESK_UID_SINCE = '0';   /* X-16: every tour made in the test carries the new @peakpickleball.us invite UID (the line itself is tested below) */
-function client(extra = {}) { let ck = ''; const f = async (action, body, hdr = true) => { const r = await fetch(`${API}?action=${action}`, { method: body ? 'POST' : 'GET', headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(body && hdr ? { 'X-Desk': '1' } : {}), ...(ck ? { Cookie: ck } : {}), ...extra }, body: body ? JSON.stringify(body) : undefined }); const sc = r.headers.get('set-cookie'); if (sc) ck = sc.split(';')[0]; const j = await r.json().catch(() => ({})); j._status = r.status; return j; }; return f; }
+env.DESK_UID_SINCE = '0';
+env.DESK_PUSH_ALLOW_HTTP = '1';   /* the Inbox alerts (2026-11-20): the test push service is a plain listener on 127.0.0.1 */   /* X-16: every tour made in the test carries the new @peakpickleball.us invite UID (the line itself is tested below) */
+function client(extra = {}) { let ck = ''; const f = async (action, body, hdr = true) => { const r = await fetch(`${API}?action=${action}`, { method: body ? 'POST' : 'GET', headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(body && hdr ? { 'X-Desk': '1' } : {}), ...(ck ? { Cookie: ck } : {}), ...extra }, body: body ? JSON.stringify(body) : undefined }); const sc = r.headers.get('set-cookie'); if (sc) ck = sc.split(';')[0]; const j = await r.json().catch(() => ({})); j._status = r.status; return j; }; f.cookie = () => ck; return f; }
 const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const today = () => iso(new Date());
 const later = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return iso(d); };
@@ -809,6 +813,152 @@ try {
       const u = JSON.parse(viaLib('echo json_encode([tmUid(["tid" => "ab12", "at" => 1795244399]), tmUid(["tid" => "ab12", "at" => 1795244400]), tmUid(["tid" => "ab12"])]);', { DESK_UID_SINCE: '' }));
       ok(u[0] === 'peak-tour-ab12@traverseplatforms.com' && u[1] === 'peak-tour-ab12@peakpickleball.us' && u[2] === 'peak-tour-ab12@traverseplatforms.com', 'invite UID: tours made before 21 Nov keep @traverseplatforms.com (so a move or cancel still matches), later ones are @peakpickleball.us');
     }
+    /* ---- the Inbox and alerts (2026-11-20, Matthew: "I think the inbox tab is better but i dont think we currently have any notification
+       that an email reply has happened"). Emails are put in as the Peak email sender does (deskInboxIn); pushes go to a listener on
+       127.0.0.1 (DESK_PUSH_ALLOW_HTTP) and are decrypted here; email alerts land in a file. Nothing reaches Microsoft, a push service or a
+       mailbox. ---- */
+    {
+      console.log('The Inbox and alerts');
+      const now = Math.floor(Date.now() / 1000), MB = 'partnerships@peakpickleball.us';
+      const inIn = (m) => inject('echo deskInboxIn(json_decode(getenv("M"), true));', { M: JSON.stringify(m) }).trim();
+      const EO = LOC[125], EB = LOC[126], EA = LOC[127];   /* a card a seller owns, a card nobody owns (a blast), a card to attach to */
+      ok((await b('owner', { world: 'sponsor', id: EO.id, owner: 'Test Seller' })).ok, 'a card Test Seller owns');
+      const KI = inIn({ from: 'jo@inboxtest.com', name: 'Jo Inbox', subject: 'RE: Sponsoring', at: now - 300, text: 'Can we do Friday instead?\n\nJo', mid: 'AAMkInbox1', mb: MB, imid: '<in1@inboxtest.com>', w: 'sponsor', id: EO.id });
+      const ST = inIn({ from: 'pat@acmeplumbing.com', name: 'Pat Acme', subject: 'Sponsorship question', at: now - 200, text: '<b>Hi</b> we would like to sponsor.\nWhat does it cost?', mid: 'AAMkInbox2', mb: MB, imid: '<in2@acmeplumbing.com>',
+        att: [{ name: 'logo.png', id: 'ATTID1', size: 2048, type: 'image/png', kind: '#microsoft.graph.fileAttachment' }, { name: 'big.zip', id: 'ATTID2', size: 20 * 1048576, kind: '#microsoft.graph.fileAttachment' }, { name: 'Forwarded.msg', id: 'ATTID3', size: 900, kind: '#microsoft.graph.itemAttachment' }] });
+      inIn({ from: 'no-reply@microsoft.com', subject: 'Your subscription', at: now - 150, mid: 'AAMkInbox3', imid: '<in3@microsoft.com>', cat: 'other', why: 'Microsoft or system notice' });
+      inIn({ from: 'lee@inboxtest.com', subject: 'Automatic reply: Hi', at: now - 140, mid: 'AAMkInbox4', imid: '<in4@inboxtest.com>', cat: 'other', why: 'auto-reply', auto: true });
+      inIn({ from: 'notify@courtreserve.com', subject: 'Court booked', at: now - 130, mid: 'AAMkInbox5', imid: '<in5@courtreserve.com>', cat: 'other', why: 'CourtReserve' });
+      ok(/^[0-9a-f]{12}$/.test(KI) && /^[0-9a-f]{12}$/.test(ST) && inIn({ from: 'pat@acmeplumbing.com', subject: 'Sponsorship question', mid: 'AAMkInbox2', imid: '<in2@acmeplumbing.com>' }) === ST, 'the sender puts emails in (one id per email, the same email twice is one)');
+      let IB = await b('inbox'), J = JSON.stringify(IB);
+      const its = IB.items, iST = its.find((x) => x.iid === ST), iKI = its.find((x) => x.iid === KI);
+      ok(IB.ok && its.length === 2 && its[0].iid === ST && its[1].iid === KI && IB.counts.open === 2 && IB.counts.other === 3 && IB.counts.done === 0, 'Inbox (a seller): the two to answer, newest first; the notice, the auto-reply and CourtReserve are not on it');
+      ok(iKI.card && iKI.card.id === EO.id && iKI.card.name === EO.name && !iST.card, 'the matched one says which card it is on; the stranger’s is on none');
+      ok(!/AAMkInbox|ATTID|<in\d@/.test(J), 'the page never gets where an email is in the mailbox, nor an attachment’s id');
+      ok(iST.preview === '<b>Hi</b> we would like to sponsor.\nWhat does it cost?' && iST.files.map((f) => f.n + ':' + f.dl).join() === 'logo.png:true,big.zip:false,Forwarded.msg:false', 'their words as text (the page shows them as text, never HTML); a plain file under 15 MB can be downloaded, the rest open in Outlook');
+      const IO = await b('inbox&f=other');
+      ok(IO && IO.items.length === 3 && IO.items.map((x) => x.why).sort().join('|') === 'CourtReserve|Microsoft or system notice|auto-reply', 'Other: the Microsoft notice, the auto-reply and the CourtReserve one');
+      ok((await b('data')).inbox.open === 2 && !('inbox' in (await ex('data'))) && (await ex('inbox'))._status === 403, 'the tab’s count is in the data; the Expo-only account has no Inbox');
+      const CI = await cc('inbox'); ok(CI.ok && CI.items.length === 2, 'Claude Check may look');
+      ok((await cc('inboxclaim', { iid: ST, on: true }))._status === 403 && (await cc('inboxdone', { iid: ST, on: true }))._status === 403 && (await cc('inboxattach', { iid: ST, w: 'sponsor', id: EA.id }))._status === 403 && (await cc('inboxreply', { iid: ST, subject: 'x', text: 'y' }))._status === 403, 'and never acts (claim, done, attach, reply: 403)');
+      GM.patched = [];
+      let one = await cc('inboxone' + '&iid=' + ST);
+      ok(one.ok && one.item.text.startsWith('<b>Hi</b>') && !GM.patched.length, 'Claude Check opening one does not mark it read in Outlook');
+      one = await b('inboxone' + '&iid=' + ST); await b('inboxone' + '&iid=' + ST);
+      ok(one.ok && GM.patched.length === 1 && GM.patched[0][0] === MB && GM.patched[0][1] === 'AAMkInbox2' && JSON.stringify(GM.patched[0][2]) === '{"isRead":true}', 'a seller opening it marks it read in Peak Partnerships, once; nothing moved or deleted');
+      ok((await b('inbox')).items.find((x) => x.iid === ST).read === true, 'and it shows as read');
+      /* attachments through the server, as a download */
+      const fr = await fetch(`${API}?action=inboxfile&iid=${ST}&n=0`, { headers: { Cookie: b.cookie() } }), fb = Buffer.from(await fr.arrayBuffer()).toString('utf8');
+      ok(fr.status === 200 && /application\/octet-stream/.test(fr.headers.get('content-type')) && /^attachment; filename="logo\.png"/.test(fr.headers.get('content-disposition') || '') && /nosniff/.test(fr.headers.get('x-content-type-options') || '') && fb === 'PNG-BYTES-ATTID1', 'a plain file downloads through the desk (as a download, never shown in the page)');
+      ok((await fetch(`${API}?action=inboxfile&iid=${ST}&n=1`, { headers: { Cookie: b.cookie() } })).status === 409 && (await fetch(`${API}?action=inboxfile&iid=${ST}&n=2`, { headers: { Cookie: b.cookie() } })).status === 409 && (await fetch(`${API}?action=inboxfile&iid=${ST}&n=0`, { headers: { Cookie: ex.cookie() } })).status === 403, 'too big, or not a plain file: Outlook only; the Expo account gets none');
+      /* Claim */
+      ok((await b('inboxclaim', { iid: ST, on: true })).ok, 'Test Seller claims the stranger’s email');
+      let cl = await c2('inboxclaim', { iid: ST, on: true });
+      ok(cl._status === 409 && /Test Seller is answering this/.test(cl.error) && (await c2('inbox')).items.find((x) => x.iid === ST).claim.by === 'Test Seller', 'the second seller sees “Test Seller is answering this” and cannot claim it too');
+      cl = await c2('inboxreply', { iid: ST, subject: 'RE: Sponsorship question', text: 'Hello Pat' });
+      ok(cl._status === 409 && cl.claim && cl.claim.by === 'Test Seller', 'nor answer it without saying so (take)');
+      /* Reply on an email that is on a card: the thread kept, logged on the card */
+      let n0 = GM.calls; let rr = await b('inboxreply', { iid: KI, subject: 'RE: Sponsoring', text: 'Friday is fine.' });
+      let RP = GM.replies[GM.replies.length - 1] || {}; D = await b('data');
+      ok(rr.ok && rr.state === 'sent' && GM.calls === n0 + 1 && RP.of === 'AAMkInbox1' && RP.box === MB && RP.create.message.toRecipients[0].emailAddress.address === 'jo@inboxtest.com' && RP.subject === 'RE: Sponsoring'
+        && /Friday is fine\.[\s\S]*Test Seller[\s\S]*Their email, quoted/.test(RP.body.content) && find('sponsor', EO.id).touches.some((x) => x.dm === rr.ref && /^Replied “RE: Sponsoring” to jo@inboxtest\.com from the desk, answering their email/.test(x.note) && x.by === 'Test Seller'), 'Reply from the Inbox: Microsoft’s own reply on her message in Peak Partnerships, signed by the seller, logged on the card');
+      IB = await c2('inbox'); const iKI2 = IB.items.find((x) => x.iid === KI);
+      ok(iKI2.replies.length === 1 && iKI2.replies[0].ok && iKI2.replies[0].by === 'Test Seller' && iKI2.claim && iKI2.claim.by === 'Test Seller', 'the Inbox shows who replied, and the one who replied has it claimed');
+      /* Reply on an email on no card: same thread, on the Inbox only; {book} needs a card */
+      ok(/needs a company/.test((await c2('inboxreply', { iid: ST, subject: 'RE: x', text: 'Pick a time that suits you: {book}', take: true })).error || ''), 'a booking link needs a company first');
+      const tc0 = JSON.stringify(D.sponsor.recs.map((r) => r.touches.length));
+      n0 = GM.calls; rr = await c2('inboxreply', { iid: ST, subject: 'RE: Sponsorship question', text: 'Hello Pat, happy to help.', take: true }); RP = GM.replies[GM.replies.length - 1] || {}; D = await b('data');
+      ok(rr.ok && rr.state === 'sent' && GM.calls === n0 + 1 && RP.of === 'AAMkInbox2' && /Hello Pat, happy to help\.[\s\S]*Second Seller/.test(RP.body.content) && JSON.stringify(D.sponsor.recs.map((r) => r.touches.length)) === tc0 && (await b('inbox')).items.find((x) => x.iid === ST).replies[0].by === 'Second Seller', 'on no card: the same thread, logged on the Inbox only (no card touched); take: true lets the second seller answer');
+      /* Attach to a company */
+      let at = await b('inboxattach', { iid: ST, w: 'sponsor', id: EA.id }); D = await b('data'); const ea = find('sponsor', EA.id), eat = ea.touches.filter((x) => x.mail && x.mail.from === 'pat@acmeplumbing.com');
+      ok(at.ok && at.name === EA.name && eat.length === 1 && eat[0].out === 'replied' && eat[0].by === 'Peak email' && /put on this card from the Inbox by Test Seller/.test(eat[0].note) && eat[0].mail.text.startsWith('<b>Hi</b>') && eat[0].mail.files.join() === 'logo.png,big.zip,Forwarded.msg' && ea.next.date === D.today && eat[0].mail.rp === 1, 'Attach to a company: their email on that card (words, files by name, Reply), with a follow-up today');
+      at = await b('inboxattach', { iid: ST, w: 'sponsor', id: EA.id }); D = await b('data');
+      ok(at.ok && at.dup && find('sponsor', EA.id).touches.filter((x) => x.mail && x.mail.from === 'pat@acmeplumbing.com').length === 1 && (await b('inbox')).items.find((x) => x.iid === ST).card.id === EA.id, 'attached twice: once; the Inbox shows the card');
+      ok((await b('inboxattach', { iid: ST, w: 'sponsor', id: 'nosuchid1' }))._status === 404, 'a company not on the desk is refused');
+      /* Done */
+      ok((await b('inboxdone', { iid: ST, on: true })).ok && !(await b('inbox')).items.some((x) => x.iid === ST), 'Done: off the open list');
+      const DN = await b('inbox&f=done');
+      ok(DN.items.length === 1 && DN.items[0].iid === ST && DN.items[0].done.by === 'Test Seller' && DN.counts.open === 1 && DN.counts.done === 1, 'the Done view keeps it');
+      ok((await c2('inboxdone', { iid: ST, on: false })).ok && (await b('inbox')).items.some((x) => x.iid === ST), 'Not done brings it back');
+      await b('inboxdone', { iid: ST, on: true });
+      ok(!readFileSync(join(LD, 'inbox.log'), 'utf8').includes('AT-') && php(['inboxcount']).includes('"open"'), 'php desk.php inboxcount (counts only); no token in the Inbox log');
+
+      /* ---- alerts ---- */
+      const PUSHES = []; const psrv = http.createServer((req, res) => { const ch = []; req.on('data', (d) => ch.push(d)); req.on('end', () => { PUSHES.push({ path: req.url, h: req.headers, body: Buffer.concat(ch) }); res.writeHead(/gone/.test(req.url) ? 410 : 201); res.end(); }); });
+      await new Promise((r) => psrv.listen(0, '127.0.0.1', r)); const PP = 'http://127.0.0.1:' + psrv.address().port;
+      const dev = (name) => { const e = crypto.createECDH('prime256v1'); e.generateKeys(); const auth = crypto.randomBytes(16); return { e, auth, sub: { endpoint: PP + '/sub/' + name, keys: { p256dh: e.getPublicKey().toString('base64url'), auth: auth.toString('base64url') } } }; };
+      const open = (p, d) => { const body = p.body, salt = body.subarray(0, 16), idl = body[20], asPub = body.subarray(21, 21 + idl), ct = body.subarray(21 + idl);
+        const hk = (s, k, info, n) => Buffer.from(crypto.hkdfSync('sha256', k, s, info, n));
+        const ikm = hk(d.auth, d.e.computeSecret(asPub), Buffer.concat([Buffer.from('WebPush: info\0'), d.e.getPublicKey(), asPub]), 32);
+        const dc = crypto.createDecipheriv('aes-128-gcm', hk(salt, ikm, Buffer.from('Content-Encoding: aes128gcm\0'), 16), hk(salt, ikm, Buffer.from('Content-Encoding: nonce\0'), 12)); dc.setAuthTag(ct.subarray(ct.length - 16));
+        const pt = Buffer.concat([dc.update(ct.subarray(0, ct.length - 16)), dc.final()]); let i = pt.length - 1; while (i >= 0 && pt[i] === 0) i--; return JSON.parse(pt.subarray(0, i).toString('utf8')); };
+      const AMAIL = join(LD, 'alert-mail.jsonl'), amails = () => lines('alert-mail.jsonl').map((l) => JSON.parse(l));
+      /* async: the push listener lives in this process, so a blocking run would leave it unable to answer */
+      const flush = (at) => new Promise((res, rej) => execFile('php', [join(WEB, 'api/desk.php'), 'alerts'], { encoding: 'utf8', env: { ...env, DESK_MAIL_FILE: AMAIL, ...(at ? { DESK_NOW: String(at) } : {}) } }, (e, so) => e ? rej(e) : res(JSON.parse(so))));
+      const queue = () => existsSync(join(LD, 'alerts.json')) ? (json('alerts.json').q || []) : [];
+      let A = (await b('data')).alerts;
+      ok(A && A.mine === true && A.inbox === true && A.email === false && A.quiet === true && A.devices.length === 0 && A.addr === 'seller@example.com', 'alerts start: replies on my companies on, new Inbox mail on, email off, quiet hours on, no device');
+      ok(!queue().length, 'nobody has turned alerts on, so nothing was queued for the emails so far');
+      ok((await cc('pushkey'))._status === 503, 'Claude Check never makes the alert key');
+      const K1 = await b('pushkey'), K2 = await c2('pushkey');
+      ok(K1.ok && /^[A-Za-z0-9_-]{86,88}$/.test(K1.publicKey) && K2.publicKey === K1.publicKey && !/PRIVATE/.test(JSON.stringify(K1)) && existsSync(join(LD, 'push-vapid.json')), 'the desk’s own Web Push key: made once, kept outside the web folder; only its public half is given out');
+      const DB = dev('b1'), DC = dev('c1'), DG = dev('gone'), DA = dev('a1');
+      ok(/not usable/.test((await b('pushsub', { subscription: { endpoint: 'https://push.example.com/x', keys: { p256dh: 'abc', auth: 'abc' } }, device: 'Windows browser' })).error || ''), 'a broken sign-up is refused');
+      ok((await cc('pushsub', { subscription: DB.sub, device: 'x' }))._status === 403, 'Claude Check turns nothing on');
+      let ps = await b('pushsub', { subscription: DB.sub, device: 'iPhone app', phone: true });
+      ok(ps.ok && ps.alerts.devices.length === 1 && ps.alerts.devices[0].device === 'iPhone app' && !JSON.stringify(ps).includes(DB.sub.keys.auth), 'Turn on alerts: this device is on (the page sees its name, never its keys)');
+      await c2('pushsub', { subscription: DC.sub, device: 'Windows browser' }); await c2('pushsub', { subscription: DG.sub, device: 'Old phone' }); await a('pushsub', { subscription: DA.sub, device: 'Mac app' });
+      ok(/Replies to my emails go to/.test((await c2('alertset', { email: true })).error || ''), 'the email heads-up needs the person’s own reply address');
+      ok((await b('alertset', { email: true, quiet: false })).alerts.email === true && (await c2('alertset', { quiet: false })).ok && (await a('alertset', { quiet: false })).ok, 'Test Seller: email on; quiet hours off for the three of them (tested below)');
+      ok((await b('myset', { sig: 'Test Seller\nPeak Pickleball\n(719) 555-0100', replyto: 'seller@example.com' })).ok && (await b('data')).alerts.email === true, 'saving the signature keeps the alert settings');
+      ok((await cc('alertset', { inbox: false }))._status === 403 && (await cc('alerttest', {}))._status === 403, 'Claude Check changes no alert setting');
+      /* who gets what */
+      const dReply = (id, ref, extra = '') => inject('echo json_encode(deskReplied("sponsor", getenv("CID"), "Jo", "x", "Peak email", getenv("REF"), ' + (extra || 'false') + ', []));', { CID: id, REF: ref });
+      dReply(EO.id, 'reply:al-owned');
+      let Q = queue(); ok(Q.length === 1 && Q[0].who === 'Test Seller' && Q[0].text === EO.name + ' replied' && Q[0].url === './#card/sponsor/' + EO.id, 'a reply on a card Test Seller owns: only Test Seller is alerted, and the tap opens that card');
+      dReply(EB.id, 'reply:al-blast');
+      Q = queue(); const qb = Q.filter((x) => x.k === 'rp:reply:al-blast').map((x) => x.who).sort();
+      const ADM = (await a('data')).me.name;
+      ok(qb.join('|') === [ADM, 'Second Seller', 'Test Seller'].sort().join('|'), 'a reply to a blast (nobody owns the card): everyone with New Inbox mail on (' + qb.join(', ') + ')');
+      dReply(EB.id, 'reply:al-blast'); ok(queue().length === Q.length, 'the same reply again: no second alert');
+      dReply(EB.id, 'reply:al-stop', 'true');
+      inject('echo json_encode(deskBounced("sponsor", getenv("CID"), "gone@x.com", "", "Peak email", "bounce:al"));', { CID: EB.id });
+      inject('echo json_encode(deskAutoReplied("sponsor", getenv("CID"), "Lee", ["from" => "lee@x.com", "text" => "Out"], "Peak email", "auto:al"));', { CID: EB.id });
+      inIn({ from: 'x@microsoft.com', subject: 'Notice', mid: 'AAMkInbox6', imid: '<in6@ms>', cat: 'other', why: 'Microsoft or system notice' });
+      ok(queue().length === Q.length, 'STOP, a bounce, an auto-reply and a Microsoft notice: no alert');
+      const NI = inIn({ from: 'sam@newco.com', name: 'Sam', subject: 'Hello there', text: 'Secret words about prices', mid: 'AAMkInbox7', mb: MB, imid: '<in7@newco.com>' });
+      Q = queue(); ok(Q.filter((x) => x.k === 'in:' + NI).length === 3 && Q.find((x) => x.k === 'in:' + NI).url === './#inbox/' + NI, 'a new email in the Inbox: the same three, and the tap opens that email');
+      /* delivery */
+      const t0 = now + 30; let F = await flush(t0);
+      const pB = PUSHES.filter((p) => p.path === '/sub/b1'), pC = PUSHES.filter((p) => p.path === '/sub/c1');
+      ok(F.push === 3 && pB.length === 1 && pC.length === 1 && PUSHES.filter((p) => p.path === '/sub/a1').length === 1 && PUSHES.some((p) => p.path === '/sub/gone'), 'one push per person per run (a batch), to every device they turned on');
+      const P1 = open(pB[0], DB), P2 = open(pC[0], DC);
+      ok(/^vapid t=[\w-]+\.[\w-]+\.[\w-]+, k=/.test(pB[0].h.authorization || '') && pB[0].h['content-encoding'] === 'aes128gcm' && P1.title === 'Peak desk' && /^3 new: /.test(P1.body) && P1.body.includes(EO.name + ' replied') && P1.body.includes('New email in the Inbox') && P1.url === './#inbox', 'the push is signed with the desk’s key and encrypted for the device: “3 new: …”, opening the Inbox');
+      ok(P2.body.startsWith('2 new: ') && !P2.body.includes(EO.name), 'the second seller’s has the blast reply and the new email, not Test Seller’s own card');
+      ok(![P1, P2].some((p) => /jo@|sam@|Secret|Friday|prices/i.test(JSON.stringify(p))), 'no push carries an email’s words or a sender’s address');
+      ok((await c2('data')).alerts.devices.length === 1, 'a device the push service says is gone (410) is taken off');
+      let M1 = amails(); ok(F.mail === 1 && M1.length === 1 && M1[0].to === 'seller@example.com' && /^Peak desk: 3 new emails$/.test(M1[0].subject) && M1[0].body.includes(EO.name + ' replied.') && M1[0].body.includes('A new email came to the Peak Partnerships inbox.') && /Open the desk/.test(M1[0].body), 'the email heads-up: to the seller’s own address, what happened and “open the desk”');
+      ok(!/jo@|sam@|pat@|Secret|prices|Friday|Hello there|inboxtest|newco/i.test(JSON.stringify(M1)), 'and never the email’s words, subject or the sender’s address');
+      ok(!queue().length && (await flush(t0 + 5)).push === 0, 'delivered: the queue is empty, nothing goes twice');
+      /* the 10-minute gap for email; pushes go each time */
+      const N2 = inIn({ from: 'kai@two.com', subject: 'Two', mid: 'AAMkInbox8', mb: MB, imid: '<in8@two.com>' });
+      F = await flush(t0 + 120); ok(F.push === 3 && F.mail === 0 && amails().length === 1 && queue().some((x) => x.k === 'in:' + N2 && x.who === 'Test Seller' && x.push && !x.mail), 'two minutes later: pushed at once, the email waits (one every 10 minutes)');
+      F = await flush(t0 + 660); M1 = amails(); ok(F.mail === 1 && M1.length === 2 && /a new email in the Inbox/.test(M1[1].subject), '10 minutes after the last, the waiting one goes');
+      /* quiet hours: held, delivered at 7 */
+      const [late, seven] = execFileSync('php', ['-r', 'date_default_timezone_set("America/Denver"); echo strtotime("tomorrow 22:30"), " ", strtotime("+2 days 07:02", strtotime("today"));'], { encoding: 'utf8' }).trim().split(' ').map(Number);
+      await b('alertset', { quiet: true }); const pb0 = PUSHES.filter((p) => p.path === '/sub/b1').length, pc0 = PUSHES.filter((p) => p.path === '/sub/c1').length;
+      const N3 = inIn({ from: 'night@owl.com', subject: 'Late', mid: 'AAMkInbox9', mb: MB, imid: '<in9@owl.com>' });
+      F = await flush(late);
+      ok(PUSHES.filter((p) => p.path === '/sub/b1').length === pb0 && PUSHES.filter((p) => p.path === '/sub/c1').length === pc0 + 1 && queue().some((x) => x.k === 'in:' + N3 && x.who === 'Test Seller' && !x.push), 'quiet hours (10:30 pm): held for Test Seller; the second seller (quiet hours off) gets it');
+      F = await flush(seven); ok(PUSHES.filter((p) => p.path === '/sub/b1').length === pb0 + 1 && !queue().length && amails().length === 3, 'at 7 am it goes (push and the email heads-up)');
+      /* my devices, the test alert */
+      const tt = await b('alerttest', {}); ok(tt.ok && tt.sent === 1 && open(PUSHES[PUSHES.length - 1], DB).body === 'Test alert: alerts are on for this device', 'Send me a test alert: to my own devices only');
+      const cdev = (await c2('data')).alerts.devices[0].id;
+      await b('pushunsub', { id: cdev }); ok((await c2('data')).alerts.devices.length === 1, 'nobody can take off another person’s device');
+      ok((await b('pushunsub', { endpoint: DB.sub.endpoint })).alerts.devices.length === 0, 'Turn off on this device takes it off');
+      ok(!/PRIVATE KEY/.test(JSON.stringify(await b('data'))) && !lines('alerts.log').join('').match(/@|Secret/), 'no key in the data; the alerts log has counts only');
+      psrv.close();
+    }
     /* left on for the screens; turned off at the end */
   }
 
@@ -863,7 +1013,7 @@ try {
   const bgS = `(function(){var c=getComputedStyle(document.body).backgroundColor.match(/\\d+/g).map(Number);return c[0]+c[1]+c[2]})()`;
   ok(await js(`document.documentElement.dataset.theme==='dark'&&!localStorage.getItem('peakdesk.theme')`) && (await js(bgS)) < 120, 'the facelift: dark is the default (nothing chosen on this device, the device itself set to light)');
   ok(await js(`(async()=>{await document.fonts.ready;return getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()==='#17a9cd'&&document.fonts.check('800 20px "Golos Text"')})()`), 'Sponsors glow Peak cyan; the Golos Text and Inter fonts load from the desk itself');
-  ok(await js(`[...document.querySelectorAll('.world button')].map(b=>b.textContent).join(',')==='Sponsors,Expo leads'&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Pipeline,Companies,Tours & deals,More'`), 'the bar: Sponsors | Expo leads, then Today, Pipeline, Companies, Tours & deals, More');
+  ok(await js(`[...document.querySelectorAll('.world button')].map(b=>b.textContent).join(',')==='Sponsors,Expo leads'&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Inbox,Pipeline,Companies,Tours & deals,More'`), 'the bar: Sponsors | Expo leads, then Today, Inbox, Pipeline, Companies, Tours & deals, More');
   ok(await js(`document.querySelector('main').dataset.section==='today'&&location.hash==='#sponsor/today'`), 'it opens on Today (#sponsor/today)');
   D = await b('data'); const dueN = D.sponsor.recs.filter((r) => r.next && r.next.date && r.next.date <= today() && !['signed', 'lost'].includes(r.stage)).length;
   ok(await js(`+document.querySelector('.kpi[data-k="due"] b').textContent`) === dueN && dueN >= 1 && await js(`document.querySelectorAll('[data-blk="due"] .row').length`) === dueN, `Today: follow-ups due (${dueN}), each listed`);
@@ -963,7 +1113,7 @@ try {
     await js(`(()=>{const i=document.querySelector('.signin input');i.value='${cd}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`); await waitFor(`!!document.querySelector('.shead')`, what); };
   const chipsNow = () => js(`[...document.querySelectorAll('.subchips [data-sub]')].map(b=>b.dataset.sub).join()`);
   await tab('more');
-  ok((await chipsNow()) === 'mine,cal,look' && await js(`document.querySelector('.sdesc').textContent==='Your email and booking link, your calendar link and the look.'`), 'More (a seller): only My email & booking link, My calendar and Look, and the description says so');
+  ok((await chipsNow()) === 'mine,cal,look' && await js(`document.querySelector('.sdesc').textContent==='Your email and booking link, your alerts (a notice on your phone or computer when an email comes in), your calendar link and the look.'`), 'More (a seller): only My email & booking link, My calendar and Look, and the description says so (with the alerts)');
   let byUrl = 0;
   for (const s of ['report', 'pl', 'pk', 'offer', 'better']) {
     await send('Page.navigate', { url: ORIGIN + '/?u=' + s + '#sponsor/more/' + s }); await waitFor(`!!document.querySelector('.shead')`, 'opened by address');
@@ -988,7 +1138,7 @@ try {
   ok((await js(bgSum)) < 120, 'Look: Dark again'); await js(`localStorage.removeItem('peakdesk.theme')`);
   /* expo */
   await world('expo'); await tab('today');
-  ok(await js(`location.hash==='#expo/today'&&/Expo leads/.test(document.querySelector('.shead h1').textContent)&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Pipeline,Organisations,Tours & quotes,More'`), 'Expo leads: the same tabs (Today, Pipeline, Organisations, Tours & quotes, More)');
+  ok(await js(`location.hash==='#expo/today'&&/Expo leads/.test(document.querySelector('.shead h1').textContent)&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Inbox,Pipeline,Organisations,Tours & quotes,More'`), 'Expo leads: the same tabs (Today, Inbox, Pipeline, Organisations, Tours & quotes, More)');
   ok(/Quotes waiting/.test(await text()), 'expo Today: quotes waiting on an answer');
   await tab('pipe');
   ok(await js(`document.querySelectorAll('.funnel .fr').length===7`), 'expo Pipeline: its 7 stages');
@@ -1224,6 +1374,19 @@ try {
     await click('.detail [data-act="dmnotre"]', 200);
     ok(await js(`!document.querySelector('.detail .dmre')&&document.querySelector('.detail .dmsub').value===''`), 'Write a new email instead takes the reply off');
     await click('.detail .close', 300);
+    /* the Inbox tab and the Alerts card (2026-11-20) */
+    await tab('inbox'); await waitFor(`!!document.querySelector('.inrow')`, 'the Inbox');
+    ok(await js(`(()=>{const r=[...document.querySelectorAll('.inrow')];return r.length>=1&&r.every(x=>!x.classList.contains('other'))&&/partnerships@peakpickleball\\.us/.test(document.querySelector('.shead .sdesc').textContent)&&/To answer/.test(document.querySelector('.shead .subchips').textContent)})()`), 'the Inbox tab: the emails to answer, newest first');
+    await js(`document.querySelector('.inrow .inhd').click()`); await waitFor(`!!document.querySelector('.inrow .intext')`, 'an email opened');
+    ok(await js(`(()=>{const t=document.querySelector('.inrow .intext');return !t.querySelector('*')&&['inreply','inattach','inclaim','indone'].every(a=>!!document.querySelector('.inrow [data-act="'+a+'"]'))})()`), 'opened: their words as plain text (nothing from the email is HTML), with Reply, Attach to a company, Claim and Done');
+    await click('.inrow [data-act="inattach"]', 200);
+    ok(await js(`!!document.querySelector('.inrow .inq')`), 'Attach to a company asks which company');
+    await shot('desk-inbox.png');
+    await sub('other'); await waitFor(`document.querySelectorAll('.inrow.other').length>=3`, 'Other');
+    ok(await js(`[...document.querySelectorAll('.inrow')].every(r=>r.classList.contains('other'))`), 'Other: the notices, the auto-replies and CourtReserve');
+    await sub('open'); await tab('more'); await sub('mine');
+    ok(await js(`(()=>{const c=document.querySelector('[data-set="alerts"]');return !!c&&!!c.querySelector('[data-act="pushon"]')&&/Home Screen/.test(c.textContent)&&/iOS 16\\.4/.test(c.textContent)&&!!c.querySelector('[data-al="quiet"]')&&!!c.querySelector('[data-al="inbox"]')&&!!c.querySelector('[data-al="mine"]')&&!!c.querySelector('[data-al="email"]')})()`), 'More › My email & booking link: Alerts (turn on per device, the iPhone Home Screen note, who gets what, quiet hours)');
+    await js(`document.querySelector('[data-set="alerts"]').scrollIntoView()`); await sleep(200); await shot('desk-alerts.png');
     await tab('today');
     ok(await js(`(()=>{const b=document.querySelector('[data-blk="linkbooked"]');return !!b&&/Booked from your booking link/.test(b.textContent)&&/Brand New Co/.test(b.textContent)})()`), 'Today: "Booked from your booking link", for the host');
     await js(`document.querySelector('[data-blk="linkbooked"]').scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-booked-today.png');

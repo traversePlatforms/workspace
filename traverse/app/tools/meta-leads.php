@@ -29,6 +29,10 @@ if (!$mlArgs && is_file(__DIR__ . '/social-queue.php')) exec(escapeshellarg(PHP_
    brought over from social-queue.json alone while that file still exists, so the two runners never both send one. */
 $mlPc = dirname(__DIR__) . '/post-calendar-tools/runner.php';
 if (!$mlArgs && is_file($mlPc)) exec(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg($mlPc) . ' > /dev/null 2>&1 &');
+/* the Peak desk's Inbox and reply alerts (2026-11-20, Matthew's own work for Peak, not Sixfold's): Peak Partnerships' Inbox read every 5
+   minutes, in the background. Its own lock (peak-mail-data/scan.lock) means two reads never overlap. */
+$mlPeak = dirname(__DIR__) . '/public_html/outbox-092b0f/peak/cron.php';
+if (!$mlArgs && is_file($mlPeak) && is_dir(dirname(__DIR__) . '/peak-mail-data')) exec(escapeshellarg(PHP_BINARY ?: 'php') . ' ' . escapeshellarg($mlPeak) . ' inbox > /dev/null 2>&1 &');
 /* a setup still waiting on Meta (2026-10-19: the app was "API access restricted" after the developer-account check, so the new token
    could not be swapped): retried once an hour by itself; the setup deletes the file when it works, and this run then polls as usual */
 $mlPend = (getenv('SIXFOLD_PRIVATE_DIR') ?: dirname(__DIR__) . '/sixfold-private') . '/meta-setup.json';

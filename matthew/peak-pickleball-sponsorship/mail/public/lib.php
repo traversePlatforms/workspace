@@ -1051,12 +1051,16 @@ function pmMailFull(array $box, string $id, array $m): array {
     [$s, $j] = pmGraph('GET', $box['base'] . '/messages/' . rawurlencode($id) . '?$select=uniqueBody,body,internetMessageId,hasAttachments', null, ['Prefer: outlook.body-content-type="text"']);
     $raw = $s === 200 ? (string) ((string) ($j['uniqueBody']['content'] ?? '') !== '' ? $j['uniqueBody']['content'] : ($j['body']['content'] ?? '')) : '';
     $text = pmReplyText($raw !== '' ? $raw : (string) ($m['bodyPreview'] ?? ''));
-    $files = [];
+    $files = []; $att = [];
     if (!empty($m['hasAttachments']) || !empty($j['hasAttachments'])) {
-        [$s2, $a] = pmGraph('GET', $box['base'] . '/messages/' . rawurlencode($id) . '/attachments?$select=name,isInline,size');
-        if ($s2 === 200) foreach ((array) ($a['value'] ?? []) as $x) if (empty($x['isInline']) && count($files) < 12) $files[] = pmClean($x['name'] ?? 'attachment', 120) ?: 'attachment';
+        [$s2, $a] = pmGraph('GET', $box['base'] . '/messages/' . rawurlencode($id) . '/attachments?$select=id,name,isInline,size,contentType');
+        if ($s2 === 200) foreach ((array) ($a['value'] ?? []) as $x) if (empty($x['isInline']) && count($files) < 12) {
+            $files[] = $nm = pmClean($x['name'] ?? 'attachment', 120) ?: 'attachment';
+            /* for the desk's Inbox (2026-11-20): which one it is, so a plain file can be downloaded through the desk */
+            $att[] = ['name' => $nm, 'id' => pmClean($x['id'] ?? '', 600), 'size' => (int) ($x['size'] ?? 0), 'type' => pmClean($x['contentType'] ?? '', 100), 'kind' => pmClean($x['@odata.type'] ?? '', 60)];
+        }
     }
-    return ['text' => $text, 'files' => $files, 'imid' => pmClean(((string) ($m['internetMessageId'] ?? '')) ?: (string) ($j['internetMessageId'] ?? ''), 300)];
+    return ['text' => $text, 'files' => $files, 'att' => $att, 'imid' => pmClean(((string) ($m['internetMessageId'] ?? '')) ?: (string) ($j['internetMessageId'] ?? ''), 300)];
 }
 /** whose mail is looked for in a mailbox, and where each belongs on the desk: [address => [to, person, company, org, kind, list, last (the
     latest email to them, 0 = none)]]. 'shared' (Peak Partnerships): everyone on the lists, everyone a desk email or tour confirmation went
@@ -1094,33 +1098,75 @@ function pmWho(array $S, string $box): array {
     if ($box === 'me') $who = array_filter($who, fn($e) => isset($via[$e][$me]), ARRAY_FILTER_USE_KEY);
     return $who;
 }
+/** why an email in Peak Partnerships' Inbox sits under Other on the desk's Inbox ('' = mail to answer): Microsoft's and other systems'
+    notices, bounces, auto-replies, calendar answers, CourtReserve (its notices go to Matthew's own mailbox, but in case), and STOP replies
+    (handled by themselves) (2026-11-20) */
+function pmInboxOther(array $m, bool $stop = false): string {
+    $from = strtolower((string) ($m['from']['emailAddress']['address'] ?? '')); $dom = substr((string) strrchr($from, '@'), 1); $nm = (string) ($m['from']['emailAddress']['name'] ?? '');
+    if (pmIsNdr($m)) return 'bounce';
+    if (pmIsAuto($m)) return 'auto-reply';
+    if (pmIsCalReply($m)) return 'calendar answer';
+    if (preg_match('/(^|\.)courtreserve\.com$/', $dom) || stripos($nm, 'courtreserve') !== false) return 'CourtReserve';
+    if ($from === '' || preg_match('/(^|\.)(microsoft\.com|microsoftonline\.com|office365\.com|microsoft365\.com|sharepointonline\.com|onmicrosoft\.com)$/', $dom)) return 'Microsoft or system notice';
+    if (preg_match('/^(no-?reply|do-?not-?reply|donotreply|noreply-[a-z0-9.-]+|notifications?|mailer|bounces?)@/', $from)) return 'system notice';
+    if ($stop) return 'STOP (handled by itself)';
+    return '';
+}
+/** one email from Peak Partnerships' Inbox onto the desk's Inbox (the desk's deskInboxIn: one row in its inbox.log). Never throws. */
+function pmInboxPut(array $box, string $id, array $m, ?array $full, string $why, ?array $x, array $flags = []): void {
+    try {
+        $full ??= ['text' => pmReplyText((string) ($m['bodyPreview'] ?? ''), 600), 'att' => [], 'imid' => ''];
+        deskInboxIn(['from' => strtolower((string) ($m['from']['emailAddress']['address'] ?? '')), 'name' => pmClean($m['from']['emailAddress']['name'] ?? '', 80), 'subject' => pmClean($m['subject'] ?? '', 200),
+            'at' => (int) strtotime((string) ($m['receivedDateTime'] ?? '')) ?: pmNow(), 'text' => (string) $full['text'], 'att' => (array) ($full['att'] ?? []), 'mid' => $id, 'mb' => $box['addr'],
+            'imid' => (string) (($full['imid'] ?? '') ?: ($m['internetMessageId'] ?? '')), 'cat' => $why !== '' ? 'other' : 'mail', 'why' => $why,
+            'w' => $x ? pmWorld($x) : '', 'id' => $x ? (string) $x['org'] : '', 'stop' => !empty($flags['stop']), 'auto' => !empty($flags['auto'])]);
+    } catch (Throwable $e) { error_log('peak-mail: desk inbox: ' . mb_substr($e->getMessage(), 0, 160)); }
+}
 /** read Peak Partnerships' Inbox and Junk folder (and Matthew's own, for people emailed from it before 2026-11-19) since the last look. A
     reply, STOP, auto-reply or bounce notice from someone pmWho() knows goes on their desk card: the reply's own words, its attachments by name,
     an auto-reply shown as one and not counted as a reply. Each one handled in Peak Partnerships is marked read there; nothing is ever moved
-    or deleted, and Matthew's own mailbox is only read. Returns a short summary. */
-function pmScan(array $S): string {
+    or deleted, and Matthew's own mailbox is only read. Since 2026-11-20 every email in Peak Partnerships' Inbox also goes on the desk's Inbox
+    tab (pmInboxPut), matched or not; the ones that matched nobody stay unread until a seller opens them there.
+    $quick (2026-11-20, the 5-minute read, `cron.php inbox`): Peak Partnerships' Inbox only, the last 15 minutes and anything not seen yet;
+    the hourly run reads every folder with two days' overlap. One lock (scan.lock): two reads never overlap (the 5-minute one skips, the
+    hourly one waits up to a minute). A 429 from Microsoft: no read for 10 minutes. $fresh = how many new emails were read. Returns a summary. */
+function pmScan(array $S, bool $quick = false, int &$fresh = 0): string {
+    $fresh = 0;
+    $lk = @fopen(pmData() . '/scan.lock', 'c'); if (!$lk) return 'read mail: the lock file could not be opened';
+    $got = false; for ($i = 0; $i < ($quick ? 1 : 30); $i++) { if (flock($lk, LOCK_EX | LOCK_NB)) { $got = true; break; } sleep(2); }
+    if (!$got) { fclose($lk); return 'read mail: another read is going'; }
+    try { return pmScanLocked($S, $quick, $fresh); } finally { flock($lk, LOCK_UN); fclose($lk); }
+}
+function pmScanLocked(array $S, bool $quick, int &$fresh): string {
     $F = pmFrom($S['settings']); $boxes = [];
-    if ($F['shared']) $boxes[] = ['base' => $F['base'], 'addr' => $F['email'], 'shared' => true, 'name' => PM_SHARED_NAME, 'who' => pmWho($S, 'shared')];
-    $boxes[] = ['base' => '/v1.0/me', 'addr' => $F['mine'], 'shared' => false, 'name' => 'Matthew\'s mailbox', 'who' => pmWho($S, 'me')];
-    $boxes = array_values(array_filter($boxes, fn($b) => $b['who']));
-    if (!$boxes) return 'read mail: nobody to look for yet';
+    if ($F['shared']) $boxes[] = ['base' => $F['base'], 'addr' => $F['email'], 'shared' => true, 'name' => PM_SHARED_NAME, 'kind' => 'shared'];
+    if (!$quick) $boxes[] = ['base' => '/v1.0/me', 'addr' => $F['mine'], 'shared' => false, 'name' => 'Matthew\'s mailbox', 'kind' => 'me'];
+    if (!$boxes) return 'read mail: nothing to read';
+    $deskIn = $F['shared'] && pmDeskLoad() === '' && function_exists('deskInboxIn');
     $sc = pmJ('scan.json', ['last' => 0, 'seen' => []]); $seen = (array) ($sc['seen'] ?? []); $now = pmNow();
-    $since = (int) $sc['last'] > 0 ? (int) $sc['last'] - 2 * 86400 : $now - 3 * 86400;
-    $iso = gmdate('Y-m-d\TH:i:s\Z', $since); $n = ['reply' => 0, 'bounce' => 0, 'auto' => 0, 'stop' => 0, 'other' => 0]; $err = [];
+    if ((int) ($sc['wait'] ?? 0) > $now) return 'read mail: Microsoft asked us to slow down, next look after ' . date('g:i a', (int) $sc['wait']);
+    $last = (int) ($sc['last'] ?? 0);
+    $since = $last > 0 ? $last - ($quick ? 900 : 2 * 86400) : $now - 3 * 86400;
+    $iso = gmdate('Y-m-d\TH:i:s\Z', $since); $n = ['reply' => 0, 'bounce' => 0, 'auto' => 0, 'stop' => 0, 'other' => 0]; $err = []; $slow = false;
     foreach ($boxes as $box) {
-        $who = $box['who']; $tag = $box['shared'] ? 'p:' : 'm:';
+        $who = null; $whoOf = function () use (&$who, $S, $box): array { return $who ??= pmWho($S, $box['kind']); };
+        if (!$box['shared'] && !$whoOf()) continue;   /* Matthew's own mailbox: only for people emailed from it before */
+        $tag = $box['shared'] ? 'p:' : 'm:';
         $read = function (string $id) use ($box): void { if ($box['shared']) pmGraph('PATCH', $box['base'] . '/messages/' . rawurlencode($id), ['isRead' => true]); };
-        foreach (['inbox', 'junkemail'] as $folder) {
+        foreach ($quick ? ['inbox'] : ['inbox', 'junkemail'] as $folder) {
+            $toDesk = $deskIn && $box['shared'] && $folder === 'inbox';
             $path = $box['base'] . '/mailFolders/' . $folder . '/messages?$select=id,from,subject,receivedDateTime,bodyPreview,internetMessageId,hasAttachments&$filter=' . rawurlencode('receivedDateTime ge ' . $iso) . '&$orderby=' . rawurlencode('receivedDateTime desc') . '&$top=50';
             for ($page = 0; $page < 8 && $path !== ''; $page++) {
                 [$s, $j] = pmGraph('GET', $path);
-                if ($s !== 200) { $err[] = 'could not read the ' . $folder . ' of ' . $box['name'] . ' (' . $s . ': ' . mb_substr((string) ($j['error']['message'] ?? ''), 0, 80) . ')'; if ($box['shared'] && in_array($s, [403, 404], true)) pmFromMark('access', false, $s . ' ' . (string) ($j['error']['code'] ?? '')); break; }
+                if ($s !== 200) { if ($s === 429) $slow = true; $err[] = 'could not read the ' . $folder . ' of ' . $box['name'] . ' (' . $s . ': ' . mb_substr((string) ($j['error']['message'] ?? ''), 0, 80) . ')'; if ($box['shared'] && in_array($s, [403, 404], true)) pmFromMark('access', false, $s . ' ' . (string) ($j['error']['code'] ?? '')); break; }
                 foreach ((array) ($j['value'] ?? []) as $m) {
                     $id = (string) ($m['id'] ?? ''); if ($id === '' || isset($seen[$tag . $id])) continue; $seen[$tag . $id] = $now;
                     $imid = (string) ($m['internetMessageId'] ?? ''); if ($imid !== '' && isset($seen['i:' . $imid])) continue;   /* the same email in both mailboxes: once */
                     if ($imid !== '') $seen['i:' . $imid] = $now;
+                    $fresh++;
                     $from = strtolower((string) ($m['from']['emailAddress']['address'] ?? '')); $at = (int) strtotime((string) ($m['receivedDateTime'] ?? '')) ?: $now;
                     if (pmIsNdr($m)) {
+                        $who = $whoOf();
                         [$s2, $full] = pmGraph('GET', $box['base'] . '/messages/' . rawurlencode($id) . '?$select=body', null, ['Prefer: outlook.body-content-type="text"']);
                         $txt = ($s2 === 200 ? (string) ($full['body']['content'] ?? '') : '') . ' ' . (string) ($m['bodyPreview'] ?? '');
                         preg_match_all('/[A-Za-z0-9._%+\'-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', $txt, $em); $hit = false;
@@ -1129,22 +1175,31 @@ function pmScan(array $S): string {
                             $row = ['t' => 'bounce', 'to' => $e, 'l' => (string) $who[$e]['list'], 'at' => $at] + pmDeskTag($who[$e], 'bounce:' . substr(sha1($id . '|' . $e), 0, 16));
                             pmLog($row); pmDeskNow($row, $S['settings']); $S['people'][$e]['bounce'] = $at; $n['bounce']++; $hit = true;
                         }
+                        if ($toDesk) pmInboxPut($box, $id, $m, null, 'bounce', null);
                         if ($hit) $read($id); elseif ($box['shared']) $n['other']++;
                         continue;
                     }
-                    if (!isset($who[$from])) { if ($box['shared']) $n['other']++; continue; }
-                    if (pmIsCalReply($m)) continue;   /* their calendar answering a tour invite (2026-11-19) */
-                    $x = $who[$from]; $full = pmMailFull($box, $id, $m);
+                    $who = $whoOf();
+                    if (!isset($who[$from])) {
+                        if ($toDesk) pmInboxPut($box, $id, $m, pmMailFull($box, $id, $m), pmInboxOther($m), null, ['auto' => pmIsAuto($m)]);
+                        if ($box['shared']) $n['other']++;
+                        continue;
+                    }
+                    $x = $who[$from];
+                    if (pmIsCalReply($m)) { if ($toDesk) pmInboxPut($box, $id, $m, null, 'calendar answer', $x); continue; }   /* their calendar answering a tour invite (2026-11-19) */
+                    $full = pmMailFull($box, $id, $m);
                     $mail = ['from' => $from, 'name' => pmClean($m['from']['emailAddress']['name'] ?? '', 80), 'subject' => pmClean($m['subject'] ?? '', 160), 'at' => $at,
                         'text' => $full['text'], 'files' => $full['files'], 'mid' => $id, 'mb' => $box['addr'], 'imid' => $full['imid'] ?: $imid];
                     $name = (string) ($x['person'] ?? '') !== '' ? (string) $x['person'] : ($mail['name'] !== '' ? $mail['name'] : $from);
                     if (pmIsAuto($m)) {
+                        if ($toDesk) pmInboxPut($box, $id, $m, $full, 'auto-reply', $x, ['auto' => true]);
                         $mail['text'] = mb_substr($mail['text'], 0, 600); $mail['auto'] = 1;
                         $row = ['t' => 'auto', 'to' => $from, 'who' => $name, 'l' => (string) $x['list'], 'at' => $at, 'mail' => $mail] + pmDeskTag($x, 'auto:' . substr(sha1($id), 0, 16));
                         pmLog($row); pmDeskNow($row, $S['settings']); $read($id); $n['auto']++; continue;
                     }
                     $subj = (string) preg_replace('/^((re|aw|fw|fwd)\s*:\s*)+/i', '', (string) ($m['subject'] ?? ''));
                     $stop = pmIsStop($full['text'] !== '' ? $full['text'] : (string) ($m['bodyPreview'] ?? '')) || (bool) preg_match('/^\W*(stop|unsubscribe)\W*$/i', $subj);
+                    if ($toDesk) pmInboxPut($box, $id, $m, $full, pmInboxOther($m, $stop), $x, ['stop' => $stop]);
                     $firstReply = empty($S['people'][$from]['reply']);
                     /* every reply goes on the card (2026-11-19: the team reads them there); only the first counts as "replied" */
                     $row = ['t' => 'reply', 'to' => $from, 'who' => $name, 'l' => (string) $x['list'], 'stop' => $stop, 'before' => empty($x['last']) && empty($S['people'][$from]['sent']),
@@ -1159,9 +1214,63 @@ function pmScan(array $S): string {
         }
     }
     foreach ($seen as $k => $t) if ($t < $now - 30 * 86400) unset($seen[$k]);
-    pmW('scan.json', ['last' => $err ? (int) $sc['last'] : $now, 'seen' => $seen]);
+    pmW('scan.json', ['last' => $err ? $last : $now, 'seen' => $seen] + ($slow ? ['wait' => $now + 600] : []));
     return ($err ? implode('; ', $err) . '; ' : '') . 'read mail: ' . $n['reply'] . ' replies (' . $n['stop'] . ' STOP), ' . $n['bounce'] . ' bounces, ' . $n['auto'] . ' auto-replies'
-        . ($n['other'] ? '; ' . $n['other'] . ' other email' . ($n['other'] === 1 ? '' : 's') . ' in ' . PM_SHARED_NAME . ' not matched to the desk (left unread)' : '');
+        . ($n['other'] ? '; ' . $n['other'] . ' other email' . ($n['other'] === 1 ? '' : 's') . ' in ' . PM_SHARED_NAME . ' not matched to the desk (left unread' . ($deskIn ? ', on the desk\'s Inbox' : '') . ')' : '');
+}
+/** the desk's alerts that are due (desk-inbox.php alertsFlush): a few words for the run line ('' when nothing moved) */
+function pmAlertsFlush(): string {
+    if (pmDeskLoad() !== '' || !function_exists('alertsFlush')) return '';
+    try { $a = alertsFlush(pmNow()); return $a['push'] || $a['mail'] || $a['held'] ? 'alerts: ' . $a['push'] . ' pushed, ' . $a['mail'] . ' emailed' . ($a['held'] ? ', ' . $a['held'] . ' held (quiet hours or the 10-minute gap)' : '') : ''; }
+    catch (Throwable $e) { return 'alerts: ' . mb_substr($e->getMessage(), 0, 80); }
+}
+/** the one-time fill of the desk's Inbox (2026-11-20, `cron.php inbox-backfill [days]`): the emails already in Peak Partnerships' Inbox from
+    the last $days days (14 by default, 60 at most), which the hourly read had already looked at before the Inbox existed. Each goes on the
+    desk's Inbox once (never twice; an email already there is left as it is), with its card when it is from someone on the desk. Nobody is
+    alerted; one already read in Outlook goes straight to Done; nothing in the mailbox is changed (read only). Counts only. */
+function pmInboxBackfill(int $days = 14): array {
+    $days = max(1, min(60, $days)); $o = ['read' => 0, 'added' => 0, 'already' => 0, 'open' => 0, 'done' => 0, 'other' => 0, 'error' => ''];
+    if (!pmReady() || !pmConn()['connected']) { $o['error'] = 'Microsoft is not connected'; return $o; }
+    $S = pmState(); $F = pmFrom($S['settings']);
+    if (!$F['shared']) { $o['error'] = 'the emails do not go out as Peak Partnerships'; return $o; }
+    if (pmDeskLoad() !== '' || !function_exists('deskInboxIn') || !function_exists('inGet')) { $o['error'] = 'the desk\'s Inbox code is not here'; return $o; }
+    $lk = @fopen(pmData() . '/scan.lock', 'c'); if (!$lk || !flock($lk, LOCK_EX | LOCK_NB)) { $o['error'] = 'another read is going: try again in a minute'; return $o; }
+    try {
+        $box = ['base' => $F['base'], 'addr' => $F['email'], 'shared' => true, 'name' => PM_SHARED_NAME, 'kind' => 'shared']; $who = pmWho($S, 'shared');
+        $path = $F['base'] . '/mailFolders/inbox/messages?$select=id,from,subject,receivedDateTime,bodyPreview,internetMessageId,hasAttachments,isRead&$filter=' . rawurlencode('receivedDateTime ge ' . gmdate('Y-m-d\TH:i:s\Z', pmNow() - $days * 86400)) . '&$orderby=' . rawurlencode('receivedDateTime desc') . '&$top=50';
+        for ($page = 0; $page < 20 && $path !== ''; $page++) {
+            [$s, $j] = pmGraph('GET', $path);
+            if ($s !== 200) { $o['error'] = 'Microsoft answered ' . $s . ' reading the Inbox'; break; }
+            foreach ((array) ($j['value'] ?? []) as $m) {
+                $id = (string) ($m['id'] ?? ''); if ($id === '') continue; $o['read']++;
+                $iid = inIid((string) ($m['internetMessageId'] ?? ''), $id);
+                if (inGet($iid)) { $o['already']++; continue; }
+                $from = strtolower((string) ($m['from']['emailAddress']['address'] ?? '')); $x = $who[$from] ?? null;
+                $full = pmIsNdr($m) || pmIsCalReply($m) ? null : pmMailFull($box, $id, $m);
+                $stop = $x && $full && !pmIsAuto($m) && pmIsStop($full['text'] !== '' ? $full['text'] : (string) ($m['bodyPreview'] ?? ''));
+                $why = pmInboxOther($m, $stop); $read = !empty($m['isRead']) && $why === '';
+                $full ??= ['text' => pmReplyText((string) ($m['bodyPreview'] ?? ''), 600), 'att' => [], 'imid' => ''];
+                deskInboxIn(['from' => $from, 'name' => pmClean($m['from']['emailAddress']['name'] ?? '', 80), 'subject' => pmClean($m['subject'] ?? '', 200),
+                    'at' => (int) strtotime((string) ($m['receivedDateTime'] ?? '')) ?: pmNow(), 'text' => (string) $full['text'], 'att' => (array) ($full['att'] ?? []), 'mid' => $id, 'mb' => $box['addr'],
+                    'imid' => (string) (($full['imid'] ?? '') ?: ($m['internetMessageId'] ?? '')), 'cat' => $why !== '' ? 'other' : 'mail', 'why' => $why,
+                    'w' => $x ? pmWorld($x) : '', 'id' => $x ? (string) $x['org'] : '', 'stop' => $stop, 'auto' => pmIsAuto($m), 'quiet' => true, 'read' => $read]);
+                $o['added']++; $o[$why !== '' ? 'other' : ($read ? 'done' : 'open')]++;
+            }
+            $next = (string) ($j['@odata.nextLink'] ?? '');
+            $path = $next !== '' ? (string) preg_replace('#^https://graph\.microsoft\.com|^' . preg_quote(pmGraphBase(), '#') . '#', '', $next) : '';
+        }
+    } finally { flock($lk, LOCK_UN); fclose($lk); }
+    return $o;
+}
+/** the 5-minute read (2026-11-20, `cron.php inbox`, started by the 5-minute cron): Peak Partnerships' Inbox onto the desk (and replies onto
+    their cards), then the alerts that are due. A line in run.log only when something new came in or went wrong. */
+function pmInboxRun(): int {
+    if (!pmReady()) { echo "no data folder\n"; return 1; }
+    $said = []; $fresh = 0;
+    if (pmConn()['connected']) { $S = pmState(); $r = pmScan($S, true, $fresh); if ($fresh || !str_starts_with($r, 'read mail: 0 replies') || str_contains($r, 'could not')) $said[] = $r; }
+    $a = pmAlertsFlush(); if ($a !== '') $said[] = $a;
+    if ($said) pmRunLine('inbox: ' . implode('; ', $said)); else echo "inbox: nothing new\n";
+    return 0;
 }
 
 /* ---------------------------------------------------------------- the hourly run */
@@ -1175,6 +1284,7 @@ function pmCronRun(): int {
     if (!$c['connected']) { pmRunLine(implode('; ', array_merge($said, [$running ? 'Microsoft is not connected: nothing sent' : 'idle (not connected)']))); return 0; }
     pmKeepAlive(); pmFromProbe(false, $S['settings']);
     $said[] = pmScan($S);   /* every run (2026-11-19): replies to desk emails and tour confirmations come to Peak Partnerships too, lists or not */
+    $al = pmAlertsFlush(); if ($al !== '') $said[] = $al;   /* the desk's alerts (2026-11-20; the 5-minute read delivers them too) */
     $S = pmState();
     /* a list whose bounces pass 8% after 20 sends stops itself: a mailbox that keeps hitting dead addresses gets blocked */
     foreach (PM_LISTS as $k => $nm) {

@@ -307,6 +307,17 @@ button.kpi:hover{border-color:var(--c,var(--acc))}
 .tmtick{display:grid;gap:4px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--bg)}.tmtick label{display:flex;gap:8px;align-items:flex-start;font-weight:650;font-size:13.5px}.tmtick input[type=checkbox]{width:auto;margin-top:2px}.tmtick small{color:var(--soft);font-size:12.5px}.tmtick label.off{color:var(--soft)}
 .tmline{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12.5px;color:var(--soft);margin-top:3px}.tmline.bad{color:var(--warn);font-weight:650}.tmline .lnk{font-size:12.5px}
 .dmsec .tmline{margin:0 0 6px}.dmbox .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dmbox .two[hidden]{display:none}.dmline small{color:var(--soft)}input.bookurl,input.bkgen{width:100%;font:13px ui-monospace,Consolas,monospace;padding:8px;border-radius:8px}
+/* the Inbox (2026-11-20) */
+.inrow{border:1px solid var(--line);border-left:3px solid var(--line);border-radius:12px;background:var(--card);margin:0 0 8px;overflow:hidden}.inrow.unread{border-left-color:var(--acc)}
+.inhd{display:block;width:100%;text-align:left;background:none;border:0;padding:11px 14px;color:var(--ink);cursor:pointer;font:inherit}
+.inl1{display:flex;gap:4px 10px;align-items:baseline;flex-wrap:wrap}.inl1 .infrom{font-weight:700}.inrow.unread .infrom::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--acc);margin-right:7px;vertical-align:1px}
+.inaddr{color:var(--soft);font-size:12.5px;overflow-wrap:anywhere}.inat{margin-left:auto;color:var(--soft);font-size:12.5px;white-space:nowrap}
+.insub{font-weight:650;margin:3px 0 2px;overflow-wrap:anywhere}.inpre{color:var(--soft);font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:2.9em;overflow:hidden;line-height:1.45}
+.intags{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px}.intags .tag{margin:0}
+.inbody{border-top:1px solid var(--line);padding:12px 14px}.inbody .inmeta{font-size:12.5px;color:var(--soft);margin-bottom:6px;overflow-wrap:anywhere}
+.inbody .intext{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5;background:var(--bg);border-radius:8px;padding:10px 12px}
+.infiles,.incard{margin-top:8px;font-size:13.5px;overflow-wrap:anywhere}.inbody .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.inpane{margin-top:10px}.inpane:empty{display:none}
+.inpane input,.inpane textarea{width:100%}.inpane .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.inpick{margin-top:6px;display:grid;gap:4px}.inpick .lnk{text-align:left}
 .mailin{border-left:3px solid var(--line);background:var(--bg);border-radius:8px;padding:7px 10px;margin:6px 0 4px}.mailin .mh{font-size:12.5px;color:var(--soft)}.mailin .ms{font-weight:650;margin:2px 0 3px}.mailin .mt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px;line-height:1.45}.mailin .mt.clip{max-height:9.6em;overflow:hidden}.mailin .mf{font-size:12.5px;color:var(--soft);margin-top:4px}.mailin .lnk{font-size:12.5px}.mailin .btn{margin-top:6px}.dmre{font-size:12.5px;color:var(--soft);margin:0 0 6px}
 pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.5 ui-monospace,Consolas,monospace;max-height:420px;overflow:auto;color:var(--ink)}
 /* the print pages: a proposal or a report, saved as PDF from the browser (always light, whatever the desk's look) */
@@ -321,7 +332,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   :root[data-theme="light"] .bar{padding-bottom:12px}
   .world{order:3;width:100%}.world button{flex:1;justify-content:center;padding:8px 6px}
   /* the tabs become a bar along the bottom, with icons */
-  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:16;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:16;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:0;background:var(--card);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
   .tabs button,:root[data-theme="light"] .tabs button{flex-direction:column;gap:3px;margin:0;padding:4px 2px;font-size:10.5px;color:var(--soft);min-width:0;position:relative;box-shadow:none;background:none;border-radius:8px}
   .tabs button svg.i{display:block;width:21px;height:21px}
   .tabs button .tl{overflow:hidden;text-overflow:ellipsis;max-width:100%;white-space:nowrap}
@@ -372,7 +383,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-20.2';
+  var BUILD = '2026-11-20.3';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -538,22 +549,24 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 
   /* ---- the bar: Sponsors or Expo leads, then the tabs ---- */
   var TABS = {
-    sponsor: [['today', 'Today'], ['pipe', 'Pipeline'], ['list', 'Companies'], ['deals', 'Tours & deals'], ['more', 'More']],
-    expo: [['today', 'Today'], ['pipe', 'Pipeline'], ['list', 'Organisations'], ['deals', 'Tours & quotes'], ['more', 'More']]
+    sponsor: [['today', 'Today'], ['inbox', 'Inbox'], ['pipe', 'Pipeline'], ['list', 'Companies'], ['deals', 'Tours & deals'], ['more', 'More']],
+    expo: [['today', 'Today'], ['inbox', 'Inbox'], ['pipe', 'Pipeline'], ['list', 'Organisations'], ['deals', 'Tours & quotes'], ['more', 'More']]
   };
   var SUBS = {
-    sponsor: { list: [['all', 'All companies'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added on the desk'], ['removed', 'Removed']],
+    sponsor: { inbox: [['open', 'To answer'], ['done', 'Done'], ['other', 'Other']], list: [['all', 'All companies'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added on the desk'], ['removed', 'Removed']],
       deals: [['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed']],
       more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['look', 'Look'], ['settings', 'Settings']] },
-    expo: { list: [['all', 'All organisations'], ['removed', 'Removed']], deals: [['tours', 'Tours'], ['quotes', 'Quotes and bookings']],
+    expo: { inbox: [['open', 'To answer'], ['done', 'Done'], ['other', 'Other']], list: [['all', 'All organisations'], ['removed', 'Removed']], deals: [['tours', 'Tours'], ['quotes', 'Quotes and bookings']],
       more: [['report', 'Report'], ['ref', 'Questions and venues'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['look', 'Look'], ['settings', 'Settings']] }
   };
   var DESC = {
-    sponsor: { today: 'What to do now: follow-ups due, who to reach next, proposals waiting, tours coming up, and the week so far.',
+    sponsor: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim says you are answering it, so nobody answers twice. Done takes it off this list. Notices, bounces and out-of-office replies are under Other. Alerts: More, My email & booking link.',
+      today: 'What to do now: follow-ups due, who to reach next, proposals waiting, tours coming up, and the week so far.',
       pipe: 'Every company by stage, from To contact to Signed. Pick a stage to work it.',
       list: 'Every company on the desk, by list: the researched new leads, Peak’s own sponsors, local businesses and the ones added on the desk.',
       deals: 'Tours at Peak, proposals sent and signed sponsors.', more: 'The report, profit and loss, packages, what Peak offers sponsors, your calendar link and the look.' },
-    expo: { today: 'Expo leads to work now: follow-ups due, who to reach next, quotes waiting, tours coming up, and the week so far.',
+    expo: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim says you are answering it, so nobody answers twice. Done takes it off this list. Notices, bounces and out-of-office replies are under Other. Alerts: More, My email & booking link.',
+      today: 'Expo leads to work now: follow-ups due, who to reach next, quotes waiting, tours coming up, and the week so far.',
       pipe: 'Every expo lead by stage, from To contact to Booked. Kept apart from the sponsors: nothing here counts there.',
       list: 'Organisations that run expos, shows and fairs and could rent Peak as their venue.', deals: 'Tours of Peak for organisers, quotes sent and events booked.',
       more: 'A report on the expo leads, the questions for Peak and the competing venues, your calendar link and the look.' }
@@ -563,11 +576,12 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
      seller the figures behind them either. */
   var ADMIN_SUBS = { settings: 1, report: 1, pl: 1, pk: 1, offer: 1, better: 1 };
   var isAdmin = function () { return !!(S.data && S.data.me.role === 'admin'); };
-  var DESC_SELLER = { sponsor: 'Your email and booking link, your calendar link and the look.', expo: 'The questions for Peak and the competing venues, your email and booking link, your calendar link and the look.' };
+  var DESC_SELLER = { sponsor: 'Your email and booking link, your alerts (a notice on your phone or computer when an email comes in), your calendar link and the look.', expo: 'The questions for Peak and the competing venues, your email and booking link, your alerts, your calendar link and the look.' };
   var subList = function (t) { var L = SUBS[S.world][t]; return L && S.data && !isAdmin() ? L.filter(function (x) { return !(t === 'more' ? ADMIN_SUBS[x[0]] : x[0] === 'settings'); }) : L; };
   var subOf = function (t) { var L = subList(t); return L ? (S.sub[S.world + t] && L.some(function (x) { return x[0] === S.sub[S.world + t]; }) ? S.sub[S.world + t] : L[0][0]) : ''; };
   function tabCount(t) {
     if (t === 'today') { var n = recs().filter(function (r) { return isDue(r) && ownerOk(r); }).length; return n ? [n, 1] : null; }
+    if (t === 'inbox') { var ni = inboxOn() ? +S.data.inbox.open || 0 : 0; return ni ? [ni, 1] : null; }
     if (t === 'pipe') return [recs().filter(function (r) { return r.stage !== 'new' && r.stage !== 'lost'; }).length];
     if (t === 'list') return [recs().length];
     return null;
@@ -585,7 +599,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     });
     var t = $('tabs'); t.textContent = '';
     TABS[S.world].forEach(function (x) {
-      var b = el('button'); b.type = 'button'; b.setAttribute('data-tab', x[0]); b.appendChild(ic({ today: 'home', pipe: 'board', list: 'list', deals: 'deal', more: 'more' }[x[0]])); b.appendChild(el('span', 'tl', x[1]));
+      if (x[0] === 'inbox' && !inboxOn()) return;   /* sellers and admins only (2026-11-20) */
+      var b = el('button'); b.type = 'button'; b.setAttribute('data-tab', x[0]); b.appendChild(ic({ inbox: 'mail', today: 'home', pipe: 'board', list: 'list', deals: 'deal', more: 'more' }[x[0]])); b.appendChild(el('span', 'tl', x[1]));
       var n = tabCount(x[0]); if (n) b.appendChild(el('b', 'tn' + (n[1] ? ' hot' : ''), String(n[0])));
       if (S.tab === x[0]) b.setAttribute('aria-current', 'page');
       b.addEventListener('click', function () { go(x[0]); }); t.appendChild(b);
@@ -597,15 +612,15 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     main.textContent = ''; document.documentElement.classList.remove('lock');
     if (S.print && S.print.kind === 'report' && !isAdmin()) S.print = null;   /* the report: admins only (2026-11-20) */
     if (S.print) return S.print.kind === 'proposal' ? printProposal(S.print.pid) : printReport();
-    if (!TABS[S.world].some(function (x) { return x[0] === S.tab; })) S.tab = 'today';
+    if (!TABS[S.world].some(function (x) { return x[0] === S.tab; }) || (S.tab === 'inbox' && !inboxOn())) S.tab = 'today';
     main.setAttribute('data-world', S.world); main.setAttribute('data-section', S.tab);
     head();
     var sub = subOf(S.tab);
-    ({ today: drawToday, pipe: drawPipe, list: drawList, deals: drawDeals, more: drawMore })[S.tab](sub);
+    ({ today: drawToday, inbox: drawInbox, pipe: drawPipe, list: drawList, deals: drawDeals, more: drawMore })[S.tab](sub);
   }
   function head() {
     var x = TABS[S.world].filter(function (s) { return s[0] === S.tab; })[0], h = el('div', 'shead'), top = el('div', 'shtop');
-    var h1 = el('h1'); if (!expoOnly()) h1.appendChild(document.createTextNode((isX() ? 'Expo leads' : 'Sponsors') + ' · ')); h1.appendChild(el('span', null, x[1])); top.appendChild(h1);
+    var h1 = el('h1'); if (!expoOnly() && S.tab !== 'inbox') h1.appendChild(document.createTextNode((isX() ? 'Expo leads' : 'Sponsors') + ' · ')); h1.appendChild(el('span', null, x[1])); top.appendChild(h1);
     if (S.tab === 'list' || S.tab === 'pipe') { var add = el('button', 'btn ghost small', isX() ? '+ Add an expo lead' : '+ Add a company'); add.type = 'button'; add.addEventListener('click', isX() ? expoAddForm : addForm); top.appendChild(add); }
     var desc = S.tab === 'more' && !isAdmin() ? DESC_SELLER[S.world] : DESC[S.world][S.tab]; if (S.tab === 'more' && isAdmin()) desc = desc.replace(/ and the look\.$/, ', the look, and the settings (message templates, the end-of-day email).');
     h.appendChild(top); h.appendChild(el('p', 'sdesc', desc));
@@ -624,6 +639,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     main.appendChild(h);
   }
   function subCount(t, k) {
+    if (t === 'inbox') return inboxOn() && S.data.inbox[k] != null ? +S.data.inbox[k] : null;
     var R = recs();
     if (t === 'list') return k === 'all' ? R.length : k === 'removed' ? W().removed.length : R.filter(function (r) { return secOf(r) === k; }).length;
     if (t === 'deals') return k === 'tours' ? upTours().length : k === 'props' ? (W().proposals || []).length : k === 'signed' ? R.filter(function (r) { return r.stage === 'signed'; }).length : k === 'quotes' ? R.filter(function (r) { return r.stage === 'quote' || r.stage === 'booked'; }).length : null;
@@ -1963,6 +1979,211 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     sh.box.appendChild(f); if (isNew) cN.focus();
   }
 
+  /* ---- the Inbox (2026-11-20, Matthew: "I think the inbox tab is better"): every email that comes to Peak Partnerships
+     (partnerships@peakpickleball.us), newest first, read every 5 minutes. Open one to read it (it is then marked read in Outlook); Reply
+     (from Peak Partnerships with your signature, in the same thread; logged on the card when it is on one), Attach to a company, Claim
+     ("Cai is answering this"), Done. Notices, bounces and auto-replies are under Other. Their words are shown as text, never as HTML.
+     Claude Check may look and never act. The Expo-only account has no Inbox. ---- */
+  var inboxOn = function () { return !!(S.data && S.data.inbox); };
+  var readOnly = function () { return !!(S.data && S.data.me.name === 'Claude Check'); };
+  var FREE = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'me.com', 'aol.com', 'comcast.net', 'msn.com', 'live.com', 'protonmail.com', 'att.net'];
+  function drawInbox(sub) {
+    var box = el('div', 'inbox'); main.appendChild(box);
+    box.appendChild(el('div', 'empty', 'Loading the Inbox…'));
+    api('inbox&f=' + encodeURIComponent(sub)).then(function (j) {
+      if (S.tab !== 'inbox' || !box.isConnected) return;
+      if (j._status === 401) return signin();
+      box.textContent = '';
+      if (!j.ok) { box.appendChild(el('div', 'empty', j.error || 'The Inbox did not load.')); return; }
+      S.data.inbox = j.counts; inChips(); bar();
+      if (!j.items.length) { box.appendChild(el('div', 'empty', sub === 'open' ? 'Nothing to answer. New emails to ' + j.mailbox + ' show here within about 5 minutes.' : sub === 'done' ? 'Nothing marked Done yet.' : 'Nothing under Other.')); return; }
+      j.items.forEach(function (it) { box.appendChild(inRow(it)); });
+      if (S.inSel) { var want = S.inSel; S.inSel = null; [].forEach.call(box.querySelectorAll('.inrow'), function (d) { if (d.getAttribute('data-iid') === want && d._open) d._open(); }); }
+    }).catch(function () { box.textContent = ''; box.appendChild(el('div', 'empty', 'No connection. Try again when you have signal.')); });
+  }
+  function inChips() { var n = S.data.inbox || {}; [].forEach.call(document.querySelectorAll('.shead .subchips button'), function (b) { var k = b.getAttribute('data-sub'), t = b.querySelector('b'); if (t && n[k] != null) t.textContent = String(n[k]); }); }
+  function inRow(it) {
+    var d = el('div', 'inrow' + (it.read ? '' : ' unread') + (it.cat === 'other' ? ' other' : '')); d.setAttribute('data-iid', it.iid);
+    var hd = el('button', 'inhd'); hd.type = 'button';
+    var l1 = el('div', 'inl1'); l1.appendChild(el('b', 'infrom', it.name || it.from || 'Unknown sender')); if (it.name && it.from) l1.appendChild(el('span', 'inaddr', it.from)); l1.appendChild(el('span', 'inat', when(it.at)));
+    hd.appendChild(l1); hd.appendChild(el('div', 'insub', it.subject || '(no subject)')); if (it.preview) hd.appendChild(el('div', 'inpre', it.preview));
+    var tg = el('div', 'intags');
+    if (it.card) tg.appendChild(el('span', 'tag oncard', 'On the card: ' + (it.card.name || 'a company')));
+    if (it.claim) tg.appendChild(el('span', 'tag claim', it.claim.by === me() ? 'You are answering this' : it.claim.by + ' is answering this'));
+    var rp = (it.replies || []).filter(function (x) { return x.ok; }).slice(-1)[0]; if (rp) tg.appendChild(el('span', 'tag', 'Replied by ' + first(rp.by) + ', ' + when(rp.at)));
+    if (it.files && it.files.length) tg.appendChild(el('span', 'tag', plural(it.files.length, 'attachment')));
+    if (it.cat === 'other') tg.appendChild(el('span', 'tag', it.why || 'Other'));
+    if (it.done) tg.appendChild(el('span', 'tag', 'Done (' + first(it.done.by) + ')'));
+    if (tg.children.length) hd.appendChild(tg);
+    d.appendChild(hd);
+    var body = el('div', 'inbody'); body.hidden = true; d.appendChild(body);
+    hd.addEventListener('click', function () { if (!body.hidden) { body.hidden = true; return; } body.hidden = false; inOpen(it, body, d); });
+    d._open = function () { if (body.hidden) hd.click(); setTimeout(function () { d.scrollIntoView({ block: 'start' }); }, 50); };
+    return d;
+  }
+  function inOpen(it0, body, row) {
+    body.textContent = ''; body.appendChild(el('div', 'soft', 'Opening…'));
+    api('inboxone&iid=' + it0.iid).then(function (j) {
+      body.textContent = '';
+      if (!j.ok) { body.appendChild(el('div', 'warnline', j.error || 'It did not open.')); return; }
+      var it = j.item; row.classList.remove('unread');
+      body.appendChild(el('div', 'inmeta', 'From ' + (it.name ? it.name + ' <' + it.from + '>' : it.from) + ' · ' + when(it.at)));
+      body.appendChild(el('div', 'mt intext', it.text || '(no words: it may be a picture or a file only; it is in the mailbox)'));
+      if (it.files.length) {
+        var fl = el('div', 'infiles'); fl.appendChild(el('b', null, 'Attached: '));
+        it.files.forEach(function (f, i) {
+          if (i) fl.appendChild(document.createTextNode(', '));
+          if (f.dl) { var a = el('a', null, f.n); a.href = API + '?action=inboxfile&iid=' + it.iid + '&n=' + f.i; a.setAttribute('download', ''); a.rel = 'noopener'; fl.appendChild(a); }
+          else fl.appendChild(document.createTextNode(f.n + ' (open in Outlook: Matthew)'));
+        });
+        body.appendChild(fl);
+      }
+      if (it.card) {
+        var cl = el('div', 'incard'); cl.appendChild(document.createTextNode('On the card: '));
+        var cb = el('button', 'lnk', (it.card.name || 'the company') + (it.card.off ? ' (removed)' : '') + ' ›'); cb.type = 'button'; cb.setAttribute('data-act', 'incard');
+        cb.addEventListener('click', function () { var w = it.card.w; if (S.world !== w) { S.world = w; bar(); } var r = rec(it.card.id); if (r) openRec(r); else toast('That company is not on the desk now.'); });
+        cl.appendChild(cb); body.appendChild(cl);
+      }
+      (it.replies || []).forEach(function (x) { body.appendChild(el('div', x.ok ? 'tmline' : 'tmline bad', (x.ok ? 'Replied by ' : 'Reply not sent, by ') + x.by + ', ' + when(x.at) + (x.ok ? '' : ': ' + x.why))); });
+      if (readOnly()) { body.appendChild(el('div', 'fuhint', 'This account only looks: nothing can be answered or changed from it.')); return; }
+      var acts = el('div', 'acts');
+      var mk = function (t, act, cls) { var b = el('button', cls || 'btn small ghost', t); b.type = 'button'; b.setAttribute('data-act', act); acts.appendChild(b); return b; };
+      var rb = it.rp && it.from && !/^(bounce|Microsoft or system notice|system notice)$/.test(it.why || '') ? mk('Reply', 'inreply', 'btn small') : null;
+      var ab = mk(it.card ? 'Move to another company' : 'Attach to a company', 'inattach');
+      var mine = it.claim && it.claim.by === me();
+      var kb = mk(mine ? 'Unclaim' : it.claim ? 'Take it over' : 'Claim: I’m answering this', 'inclaim');
+      var db = mk(it.done ? 'Not done' : 'Done', 'indone');
+      body.appendChild(acts);
+      var pane = el('div', 'inpane'); body.appendChild(pane);
+      var after = function (msg) { if (msg) toast(msg); load(function () { draw(); }); };
+      kb.addEventListener('click', function () {
+        var on = !mine; if (it.claim && !mine && !confirm(it.claim.by + ' is answering this. Take it over?')) return;
+        kb.disabled = true;
+        var go = function () { return api('inboxclaim', { iid: it.iid, on: on }).then(function (x) { kb.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after(on ? 'You’re answering this one' : 'Unclaimed'); }); };
+        (it.claim && !mine && on ? api('inboxclaim', { iid: it.iid, on: false }).then(go) : go());
+      });
+      db.addEventListener('click', function () { db.disabled = true; api('inboxdone', { iid: it.iid, on: !it.done }).then(function (x) { db.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after(it.done ? 'Back on the open list' : 'Done: off the open list'); }); });
+      ab.addEventListener('click', function () { inAttachPane(it, pane, after); });
+      if (rb) rb.addEventListener('click', function () { inReplyPane(it, pane, after); });
+    }).catch(function () { body.textContent = ''; body.appendChild(el('div', 'warnline', 'No connection.')); });
+  }
+  /* Attach to a company: their email goes on that card as one of their emails, with a follow-up today (as a matched reply does) */
+  function inAttachPane(it, pane, after) {
+    pane.textContent = ''; pane.appendChild(el('label', 'lab', 'Which company is this from?'));
+    var q = el('input'); q.placeholder = 'Type part of the company’s name'; q.className = 'inq'; q.setAttribute('aria-label', 'Company'); pane.appendChild(q);
+    var list = el('div', 'inpick'); pane.appendChild(list);
+    var dom = String(it.from || '').split('@')[1] || '';
+    var all = []; ['sponsor', 'expo'].forEach(function (w) { if (S.data[w]) S.data[w].recs.forEach(function (r) { all.push({ w: w, r: r }); }); });
+    var byDom = function (x) { return dom && FREE.indexOf(dom) < 0 && ((x.r.people || []).some(function (p) { return String(p.email || '').toLowerCase().split('@')[1] === dom; }) || normSite(x.r.site) === dom); };
+    var paint = function () {
+      list.textContent = ''; var t = normName(q.value), L = t ? all.filter(function (x) { return normName(x.r.name).indexOf(t) >= 0; }) : all.filter(byDom);
+      if (!t && L.length) list.appendChild(el('div', 'fuhint', 'Companies with their email’s web address (' + dom + '):'));
+      L.slice(0, 12).forEach(function (x) {
+        var b = el('button', 'lnk', x.r.name + ' · ' + (x.w === 'expo' ? 'Expo lead' : 'Sponsors') + ' · ' + STNW(x.w, x.r.stage)); b.type = 'button'; b.setAttribute('data-pick', x.w + ':' + x.r.id);
+        b.addEventListener('click', function () {
+          if (!confirm('Put this email on ' + x.r.name + '’s card?')) return;
+          api('inboxattach', { iid: it.iid, w: x.w, id: x.r.id }).then(function (j) { if (!j.ok) { toast(j.error || 'Not saved.'); return; } after('On ' + j.name + '’s card' + (j.dup ? ' (it already was)' : '')); });
+        });
+        list.appendChild(el('div')).appendChild(b);
+      });
+      if (t && !L.length) list.appendChild(el('div', 'fuhint', 'No company by that name. Add it first (Companies, + Add a company), then attach.'));
+    };
+    q.addEventListener('input', paint); paint(); q.focus();
+  }
+  var STNW = function (w, k) { var s = (S.data[w].stages || []).filter(function (x) { return x[0] === k; })[0]; return s ? s[1] : k; };
+  /* Reply: from Peak Partnerships with my signature, in the same thread as their email */
+  function inReplyPane(it, pane, after) {
+    var C = DMC(), mine = C.mine || {}; pane.textContent = '';
+    pane.appendChild(el('div', 'dmre', 'Replying to ' + (it.name || it.from) + '’s email of ' + when(it.at) + ': it goes from ' + FROML() + ', signed by you, in the same thread.' + (it.card ? ' It is logged on ' + (it.card.name || 'the card') + '.' : ' Not on a card: Attach to a company first if you want it logged there.')));
+    var two = el('div', 'two'), tn = el('input'), te = el('input'); tn.placeholder = 'Their name'; tn.value = it.name || ''; tn.className = 'dmname'; te.type = 'email'; te.value = it.from || ''; te.className = 'dmemail'; te.setAttribute('aria-label', 'Their email'); tn.setAttribute('aria-label', 'Their name');
+    two.appendChild(tn); two.appendChild(te); pane.appendChild(el('label', 'lab', 'To')); pane.appendChild(two);
+    var sj = el('input'); sj.className = 'dmsub'; sj.setAttribute('aria-label', 'Subject'); sj.value = /^re:/i.test(it.subject || '') ? it.subject : 'RE: ' + (it.subject || '');
+    var bd = el('textarea'); bd.className = 'dmbody'; bd.rows = 8; bd.setAttribute('aria-label', 'Message'); bd.placeholder = 'Write your answer.';
+    pane.appendChild(el('label', 'lab', 'Subject')); pane.appendChild(sj); pane.appendChild(el('label', 'lab', 'Message')); pane.appendChild(bd);
+    pane.appendChild(el('div', 'fuhint', 'Signed: ' + String(mine.sig || me()).split('\n').join(' · ') + (mine.replyto ? ' · their answer goes to ' + mine.replyto : ' · their answer comes back to this Inbox') + '.'));
+    var acts = el('div', 'acts'), sd = el('button', 'btn small', 'Send'), x = el('button', 'lnk', 'Close'); sd.type = x.type = 'button'; sd.setAttribute('data-act', 'insend'); acts.appendChild(sd); acts.appendChild(x); pane.appendChild(acts);
+    if (!C.on) { sd.disabled = true; pane.appendChild(el('div', 'fuhint', 'Send turns on once Matthew turns Desk emails on.')); }
+    x.addEventListener('click', function () { pane.textContent = ''; });
+    var send = function (take) {
+      sd.disabled = true;
+      api('inboxreply', { iid: it.iid, to: te.value.trim(), name: tn.value.trim(), subject: sj.value, text: bd.value, take: !!take }).then(function (j) {
+        sd.disabled = false;
+        if (j._status === 409 && j.claim) { if (confirm(j.error + '\n\nSend it anyway?')) send(true); return; }
+        if (!j.ok) { toast(j.error || 'Not sent.'); return; }
+        if (j.state === 'sent' || j.state === 'dup') after('Reply sent to ' + j.to); else toast('Not sent: ' + (j.why || 'it did not go') + '.');
+      }).catch(function () { sd.disabled = false; toast('No connection. Not sent.'); });
+    };
+    sd.addEventListener('click', function () {
+      if (!te.value.trim() || !sj.value.trim() || !bd.value.trim()) { toast('Write the subject and the message first.'); return; }
+      if (!confirm('Send this reply to ' + te.value.trim() + ' now? It goes as ' + FROML() + ', signed by you, in the same thread.')) return;
+      send(false);
+    });
+    bd.focus();
+  }
+  /* ---- alerts on this device (2026-11-20): Web Push from the desk's own server; an iPhone needs the desk on the Home Screen ---- */
+  var isIos = function () { var ua = navigator.userAgent; return /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); };
+  var standalone = function () { return !!((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone); };
+  var pushOk = function () { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && window.isSecureContext; };
+  var phoneUa = function () { return isIos() || /Android|Mobile/.test(navigator.userAgent); };
+  var deviceName = function () { var ua = navigator.userAgent; return (isIos() ? (/iPad/.test(ua) ? 'iPad' : 'iPhone') : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'device') + (standalone() ? ' app' : ' browser'); };
+  var keyBytes = function (b) { var s2 = (b + '==='.slice((b.length + 3) % 4)).replace(/-/g, '+').replace(/_/g, '/'), raw = atob(s2), o = new Uint8Array(raw.length); for (var i = 0; i < raw.length; i++) o[i] = raw.charCodeAt(i); return o; };
+  var swReady = function () { return navigator.serviceWorker.register('sw.js').then(function () { return navigator.serviceWorker.ready; }); };
+  function pushSub() { return pushOk() ? swReady().then(function (r) { return r.pushManager.getSubscription(); }).catch(function () { return null; }) : Promise.resolve(null); }
+  function pushOn() {
+    if (!pushOk()) return Promise.resolve(isIos() && !standalone() ? 'ios' : 'unsupported');
+    return Notification.requestPermission().then(function (perm) {
+      if (perm !== 'granted') return perm === 'denied' ? 'blocked' : 'dismissed';
+      return Promise.all([swReady(), api('pushkey')]).then(function (x) {
+        if (!x[1].ok) return 'nokey';
+        return x[0].pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(x[1].publicKey) })
+          .then(function (sub) { return api('pushsub', { subscription: sub.toJSON(), device: deviceName(), phone: phoneUa() }); })
+          .then(function (j) { return j.ok ? 'on' : 'failed'; });
+      });
+    }).catch(function () { return 'failed'; });
+  }
+  function pushOff() { return pushSub().then(function (sub) { if (!sub) return; var ep = sub.endpoint; return sub.unsubscribe().then(function () { return api('pushunsub', { endpoint: ep }); }); }).catch(function () {}); }
+  var PUSHSAY = { ios: 'On an iPhone, alerts come only to the desk added to the Home Screen (iOS 16.4 or later): in Safari tap Share, Add to Home Screen, open the desk from there, then turn alerts on.', unsupported: 'This browser cannot take alerts. Chrome or Edge on a computer or Android, or the desk from the iPhone Home Screen, can.',
+    blocked: 'Alerts are blocked for the desk here. Computer: click the icon left of the address and allow Notifications. iPhone: Settings, Notifications, Peak Desk.', dismissed: 'Not turned on. Tap again and choose Allow.', nokey: 'The server could not make its alert key. Try again in a minute.', failed: 'That did not work. Try again in a minute.' };
+  function alertsCard(g) {
+    var A = (S.data && S.data.alerts) || { devices: [] }, c = el('div', 'card info'); c.setAttribute('data-set', 'alerts'); g.appendChild(c);
+    c.appendChild(el('h3', null, 'Alerts'));
+    c.appendChild(el('p', 'soft', 'A notice on your phone or computer when an email comes in, so nobody has to keep looking. Replies on the companies you own come to you. Replies to the Peak email and new emails in the Inbox come to everyone with New Inbox mail on. STOP replies, bounces and out-of-office replies send no alert. Each device is turned on by itself.'));
+    var st = el('div', 'tmline'); c.appendChild(st);
+    var row = el('div', 'seg'), on = el('button', null, 'Turn on alerts on this device'); on.type = 'button'; on.setAttribute('data-act', 'pushon'); row.appendChild(on);
+    var tst = el('button', null, 'Send me a test alert'); tst.type = 'button'; tst.setAttribute('data-act', 'pushtest'); row.appendChild(tst); c.appendChild(row);
+    c.appendChild(el('small', null, 'iPhone: only from the desk added to the Home Screen (Safari, Share, Add to Home Screen), iOS 16.4 or later.'));
+    var devs = el('div', 'indevs'); c.appendChild(devs);
+    (A.devices || []).forEach(function (d) { var x = el('div', 'tmline', d.device + ' · on since ' + ago(d.at) + (d.ok ? ' · last alert ' + ago(d.ok) : '')); var rm = el('button', 'lnk', 'Remove'); rm.type = 'button'; rm.addEventListener('click', function () { api('pushunsub', { id: d.id }).then(function () { load(function () { draw(); }); }); }); x.appendChild(rm); devs.appendChild(x); });
+    var f = el('div', 'form'); c.appendChild(f);
+    var box = function (k, label, val) { var lb = el('label', 'chk'), cb = el('input'); cb.type = 'checkbox'; cb.checked = !!val; cb.setAttribute('data-al', k); lb.appendChild(cb); lb.appendChild(document.createTextNode(' ' + label)); lb.style.cssText = 'display:block;margin:6px 0;font-size:13.5px'; f.appendChild(lb); return cb; };
+    var cMine = box('mine', 'Replies on my companies', A.mine), cIn = box('inbox', 'New Inbox mail (replies to the Peak email, and new emails to partnerships@)', A.inbox);
+    var cMail = box('email', 'Also email me a short heads-up' + (A.addr ? ' at ' + A.addr : ' (set your own email under “Replies to my emails go to” first)') + ': only “Acme Corp replied, open the desk”, never the email itself; at most one every 10 minutes', A.email);
+    if (!A.addr && !A.email) cMail.disabled = true;
+    var cQ = box('quiet', 'Quiet hours, 9 pm to 7 am Mountain (held and sent at 7)', A.quiet);
+    var sv = el('button', 'btn small', 'Save alerts'); sv.type = 'button'; sv.setAttribute('data-act', 'alsave'); f.appendChild(sv);
+    if (readOnly()) { [on, tst, sv, cMine, cIn, cMail, cQ].forEach(function (b) { b.disabled = true; }); st.textContent = 'This account only looks.'; return; }
+    sv.addEventListener('click', function () { save('alertset', { mine: cMine.checked, inbox: cIn.checked, email: cMail.checked, quiet: cQ.checked }, 'Alerts saved'); });
+    tst.addEventListener('click', function () { api('alerttest', {}).then(function (j) { toast(j && j.ok ? (j.sent ? 'Test alert sent to ' + plural(j.sent, 'device') : 'No device has alerts on yet') : 'It did not send.'); }); });
+    var paint = function (sub) {
+      var here = !!sub && window.Notification && Notification.permission === 'granted';
+      on.textContent = here ? 'Turn off on this device' : 'Turn on alerts on this device';
+      st.textContent = here ? 'On for this device.' : !pushOk() ? (isIos() && !standalone() ? PUSHSAY.ios : PUSHSAY.unsupported) : 'Off on this device.';
+      on.onclick = function () {
+        on.disabled = true;
+        (here ? pushOff().then(function () { return 'off'; }) : pushOn()).then(function (r) { on.disabled = false; if (r === 'on' || r === 'off') { toast(r === 'on' ? 'Alerts are on for this device' : 'Alerts are off for this device'); load(function () { draw(); }); } else toast(PUSHSAY[r] || PUSHSAY.failed); });
+      };
+    };
+    pushSub().then(paint);
+  }
+  /* where an alert's tap lands: #inbox/<email>, #card/<list>/<company> */
+  function route(hash) {
+    var h = String(hash || '').replace(/^.*#/, '').split('/');
+    if (h[0] === 'inbox' && inboxOn()) { S.inSel = h[1] || null; go('inbox', 'open'); return true; }
+    if (h[0] === 'card' && (h[1] === 'sponsor' || h[1] === 'expo') && S.data && S.data[h[1]]) { if (S.world !== h[1]) S.world = h[1]; var r = rec(h[2] || ''); if (r) { bar(); openRec(r); return true; } }
+    return false;
+  }
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open' && S.data) load(function () { if (!route(e.data.url)) draw(); }); });
+
   /* ---- More ---- */
   function drawMore(sub) {
     if (ADMIN_SUBS[sub] && !isAdmin()) return;   /* never drawn for a seller (subOf already keeps them off it) */
@@ -2029,6 +2250,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var rt = el('input'); rt.type = 'email'; rt.className = 'myreply'; rt.placeholder = 'Your own email, so replies come to you'; rt.value = mine.replyto || ''; f.appendChild(rt);
     f.appendChild(el('small', null, 'Left empty (best), replies come to ' + FROML() + ', the address the email comes from, and show on the company’s card for everyone on the desk.'));
     var sv = el('button', 'btn small', 'Save'); sv.type = 'button'; sv.setAttribute('data-act', 'mysave'); sv.addEventListener('click', function () { save('myset', { sig: sg.value, replyto: rt.value.trim() }, 'Saved'); }); f.appendChild(sv);
+    alertsCard(g);   /* my alerts (2026-11-20) */
   }
   /* Settings: Desk emails and Booking links (2026-11-19): both OFF until Matthew says go */
   function setDeskMail(g) {
@@ -2301,10 +2523,10 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   /* the address keeps the place: #sponsor/pipe, #expo/list/removed; the old desk's addresses land on Today */
   (function () {
     var h = (location.hash || '').slice(1).split('/');
-    if (h[0] === 'sponsor' || h[0] === 'expo') { S.world = h[0]; if (h[1] && TABS[h[0]].some(function (x) { return x[0] === h[1]; })) { S.tab = h[1]; if (h[2]) S.sub[h[0] + h[1]] = h[2]; } }
-    else if (h[0] === 'expo') S.world = 'expo';
+    if (h[0] === 'inbox' || h[0] === 'card') S.route = location.hash;   /* an alert's tap (2026-11-20): routed once the data is in */
+    else if (h[0] === 'sponsor' || h[0] === 'expo') { S.world = h[0]; if (h[1] && TABS[h[0]].some(function (x) { return x[0] === h[1]; })) { S.tab = h[1]; if (h[2]) S.sub[h[0] + h[1]] = h[2]; } }
   })();
-  load();
+  load(S.route ? function () { var r = S.route; S.route = null; if (!route(r)) { remember(); draw(); } } : undefined);
 })();
 </script>
 </body>

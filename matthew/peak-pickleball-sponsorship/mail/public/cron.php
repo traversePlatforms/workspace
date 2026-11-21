@@ -3,6 +3,9 @@ declare(strict_types=1);
 /* The Peak email's command line (never a web page). The hourly SiteGround cron job (sixfold-tools/morning-email.php) starts `run` in the
    background, and the overnight check on Matthew's laptop prints `stats`.
      php cron.php run       read replies and bounce notices, then send this hour's emails (only lists Matthew started, only in the window)
+     php cron.php inbox     every 5 minutes (2026-11-20, started by the 5-minute cron, sixfold-tools/meta-leads.php): Peak Partnerships' Inbox
+                            onto the Peak desk's Inbox and replies onto their cards, then the desk's alerts that are due (one lock: never two reads)
+     php cron.php inbox-backfill [days]   once: the emails already in Peak Partnerships' Inbox (14 days) onto the desk's Inbox; no alerts
      php cron.php stats     one line: connection, and per list: status, sent, waiting, replied, bounced, unsubscribed, clicked
      php cron.php import    bring the two lists in from the Peak desk again (a running list that gains people is paused)
      php cron.php check     what is set up (never a key, token or code)
@@ -54,6 +57,9 @@ if ($cmd === 'links' || $cmd === 'links-on' || $cmd === 'links-off') {
     exit(0);
 }
 if ($cmd === 'run') exit(pmCronRun());
+if ($cmd === 'inbox') exit(pmInboxRun());
+/* the one-time fill of the desk's Inbox with what is already in Peak Partnerships' Inbox (2026-11-20): read only, no alerts; counts only */
+if ($cmd === 'inbox-backfill') { $r = pmInboxBackfill((int) ($argv[2] ?? 14)); echo json_encode($r), "\n"; exit($r['error'] === '' ? 0 : 1); }
 if ($cmd === 'stats') { echo pmStatsLine(), "\n"; exit(0); }
 if ($cmd === 'import') {
     $r = pmImportSave('command line'); if (isset($r['error'])) { fwrite(STDERR, $r['error'] . "\n"); exit(1); }
@@ -75,4 +81,4 @@ if ($cmd === 'check') {
     foreach (PM_LISTS as $k => $n) echo $k, ': ', $S['lists'][$k]['status'], ', template ', pmIsDraft($S['templates'][$k]) ? 'DRAFT' : 'set', "\n";
     exit(0);
 }
-fwrite(STDERR, "usage: php cron.php run | stats | import | check | dns | setapp | setcode\n"); exit(1);
+fwrite(STDERR, "usage: php cron.php run | inbox | stats | import | check | dns | setapp | setcode\n"); exit(1);

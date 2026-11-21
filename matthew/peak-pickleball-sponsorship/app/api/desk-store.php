@@ -217,7 +217,7 @@ function apply(array &$M, string $w, array $r): void {
         case 'touch': {
             if (!$has || !is_array($r['touch'] ?? null)) return; $x = $r['touch']; $k = (string) ($r['k'] ?? newKey()); $m = (string) ($x['m'] ?? 'other');
             $T = ['k' => $k, 'at' => $at, 'when' => (int) ($x['when'] ?? $at) ?: $at, 'by' => $by, 'm' => $m, 'out' => (string) ($x['out'] ?? ''), 'note' => (string) ($x['note'] ?? '')];
-            foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from', 'tpl', 'tc', 'dm'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
+            foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from', 'tpl', 'tc', 'dm', 'ib'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
             if (is_array($x['mail'] ?? null)) $T['mail'] = $x['mail'];   /* their email, read from Peak Partnerships (2026-11-19) */
             /* a tour confirmation (tc, 2026-11-19) is on the Activity but is not counted as the booker's own email */
             $M['recs'][$id]['touches'][] = $T; $dirty($id); if (empty($T['tc'])) $act($m, $id, $T['when'], $k); return;
@@ -632,9 +632,11 @@ function deskMailIn(array $m): array {
         'auto' => !empty($m['auto']) ? 1 : 0, 'stop' => !empty($m['stop']) ? 1 : 0];
     return array_filter($o, fn($v) => $v !== '' && $v !== [] && $v !== 0);
 }
-function deskReplied(string $w, string $id, string $from, string $note = '', string $by = 'Peak email', string $ref = '', bool $stop = false, array $mail = []): array {
+/* $alert (2026-11-20): a reply alerts the card's owner, or the Inbox watchers when it answers a blast (desk-inbox.php); never a STOP, and not
+   an email a seller put on the card from the Inbox themselves */
+function deskReplied(string $w, string $id, string $from, string $note = '', string $by = 'Peak email', string $ref = '', bool $stop = false, array $mail = [], bool $alert = true): array {
     W($w); $from = clean($from, 160); $note = clean($note, 600); $by = clean($by, 60) ?: 'Peak email'; $ref = clean($ref, 200); $mail = $mail ? deskMailIn($mail) : [];
-    return withLock(function () use ($w, $id, $from, $note, $by, $ref, $stop, $mail) {
+    return withLock(function () use ($w, $id, $from, $note, $by, $ref, $stop, $mail, $alert) {
         sync($w, true); $R = recs($w)[$id] ?? null;
         if (!$R) return ['ok' => false, 'error' => 'No such lead.', 'code' => 404];
         if ($ref !== '') foreach ($R['touches'] as $t) if (($t['ref'] ?? '') === $ref) return ['ok' => true, 'dup' => true, 'k' => $t['k'], 'stage' => $R['stage']];
@@ -652,6 +654,7 @@ function deskReplied(string $w, string $id, string $from, string $note = '', str
         } elseif (!in_array($R['stage'], $C['done'], true) && ($nd === '' || $nd > date('Y-m-d')) && (!$stop || !$open))
             $rows[] = rowNext($w, $id, ['date' => date('Y-m-d'), 'what' => $stop ? 'They asked not to be emailed again: no more emails' : 'They replied to the email: answer them'], $by, $now);
         commit($w, $rows);
+        if ($alert && !$stop && function_exists('deskAlertReply')) deskAlertReply($w, $R, $ref !== '' ? $ref : $k);
         return ['ok' => true, 'k' => $k, 'stage' => recs($w)[$id]['stage']];
     });
 }
@@ -703,3 +706,5 @@ function deskBounced(string $w, string $id, string $to, string $note = '', strin
         return ['ok' => true, 'k' => $k, 'stage' => recs($w)[$id]['stage']];
     });
 }
+/* the Inbox and reply alerts (2026-11-20): the Peak email sender records Peak Partnerships' Inbox here; desk-inbox.php explains */
+require_once __DIR__ . '/desk-inbox.php';

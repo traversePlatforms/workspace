@@ -44,7 +44,10 @@ function dmMineSave(string $name, array $in): array {
     $lk = fopen(DATA_DIR . '/people-settings.lock', 'c'); flock($lk, LOCK_EX);
     try {
         $all = jread('people-settings.json', []); $k = strtolower(trim($name));
-        $all[$k] = ['name' => $name, 'replyto' => $rt, 'at' => time()] + ($sig !== '' && $sig !== $name . "\nPeak Pickleball" ? ['sig' => $sig] : []);
+        $all[$k] = ['name' => $name, 'replyto' => $rt, 'at' => time()] + ($sig !== '' && $sig !== $name . "\nPeak Pickleball" ? ['sig' => $sig] : [])
+            + (is_array($all[$k]['alerts'] ?? null) ? ['alerts' => $all[$k]['alerts']] : []);   /* their alert settings (2026-11-20) stay */
+        /* the email heads-up goes to the reply address: with none left, it is off */
+        if ($rt === '' && !empty($all[$k]['alerts']['email'])) $all[$k]['alerts']['email'] = false;
         if (!jwrite('people-settings.json', $all)) return ['error' => 'It could not be saved.'];
     } finally { flock($lk, LOCK_UN); fclose($lk); }
     return dmMine($name);

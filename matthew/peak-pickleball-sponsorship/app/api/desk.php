@@ -46,10 +46,17 @@
  * 2026-11-19 evening (Matthew set up the shared mailbox Peak Partnerships): every Peak email goes out as Peak Partnerships
  * <partnerships@peakpickleball.us> (set in Outbox; shown read only in More, Settings), and the Peak email sender reads replies, bounces,
  * auto-replies and STOP from its Inbox onto the card: the reply's own words, its attachments by name, for everyone with a desk sign-in, with
- * a Reply button that answers in the same thread (desk-email.php). The page never gets a message's id or mailbox, only the touch's key. */
+ * a Reply button that answers in the same thread (desk-email.php). The page never gets a message's id or mailbox, only the touch's key.
+ *
+ * 2026-11-20 (Matthew: "I think the inbox tab is better but i dont think we currently have any notification that an email reply has
+ * happened"): the Inbox tab (every email in Peak Partnerships' Inbox, read every 5 minutes: Reply, Attach to a company, Claim, Done) and
+ * alerts (Web Push to the desk app per device, an optional email heads-up), desk-inbox.php explains (actions inbox, inboxone, inboxfile,
+ * inboxclaim, inboxdone, inboxattach, inboxreply, pushkey, pushsub, pushunsub, alertset, alerttest).
+ *   php desk.php alerts      deliver the alerts that are due (the 5-minute and the hourly runs do this)
+ *   php desk.php inboxcount  how many emails are open, done and Other (counts only) */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-20.2';
+const BUILD = '2026-11-20.3';
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
@@ -104,6 +111,8 @@ if (PHP_SAPI === 'cli') {
         $L = recs('sponsor')[$name] ?? null; if (!$L) { fwrite(STDERR, "No such lead.\n"); exit(1); }
         $json(scanAndSave($L, in_array('--hunter', $argv, true) ? 'hunter' : 'site')); exit(0);
     }
+    if ($cmd === 'alerts') { $now = ctype_digit((string) getenv('DESK_NOW')) ? (int) getenv('DESK_NOW') : time(); $json(alertsFlush($now)); exit(0); }
+    if ($cmd === 'inboxcount') { $json(inCounts()); exit(0); }
     if ($cmd === 'rebuild') { foreach (['sponsor', 'expo'] as $w) echo "$w: rebuilt from the lists and " . rebuild($w) . " log rows\n"; exit(0); }
     /* the counts a migration or deploy is checked against */
     if ($cmd === 'check') {
@@ -207,9 +216,17 @@ function handle(string $action, bool $isPost, array $body): array {
     else { $op = $action; $w = ($body['world'] ?? '') === 'expo' ? 'expo' : 'sponsor'; }
     if (in_array($op, $SPONSOR, true)) $w = 'sponsor';
     /* the expo-only account (2026-11-13): the Expo leads and nothing else, read or write */
-    if ($ROLE === 'expo' && !in_array($action, ['data', 'callink', 'myset', 'booklink'], true) && $w !== 'expo') fail('This account is for the Expo leads only.', 403);
+    if ($ROLE === 'expo' && !in_array($action, ['data', 'callink', 'myset', 'booklink', 'pushkey', 'pushsub', 'pushunsub', 'alertset', 'alerttest'], true) && $w !== 'expo') fail('This account is for the Expo leads only.', 403);
 
     if ($action === 'data') return dataOut($ME, $ROLE);
+    /* the Inbox (2026-11-20): sellers and admins; Claude Check may look (it is never marked read for it) and never acts */
+    $INBOX = ['inbox', 'inboxone', 'inboxfile', 'inboxclaim', 'inboxdone', 'inboxattach', 'inboxreply'];
+    if (in_array($action, $INBOX, true) && !in_array($ROLE, ['admin', 'seller'], true)) fail('The Inbox is for the sellers and admins.', 403);
+    if ($action === 'inbox') return inList((string) ($_GET['f'] ?? 'open'), $ME);
+    if ($action === 'inboxone') { $x = inOpen((string) ($_GET['iid'] ?? ''), $ME, $ME !== 'Claude Check'); if (empty($x['ok'])) fail($x['error'], (int) $x['code']); return $x; }
+    if ($action === 'inboxfile') { inFile((string) ($_GET['iid'] ?? ''), (int) ($_GET['n'] ?? -1)); }
+    /* alerts: the desk's public Web Push key (made the first time someone turns alerts on) */
+    if ($action === 'pushkey') { $v = alVapid($ME !== 'Claude Check'); if (!$v) fail('The alert key is not made yet.', 503); return ['ok' => true, 'publicKey' => $v['publicKey']]; }
     /* the end-of-day email as it would go now (admins; read only, so Claude Check may look): nothing is sent */
     /* a tour confirmation as it would go (2026-11-19): read only, nothing is sent. sample: the Settings preview, with the words being edited */
     if ($action === 'tourpreview') {
@@ -265,6 +282,18 @@ function handle(string $action, bool $isPost, array $body): array {
         @file_put_contents(DATA_DIR . '/' . $key . '-settings.log', jline(['at' => $now, 'by' => $ME] + $cur), FILE_APPEND | LOCK_EX);
         return ['ok' => true, 'deskmail' => dmOut(true, $ME), 'book' => bkOut(true, $ME)];
     }
+    /* the Inbox's actions and my alerts (2026-11-20) */
+    if (in_array($action, ['inboxclaim', 'inboxdone', 'inboxattach', 'inboxreply'], true)) {
+        $iid = (string) ($body['iid'] ?? '');
+        $x = match ($action) { 'inboxclaim' => inClaim($iid, !empty($body['on']), $ME), 'inboxdone' => inDone($iid, !empty($body['on']), $ME),
+            'inboxattach' => inAttach($iid, (string) ($body['w'] ?? ''), (string) ($body['id'] ?? ''), $ME), default => inReply($iid, $body, $ME) };
+        if (empty($x['ok'])) { if (isset($x['claim'])) { http_response_code((int) $x['code']); return ['ok' => false, 'error' => $x['error'], 'claim' => $x['claim']]; } fail((string) $x['error'], (int) ($x['code'] ?? 400)); }
+        unset($x['code']); return $x;
+    }
+    if ($action === 'pushsub') { $x = alSubAdd($ME, is_array($body['subscription'] ?? null) ? $body['subscription'] : [], clean($body['device'] ?? '', 40), !empty($body['phone'])); if (!$x['ok']) fail($x['error']); return ['ok' => true, 'alerts' => alOut($ME)]; }
+    if ($action === 'pushunsub') { alSubDrop($ME, (string) ($body['endpoint'] ?? ''), preg_match('/^[0-9a-f]{16}$/', (string) ($body['id'] ?? '')) ? (string) $body['id'] : ''); return ['ok' => true, 'alerts' => alOut($ME)]; }
+    if ($action === 'alertset') { $x = alSave($ME, $body); if (isset($x['error'])) fail($x['error']); return ['ok' => true, 'alerts' => alOut($ME)]; }
+    if ($action === 'alerttest') { $x = alTest($ME); return $x + ['alerts' => alOut($ME)]; }
     /* Write an email (2026-11-19): Send, and Retry of one that did not go */
     if ($action === 'dmsend') {
         $R = recs($w)[(string) ($body['id'] ?? '')] ?? null; if (!$R || !empty($R['off'])) fail('No such lead.', 404);
@@ -386,6 +415,9 @@ function dataOut(string $ME, string $ROLE): array {
     if ($ROLE === 'admin') $base['eod'] = eodConf();
     $base['tourmail'] = tmOut($ROLE === 'admin');
     $base['deskmail'] = dmOut($ROLE === 'admin', $ME); $base['book'] = bkOut($ROLE === 'admin', $ME);
+    /* the Inbox's counts for the tab, and my alerts (2026-11-20) */
+    if (in_array($ROLE, ['admin', 'seller'], true)) $base['inbox'] = inCounts();
+    $base['alerts'] = alOut($ME);
     /* who Peak's emails go out as (2026-11-19): set in Outbox, shown here read only */
     $mb = tmMailbox(); $base['sendFrom'] = ['email' => $mb['email'] ?: TM_ORGANIZER, 'name' => $mb['name'] ?: TM_FROM_NAME, 'shared' => (bool) ($mb['shared'] ?? false), 'warn' => (string) ($mb['warn'] ?? ''), 'ready' => (bool) $mb['ok']];
     $X = worldOut('expo'); $xs = jread('expo-seed.json', []);
