@@ -80,7 +80,7 @@ body.shot .pv{grid-template-columns:1fr}
 <body>
 <div class="jv">
  <div class="pv">
-  <div class="top"><div class="wm">J.A.R.V.I.S.</div><div class="sub"><b>Globe preview</b> · 21 Nov · not live</div></div>
+  <div class="top"><div class="wm">J.A.R.V.I.S.</div><div class="sub"><b>Globe preview</b> · 21 Nov · v2: answering and alert</div></div>
   <main>
    <div class="stage" id="stage"></div>
    <p class="hint"><b>Tap the globe</b> to talk. <b>Press and hold</b> it to record a meeting. <b>Tap a satellite</b> to open its list. Everything on this page is a simulation: nothing is sent and nothing records.</p>
@@ -105,6 +105,7 @@ body.shot .pv{grid-template-columns:1fr}
     <label>Due <input type="number" id="c-remind" min="0" max="99" value="2"></label>
     <label>Builds <input type="number" id="c-build" min="0" max="99" value="0"></label>
    </div>
+   <label class="chk"><input type="checkbox" id="urg"> A build failed (its satellite turns red, the mood goes to alert)</label>
    <div class="ph"><span class="n">06</span> View</div>
    <div class="acts"><button class="btn" id="replay">Replay start-up</button><button class="btn" id="both" aria-pressed="false">Show both sizes</button><button class="btn" id="rm" aria-pressed="false">Reduced motion</button></div>
    <div class="ph"><span class="n">07</span> Events</div>
@@ -115,10 +116,12 @@ body.shot .pv{grid-template-columns:1fr}
 
 <!-- ================================================================================================================================
      JvGlobe: the J.A.R.V.I.S. globe as one component. COPY THIS WHOLE <script> BLOCK AS-IS into index.html.
-     var g = JvGlobe(containerEl, { size: 236, onTalk: fn, onRecord: fn, onMarker: fn(key, count), labels: {...} });
-     g.setState('idle'|'listen'|'think'|'speak'|'answer')  g.setMood('normal'|'attention'|'alert'|'done')  g.setLevel(0..1)
-     g.setCounts({reply, decide, remind, build})  g.setProgress(0..1 | null)  g.attachAudio(mediaElement | MediaStream | null)
-     g.replayIntro()  g.setReducedMotion(true|false|null)  g.destroy()
+     var g = JvGlobe(containerEl, { size: 236, onTalk: fn, onRecord: fn, onMarker: fn(key, count, urgentWord), labels: {...}, intro: false });
+     g.setState('idle'|'listen'|'think'|'speak'|'answer')  g.setMood('normal'|'attention'|'alert'|'done', note)  g.setLevel(0..1)
+     g.setCounts({reply, decide, remind, build})  g.setUrgent({build: 'Failed'})  g.setProgress(0..1 | null)  g.kick(0..1)
+     g.attachAudio(mediaElement | MediaStream | null)  g.replayIntro()  g.setReducedMotion(true|false|null)  g.alive()  g.info()  g.destroy()
+     21 Nov v2: answering has its own violet accent (closed ring, steady outward pulse); alert is a strong red with no fade through amber,
+     a beating bezel and shockwaves; a satellite can be urgent (red). The root carries data-state and data-mood.
      One requestAnimationFrame loop; pauses when the tab is hidden or the globe is off screen; 30 fps on phones; reduced motion = slow.
      ================================================================================================================================ -->
 <script id="jv-globe">
@@ -140,19 +143,27 @@ body.shot .pv{grid-template-columns:1fr}
     '.jvg-mk.bump b{animation:jvgbump .6s ease-out}' +
     '.jvg.sm .jvg-mk{height:16px;padding:0 6px 0 5px;gap:4px;font-size:7.5px;letter-spacing:.08em}.jvg.sm .jvg-mk b{font-size:9.5px}.jvg.sm .jvg-mk i{width:4px;height:4px}' +
     '@keyframes jvgbump{0%{transform:scale(1)}30%{transform:scale(1.6)}100%{transform:scale(1)}}' +
+    '.jvg-mk.urg{background:#2a0309e6;animation:jvgurg 1.1s ease-in-out infinite}.jvg-mk.urg .t{color:#ffd3d7;opacity:1}' +
+    '@keyframes jvgurg{0%,100%{box-shadow:0 0 10px -2px currentColor,inset 0 0 8px -4px currentColor}50%{box-shadow:0 0 22px 3px currentColor,inset 0 0 10px -2px currentColor}}' +
+    '@media (prefers-reduced-motion:reduce){.jvg-mk.urg{animation:none;box-shadow:0 0 18px 1px currentColor}}' +
     '.jvg-lb{position:relative;z-index:1;text-align:center;font:500 11px "JetBrains Mono",monospace;letter-spacing:.32em;text-transform:uppercase;min-height:16px;white-space:nowrap}' +
-    '.jvg-lb .x{opacity:.6;letter-spacing:.18em}' +
+    '.jvg-lb .x{opacity:.6;letter-spacing:.18em}.jvg-lb .x.n{opacity:1;font-weight:600}' +
     '.jvg.sm .jvg-lb{font-size:10px;letter-spacing:.3em}';
 
-  var MOOD = { normal: [62, 232, 255], attention: [255, 182, 72], alert: [255, 107, 107], done: [74, 222, 128] };
+  /* 21 Nov (Matthew: "for alerts it also needs to be a more distinguished color or red"): alert is a strong red, and the colour switches to it
+     at once (no fade through amber). */
+  var MOOD = { normal: [62, 232, 255], attention: [255, 182, 72], alert: [255, 34, 52], done: [74, 222, 128] };
+  var URG = '#ff2a3d';   /* an urgent satellite (a failed build) */
+  /* 21 Nov (Matthew: answering "should look more different"): answering has its own accent, a closed lit ring and a steady outward pulse */
+  var ANS = [178, 150, 255];
   var STATE = {   /* every number eases toward these, so state changes glide */
-    idle:   { spin: 0.20, ring: 1.0, glow: 0.78, arc: 0, wave: 0, rip: 0, mid: 1,   scan: 6.5, link: 3.0 },
-    listen: { spin: 0.28, ring: 1.6, glow: 0.92, arc: 0, wave: 0, rip: 1, mid: 1,   scan: 0,   link: 0 },
-    think:  { spin: 0.95, ring: 5.0, glow: 0.88, arc: 1, wave: 0, rip: 0, mid: 1,   scan: 1.7, link: 0.55 },
-    speak:  { spin: 0.32, ring: 1.8, glow: 1.0,  arc: 0, wave: 1, rip: 0, mid: 0.3, scan: 0,   link: 0 },
-    answer: { spin: 0.24, ring: 1.0, glow: 1.12, arc: 0, wave: 0, rip: 0, mid: 1,   scan: 4.5, link: 2.2 }
+    idle:   { spin: 0.20, ring: 1.0, glow: 0.78, arc: 0, wave: 0, rip: 0, mid: 1,   scan: 6.5, link: 3.0, ans: 0 },
+    listen: { spin: 0.28, ring: 1.6, glow: 0.92, arc: 0, wave: 0, rip: 1, mid: 1,   scan: 0,   link: 0,   ans: 0 },
+    think:  { spin: 0.95, ring: 5.0, glow: 0.88, arc: 1, wave: 0, rip: 0, mid: 1,   scan: 1.7, link: 0.55, ans: 0 },
+    speak:  { spin: 0.32, ring: 1.8, glow: 1.0,  arc: 0, wave: 1, rip: 0, mid: 0.3, scan: 0,   link: 0,   ans: 0 },
+    answer: { spin: 0.16, ring: 0.7, glow: 1.15, arc: 0, wave: 0, rip: 0, mid: 0.5, scan: 0,   link: 0,   ans: 1 }
   };
-  var LABELS = { idle: 'Standing by', listen: 'Listening', think: 'Thinking', speak: 'Speaking', answer: 'Ready' };
+  var LABELS = { idle: 'Standing by', listen: 'Listening', think: 'Thinking', speak: 'Speaking', answer: 'Answer ready', hold: 'Hold to record', held: 'Record meeting' };   /* held: the hold opens the Record screen; nothing records before its consent tap */
   var MARKERS = [   /* key, word on the chip, colour */
     ['reply', 'Reply', '#3ee8ff'], ['decide', 'Decide', '#ffb648'], ['remind', 'Due', '#c3a6ff'], ['build', 'Build', '#4ade80']
   ];
@@ -195,11 +206,11 @@ body.shot .pv{grid-template-columns:1fr}
     var GS = G * Math.sqrt(1 - 1 / (D * D));   /* sphere scale so the perspective silhouette lands on G */
 
     /* ---- state */
-    var state = 'idle', mood = 'normal', moodBefore = 'normal', moodT = 0;
+    var state = 'idle', mood = 'normal', moodBefore = 'normal', moodT = 0, moodNote = '', noteBefore = '', kickV = 0;
     var P = Object.assign({}, STATE.idle);
     var col = MOOD.normal.slice(), tgt = MOOD.normal.slice();
     var lvlIn = 0, lvlInT = -1e9, lvl = 0, progress = null, progShown = 0;
-    var counts = { reply: 0, decide: 0, remind: 0, build: 0 };
+    var counts = { reply: 0, decide: 0, remind: 0, build: 0 }, urgent = {};
     var t = 0, last = 0, lastDraw = 0, raf = 0, alive = true, onScreen = true;
     var introT0 = reduced() || opts.intro === false ? -1 : 0, introAge = reduced() || opts.intro === false ? 99 : 0;
     var ang = 0.6, ringA = 0, orbitA = -Math.PI / 2 - 0.5, scanAge = 99, scanSince = 2, linkSince = 0, links = [];
@@ -225,10 +236,10 @@ body.shot .pv{grid-template-columns:1fr}
       b.type = 'button'; b.style.color = m[2]; w.textContent = m[1]; b.appendChild(dot); b.appendChild(w); b.appendChild(n);
       b.style.display = 'none'; b.tabIndex = -1;
       b.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
-      b.addEventListener('click', function (e) { e.stopPropagation(); if (opts.onMarker) opts.onMarker(m[0], counts[m[0]]); });
+      b.addEventListener('click', function (e) { e.stopPropagation(); if (opts.onMarker) opts.onMarker(m[0], counts[m[0]], urgent[m[0]] || null); });
       b.addEventListener('pointerenter', function () { hoverMk = true; }); b.addEventListener('pointerleave', function () { hoverMk = false; });
       layer.appendChild(b);
-      return { key: m[0], word: m[1], el: b, num: n, slot: i / 4 * TAU, a: 0, vis: 0, w: 0, shown: false };
+      return { key: m[0], word: m[1], col: m[2], wd: w, el: b, num: n, slot: i / 4 * TAU, a: 0, vis: 0, w: 0, shown: false };
     });
     var hoverMk = false;
 
@@ -275,17 +286,18 @@ body.shot .pv{grid-template-columns:1fr}
       t += dt; introAge += dt;
       for (key in Tg) P[key] += (Tg[key] - P[key]) * k;
       /* mood colour */
-      if (mood === 'done' && (t - moodT) > 2.4) { mood = moodBefore; tgt = MOOD[mood].slice(); }
+      if (mood === 'done' && (t - moodT) > 2.4) { mood = moodBefore; moodNote = noteBefore; tgt = MOOD[mood].slice(); if (mood === 'alert') { col = tgt.slice(); alertPhase = 99; } rootEl.setAttribute('data-mood', mood); }
       var kc = 1 - Math.exp(-dt * (mood === 'done' ? 9 : 3.5));
       for (var i = 0; i < 3; i++) col[i] += (tgt[i] - col[i]) * kc;
       /* level: the analyser if attached, else setLevel, else a gentle speech envelope while speaking */
-      var target = 0, fresh = (t - lvlInT) < 0.6;
-      if (an) target = readAnalyser();
+      var target = 0, fresh = (t - lvlInT) < 0.6, anOn = anLive();
+      if (anOn) target = readAnalyser();
       if (fresh) target = Math.max(target, lvlIn);
-      if (!an && !fresh && opts.autoLevel !== false) {
+      if (!anOn && !fresh && opts.autoLevel !== false) {
         if (state === 'speak') target = clamp(0.35 + 0.35 * Math.sin(t * 9.1) * Math.sin(t * 3.7 + 1) + 0.22 * Math.sin(t * 23.3), 0.05, 1) * (0.55 + 0.45 * Math.abs(Math.sin(t * 1.3)));
         else if (state === 'listen') target = 0.12 + 0.06 * Math.sin(t * 2.1);
       }
+      kickV = Math.max(0, kickV - dt * 3.2); if (state === 'speak') target = Math.max(target, kickV);   /* word accents (kick) on top of the speech envelope */
       lvl += (target - lvl) * (1 - Math.exp(-dt * (target > lvl ? 22 : 6)));
       /* motion */
       var sp = rm ? 0.18 : 1;
@@ -300,9 +312,9 @@ body.shot .pv{grid-template-columns:1fr}
       if (!rm && Tg.link > 0 && linkSince > Tg.link && introAge > INTRO * 0.8) { linkSince = 0; var a = (Math.random() * nodes.length) | 0, b = (a + 1 + ((Math.random() * (nodes.length - 1)) | 0)) % nodes.length; links.push({ a: nodes[a], b: nodes[b], age: 0 }); }
       for (i = links.length - 1; i >= 0; i--) { links[i].age += dt; if (links[i].age > 2.2) links.splice(i, 1); }
       for (i = shock.length - 1; i >= 0; i--) { shock[i].age += dt; if (shock[i].age > shock[i].life) shock.splice(i, 1); }
-      if (mood === 'alert' && !rm && alertPhase > 1.25) { alertPhase = 0; shock.push({ age: 0, life: 1.25, c: MOOD.alert, from: RO, to: S * 0.62 }); }
+      if (mood === 'alert' && !rm && alertPhase > 1.1) { alertPhase = 0; shock.push({ age: 0, life: 1.35, c: MOOD.alert, from: G * 1.08, to: S * 0.7, w: small ? 2.2 : 2.8 }); }
       /* waveform bars */
-      var fr = an && anFreq ? anFreq : null;
+      var fr = anOn && anFreq ? anFreq : null;
       for (i = 0; i < wave.length; i++) {
         var qn = wave.length / 4, h = i % (2 * qn), v; h = h < qn ? h : 2 * qn - 1 - h;   /* mirrored four ways, so the ring stays balanced */
         if (fr) v = Math.max((fr[2 + ((h * 2.2) | 0)] || 0) / 255 * 1.3, lvl * 0.4);
@@ -337,6 +349,7 @@ body.shot .pv{grid-template-columns:1fr}
       an.getByteFrequencyData(anFreq);
       return clamp(Math.sqrt(s / anBuf.length) * 4.2, 0, 1);
     }
+    function anLive() { return !!(an && sharedCtx && sharedCtx.state === 'running'); }   /* a suspended context reads silence: use the envelope */
     function detach() {
       if (anSrc && an) { try { anSrc.disconnect(an); } catch (e) {} if (anKind === 'stream') { try { anSrc.disconnect(); } catch (e) {} } }
       an = null; anBuf = null; anFreq = null; anSrc = null; anKind = '';
@@ -349,9 +362,10 @@ body.shot .pv{grid-template-columns:1fr}
       return [C + x1 * f * sc, C - y2 * f * sc, z2];
     }
     function draw() {
-      var c = ctx, rm = reduced(), u = reduced() ? 99 : introAge / INTRO, hi = mix(col, [255, 255, 255], 0.72), white = [255, 255, 255];
+      var c = ctx, rm = reduced(), u = reduced() ? 99 : introAge / INTRO, red = mood === 'alert', hi = mix(col, [255, 255, 255], red ? 0.34 : 0.72), white = [255, 255, 255];
+      var ak = red ? 0 : P.ans, acc = mix(hi, ANS, ak);   /* the answering accent (violet in every mood but red: red stays red) */
       c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, W);
-      var pulse = mood === 'alert' ? (rm ? 1.15 : 1 + 0.32 * (0.5 + 0.5 * Math.sin(t * TAU * 0.8))) : mood === 'attention' ? 1 + 0.1 * Math.sin(t * 1.6) : 1;
+      var beat = 0.5 + 0.5 * Math.sin(t * TAU * 0.9), pulse = red ? (rm ? 1.25 : 1 + 0.55 * beat) : mood === 'attention' ? 1 + 0.1 * Math.sin(t * 1.6) : 1;
       var breathe = rm ? 1 : 0.93 + 0.07 * Math.sin(t * 1.25);
       var I = P.glow * pulse * breathe * (1 + 0.55 * lvl) + flash * 0.9 + holdFlash * 0.6;
       var gu = ease((u - 0.22) / 0.55), gscale = (u >= 1 ? 1 : 0.55 + 0.45 * back((u - 0.22) / 0.6)) * (1 + 0.06 * lvl * (P.rip + P.wave));
@@ -359,9 +373,9 @@ body.shot .pv{grid-template-columns:1fr}
 
       /* 1. glow / bloom behind everything */
       c.globalCompositeOperation = 'lighter';
-      var gr = c.createRadialGradient(C, C, 0, C, C, G * 2.05);
-      gr.addColorStop(0, rgba(hi, 0.42 * I * gu)); gr.addColorStop(0.22, rgba(col, 0.26 * I * gu));
-      gr.addColorStop(0.55, rgba(col, 0.07 * I * gu)); gr.addColorStop(1, rgba(col, 0));
+      var gr = c.createRadialGradient(C, C, 0, C, C, G * (red ? 2.5 : 2.05));
+      gr.addColorStop(0, rgba(hi, 0.42 * I * gu)); gr.addColorStop(0.22, rgba(col, (red ? 0.36 : 0.26) * I * gu));
+      gr.addColorStop(0.55, rgba(col, (red ? 0.13 : 0.07) * I * gu)); gr.addColorStop(1, rgba(col, 0));
       c.fillStyle = gr; c.fillRect(0, 0, W, W);
 
       /* 2. outer rings: ticks (R), thin ring + bright segments (RO), progress */
@@ -383,6 +397,11 @@ body.shot .pv{grid-template-columns:1fr}
         c.strokeStyle = rgba(hi, 0.85 * u2); c.lineWidth = 2; arc(c, RO, b0, b0 + 0.95 * u2);
         c.strokeStyle = rgba(col, 0.5 * u2); c.lineWidth = 2; arc(c, RO, b0 + Math.PI, b0 + Math.PI + 0.22 * u2);
       }
+      if (red) { c.lineCap = 'butt'; c.lineWidth = 7; c.strokeStyle = rgba(col, (0.1 + 0.16 * (rm ? 0.5 : beat)) * u2); arc(c, RO, 0, TAU);
+        c.lineWidth = 1.8; c.strokeStyle = rgba(col, (0.55 + 0.4 * (rm ? 0.5 : beat)) * u2); arc(c, RO, 0, TAU); }
+      if (ak > 0.01) { c.lineCap = 'butt'; c.lineWidth = 6; c.strokeStyle = rgba(ANS, 0.13 * ak * u2); arc(c, RO, 0, TAU);
+        c.lineWidth = 1.6; c.strokeStyle = rgba(mix(ANS, white, 0.3), 0.85 * ak * u2); arc(c, RO, 0, TAU);
+        c.lineWidth = 1; c.strokeStyle = rgba(ANS, 0.45 * ak * u2); arc(c, RO + 5, 0, TAU); }
       /* mid dashed ring (counter-rotating) */
       c.lineCap = 'butt'; c.lineWidth = 1; c.strokeStyle = rgba(col, 0.3 * P.mid * u3);
       c.setLineDash([RM * 0.55, RM * 0.17]); c.lineDashOffset = ringA * RM * 0.9;
@@ -415,11 +434,19 @@ body.shot .pv{grid-template-columns:1fr}
         c.lineWidth = small ? 1.5 : 1.8; c.strokeStyle = rgba(hi, 0.85 * P.wave); c.stroke();
       }
 
+      /* answering: a steady outward pulse, one ring a second, from the globe out past the bezel */
+      if (P.ans > 0.01) {
+        var pc = ak > 0.01 ? ANS : hi;
+        if (!rm) for (var q2 = 0; q2 < 2; q2++) { var pp = (t / 2 + q2 / 2) % 1, r2 = G * 1.12 + (S * 0.66 - G * 1.12) * ease(pp);
+          c.lineWidth = (small ? 4 : 5) * (1 - pp) + 1; c.strokeStyle = rgba(pc, 0.12 * (1 - pp) * P.ans); arc(c, r2, 0, TAU);
+          c.lineWidth = 1.5; c.strokeStyle = rgba(mix(pc, white, 0.25), 0.75 * (1 - pp) * P.ans); arc(c, r2, 0, TAU); }
+        else { c.lineWidth = 1.5; c.strokeStyle = rgba(pc, 0.5 * P.ans); arc(c, G * 1.35, 0, TAU); }
+      }
       /* 4. particles on tilted orbits: the half behind the globe first */
       orbitPass(c, false, u, hi);
 
       /* 5. the globe: wireframe with depth, data dots, links, scan */
-      if (gu > 0.001) globe(c, g, gs, gu, u, hi, I);
+      if (gu > 0.001) globe(c, g, gs, gu, u, hi, I, acc, ak);
 
       /* 6. particles in front */
       orbitPass(c, true, u, hi);
@@ -442,8 +469,9 @@ body.shot .pv{grid-template-columns:1fr}
         if (holdFlash > 0) { c.lineWidth = 2; c.strokeStyle = rgba(rc, holdFlash); arc(c, hr + (1 - holdFlash) * S * 0.18, 0, TAU); }
       }
       for (var s2 = 0; s2 < shock.length; s2++) {
-        var sh = shock[s2], sp = ease(sh.age / sh.life);
-        c.lineWidth = 1.6; c.strokeStyle = rgba(sh.c, 0.55 * (1 - sp)); arc(c, sh.from + (sh.to - sh.from) * sp, 0, TAU);
+        var sh = shock[s2], sp = ease(sh.age / sh.life), sr = sh.from + (sh.to - sh.from) * sp, sw = sh.w || 1.6;
+        c.lineWidth = sw * 3.5; c.strokeStyle = rgba(sh.c, 0.16 * (1 - sp)); arc(c, sr, 0, TAU);
+        c.lineWidth = sw; c.strokeStyle = rgba(sh.c, (sh.w ? 0.9 : 0.55) * (1 - sp)); arc(c, sr, 0, TAU);
       }
       c.globalCompositeOperation = 'source-over';
       label();
@@ -464,7 +492,7 @@ body.shot .pv{grid-template-columns:1fr}
       c.lineWidth = 2; c.strokeStyle = rgba(hi, 0.9 * u1); c.lineCap = 'butt';
       for (var k = 0; k < 4; k++) { var a0 = rot + k * TAU / 4 + 0.2 / n * TAU; c.beginPath(); c.arc(C, C, r + 3, a0, a0 + 1.6 / n * TAU); c.stroke(); }
     }
-    function globe(c, g, gs, gu, u, hi, I) {
+    function globe(c, g, gs, gu, u, hi, I, acc, ak) {
       var tilt = 0.36, front = new Path2D(), rim = new Path2D(), backP = new Path2D(), eq = new Path2D();
       function line(fn, steps, frac, path0) {
         var prev = null, lim = Math.ceil(steps * frac);
@@ -493,10 +521,11 @@ body.shot .pv{grid-template-columns:1fr}
       c.lineWidth = 3.2; c.strokeStyle = rgba(col, 0.09 * gu * I); c.stroke(front);
       c.lineWidth = 1; c.strokeStyle = rgba(col, 0.62 * gu); c.stroke(front);
       c.lineWidth = 3.4; c.strokeStyle = rgba(col, 0.14 * gu * I); c.stroke(eq);
-      c.lineWidth = 1.3; c.strokeStyle = rgba(hi, 0.85 * gu); c.stroke(eq);
-      /* silhouette with a soft rim light */
-      c.lineWidth = 4; c.strokeStyle = rgba(col, 0.1 * gu * I); arc(c, g, 0, TAU);
-      c.lineWidth = 1.2; c.strokeStyle = rgba(col, 0.75 * gu); arc(c, g, 0, TAU);
+      c.lineWidth = 1.3; c.strokeStyle = rgba(ak > 0.01 ? acc : hi, 0.85 * gu); c.stroke(eq);
+      /* silhouette with a soft rim light (answering: in its accent) */
+      var rimC = ak > 0.01 ? mix(col, ANS, 0.75 * ak) : col;
+      c.lineWidth = 4; c.strokeStyle = rgba(rimC, (0.1 + 0.1 * ak) * gu * I); arc(c, g, 0, TAU);
+      c.lineWidth = 1.2 + 0.4 * ak; c.strokeStyle = rgba(rimC, 0.75 * gu); arc(c, g, 0, TAU);
       /* data dots on the near side */
       var du = ease((u - 0.6) / 0.4);
       if (du > 0) {
@@ -553,34 +582,54 @@ body.shot .pv{grid-template-columns:1fr}
     }
     var lastLbl = '', lastCol = '';
     function label() {
-      var u = introAge / INTRO, txt = press && holdP > 0 ? 'Hold to record' : holdFlash > 0.3 ? 'Recording' : labels[state] || '', ex = '';
-      if (progress != null && !press) ex = 'Build ' + Math.round(clamp(progress, 0, 1) * 100) + '%';
+      var u = introAge / INTRO, txt = press && holdP > 0 ? labels.hold : holdFlash > 0.3 ? labels.held : labels[state] || '', ex = '', isNote = false;
+      if (mood === 'alert' && moodNote && !press) { ex = moodNote; isNote = true; } else if (progress != null && !press) ex = 'Build ' + Math.round(clamp(progress, 0, 1) * 100) + '%';
       if (u < 1) { var k = clamp((u - 0.72) / 0.28, 0, 1); txt = txt.slice(0, Math.round(txt.length * k)) + (k < 1 ? '_' : ''); ex = ''; }
       var key = txt + '|' + ex + '|' + (press && holdP > 0 ? 'r' : '');
-      var colr = press && holdP > 0 || holdFlash > 0.3 ? '#ff8a8a' : 'rgb(' + (col[0] | 0) + ',' + (col[1] | 0) + ',' + (col[2] | 0) + ')';
+      var lc = mood === 'alert' ? MOOD.alert : P.ans > 0.05 ? mix(col, mix(ANS, [255, 255, 255], 0.2), P.ans) : col;
+      var colr = press && holdP > 0 || holdFlash > 0.3 ? '#ff8a8a' : 'rgb(' + (lc[0] | 0) + ',' + (lc[1] | 0) + ',' + (lc[2] | 0) + ')';
       if (colr !== lastCol) { lastCol = colr; lbl.style.color = colr; lbl.style.textShadow = '0 0 12px ' + colr.replace('rgb(', 'rgba(').replace(')', ',.45)'); }
       if (key === lastLbl) return; lastLbl = key;
       lbl.textContent = txt;
-      if (ex) { var sx = mk('span', 'x'); sx.textContent = '  ·  ' + ex; lbl.appendChild(sx); }
+      if (ex) { var sx = mk('span', isNote ? 'x n' : 'x'); sx.textContent = '  ·  ' + ex; lbl.appendChild(sx); }
     }
 
     var api = {
       el: rootEl,
-      setState: function (s) { if (!STATE[s]) return; state = s; if (s === 'think') scanSince = 99; wake(); },
-      setMood: function (m) {
-        if (!MOOD[m]) return;
-        if (m === 'done') { if (mood !== 'done') moodBefore = mood; moodT = t; flash = reduced() ? 0.3 : 1; if (!reduced()) shock.push({ age: 0, life: 1.1, c: MOOD.done, from: G * 1.1, to: S * 0.62 }); }
-        else moodBefore = m;
+      setState: function (s) { if (!STATE[s]) return; state = s; rootEl.setAttribute('data-state', s); if (s === 'think') scanSince = 99; wake(); },
+      /* setMood(m, note): the note (alert only) shows beside the label, e.g. "Build failed". A non-alert mood during the done flash waits for
+         the flash to end; alert never waits. Into or out of alert the colour switches at once. */
+      setMood: function (m, note) {
+        if (!MOOD[m]) return; note = note ? String(note) : '';
+        if (m !== 'done' && m !== 'alert' && mood === 'done' && (t - moodT) <= 2.4) { moodBefore = m; noteBefore = note; return; }
+        if (m === 'done') { if (mood !== 'done') { moodBefore = mood; noteBefore = moodNote; } moodT = t; flash = reduced() ? 0.3 : 1; if (!reduced()) shock.push({ age: 0, life: 1.1, c: MOOD.done, from: G * 1.1, to: S * 0.62 }); }
+        else { moodBefore = m; noteBefore = note; moodNote = note; }
         if (m === 'alert' && mood !== 'alert') alertPhase = 99;
-        mood = m; tgt = MOOD[m].slice(); wake();
+        var snap = m === 'alert' || mood === 'alert';
+        mood = m; tgt = MOOD[m].slice(); if (snap) col = tgt.slice(); rootEl.setAttribute('data-mood', m); lastLbl = ''; wake();
       },
+      /* setUrgent({ build: 'Failed' }): that satellite turns red, pulses, and shows the word given; false or absent puts it back */
+      setUrgent: function (o) {
+        o = o || {};
+        marks.forEach(function (m) {
+          var w = o[m.key] ? (typeof o[m.key] === 'string' ? o[m.key] : m.word) : null;
+          if ((urgent[m.key] || null) === w) return;
+          if (w) urgent[m.key] = w; else delete urgent[m.key];
+          m.el.classList.toggle('urg', !!w); m.el.style.color = w ? URG : m.col; m.wd.textContent = w || m.word;
+          m.el.setAttribute('aria-label', (w || m.word) + ': ' + counts[m.key]);
+          if (m.shown) m.w = m.el.offsetWidth;
+        });
+      },
+      kick: function (v) { kickV = Math.max(kickV, clamp(v == null ? 0.85 : +v || 0, 0, 1)); },   /* a word starting (the device voice's boundary event) */
+      alive: function () { return alive; },
+      info: function () { return { state: state, mood: mood, note: moodNote, counts: Object.assign({}, counts), urgent: Object.assign({}, urgent), progress: progress }; },
       setLevel: function (v) { lvlIn = clamp(+v || 0, 0, 1); lvlInT = t; },
       setCounts: function (o) {
         o = o || {};
         marks.forEach(function (m) {
           if (!(m.key in o)) return; var v = Math.max(0, Math.floor(+o[m.key] || 0)), old = counts[m.key];
           counts[m.key] = v; m.num.textContent = v > 99 ? '99+' : String(v);
-          m.el.setAttribute('aria-label', m.word + ': ' + v);
+          m.el.setAttribute('aria-label', (urgent[m.key] || m.word) + ': ' + v);
           if (m.shown) m.w = m.el.offsetWidth;
           if (v > old && m.shown) { m.el.classList.remove('bump'); void m.el.offsetWidth; m.el.classList.add('bump'); }
         });
@@ -591,7 +640,7 @@ body.shot .pv{grid-template-columns:1fr}
         detach(); if (!src) return null;
         try {
           var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-          sharedCtx = sharedCtx || new AC(); if (sharedCtx.state === 'suspended') sharedCtx.resume();
+          sharedCtx = sharedCtx || new AC(); if (sharedCtx.state === 'suspended') { var rp = sharedCtx.resume(); if (rp && rp.catch) rp.catch(function () {}); }
           an = sharedCtx.createAnalyser(); an.fftSize = 512; an.smoothingTimeConstant = 0.6;
           anBuf = new Uint8Array(an.fftSize); anFreq = new Uint8Array(an.frequencyBinCount);
           if (typeof MediaStream === 'function' && src instanceof MediaStream) { anKind = 'stream'; anSrc = sharedCtx.createMediaStreamSource(src); anSrc.connect(an); }
@@ -612,7 +661,9 @@ body.shot .pv{grid-template-columns:1fr}
         if (io) io.disconnect(); if (rootEl.parentNode) rootEl.parentNode.removeChild(rootEl);
       }
     };
+    rootEl.setAttribute('data-state', state); rootEl.setAttribute('data-mood', mood);
     if (opts.counts) api.setCounts(opts.counts);
+    if (opts.urgent) api.setUrgent(opts.urgent);
     if (opts.state) api.setState(opts.state);
     if (opts.mood) api.setMood(opts.mood);
     if (opts.progress != null) api.setProgress(opts.progress);
@@ -634,7 +685,7 @@ body.shot .pv{grid-template-columns:1fr}
   var counts = { reply: 3, decide: 1, remind: 2, build: 0 };
   if (Q.get('counts')) { var cs = Q.get('counts').split(','); ['reply', 'decide', 'remind', 'build'].forEach(function (k, i) { counts[k] = +cs[i] || 0; }); }
   ['reply', 'decide', 'remind', 'build'].forEach(function (k) { document.getElementById('c-' + k).value = counts[k]; });
-  var progress = Q.has('progress') ? +Q.get('progress') : null, level = Q.has('level') ? +Q.get('level') : 0.45, sim = !Q.has('level');
+  var urg = Q.get('urgent') === '1', progress = Q.has('progress') ? +Q.get('progress') : null, level = Q.has('level') ? +Q.get('level') : 0.45, sim = !Q.has('level');
   var WORDS = { reply: 'Emails needing a reply', decide: 'Decisions waiting', remind: 'Reminders due', build: 'Builds running' };
 
   function toast(t) { var o = document.querySelector('.toast'); if (o) o.remove(); var e = document.createElement('div'); e.className = 'toast'; e.textContent = t; e.setAttribute('role', 'status'); document.body.appendChild(e); setTimeout(function () { e.remove(); }, 3200); }
@@ -651,7 +702,8 @@ body.shot .pv{grid-template-columns:1fr}
     sizes.forEach(function (s) {
       var fr = document.createElement('div'); fr.className = 'frame' + (s < 200 ? ' ph-frame' : '');
       stageEl.appendChild(fr);
-      var g = JvGlobe(fr, Object.assign({ size: s, counts: counts, state: cur.state, mood: cur.mood === 'done' ? 'normal' : cur.mood, progress: progress }, handlers));
+      var g = JvGlobe(fr, Object.assign({ size: s, counts: counts, state: cur.state, progress: progress, urgent: urg ? { build: 'Failed' } : null }, handlers));
+      if (cur.mood !== 'done') g.setMood(cur.mood, cur.mood === 'alert' ? (urg ? 'Build failed' : 'Overnight check') : '');
       if (cur.rm) g.setReducedMotion(true);
       if (cur.mood === 'done') setTimeout(function () { g.setMood('done'); }, Q.has('t') ? +Q.get('t') : 1600);
       var cap = document.createElement('div'); cap.className = 'cap'; cap.textContent = s < 200 ? 'Phone · 170 px' : 'Laptop · 236 px'; fr.appendChild(cap);
@@ -661,7 +713,7 @@ body.shot .pv{grid-template-columns:1fr}
   }
   function all(fn) { globes.forEach(fn); }
   function setState(s) { cur.state = s; all(function (g) { g.setState(s); }); syncButtons(); }
-  function setMood(m) { cur.mood = m; all(function (g) { g.setMood(m); }); syncButtons(); if (m === 'done') setTimeout(function () { if (cur.mood === 'done') { cur.mood = 'normal'; syncButtons(); } }, 2400); }
+  function setMood(m) { cur.mood = m; all(function (g) { g.setMood(m, m === 'alert' ? (urg ? 'Build failed' : 'Overnight check') : ''); }); syncButtons(); if (m === 'done') setTimeout(function () { if (cur.mood === 'done') { cur.mood = 'normal'; syncButtons(); } }, 2400); }
 
   var stBox = document.getElementById('st'), mdBox = document.getElementById('md');
   [['idle', 'Idle'], ['listen', 'Listening'], ['think', 'Thinking'], ['speak', 'Speaking'], ['answer', 'Answering']].forEach(function (p) {
@@ -739,6 +791,9 @@ body.shot .pv{grid-template-columns:1fr}
     document.getElementById('c-' + k).addEventListener('input', function () { counts[k] = Math.max(0, +this.value || 0); var o = {}; o[k] = counts[k]; all(function (g) { g.setCounts(o); }); });
   });
 
+  var urgB = document.getElementById('urg'); urgB.checked = urg;
+  urgB.addEventListener('change', function () { urg = urgB.checked; if (urg && !counts.build) { counts.build = 1; document.getElementById('c-build').value = 1; }
+    all(function (g) { g.setCounts({ build: counts.build }); g.setUrgent({ build: urg ? 'Failed' : false }); }); setMood(urg ? 'alert' : 'normal'); log(urg ? 'setUrgent({build:"Failed"}) + setMood("alert","Build failed")' : 'setUrgent({})'); });
   /* view */
   document.getElementById('replay').addEventListener('click', function () { all(function (g) { g.replayIntro(); }); log('replayIntro()'); });
   document.getElementById('both').addEventListener('click', function () { cur.both = !cur.both; build(); });

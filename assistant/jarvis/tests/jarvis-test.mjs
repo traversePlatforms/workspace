@@ -272,9 +272,16 @@ try {
   ok(await ev('window.__xss===undefined'), 'an email subject with HTML in it is shown as text, never run');
 
   /* ================================================================ 4. the Halo pieces are there */
-  ok(await ev('!!document.querySelector(".core svg .glob") && !!document.querySelector(".core .r-arc") && document.querySelectorAll(".core .rip").length===3'), 'the core: globe, inner arc and three ripples');
+  ok(await ev('typeof window.JvGlobe==="function" && !!document.querySelector(".desk .mid .jvg canvas.jvg-cv") && !!document.querySelector(".desk .mid .jvg .jvg-st[role=button]") && !document.querySelector(".desk .core")'), '21 Nov: the new globe (JvGlobe) in the middle, in place of the old core');
   ok(await ev('document.querySelectorAll(".desk .pnl .ph .n").length===8 && [...document.querySelectorAll(".ph .n")].map(n=>n.textContent).sort().join()==="01,02,03,05,06,07,08,09" && !!document.querySelector(".rail button[data-panel=brief]")'), 'eight panels open; the Morning brief (04) starts folded into its edge icon (19 Nov: "if i need a briefing I will ask for it")');
-  ok(await ev('document.querySelector(".slbl").textContent==="Standing by" && document.getElementById("app").classList.contains("s-idle")'), 'idle state label');
+  ok(await until('/^Standing by/.test(document.querySelector(".jvg-lb").textContent) && document.querySelector(".jvg").dataset.state==="idle" && document.getElementById("app").classList.contains("s-idle")', 4000), 'idle state label (on the globe)');
+  /* 21 Nov: the globe's counts, mood and build progress come from what the page already has */
+  { const gi = await ev('(()=>{const g=window.__jvGlobe&&window.__jvGlobe();return g?g.info():null})()') || { counts: {} };
+    const pd = await ev('parseInt(document.querySelector("#p-waiting .pc").textContent)||0'), rd = await ev('(()=>{const m=/(\\d+) due/.exec((document.querySelector("#p-remind .pc")||{}).textContent||"");return m?+m[1]:0})()');
+    ok(gi.counts.reply === 4 && gi.counts.decide === pd && pd > 0 && gi.counts.remind === rd && gi.counts.build === 2, 'globe counts: Reply = emails needing a reply (4), Decide = waiting (' + pd + '), Due = reminders due (' + rd + '), Build = running builds (2) (' + JSON.stringify(gi.counts) + ')');
+    ok(gi.mood === 'attention' && Math.abs(gi.progress - 0.68) < 1e-6 && Object.keys(gi.urgent).length === 0, 'globe: amber while decisions wait; the ring shows the running build at 68% (' + gi.mood + ', ' + gi.progress + ')');
+    ok(await until('(()=>{const t=[...document.querySelectorAll(".desk .jvg-mk")].filter(m=>m.style.display!=="none").map(m=>m.textContent);return t.includes("Reply4") && t.includes("Build2") && t.some(x=>/^Decide\\d/.test(x))})()', 4000), 'globe: the satellites show their words and counts (Reply 4, Decide, Build 2)');
+    ok(await until('/Build 68%/.test(document.querySelector(".jvg-lb").textContent)', 3000), 'globe: the label carries the build progress'); }
   ok(/Laptop awake/i.test(await ev('document.querySelector(".top").innerText')), 'top bar: laptop awake (from the heartbeat)');
   ok(!/API \$/.test(await ev('document.querySelector(".top").innerText')), 'top bar: no API spend (21 Nov: a push near the budget instead)');
   ok(await ev('[...document.querySelectorAll(".chip")].length>=5'), 'suggestion chips');
@@ -354,7 +361,7 @@ try {
   /* ================================================================ 8. which brain answers, named on the bar */
   ok(/Answering: Assistant, instant/.test(await ev('document.getElementById("brainlabel").textContent')), 'the bar says: Assistant, instant');
   reqs.length = 0;
-  ok(await ev('(()=>{document.getElementById("ask").value="Anything from Jen this week?";document.querySelector(".cmdbar .snd").click();return document.getElementById("app").classList.contains("s-think") && /Thinking/.test(document.querySelector(".slbl").textContent)})()'), 'asking the Assistant: the core thinks');
+  ok(await ev('(()=>{document.getElementById("ask").value="Anything from Jen this week?";document.querySelector(".cmdbar .snd").click();return document.getElementById("app").classList.contains("s-think") && document.querySelector(".jvg").dataset.state==="think"})()'), 'asking the Assistant: the globe thinks');
   await until('!document.getElementById("app").classList.contains("s-think")', 6000);
   ok(reqs.filter(r => /action=chat\b/.test(r)).length === 1, 'one question, one Ask call');
   ok(/Anthropic key/.test(await ev('window.__said[window.__said.length-1] || ""')), 'Voice: the reply is read aloud');
@@ -453,7 +460,7 @@ try {
   { const n0 = await ev('document.querySelectorAll(".chat > .msg").length'); await click('#chatclearbtn'); await sleep(150);
     ok(n0 > 0 && await ev('document.querySelectorAll(".chat > .msg").length === 0 && !!document.querySelector(".chat > .sp")'), 'Clear: the conversation leaves the screen (' + n0 + ' messages before)'); }
   await click('.ib.mic'); await sleep(150);
-  ok(await ev('document.getElementById("app").classList.contains("s-listen") && /Listening/.test(document.querySelector(".slbl").textContent)'), 'the mic: the core listens');
+  ok(await ev('document.getElementById("app").classList.contains("s-listen") && document.querySelector(".jvg").dataset.state==="listen"') && await until('/^Listening/.test(document.querySelector(".jvg-lb").textContent)', 2000), 'the mic: the globe listens');
   await sleep(500);
   ok((await ev('document.getElementById("ask").value')) === 'Add milk to groceries', 'speech becomes text in the bar (and nothing is sent by itself)');
   await shot('jarvis-desktop-listen');
@@ -462,6 +469,53 @@ try {
   reqs.length = 0; await click('.cmdbar .snd');
   ok(await until('/Added to the grocery list: milk/.test(document.querySelector(".chat").innerText)'), '"Add milk to groceries" adds it to the list');
   ok(!reqs.some(r => /action=chat\b/.test(r)), 'without a model call');
+
+  /* ================================================================ 10b. the globe (21 Nov): tap, hold, satellites, speaking, moods */
+  { const press = ms => ev('(async()=>{const s=document.querySelector(".jvg-st"),r=s.getBoundingClientRect(),o={bubbles:true,cancelable:true,pointerId:7,clientX:r.left+r.width/2,clientY:r.top+r.height/2,button:0,pointerType:"mouse",isPrimary:true};s.dispatchEvent(new PointerEvent("pointerdown",o));await new Promise(f=>setTimeout(f,' + ms + '));s.dispatchEvent(new PointerEvent("pointerup",o));return true})()');
+    const gst = () => ev('document.querySelector(".jvg").dataset.state'), gmd = () => ev('document.querySelector(".jvg").dataset.mood');
+    await ev('document.getElementById("ask").value=""'); await press(80);
+    ok(await until('document.getElementById("app").classList.contains("s-listen") && document.querySelector(".jvg").dataset.state==="listen"', 2000), 'globe: a tap listens, as the mic does');
+    await ev('window.__srStop()'); await sleep(200); await ev('document.getElementById("ask").value=""');
+    ok(await gst() === 'idle', 'globe: the mic stopping puts it back to standing by');
+    const mreq = reqs.length;
+    await press(950);
+    ok(await until('!!document.getElementById("mrconsent") && !document.querySelector("#meetrec.live")', 2500), 'globe: press and hold opens the Record screen, waiting for the consent tap');
+    ok(await gst() !== 'listen' && !reqs.slice(mreq).some(r => /action=jvmeet(start|chunk|put|up)/.test(r)), 'globe: the hold neither listens nor records anything by itself');
+    await click('#mrcancel'); await sleep(150);
+    /* satellites: a folded panel opens, and the panel flashes */
+    await click('#p-builds .ph .fold'); await sleep(200);
+    ok(await ev('!document.getElementById("p-builds")') && await ev('(()=>{const m=[...document.querySelectorAll(".desk .jvg-mk")].find(x=>/^Build/.test(x.textContent));if(!m)return false;m.click();return true})()') && await until('!!document.getElementById("p-builds") && document.getElementById("p-builds").classList.contains("flash")', 2000), 'globe: the Build satellite unfolds the Builds panel and flashes it');
+    ok(await ev('(()=>{const m=[...document.querySelectorAll(".desk .jvg-mk")].find(x=>/^Reply/.test(x.textContent));if(!m)return false;m.click();return document.getElementById("p-inbox").classList.contains("flash")})()'), 'globe: the Reply satellite points at the Inbox');
+    ok(await ev('(()=>{const m=[...document.querySelectorAll(".desk .jvg-mk")].find(x=>/^Decide/.test(x.textContent));if(!m)return false;m.click();return document.getElementById("p-waiting").classList.contains("flash")})()'), 'globe: the Decide satellite points at Waiting on you');
+    /* speaking: the device voice (a stand-in that starts, says one word and ends 1.5 s later) */
+    await ev('(()=>{const s=window.speechSynthesis;window.__sp0=s.speak;window.__spk=false;s.speak=function(u){if(u.text&&u.text.trim())window.__said.push(u.text);window.__spk=true;setTimeout(function(){u.onstart&&u.onstart();u.onboundary&&u.onboundary({name:"word"});},30);setTimeout(function(){window.__spk=false;u.onend&&u.onend();},1500);};Object.defineProperty(s,"speaking",{configurable:true,get:function(){return !!window.__spk}});})()');
+    const said0 = await ev('window.__said.length');
+    await ev('[...document.querySelectorAll(".chip")].find(c=>/What.s waiting/.test(c.textContent)).click()');
+    ok(await until('document.querySelector(".jvg").dataset.state==="speak" && document.getElementById("app").classList.contains("s-speak")', 2000) && await ev('window.__said.length') === said0 + 1, 'globe: Speaking while the device voice talks (and the voice still says it)');
+    await until('/^Speaking/.test(document.querySelector(".jvg-lb").textContent)', 1500); await shot('jarvis-desktop-speak');
+    ok(await until('document.querySelector(".jvg").dataset.state==="answer"', 4000), 'globe: Speaking ends when the voice ends (Answer ready)');
+    ok(await until('/^Answer ready/.test(document.querySelector(".jvg-lb").textContent)', 2000), 'globe: answering has its own label');
+    await ev('(()=>{const s=window.speechSynthesis;s.speak=window.__sp0;delete s.speaking;})()');
+    await click('#chatclearbtn'); await sleep(150);
+    ok(await gst() === 'idle', 'globe: Clear puts it back to standing by');
+    /* moods from the laptop's status: done (green flash) when a build finishes, alert (red) on a failed build or an overnight problem */
+    const sf = path.join(DATA, 'jarvis', 'status.json'), st0 = fs.readFileSync(sf, 'utf8'), stj = JSON.parse(st0);
+    const push = async () => { fs.writeFileSync(sf, JSON.stringify(stj)); await ev('document.dispatchEvent(new Event("visibilitychange"))'); };
+    ok(await gmd() === 'attention', 'globe mood: amber (attention) while decisions wait');
+    stj.builds[0].state = 'done'; await push();
+    ok(await until('document.querySelector(".jvg").dataset.mood==="done"', 5000), 'globe mood: a green flash when a build finishes');
+    ok(await until('document.querySelector(".jvg").dataset.mood==="attention"', 5000), 'globe mood: the flash passes, back to amber');
+    stj.builds[1].state = 'failed'; await push();
+    ok(await until('document.querySelector(".jvg").dataset.mood==="alert"', 5000), 'globe mood: red (alert) on a failed build');
+    { const gi = await ev('window.__jvGlobe().info()');
+      ok(gi.note === 'Build failed' && gi.urgent.build === 'Failed' && gi.counts.build === 1 && gi.progress === null, 'globe: the alert says Build failed; the build satellite is urgent with the failed count (' + JSON.stringify(gi) + ')'); }
+    ok(await until('/Build failed/.test(document.querySelector(".jvg-lb").textContent) && (()=>{const m=[...document.querySelectorAll(".desk .jvg-mk")].find(x=>/^Failed1/.test(x.textContent));return !!m && m.classList.contains("urg") && getComputedStyle(m).color==="rgb(255, 42, 61)"})()', 4000), 'globe: the label reads Build failed and the satellite shows Failed 1 in red');
+    await sleep(400); await shot('jarvis-desktop-globe-alert');
+    stj.builds[1].state = 'running'; stj.overnight.problems = ['PROBLEM: the 6 pm backup did not run']; await push();
+    ok(await until('document.querySelector(".jvg").dataset.mood==="alert" && window.__jvGlobe().info().note==="Overnight check" && !window.__jvGlobe().info().urgent.build', 5000), 'globe mood: red on an overnight-check problem too');
+    fs.writeFileSync(sf, st0); await ev('document.dispatchEvent(new Event("visibilitychange"))');
+    ok(await until('document.querySelector(".jvg").dataset.mood==="attention" && window.__jvGlobe().info().counts.build===2', 5000), 'globe mood: back to amber once it clears');
+    ok(await ev('window.__jvGlobe()===window.__jvGlobe() && document.querySelectorAll(".jvg").length===1'), 'globe: one globe, kept across redraws'); }
   ok(errs.length === 0, 'no script errors on the desktop (' + errs.join(' | ') + ')');
 
   /* ================================================================ 13. the eight (19 Nov, P-8) */
@@ -980,8 +1034,10 @@ try {
     ok(await until('/of 9,000 characters used this month/.test((document.getElementById("natread")||{}).textContent||"")') && /Natural voice \(ElevenLabs\): on/.test(await ev('document.getElementById("natswitch").textContent')), 'page: on by default, with this month\'s characters of the cap (' + await ev('(document.getElementById("natread")||{}).textContent') + ')');
     await shot('jarvis-natural-voice');
     const said0 = await ev('window.__said.length'), n0 = EL.calls.length;
+    await ev('(()=>{window.__gst=[];const g=document.querySelector(".jvg");if(g)new MutationObserver(function(){window.__gst.push(g.dataset.state)}).observe(g,{attributes:true,attributeFilter:["data-state"]});})()');
     await click('#nathear');
     ok(await until('window.__played.some(p=>/FAKE-MP3:Good to meet you, Matthew/.test(p.body) && p.tts==="made")', 6000) && await ev('window.__said.length') === said0 && EL.calls.length === n0 + 1, 'page: an answer plays in the ElevenLabs voice, not the device voice');
+    ok(await until('window.__gst.includes("speak") && window.__gst[window.__gst.length-1]==="answer"', 4000), 'globe: Speaking while the natural voice plays, Answer ready when it ends (' + await ev('window.__gst.join(",")') + ')');
     await sleep(300); await click('#nathear');
     ok(await until('window.__played.filter(p=>/Good to meet you/.test(p.body)).length===2', 6000) && await ev('window.__played[window.__played.length-1].tts') === 'cache' && EL.calls.length === n0 + 1, 'page: said again, from the cache');
     ok(await ev('window.__played.every(p=>!/Good to meet/.test(decodeURIComponent(p.src)))'), 'page: the words never go in an address');
@@ -1276,11 +1332,21 @@ try {
   /* ================================================================ 11. the phone */
   await phone(); await cdp('Page.reload'); await until('!!document.querySelector(".phone .tabs")', 9000); await sleep(1400);
   ok(await ev('document.getElementById("app").classList.contains("phone") && document.querySelectorAll(".phone .tabs button").length===5'), 'phone: the Halo phone layout with five tabs');
-  ok(await ev('!!document.querySelector(".phone .core svg") && document.querySelectorAll(".phone .tiles .pnl").length===3'), 'phone: the core and three tiles');
+  ok(await ev('!!document.querySelector(".phone .jvg .jvg-cv") && !document.querySelector(".phone .core") && document.querySelectorAll(".phone .tiles .pnl").length===3'), 'phone: the globe and three tiles');
+  ok(await until('(()=>{const t=[...document.querySelectorAll(".phone .jvg-mk")].filter(m=>m.style.display!=="none").map(m=>m.textContent);return t.some(x=>/^Reply\\d/.test(x)) && t.some(x=>/^Decide\\d/.test(x))})()', 4000), 'phone: the satellites keep their words (Reply, Decide), as on the laptop');
   ok(await ev('document.documentElement.scrollWidth<=390 && document.body.scrollWidth<=390'), 'phone: nothing wider than the screen');
   ok(await ev('(()=>{const b=document.querySelector(".cmdbar").getBoundingClientRect();return b.bottom<=844 && b.top>300})()'), 'phone: the command bar sits above the tabs, on screen');
   ok(/Answering: Assistant, instant/.test(await ev('document.getElementById("brainlabel").textContent')), 'phone: the brain is named on the bar');
   await shot('jarvis-phone-idle');
+  /* 21 Nov: the globe on the phone: a satellite opens its tab; hold reaches the consent tap */
+  await ev('[...document.querySelectorAll(".phone .jvg-mk")].find(m=>/^Decide/.test(m.textContent)).click()'); await sleep(300);
+  ok(await ev('document.querySelector(".tabs button[data-tab=team]").getAttribute("aria-selected")==="true" && !!document.getElementById("p-waiting")'), 'phone: the Decide satellite opens the Decide tab');
+  await click('.tabs button[data-tab=home]'); await sleep(400);
+  ok(await ev('!!document.querySelector(".phone .jvg .jvg-cv") && document.querySelectorAll(".jvg").length===1'), 'phone: back on Home, the globe is there again');
+  await ev('(async()=>{const s=document.querySelector(".phone .jvg-st"),r=s.getBoundingClientRect(),o={bubbles:true,cancelable:true,pointerId:9,clientX:r.left+r.width/2,clientY:r.top+r.height/2,button:0,pointerType:"touch",isPrimary:true};s.dispatchEvent(new PointerEvent("pointerdown",o));await new Promise(f=>setTimeout(f,950));s.dispatchEvent(new PointerEvent("pointerup",o));})()');
+  ok(await until('!!document.getElementById("mrconsent") && !document.querySelector("#meetrec.live")', 2500), 'phone: press and hold on the globe opens the Record screen at the consent tap');
+  await click('#mrcancel'); await sleep(200);
+  ok(await until('!/Recording/i.test(document.querySelector(".jvg-lb").textContent)', 1500), 'phone: after a hold the globe never says Recording (the consent tap comes first)');
   await ev('[...document.querySelectorAll(".chip")].find(c=>/Morning check/.test(c.textContent)).click()'); await sleep(500);
   ok(/Overnight check/.test(await ev('document.querySelector(".chat").innerText')), 'phone: an answer card');
   await shot('jarvis-phone-answer');
