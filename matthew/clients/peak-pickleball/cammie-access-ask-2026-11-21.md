@@ -21,5 +21,5 @@ Thanks!
 Matthew
 
 ---
-Draft for Matthew to send himself (21 Nov 2026). Not sent. Copy on the Desktop: "Peak - what I need from Cammie.txt".
+SENT by Matthew to Cammie, 21 Nov 2026. Copy on the Desktop: "Peak - what I need from Cammie.txt".
 Fact-check log: the menu paths (Meta Business Suite Settings > People; YouTube Studio Settings > Permissions; Google Business Profile Manager role; LinkedIn Super/Content admin) are the standard names as of 2026. Not checked against Peak's own accounts. Paage: what it is and whether it allows extra users is unknown, so it is asked, not assumed.

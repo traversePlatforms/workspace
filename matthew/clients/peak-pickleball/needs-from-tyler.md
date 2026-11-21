@@ -1,6 +1,6 @@
 # Peak: what I need from Tyler (or Peak's admin)
 
-Made 19 Nov 2026, after the meeting; updated 20 Nov (evening: 8a sponsor add-ons, the GoDaddy note under 16, and the TVs) and 21 Nov (the website access under 16; a clean ask-list copy for Matthew on the Desktop, "Peak - what I need from Tyler.txt"). Matthew is holding the rest until the deal is committed. **DONE** marks what is already sorted.
+Made 19 Nov 2026, after the meeting; updated 20 Nov (evening: 8a sponsor add-ons, the GoDaddy note under 16, and the TVs) and 21 Nov (the website access under 16; a clean ask-list copy for Matthew on the Desktop, "Peak - what I need from Tyler.txt"). **21 Nov: Matthew SENT Tyler the open-items list (the Desktop copy).** Waiting on his answers. **DONE** marks what is already sorted.
 
 ## 1. The deal (first)
 1. A yes on price and scope, and the start date.
