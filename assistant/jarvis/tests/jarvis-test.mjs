@@ -1328,6 +1328,12 @@ try {
   /* ---- desktop idle shot: a fresh load */
   await cdp('Page.reload'); await until('document.querySelectorAll(".msg.ai").length>0', 9000); await sleep(1200);
   await shot('jarvis-desktop-idle');
+  { const gw = () => ev('Math.round(document.querySelector(".desk .mid .jvg canvas").getBoundingClientRect().width)');
+    const w0 = await gw();
+    await cdp('Emulation.setDeviceMetricsOverride', { width: 2560, height: 1400, deviceScaleFactor: 1, mobile: false }); await sleep(600);
+    const w1 = await gw(); await shot('jarvis-desktop-big');
+    ok(w1 > w0 + 150 && w1 <= Math.round(440 * 1.32) + 2, 'laptop: the globe grows with a big window (21 Nov) (' + w0 + ' -> ' + w1 + ' px)');
+    await desk(); await sleep(600); ok(await gw() === w0, 'laptop: and goes back to its size when the window does'); }
 
   /* ================================================================ 11. the phone */
   await phone(); await cdp('Page.reload'); await until('!!document.querySelector(".phone .tabs")', 9000); await sleep(1400);
