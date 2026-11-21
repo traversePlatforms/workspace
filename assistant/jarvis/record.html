@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#03060c">
+<title>Record meeting</title>
+<!-- 21 Nov: the Record meeting icon (Matthew: "make the record icon"). Added to the Home Screen from this page, it opens J.A.R.V.I.S. at
+     ?record=1: straight to the Record a meeting screen. That screen still needs the tap "Everyone here knows this is being recorded"
+     before the microphone opens (P-12; Matthew: "It will never be used without everyones acknowlegment"). This page records nothing. -->
+<link rel="manifest" href="record-manifest.json">
+<link rel="icon" href="record-192.png" type="image/png">
+<link rel="apple-touch-icon" href="record-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Record">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>
+  /* opened from the Home Screen icon: go straight on (replace, so Back does not land here) */
+  (function () {
+    var app = window.navigator.standalone === true || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    var f = /[?&]for=(surge|sixfold|traverse|peak|personal)\b/i.exec(location.search);
+    window.__recGo = './?record=1' + (f ? '&for=' + f[1].toLowerCase() : '');
+    if (app) location.replace(window.__recGo);
+  })();
+</script>
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #03060c; color: #d8f6ff; font: 16px/1.5 system-ui, -apple-system, sans-serif; padding: 20px; box-sizing: border-box; }
+  main { max-width: 420px; text-align: center; }
+  img { width: 96px; height: 96px; border-radius: 22px; }
+  h1 { font-size: 22px; margin: 12px 0 4px; letter-spacing: .04em; }
+  p { color: #9fc3d3; margin: 0 0 14px; }
+  ol { text-align: left; color: #d8f6ff; padding-left: 22px; margin: 0 0 18px; }
+  li { margin: 0 0 6px; }
+  a.go { display: inline-block; font-weight: 700; background: #3ee8ff; color: #022231; border-radius: 10px; padding: 10px 16px; text-decoration: none; }
+</style>
+</head>
+<body>
+<main>
+  <img src="record-touch-icon.png" alt="">
+  <h1>Record meeting</h1>
+  <p>An icon that opens J.A.R.V.I.S. straight at Record a meeting. You still tap "Everyone here knows this is being recorded" before it starts.</p>
+  <ol>
+    <li>In Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+    <li>Open it from the new <b>Record</b> icon. The first time, sign in, and allow the microphone when it asks.</li>
+  </ol>
+  <a class="go" id="go" href="./?record=1">Open it now</a>
+</main>
+<script>document.getElementById('go').href = window.__recGo;</script>
+</body>
+</html>

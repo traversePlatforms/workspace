@@ -2203,6 +2203,13 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open') openFromUrl(String(e.data.url || '')); });
   /* a tap on an alert, or a link: ?desk=<id> opens that desk chat */
   function openFromUrl(u) {
+    /* 21 Nov: the Record meeting icon (record.html; Matthew: "make the record icon") opens ?record=1 (and &for=peak and so on): straight to
+       the Record a meeting screen. Only the screen: the tap "Everyone here knows this is being recorded" is still needed before the microphone opens. */
+    if (/[?&]record=1\b/.test(u)) { if (u === location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
+      if (MR && !MR.over) { mrShow(); return; }
+      var rf = /[?&]for=(surge|sixfold|traverse|peak|personal)\b/i.exec(u), rco = rf ? rf[1].charAt(0).toUpperCase() + rf[1].slice(1).toLowerCase() : '';
+      aget('jvmeetlist').then(function (j) { var a = ((j && j.meetings) || []).filter(function (m) { return m.source === 'live' && (m.status === 'recording' || m.status === 'paused'); })[0]; if (a) mrOffer(a); else mrOpen({ company: rco }); }, function () { mrOpen({ company: rco }); });
+      return; }
     var mm = /[?&]meeting=(m[0-9]{14}[0-9a-f]{4})/.exec(u);   /* 20 Nov (P-12): "Recording paused" and the other meeting alerts */
     if (mm) { if (u === location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} } if (MR && MR.id === mm[1] && !MR.over) { mrShow(); return; }
       aget('jvmeetlist').then(function (j) { var x = (j.meetings || []).filter(function (m) { return m.id === mm[1]; })[0]; if (!x) return; if (x.status === 'recording' || x.status === 'paused') mrOffer(x); else meetingSheet(); }); return; }
@@ -2250,8 +2257,8 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       if (!ok) return;
       var t = new Promise(function (res) { setTimeout(res, 2500); });
       Promise.race([Promise.all([Promise.all(DESKS.map(loadTeam)), loadDesk(), loadSlow()]), t]).then(function () {
-        var q = location.search, lis = /[?&]listen=1\b/.test(q) || S.wantListen; S.wantListen = false;
-        draw(); if (!S.briefed) { S.briefed = true; if (!lis) greet(); } openFromUrl(q); if (/[?&]meeting=/.test(q)) mqResume(); else mrStartup();
+        var q = location.search, lis = /[?&]listen=1\b/.test(q) || S.wantListen; S.wantListen = false; var rec = /[?&]record=1\b/.test(q);
+        draw(); if (!S.briefed) { S.briefed = true; if (!lis && !rec) greet(); } openFromUrl(q); if (/[?&]meeting=/.test(q) || rec) mqResume(); else mrStartup();
         if (/[?&](voice=setup|setup=voice)\b/.test(q)) { try { history.replaceState(null, '', location.pathname); } catch (e) {} voiceSheet(); }
         if (lis) listenFromUrl(q);
       });

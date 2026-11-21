@@ -1137,6 +1137,15 @@ try {
     const M4 = await (async () => { await nodeUntil(() => metas().some(m => m.company === 'Sixfold' && m.source === 'live' && parts(m.id).length >= 1), 8000); return metas().find(m => m.company === 'Sixfold' && m.source === 'live').id; })();
     await click('#mrdiscard'); await until('!!document.getElementById("cfyes")'); await click('#cfyes');
     ok(await nodeUntil(() => meta(M4).status === 'discarded' && parts(M4).length === 0, 6000) && await ev('!document.getElementById("meetrec")'), 'meeting: Discard deletes what was recorded');
+    /* 21 Nov: the Record meeting icon (record.html) opens ?record=1: the Record screen with the company, the tap still needed, no greeting */
+    { const rp = await ev('fetch("record.html").then(r=>r.text())'), rm = JSON.parse(await ev('fetch("record-manifest.json").then(r=>r.text())'));
+      ok(/rel="manifest" href="record-manifest\.json"/.test(rp) && /apple-touch-icon" href="record-touch-icon\.png"/.test(rp) && rm.scope === '/a-e018bb82/jarvis/' && /record\.html$/.test(rm.start_url), 'record icon: its own page, manifest and icon, inside J.A.R.V.I.S.\'s scope');
+      ok(await ev('fetch("record-touch-icon.png").then(r=>r.ok && /image\\/png/.test(r.headers.get("content-type")||""))'), 'record icon: the icon is served'); }
+    const g5 = await ev('window.__gum');
+    await cdp('Page.navigate', { url: PAGE + '?record=1&for=peak' });
+    ok(await until('!!document.getElementById("mrconsent") && document.querySelector("#meetrec .cos button[data-co=Peak]").getAttribute("aria-pressed")==="true" && !document.querySelector("#meetrec.live")', 9000), 'record icon: ?record=1&for=peak opens Record a meeting for Peak, not recording yet');
+    ok(await ev('!/record=/.test(location.search) && !window.__gum'), 'record icon: the microphone is not opened (' + g5 + ' before the reload), and a reload does not open it again');
+    await click('#mrcancel'); ok(await until('!document.getElementById("meetrec")', 3000), 'record icon: Cancel closes it');
     /* the voice door says to use the screen */
     ok(errs.length === 0, 'no script errors while recording (' + errs.join(' | ') + ')');
     fs.rmSync(MEETST, { recursive: true, force: true });

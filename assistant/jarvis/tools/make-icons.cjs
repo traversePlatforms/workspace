@@ -10,14 +10,15 @@ const mark = '<circle cx="32" cy="32" r="22" fill="none" stroke="#3ee8ff" stroke
   + '<circle cx="32" cy="32" r="13" fill="none" stroke="#3ee8ff" stroke-width="3"/>'
   + '<ellipse cx="32" cy="32" rx="6" ry="13" fill="none" stroke="#3ee8ff" stroke-opacity=".7" stroke-width="2"/>'
   + '<circle cx="32" cy="32" r="4.5" fill="#dffbff"/>';
-function svg(bleed) {
+function svg(bleed, m) {
+  m = m || mark;
   const S = 512, r = bleed ? 0 : 112, k = bleed ? 0.62 : 0.86, w = 64 * k * (S / 64), off = (S - w) / 2;
   return '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">'
     + '<defs><radialGradient id="g" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#0b2a3e"/><stop offset=".55" stop-color="#06121e"/><stop offset="1" stop-color="#03060c"/></radialGradient>'
     + '<radialGradient id="h" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#3ee8ff" stop-opacity=".35"/><stop offset="1" stop-color="#3ee8ff" stop-opacity="0"/></radialGradient></defs>'
     + '<rect width="512" height="512" rx="' + r + '" fill="url(#g)"/>'
     + '<circle cx="256" cy="256" r="' + (w * 0.42) + '" fill="url(#h)"/>'
-    + '<g transform="translate(' + off + ' ' + off + ') scale(' + (w / 64) + ')">' + mark + '</g></svg>';
+    + '<g transform="translate(' + off + ' ' + off + ') scale(' + (w / 64) + ')">' + m + '</g></svg>';
 }
 (async () => {
   fs.writeFileSync(path.join(OUT, 'icon.svg'), svg(false));
@@ -25,5 +26,9 @@ function svg(bleed) {
     await sharp(Buffer.from(svg(bleed))).resize(size, size).png().toFile(path.join(OUT, f));
   /* Android's small status-bar badge: the mark alone, white on clear */
   await sharp(Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 64 64">' + mark.replace(/#3ee8ff|#dffbff/g, '#ffffff') + '</svg>')).resize(96, 96).png().toFile(path.join(OUT, 'badge-96.png'));
+  /* 21 Nov: the Record meeting icon (record.html): the same halo, its centre a red recording dot */
+  const rec = mark.replace('<circle cx="32" cy="32" r="4.5" fill="#dffbff"/>', '<circle cx="32" cy="32" r="9" fill="#ff3b4a" stroke="#ffe3e6" stroke-width="1.5"/>');
+  for (const [f, size, bleed] of [['record-192.png', 192, false], ['record-512.png', 512, false], ['record-touch-icon.png', 180, true]])
+    await sharp(Buffer.from(svg(bleed, rec))).resize(size, size).png().toFile(path.join(OUT, f));
   console.log('icons written to ' + OUT);
 })();
