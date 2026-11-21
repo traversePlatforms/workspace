@@ -913,7 +913,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     [['inbox', 'Full inbox'], ['cart', 'Groceries'], ['out', 'Outbox'], ['peak', 'Peak desk'], ['posts', 'Posts'], ['leaf', 'Sixfold app'], ['cog', 'Settings']].forEach(function (v) { var b = btn(null, v[0], null, function () { openView({ inbox: 'inbox', cart: 'groceries', out: 'outbox', peak: 'peak', posts: 'posts', leaf: 'sixfold', cog: 'settings' }[v[0]]); }); b.title = v[1]; b.setAttribute('aria-label', v[1]); b.setAttribute('data-view', v[0]); vw.appendChild(b); });
     var nb = btn(null, 'bell', null, function () { notifySheet(); }); nb.id = 'notifybtn'; nb.title = 'Phone alerts and the app'; nb.setAttribute('aria-label', 'Phone alerts and the app'); if (!S.pushOn) nb.style.color = 'var(--warn)'; vw.insertBefore(nb, vw.firstChild);
     var vs = btn(null, 'wave', null, function () { voiceSheet(); }); vs.id = 'voicebtn'; vs.title = 'Talk without Siri'; vs.setAttribute('aria-label', 'Talk without Siri'); vw.insertBefore(vs, vw.firstChild);
-    var dv = btn(null, 'car', null, function () { setDrive(true); }); dv.id = 'drivebtn'; dv.title = 'Driving mode: big buttons, read aloud'; dv.setAttribute('aria-label', 'Driving mode'); vw.insertBefore(dv, vw.firstChild);
+    /* 21 Nov: no Drive button on the laptop (Matthew: "we should remove the driving button up top on the laptop version that way the banner has less"); the phone header keeps it */
     add(t, vw, el('span', 'clock mono', nowLine()));
     return t;
   }
@@ -1011,6 +1011,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var c = cmd(); c.style.display = 'none'; app.appendChild(c);
     chatLog.scrollTop = chatLog.scrollHeight;
   }
+  window.__jvSetDrive = function (on) { setDrive(on); };   /* the tests start Driving mode on the laptop layout this way (21 Nov) */
   function setDrive(on) { S.drive = !!on; store('jarvis.drive', S.drive); app.classList.remove('drive'); if (on) { touched = true; } else hush(); draw(); }
   function drawDesk() {
     app.classList.add('desk'); app.classList.remove('phone'); app.classList.remove('drive');

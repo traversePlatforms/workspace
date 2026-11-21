@@ -572,7 +572,8 @@ try {
 
   /* ---- 8. Driving mode */
   { await click('#voiceswitch');   /* Voice off: driving mode reads aloud anyway */
-    await click('#drivebtn'); await sleep(300);
+    ok(await ev('!document.getElementById("drivebtn")'), 'laptop: no Drive button in the top bar (21 Nov)');
+    await ev('window.__jvSetDrive(true)'); await sleep(300);
     ok(await ev('document.getElementById("app").classList.contains("drive") && [...document.querySelectorAll(".dgrid button")].map(b=>b.getAttribute("data-drive")).join()==="Brief me,What’s new,Remind me,Talk" && !document.querySelector(".pnl")'), 'Driving: four big buttons and no panels');
     ok(await ev('(()=>{const b=document.querySelector(".dgrid button").getBoundingClientRect();return b.height>=90})()'), 'Driving: the buttons are big');
     const s0 = await ev('window.__said.length');
@@ -851,7 +852,7 @@ try {
     await click('.cmdbar .mic'); ok(await until('window.__srStarts===2', 6000), 'Hands-free: the mic button starts a conversation that follows up');
     await sleep(2200);
     /* Driving mode with Hands-free: the same follow-up */
-    await click('#drivebtn'); await sleep(300);
+    await ev('window.__jvSetDrive(true)'); await sleep(300);
     await ev('window.__srQ=["what\'s new",""];window.__srStarts=0'); await click('#drivetalk');
     ok(await until('window.__srStarts===2', 6000), 'Driving mode with Hands-free: the mic opens again after the answer');
     await sleep(2200); await click('#driveexit'); await sleep(300);
