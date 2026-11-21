@@ -426,7 +426,9 @@ function counts(string $w, int $since): array {
         $n = (int) $r['n'];
         switch ($r['kind']) {
             case 'call': $p['calls'] += $n; break; case 'voicemail': $p['calls'] += $n; $p['vms'] += $n; break;
-            case 'email': $p['emails'] += $n; break; case 'text': $p['texts'] += $n; break;
+            /* 21 Nov (Matthew: "take follow ups counted emails off too it should just be an indication that this company was contacted via email"):
+               emails count COMPANIES emailed in the period, once each, however many emails or follow-ups went to it */
+            case 'email': $p['emails'] += (int) $r['d']; break; case 'text': $p['texts'] += $n; break;
             case 'inperson': case 'linkedin': case 'other': $p['other'] += $n; break;
             case 'note': $p['notes'] += $n; break;
         }

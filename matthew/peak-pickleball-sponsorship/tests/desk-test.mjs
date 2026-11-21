@@ -235,6 +235,10 @@ try {
   console.log('Counts per person this week');
   D = await b('data'); const wk = D.sponsor.week['Test Seller'] || {}, wk2 = D.sponsor.week['Second Seller'] || {};
   ok(wk.calls === 3 && wk.vms === 1 && wk.emails === 1 && wk.texts === 1 && wk.other === 2 && wk2.calls === 1, `this week: Test Seller ${wk.calls} calls (a voicemail counts as a call), ${wk.emails} email, ${wk.texts} text, ${wk.other} other (LinkedIn, in person); Second Seller ${wk2.calls} call; the undone call is not counted`);
+  { const eid = D.sponsor.recs.find((r) => (r.touches || []).some((t) => t.m === 'email' && t.by === 'Test Seller')).id;
+    await b('touch', { world: 'sponsor', id: eid, m: 'email', out: 'sent' }); await b('touch', { world: 'sponsor', id: eid, m: 'email', out: 'sent' });
+    const wk3 = (await b('data')).sponsor.week['Test Seller'] || {};
+    ok(wk3.emails === 1, 'emails count companies (21 Nov): two more emails to the same company still count it once (' + wk3.emails + ')'); }
   ok(wk.tours === 1 && wk.proposals === 1 && wk.signed === 2 && (D.expo.week['Test Seller'] || {}).tours === 2, 'tours, proposals and signed count companies; expo counts are their own');
   ok(D.sponsor.team['Brandon Long'] && D.sponsor.team['Brandon Long'].other === 2 && !D.sponsor.week['Brandon Long'], 'Brandon\u2019s two count in his all-time numbers, not this week');
 
