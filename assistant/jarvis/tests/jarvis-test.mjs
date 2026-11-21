@@ -336,7 +336,7 @@ try {
     /* 19 Nov: Brief me reads aloud even with Voice off (he asked for it) */
     await ev('[...document.querySelectorAll(".chip")].find(c=>/Brief me/.test(c.textContent)).click()'); await sleep(300);
     const said1 = await ev('window.__said[window.__said.length-1] || ""');
-    ok(await ev('window.__said.length') === said0 + 1 && /Today on your calendar: 2:30pm Peak meeting with Tyler/.test(said1) && /Outbox: 37 sent today, 12 waiting, 1 failed/.test(said1) && /Peak desk: 6 follow-ups due, 2 late/.test(said1), 'Brief me: read aloud with Voice off, calendar, Outbox and Peak in it (' + said1.slice(0, 160) + ')');
+    ok(await ev('window.__said.length') === said0 + 1 && /Today on your calendar: 2:30pm Peak meeting with Tyler/.test(said1) && /Outbox: 37 sent today, 12 waiting, 1 failed/.test(said1) && !/Peak desk/.test(said1), 'Brief me: read aloud with Voice off, calendar and Outbox in it, no Peak desk line (21 Nov) (' + said1.slice(0, 160) + ')');
     ok(!/click|repl|unsub|open rate/i.test(said1) && /2 decisions waiting on you/.test(said1) && /team request/.test(said1) && /build/.test(said1), 'Brief me: Outbox gives sent, waiting and failed only (no clicks, replies or unsubscribes); decisions, team and builds are in it');
     await ev('[...document.querySelectorAll(".chip")].find(c=>/Brief me/.test(c.textContent)).click()'); await sleep(150);
     await click('#voiceswitch'); }
@@ -410,9 +410,12 @@ try {
     ok(await count('/Roof material/') >= 1 && await ev('document.querySelectorAll(".chip.on").length === 1'), "Chips: What's building? shows its answer, the chip lit");
     await tap('/building/'); await sleep(300);
     ok(await count('/Roof material/') === 0 && await ev('document.querySelectorAll(".chip.on").length === 0'), 'Chips: tapped again, the answer closes (no copies)');
-    await tap('/building/'); await sleep(300); await tap('/Team requests/'); await sleep(300);
-    ok(await count('/Roof material/') === 0 && await count('/team request/i') >= 1, 'Chips: another chip replaces the last chip answer');
-    await tap('/Team requests/'); await sleep(200); }
+    await tap('/building/'); await sleep(300); await tap('/Morning check/'); await sleep(300);
+    ok(await count('/Roof material/') === 0 && await count('/Overnight check/i') >= 1, 'Chips: another chip replaces the last chip answer');
+    await tap('/Morning check/'); await sleep(200);
+    ok(await ev('![...document.querySelectorAll(".chip")].some(c=>/Team requests|Peak follow-ups/.test(c.textContent))'), 'Chips: no Team requests or Peak follow-ups chip (21 Nov)');
+    await tap('/Record meeting/'); ok(await until('!!document.getElementById("mrconsent") && !document.querySelector("#meetrec.live")', 3000), 'Chips: Record meeting opens the Record screen, waiting for the tap');
+    await click('#mrcancel'); await sleep(150); }
   await click('.ib.mic'); await sleep(150);
   ok(await ev('document.getElementById("app").classList.contains("s-listen") && /Listening/.test(document.querySelector(".slbl").textContent)'), 'the mic: the core listens');
   await sleep(500);
@@ -1163,8 +1166,8 @@ try {
   ok(await ev('(()=>{const b=document.querySelector(".cmdbar").getBoundingClientRect();return b.bottom<=844 && b.top>300})()'), 'phone: the command bar sits above the tabs, on screen');
   ok(/Answering: Assistant, instant/.test(await ev('document.getElementById("brainlabel").textContent')), 'phone: the brain is named on the bar');
   await shot('jarvis-phone-idle');
-  await ev('[...document.querySelectorAll(".chip")].find(c=>/Peak/.test(c.textContent)).click()'); await sleep(500);
-  ok(/Peak desk: 6 follow-ups due/.test(await ev('document.querySelector(".chat").innerText')), 'phone: an answer card');
+  await ev('[...document.querySelectorAll(".chip")].find(c=>/Morning check/.test(c.textContent)).click()'); await sleep(500);
+  ok(/Overnight check/.test(await ev('document.querySelector(".chat").innerText')), 'phone: an answer card');
   await shot('jarvis-phone-answer');
   await click('.tabs button[data-tab=inbox]'); await sleep(300);
   ok(await ev('document.querySelectorAll(".phone .ibr").length===4 && document.querySelectorAll(".phone .needs .li").length>=3'), 'phone Inbox tab: Needs you and the four folding rows');

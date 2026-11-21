@@ -132,7 +132,9 @@ button.li:hover .lt{color:#fff}
 .btn.gh{color:var(--mut)}
 .btn.warn{border:1px solid #ffb64866;color:var(--warn)}
 .btn:disabled{opacity:.5;cursor:default}
-.chips{display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;margin-bottom:8px;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+.chips{display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none;margin-bottom:8px}
+/* 21 Nov (Matthew: "add to grocery list is slightly darker towards the end"): the fade only while more chips are hidden to the right */
+.chips.ovf{-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
 .chips::-webkit-scrollbar{display:none}
 .chip{white-space:nowrap;border:1px solid #3ee8ff33;color:#a9e9f7;padding:6px 12px;border-radius:999px;font-size:12px;background:#3ee8ff08;flex:none}
 .chip:hover{background:#3ee8ff14}
@@ -808,11 +810,10 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     if (due.length) L.push('Reminders due: ' + due.map(function (r) { return endDot(r.text); }).join(' '));
     if (soon.length) L.push('Coming up: ' + soon.map(function (r) { return dayName(r.date).replace(/ \d+ \w+$/, '') + ', ' + oneLine(r.text, 70); }).join('; ') + '.');
     var w = waitingOpen().length; if (w) L.push(plural(w, 'decision') + ' waiting on you.');
-    var tn = teamNeedsMe().length, to = teamOpen().length; if (to) L.push(plural(to, 'team request') + ' open' + (tn ? ', ' + tn + ' waiting on you.' : '.')); else L.push('No team requests open.');
+    var tn = teamNeedsMe().length, to = teamOpen().length; if (to) L.push(plural(to, 'team request') + ' open' + (tn ? ', ' + tn + ' waiting on you.' : '.'));
     var b = (S.st && S.st.builds) || [], br = b.filter(function (x) { return x.state === 'running'; }), bd = b.filter(function (x) { return x.state === 'done'; });
     if (br.length || bd.length) L.push((br.length ? plural(br.length, 'build') + ' running' + (br.length <= 2 ? ': ' + br.map(function (x) { return x.name; }).join(' and ') : '') : 'Nothing building') + (bd.length ? '; ' + bd.length + ' finished.' : '.'));
     var ob = outboxSum(); if (ob) L.push('Outbox: ' + ob.sent + ' sent today, ' + ob.waiting + ' waiting, ' + ob.failed + ' failed' + (ob.bounces ? ', ' + ob.bounces + ' bounced in 30 days' : '') + '.');
-    var dd = deskDue(); if (dd) L.push(dd.due ? 'Peak desk: ' + plural(dd.due, 'follow-up') + ' due' + (dd.late ? ', ' + dd.late + ' late.' : '.') : 'Peak desk: nothing due today.');
     return L;
   }
   function mailRow(i, withInbox) {
@@ -864,9 +865,13 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   function cmd() {
     var w = el('div', 'cmd');
     var ch = el('div', 'chips');
-    [['Brief me', localBrief], ['What’s waiting?', localWaiting], ['Meeting notes', function () { meetingSheet(); }], ['Remind me…', function () { remindSheet(); }], ['Remember this…', function () { rememberSheet(''); }],
-     ['Morning check', localCheck], ['Team requests', localTeam], ['Peak follow-ups', localPeak], ['What’s building?', localBuilds], ['Add to groceries…', function () { field.value = 'Add  to groceries'; field.focus(); field.setSelectionRange(4, 4); if (S.brain === 'desk') setBrain('assistant'); }]]
+    [['Brief me', localBrief], ['What’s waiting?', localWaiting], ['Record meeting', function () { mrOpen({}); }], ['Meeting notes', function () { meetingSheet(); }], ['Remind me…', function () { remindSheet(); }], ['Remember this…', function () { rememberSheet(''); }],
+     ['Morning check', localCheck], ['What’s building?', localBuilds], ['Add to groceries…', function () { field.value = 'Add  to groceries'; field.focus(); field.setSelectionRange(4, 4); if (S.brain === 'desk') setBrain('assistant'); }]]
       .forEach(function (c) { ch.appendChild(chipBtn(c[0], c[1])); });
+    /* 21 Nov: Record meeting is built in (Matthew: "should that just be built into the jarvis app"); Team requests and Peak follow-ups left the
+       chips ("Remove team request ... Peak followups can leave as well"). The fade shows only while chips are hidden to the right. */
+    var ovf = function () { ch.classList.toggle('ovf', ch.scrollWidth - ch.clientWidth - ch.scrollLeft > 4); };
+    ch.addEventListener('scroll', ovf, { passive: true }); window.addEventListener('resize', ovf); setTimeout(ovf, 0);
     brainBar = el('div', 'brain'); brainBar.id = 'brain';
     lpLine = el('div', 'lpline'); lpLine.id = 'lpline';
     var bar = el('form', 'cmdbar'); bar.setAttribute('autocomplete', 'off');
@@ -940,7 +945,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var wide = window.innerWidth >= 1280 ? 340 : 300, cols = [];
     app.appendChild(topBar());
     ['L', 'R'].forEach(function (side) {
-      var keys = Object.keys(PANELS).filter(function (k) { return PANELS[k].side === side; });
+      var keys = Object.keys(PANELS).filter(function (k) { return PANELS[k].side === side && (k !== 'team' || teamOpen().length); });   /* 21 Nov: Team requests only while one is open (Matthew: "Only populate it when there an actual request") */
       var col = el('aside', 'col col' + side), rail = el('div', 'rail'), pans = el('div', 'pans');
       keys.forEach(function (k) {
         if (S.fold[k]) {
@@ -974,7 +979,8 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     if (S.tab === 'home') {
       coreBox = core(170); stateLbl = el('div', 'slbl'); stateLbl.style.cssText = 'margin:-4px 0 10px;font-size:10px;letter-spacing:.3em';
       var dd = deskDue(), tiles = el('div', 'tiles');
-      [[items().length, 'Inbox', 'inbox', ''], [teamOpen().length, 'Team asks', 'team', ''], [dd ? dd.due : '–', 'Peak due', 'peak', dd && dd.late ? '#ffb648' : '']].forEach(function (x) {
+      /* 21 Nov: Peak due left the home tiles (Matthew: "Peak followups can leave"); Team asks only while one is open */
+      [[items().length, 'Inbox', 'inbox', ''], [waitingOpen().length, 'To decide', 'team', ''], teamOpen().length ? [teamOpen().length, 'Team asks', 'team', ''] : [remDue().length, 'Reminders due', 'today', remDue().length ? '#ffb648' : '']].forEach(function (x) {
         var b = btn(null, null, 'pnl', function () { if (x[2] === 'peak') localPeak(); else { S.tab = x[2]; draw(); } }); var kv = el('div', 'kv', String(x[0])); if (x[3]) kv.style.color = x[3]; add(b, kv, el('div', 'kl', x[1])); tiles.appendChild(b);
       });
       add(app, coreBox, stateLbl, tiles);
@@ -983,14 +989,14 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       stateLbl = null; coreBox = null;
       var sc = el('div', 'pscroll');
       if (S.tab === 'inbox') sc.appendChild(panel('inbox'));
-      if (S.tab === 'team') { sc.appendChild(panel('waiting')); sc.appendChild(panel('team')); }
+      if (S.tab === 'team') { sc.appendChild(panel('waiting')); if (teamOpen().length) sc.appendChild(panel('team')); }
       if (S.tab === 'today') ['today', 'remind', 'cal', 'builds', 'money'].forEach(function (k) { sc.appendChild(panel(k)); });
       if (S.tab === 'more') sc.appendChild(moreList());
       body.appendChild(sc);
     }
     app.appendChild(body);
     var tabs = el('nav', 'tabs'); tabs.setAttribute('role', 'tablist');
-    [['home', 'Home', 'home', 0], ['inbox', 'Inbox', 'inbox', items().length], ['team', 'Team', 'help', teamOpen().length + waitingOpen().length], ['today', 'Today', 'sun', remDue().length], ['more', 'More', 'more', 0]].forEach(function (t) {
+    [['home', 'Home', 'home', 0], ['inbox', 'Inbox', 'inbox', items().length], ['team', teamOpen().length ? 'Team' : 'Decide', teamOpen().length ? 'help' : 'vote', teamOpen().length + waitingOpen().length], ['today', 'Today', 'sun', remDue().length], ['more', 'More', 'more', 0]].forEach(function (t) {
       var b = btn(null, t[2], null, function () { S.tab = t[0]; draw(); }); b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', String(S.tab === t[0])); b.setAttribute('data-tab', t[0]);
       b.appendChild(document.createTextNode(t[1])); if (t[3]) b.appendChild(el('em', null, String(t[3]))); tabs.appendChild(b);
     });
