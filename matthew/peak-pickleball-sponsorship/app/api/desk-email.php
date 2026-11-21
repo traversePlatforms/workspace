@@ -87,6 +87,28 @@ function dmReOf(array $R, string $k): ?array {
         return ['k' => $k, 'mid' => (string) ($t['mail']['mid'] ?? ''), 'mb' => (string) ($t['mail']['mb'] ?? ''), 'imid' => (string) ($t['mail']['imid'] ?? ''), 'from' => (string) ($t['mail']['from'] ?? ''), 'subject' => (string) ($t['mail']['subject'] ?? '')];
     return null;
 }
+/** 21 Nov 2026 (Matthew: "do they have the logos too?" ... "ok do it when the build finishes"): the signature in the HTML part looks like
+    his Outlook one: Peak's logo, a Peak-green line, the name in bold green, then the other lines (a phone becomes a tap-to-call link, an
+    address a mail link). The plain-text part keeps the signature as typed. The logo is the one the blasts use, on Peak's link name. */
+function dmLogoUrl(): string {
+    $b = bkLinkBase();
+    return $b !== '' ? (string) preg_replace('#/book/$#', '', $b) . '/peak-logo.png' : 'https://traverseplatforms.com/outbox-092b0f/peak/peak-logo.png';
+}
+function dmSigHtml(string $sig): string {
+    $e = fn(string $x) => htmlspecialchars($x, ENT_QUOTES, 'UTF-8');
+    $lines = array_values(array_filter(array_map('trim', explode("\n", str_replace("\r", '', trim($sig)))), fn($l) => $l !== ''));
+    if (!$lines) return '';
+    $rows = [];
+    foreach (array_slice($lines, 1) as $l) {
+        if (filter_var($l, FILTER_VALIDATE_EMAIL)) $rows[] = '<a href="mailto:' . $e($l) . '" style="color:#1f5b46;text-decoration:none">' . $e($l) . '</a>';
+        elseif (preg_match('/^\+?[\d\s().-]{10,20}$/', $l) && strlen(preg_replace('/\D/', '', $l)) >= 10) $rows[] = '<a href="tel:+' . (strlen(preg_replace('/\D/', '', $l)) === 10 ? '1' : '') . preg_replace('/\D/', '', $l) . '" style="color:#444444;text-decoration:none">' . $e($l) . '</a>';
+        else $rows[] = $e($l);
+    }
+    return '<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;color:#222222">'
+        . '<tr><td style="padding:0 0 8px 0"><img src="' . $e(dmLogoUrl()) . '" width="220" height="23" alt="Peak Pickleball" style="display:block;border:0;width:220px;height:23px"></td></tr>'
+        . '<tr><td style="border-top:2px solid #1f5b46;padding:8px 0 0 0;font-size:10pt;line-height:1.5;color:#444444">'
+        . '<span style="font-weight:bold;font-size:11pt;color:#1f5b46">' . $e($lines[0]) . '</span>' . ($rows ? '<br>' . implode('<br>', $rows) : '') . '</td></tr></table>';
+}
 /** the email as it goes: subject, text, html */
 function dmCompose(array $d, string $ref): array {
     $link = bkMsgUrl($ref);
@@ -99,7 +121,7 @@ function dmCompose(array $d, string $ref): array {
        booking link pasted in full, shows "Book a time". Other addresses show as written. The plain-text part keeps the address. */
     $hb = (string) preg_replace('/Pick a time that suits you:[ \t]*\{book\}/i', "\x02", (string) $d['text']);
     $hb = str_replace('{book}', "\x03", $hb);
-    $h = htmlspecialchars(rtrim($hb) . $sep . trim((string) $d['sig']) . "\n\n" . DM_FOOTER, ENT_QUOTES, 'UTF-8');
+    $h = htmlspecialchars(rtrim($hb), ENT_QUOTES, 'UTF-8');   /* the message alone: the signature and footer are drawn below (21 Nov) */
     $bb = bkBase();
     $h = (string) preg_replace_callback('~\bhttps?://[^\s<>"\']+[^\s<>().,;:!?"\']~i', function ($m) use ($bb) {
         $raw = html_entity_decode($m[0], ENT_QUOTES, 'UTF-8');
@@ -108,7 +130,9 @@ function dmCompose(array $d, string $ref): array {
     $h = str_replace(["\x02", "\x03"], [$la . 'Pick a time that suits you</a>', $la . 'Book a time</a>'], $h);
     $px = dmConf()['pixel'] ? '<img src="' . htmlspecialchars(bkPixelUrl($ref), ENT_QUOTES, 'UTF-8') . '" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">' : '';
     $html = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body><div style="font-family:Calibri,Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.45;color:#111">'
-        . str_replace("\n", "<br>\n", $h) . '</div>' . $px . '</body></html>';
+        . str_replace("\n", "<br>\n", $h) . str_repeat('<br>', strlen($sep)) . "\n" . dmSigHtml((string) $d['sig'])
+        . '<div style="margin-top:14px;font-family:Arial,Helvetica,sans-serif;font-size:9pt;line-height:1.4;color:#777">' . str_replace("\n", '<br>', htmlspecialchars(DM_FOOTER, ENT_QUOTES, 'UTF-8')) . '</div>'
+        . '</div>' . $px . '</body></html>';
     return ['subject' => (string) $d['subject'], 'text' => $text, 'html' => $html, 'link' => !empty($d['book']) ? $link : ''];
 }
 /** a preview (nothing is sent; Claude Check may look) */
