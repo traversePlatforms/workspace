@@ -317,7 +317,11 @@ try {
   ok(/Roof material/.test(builds) && /68%/.test(builds) && /Yards v3 refresh/.test(builds) && /done/.test(builds) && /2 ACTIVE/i.test(await ev('document.querySelector("#p-builds .ph").innerText')), 'Builds: running ones with progress, finished one done');
   /* 18 Nov: Check off a finished build; it stays gone after a fresh status read (saved on the server), running ones have no button */
   ok(await ev('document.querySelectorAll("#p-builds .bcheck").length') === 1, 'Builds: only the finished one has Check off');
-  await click('#p-builds .bcheck');
+  /* 21 Nov (Matthew: "the check off button isnt working"): checked off from the What's building? card in the conversation, the row leaves the card too */
+  await ev('[...document.querySelectorAll(".chip")].find(c=>/building/.test(c.textContent)).click()'); await until('!!document.querySelector(".chat .bcheck")', 3000);
+  await ev('document.querySelector(".chat .bcheck").click()');
+  ok(await until('!document.querySelector(".chat .bcheck") && ![...document.querySelectorAll(".chat .li")].some(r=>/Prospect Desk tracked links/.test(r.innerText))', 4000), 'Builds: ✓ Check off in the What’s building? card takes the row off the card');
+  await ev('[...document.querySelectorAll(".chip")].find(c=>/building/.test(c.textContent)).click()'); await sleep(200);
   ok(await until('!/Prospect Desk tracked links/.test(document.getElementById("p-builds").innerText)'), 'Builds: Check off takes it off the panel');
   ok(await ev('fetch("../api.php?action=jvstatus",{credentials:"same-origin"}).then(r=>r.json()).then(j=>!j.builds.some(b=>/Prospect Desk/.test(b.name)) && j.builds.some(b=>/Roof material/.test(b.name)))'), 'Builds: checked off on the server too (every device), running ones kept');
   { const cal = await ev('document.getElementById("p-cal").innerText');

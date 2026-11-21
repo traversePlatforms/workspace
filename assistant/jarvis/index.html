@@ -1333,7 +1333,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
         var pg = el('div', 'prog'), bar = el('i'); bar.style.width = (x.state === 'done' ? 100 : x.pct || 0) + '%'; pg.appendChild(bar); r.appendChild(pg);
         r.appendChild(el('div', 'ls', (x.steps ? 'step ' + x.step + ' of ' + x.steps + (x.note ? ' · ' : '') : '') + (x.note || '') + ' · ' + ago(x.at)));
         /* 18 Nov (Matthew): check off a finished one so it leaves the panel, on every device (saved on the server) */
-        if (x.state === 'done' || x.state === 'failed' || x.state === 'quiet') { var ck = btn('✓ Check off', null, 'bcheck', function () { ck.disabled = true; apost('jvbuildhide', { id: x.id, at: x.at }).then(function (j) { if (j.ok) { S.st.builds = S.st.builds.filter(function (y) { return y !== x; }); draw(); } else { ck.disabled = false; toast(j.error || 'Could not check it off.'); } }, function () { ck.disabled = false; toast('No connection.'); }); }); ck.setAttribute('aria-label', 'Check off ' + x.name); r.appendChild(ck); }
+        if (x.state === 'done' || x.state === 'failed' || x.state === 'quiet') { var ck = btn('✓ Check off', null, 'bcheck', function () { ck.disabled = true; apost('jvbuildhide', { id: x.id, at: x.at }).then(function (j) { if (j.ok) { S.st.builds = S.st.builds.filter(function (y) { return y !== x; }); r.remove(); /* 21 Nov: the row also leaves a "What’s building?" card in the conversation (Matthew: "the check off button isnt working") */ draw(); } else { ck.disabled = false; toast(j.error || 'Could not check it off.'); } }, function () { ck.disabled = false; toast('No connection.'); }); }); ck.setAttribute('aria-label', 'Check off ' + x.name); r.appendChild(ck); }
         return r;
       });
     },
