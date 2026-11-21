@@ -132,6 +132,11 @@ function voRoute(string $raw, array $k): array {
         if (!$d['ok']) return ['intent' => 'remember', 'say' => 'The desk did not take it: ' . $d['error']];
         return ['intent' => 'remember', 'say' => 'Got it. The desk will save that to your memory.', 'thread' => $d['id']];
     }
+    /* 20 Nov (P-12): recording a meeting needs the J.A.R.V.I.S. screen (the company, the consent tap, the screen kept on) */
+    if ($words <= 8 && preg_match('/^' . $q . '(?:start\s+)?(?:record(?:ing)?|tape)\s+(?:this|the|a|my|our)\s+meeting\b|^' . $q . 'start (?:a |the )?(?:meeting )?recording\b/u', $bare))
+        return ['intent' => 'meeting-record', 'say' => 'The Shortcut cannot record. Open J.A.R.V.I.S., tap Meeting notes, pick the company and tap Record. On the laptop, say Hey Jarvis, record this meeting.'];
+    if ($words <= 6 && preg_match('/^(?:stop|end|pause) (?:the )?(?:meeting )?recording\b/u', $bare))
+        return ['intent' => 'meeting-stop', 'say' => 'A recording stops from the J.A.R.V.I.S. screen: tap Stop there.'];
     /* anything that would send, post or message someone: a draft, only ever */
     if (voIsSend($bare)) return voDesk($t, $k, 'draft');
     /* the calendar */

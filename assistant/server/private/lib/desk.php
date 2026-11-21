@@ -90,7 +90,12 @@ function jdUnlock($lk): void { flock($lk, LOCK_UN); fclose($lk); }
 /** the page's list: newest first, the last 40 */
 function jdList(): array {
     $l = array_values(jdAll()); usort($l, fn($a, $b) => $b['updated'] <=> $a['updated']);
-    return array_slice($l, 0, 40);
+    $l = array_slice($l, 0, 40);
+    /* 20 Nov (P-12): a recorded meeting's message holds its whole transcript; the page gets the first 6,000 characters (the laptop's
+       jvdesk.php next still gets all of it), and the full raw transcript opens from Meetings */
+    foreach ($l as &$t) foreach ($t['msgs'] as &$m) if (mb_strlen($m['text']) > 6000) { $m['text'] = mb_substr($m['text'], 0, 6000) . "\n\n[… cut here: the full transcript is in Meeting notes › Recordings]"; $m['cut'] = true; }
+    unset($t, $m);
+    return $l;
 }
 function jdPending(): int { return count(array_filter(jdAll(), fn($t) => $t['status'] === 'new')); }
 function jdClean(string $s, int $n): string { return mb_substr(trim((string) preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', str_replace("\r\n", "\n", $s))), 0, $n); }

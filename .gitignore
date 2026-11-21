@@ -337,6 +337,8 @@ traverse/data-pipeline/door-territory/lawn-trial/yard-metro.before-*.tgz
 personal/pay/
 # meeting notes filed under Personal by J.A.R.V.I.S. meeting mode (2026-11-19, P-8): kept off git
 personal/meetings/
+# raw transcripts of recorded meetings (2026-11-20, P-12): the laptop keeps a private copy beside each company's meeting notes; never in git
+**/meetings/transcripts/
 
 # public copies without notes (2026-10-26, shared/tools/minify-public.cjs)
 matthew/peak-pickleball-sponsorship/dist/

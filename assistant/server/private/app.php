@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendor)) require $vendor;
-foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk', 'voice', 'tts'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk', 'voice', 'tts', 'meet'] as $f) require __DIR__ . '/lib/' . $f . '.php';
 
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -49,6 +49,14 @@ if ($action === 'jvdpending' || $action === 'jvdreply') {
     $fl = array_values(array_filter((array) ($body['files'] ?? []), 'is_string'));
     out(jdReply((string) ($body['id'] ?? ''), (string) ($body['status'] ?? 'answered'), (string) ($body['text'] ?? ''), !empty($body['refresh']), $fl));
 }
+/* 20 Nov (P-12): the meeting transcriber on the laptop asks over HTTPS (the same laptop key) how many recordings it may take now: a bare
+   number. Over SSH it uses jvmeet.php (peek, next, seg, done). */
+if ($action === 'jvmpending') {
+    if (tooManyTries()) out(['ok' => false, 'error' => 'Too many tries.'], 429);
+    if (!jdKeyOk((string) ($_SERVER['HTTP_X_JARVIS_KEY'] ?? ''))) { noteTry(); out(['ok' => false, 'error' => 'Not allowed.'], 403); }
+    $w = (string) ($_GET['who'] ?? 'laptop'); if (!mtWho($w)) out(['ok' => false], 400);
+    header('Content-Type: text/plain; charset=utf-8'); echo mtPeek($w); exit;
+}
 /* 19 Nov: talk without Siri (lib/voice.php): the iPhone Shortcut's door, with that device's voice key in an X-Voice-Key header. Plain text
    back, made to be heard; anything that would send or post only ever becomes a draft. */
 if ($action === 'voice') { @set_time_limit(90); voiceHttp($body, $isPost); }
@@ -64,6 +72,10 @@ if ($action === 'tts' && isset($_SERVER['HTTP_X_VOICE_KEY'])) {
     @set_time_limit(60); ttsDirect((string) ($body['text'] ?? ($_POST['text'] ?? '')));
 }
 if (!signedIn()) out(['ok' => false, 'error' => 'Signed out.'], 401);
+mtSweepMaybe();   /* 20 Nov (P-12): the stalled-recording alert and the rest of the meeting clock work, at most every 30 s */
+/* 20 Nov (P-12): record a meeting (lib/meet.php): start (only with the consent tap), the pieces as they are made, pause/resume/stop/keep/discard,
+   his recordings, a raw transcript */
+if (in_array($action, ['jvmeetstart', 'jvmeetchunk', 'jvmeetstate', 'jvmeetlist', 'jvmeettext'], true)) mtHttp($action, $action === 'jvmeetchunk' ? [] : $body, $isPost);
 /* 19 Nov: the voice keys (one per device, shown once, only their hash kept) and the setup page's "Try it here" */
 if ($action === 'jvvoicekeys') out(['ok' => true, 'keys' => voKeyList(), 'url' => voUrl()]);
 if ($action === 'jvvoicekeynew') { if (!$isPost) out(['ok' => false], 405); out(voKeyNew((string) ($body['name'] ?? ''))); }

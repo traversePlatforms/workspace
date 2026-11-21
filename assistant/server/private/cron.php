@@ -6,7 +6,8 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendor)) require $vendor;
-foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'jarvis'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'jarvis', 'desk', 'meet'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+try { $mt = mtSweep(); } catch (Throwable $e) { $mt = ['error' => mb_substr($e->getMessage(), 0, 200)]; }   /* 20 Nov (P-12): recordings left open, stalled, kept past 30 days */
 try { $rm = jvRemindersRun(); } catch (\Throwable $e) { $rm = ['error' => mb_substr($e->getMessage(), 0, 200)]; }
 if (in_array('--reminders', $argv ?? [], true)) { echo json_encode(['reminders' => $rm], JSON_UNESCAPED_SLASHES) . "\n"; exit; }
 $r = checkAll();

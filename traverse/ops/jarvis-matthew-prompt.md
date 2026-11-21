@@ -72,6 +72,14 @@ one line in the reply.
    first; `surge/drafts/`), plain text, marked DRAFT. Never sent, never posted, never scheduled, never put in Outbox's queue.
 4. **Reply** (status answered), short: where the notes are filed, the to-dos added (IDs), the drafts made (paths), anything unclear.
    Commit the files (not personal/).
+5. **From a recording** (20 Nov, P-12: the message has `Recorded:` or `Recording:`, `Consent:` and `--- Transcript, part i of N ---`): the
+   text is whisper.cpp's running transcript of the whole meeting, with no speaker names and the odd misheard word; gaps show as
+   "[recording paused 2 min]". Read every part first. The notes file gets the date, the length, the consent line exactly as given, then
+   NOTES written from the transcript (decisions, numbers, dates, who said they would do what, but only when the words say who), then Asks
+   and Follow-ups. Never paste the raw transcript into the notes, TASKS.md, a commit or a reply, and never quote more than a short phrase;
+   the raw transcript is kept privately (J.A.R.V.I.S. Meetings, and the laptop's gitignored `<folder>/transcripts/`), so say only
+   "Raw transcript: J.A.R.V.I.S. › Meeting notes › Recordings" in the notes. Never `git add` a `transcripts/` folder. Where the transcript
+   is unclear on a name, number or date, write "(unclear in the recording)" rather than guess.
 
 ### [REMEMBER THIS]: save to memory
 Save the text into the Claude Code memory at `C:\Users\Matthew sharpe\.claude\projects\c--Users-Matthew-sharpe-Desktop-claude-test-2\memory\`

@@ -1,0 +1,11 @@
+# Every minute: the cloud machine's look for a meeting recording to transcribe (jarvis-meetings.service; TASKS P-12).
+[Unit]
+Description=J.A.R.V.I.S. meeting transcriber, every minute
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=60s
+AccuracySec=10s
+
+[Install]
+WantedBy=timers.target

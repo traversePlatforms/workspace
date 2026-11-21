@@ -54,6 +54,16 @@ cloud_tick() {
     ( nice -n 19 bash "$CSYNC" cycle > /dev/null 2>&1 & ) < /dev/null
   fi
 }
+# 20 Nov (P-12, J.A.R.V.I.S. "record this meeting"): once a minute, from the heartbeat loop below (so a long session never holds it up) and
+# whether or not the cloud is live, the meeting transcriber (assistant/jarvis/tools/meeting-worker.sh: its own lock, log in
+# ProjectBackup/meetings/) looks for a recording to turn into text. ProjectBackup/meetings/off stops it.
+MEET_AT=0
+meet_tick() {
+  local now; now=$(date +%s)
+  [ $(( now - MEET_AT )) -ge 60 ] || return 0; MEET_AT=$now
+  [ -f "$REPO/assistant/jarvis/tools/meeting-worker.sh" ] && [ ! -f "$PBD/meetings/off" ] && ( nice -n 10 bash "$REPO/assistant/jarvis/tools/meeting-worker.sh" > /dev/null 2>&1 & ) < /dev/null
+  return 0
+}
 one_job() {   # the oldest job the cloud queued for this laptop: a full session on it, then marked done (once, even if it fails)
   local F K AT; F=$(ls -tr "$ST"/cloud-jobs/h*.json 2>/dev/null | head -1); [ -n "$F" ] || return 1
   K=$(node -e "try{const j=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));console.log((j.kind==='jarvis'?'jarvis':'staff')+' '+(j.at|0))}catch(e){console.log('bad 0')}" "$F")
@@ -346,7 +356,7 @@ END=$(( $(date +%s) + 3480 ))
 ( while kill -0 $$ 2>/dev/null; do
     [ -f "$ST/pause" ] || bash "$REPO/assistant/jarvis/tools/jarvis-status.sh" beat > /dev/null 2>&1
     printf '%s %s\n' "$(date +%s)" "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)" | $SG 'mkdir -p ~/www/traverseplatforms.com/jarvis-cloud && chmod 700 ~/www/traverseplatforms.com/jarvis-cloud && cat > ~/www/traverseplatforms.com/jarvis-cloud/laptop.txt' > /dev/null 2>&1   # the cloud's write turn (19 Nov)
-    for _b in $(seq 60); do kill -0 $$ 2>/dev/null || exit 0; sleep 5; done   # gone within 5 s of this copy, so the next one starts on time
+    for _b in $(seq 60); do kill -0 $$ 2>/dev/null || exit 0; [ -f "$ST/pause" ] || meet_tick; sleep 5; done   # gone within 5 s of this copy, so the next one starts on time
   done ) < /dev/null > /dev/null 2>&1 &
 while [ "$(date +%s)" -lt "$END" ]; do
   if [ ! -f "$ST/pause" ]; then

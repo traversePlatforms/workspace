@@ -9,6 +9,8 @@
 #   bash traverse/ops/jarvis-cloud.sh sync        send the repo and memory now (jarvis-cloud-sync.sh push)
 #   bash traverse/ops/jarvis-cloud.sh test        the stand-in tests on the VM (no live server, no Claude, no real ticket)
 #   bash traverse/ops/jarvis-cloud.sh shadow-report [hours]    what the cloud would have done vs what the laptop did (default 24 h)
+#   bash traverse/ops/jarvis-cloud.sh meetings    20 Nov (P-12): the meeting transcriber only (meeting-worker.sh, meeting-assemble.cjs, the Silero
+#                                                 voice model, jarvis-meetings.timer); the watcher, its service and the mode are left alone
 #   bash traverse/ops/jarvis-cloud.sh stop|start|log|pubkey
 # JARVIS_VM=yard@<ip> for another machine (the B2s move: jarvis-cloud-move.sh).
 set -u
@@ -73,8 +75,16 @@ case "${1:-status}" in
             const missed = lap.filter((x, i) => !used.has(i));
             if (missed.length) { console.log("\nLaptop sessions the cloud did not see:"); for (const x of missed) console.log("- " + t(x.at) + " " + (x.q || "staff/desk") + " " + x.id); }
           ' "$T/cloud.txt" "$L/help-watch.log" "$L" "$S"; rm -rf "$T";;
+  meetings) T="$REPO/assistant/jarvis/tools"
+          up "$T/meeting-worker.sh" "$VM:jarvis/ops/meeting-worker.sh.new" && up "$T/meeting-assemble.cjs" "$VM:jarvis/ops/meeting-assemble.cjs" &&
+          up "$OPS/jarvis-meetings.service" "$OPS/jarvis-meetings.timer" "$VM:.config/systemd/user/" &&
+          v 'set -e; bash -n ~/jarvis/ops/meeting-worker.sh.new; mv ~/jarvis/ops/meeting-worker.sh.new ~/jarvis/ops/meeting-worker.sh; chmod 700 ~/jarvis/ops/meeting-worker.sh
+          M=~/jarvis/tools/whisper.cpp/models; [ -s $M/ggml-silero-v6.2.0.bin ] || { curl -fsSL -o $M/ggml-silero-v6.2.0.bin.tmp https://huggingface.co/ggml-org/whisper-vad/resolve/main/ggml-silero-v6.2.0.bin && mv $M/ggml-silero-v6.2.0.bin.tmp $M/ggml-silero-v6.2.0.bin; }
+          ls -la $M/ggml-silero-v6.2.0.bin | cut -c1-60
+          systemctl --user daemon-reload; systemctl --user enable --now jarvis-meetings.timer > /dev/null 2>&1
+          echo "meetings timer: $(systemctl --user is-active jarvis-meetings.timer); watcher service: $(systemctl --user is-active jarvis-cloud), mode $(bash ~/jarvis/ops/help-watch-cloud.sh --mode)"';;
   stop|start) v "systemctl --user $1 jarvis-cloud; systemctl --user is-active jarvis-cloud";;
   log) v 'tail -n 40 ~/jarvis/state/help-watch.log';;
   pubkey) v 'cat ~/jarvis/secrets/traverse_sg_cloud.pub';;
-  *) echo "signin | status | init | deploy | mode <m> | sync | test | shadow-report [h] | stop | start | log | pubkey"; exit 2;;
+  *) echo "signin | status | init | deploy | meetings | mode <m> | sync | test | shadow-report [h] | stop | start | log | pubkey"; exit 2;;
 esac

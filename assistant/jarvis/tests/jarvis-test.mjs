@@ -109,6 +109,12 @@ for (const p of ['summit-de59ae83', 'hl-f98938', 'outbox-092b0f', 'peak-desk-28d
 
 /* ---- the Gmail mock: answers like Gmail, counts every call; a send is anything that would send ---- */
 const G = { calls: [], sends: [] }; const PUSHES = [];
+let PUSHKEYS = null;   /* 20 Nov (P-12): section 14's made-up phone keys, so later sections can read an alert the way the phone does (RFC 8291) */
+const PUSHDEC = body => { const { ec, auth } = PUSHKEYS, salt = body.subarray(0, 16), idl = body[20], asPub = body.subarray(21, 21 + idl), ct = body.subarray(21 + idl);
+  const ikm = Buffer.from(crypto.hkdfSync('sha256', ec.computeSecret(asPub), auth, Buffer.concat([Buffer.from('WebPush: info\0'), ec.getPublicKey(), asPub]), 32));
+  const cek = Buffer.from(crypto.hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: aes128gcm\0'), 16)), nonce = Buffer.from(crypto.hkdfSync('sha256', ikm, salt, Buffer.from('Content-Encoding: nonce\0'), 12));
+  const d = crypto.createDecipheriv('aes-128-gcm', cek, nonce); d.setAuthTag(ct.subarray(ct.length - 16)); const pt = Buffer.concat([d.update(ct.subarray(0, ct.length - 16)), d.final()]);
+  return JSON.parse(pt.subarray(0, pt.lastIndexOf(2)).toString()); };
 const EL_KEY = 'sk_' + 'mockelevenlabskey'.padEnd(48, 'q'), EL = { calls: [], mode: 'ok' };   /* 20 Nov (P-11): the ElevenLabs mock's key: 51 characters, like his */
 const b64u = s => Buffer.from(s).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 const gsrv = http.createServer((req, res) => {
@@ -180,7 +186,7 @@ const hpost = async (u, body, cookie = '') => { const r = await fetch(BASE + u, 
 
 /* ================================================================ headless Chrome */
 const prof = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvischrome-'));
-const ch = spawn(CHROME, ['--headless=new', '--remote-debugging-port=' + CDP, '--user-data-dir=' + prof, '--no-first-run', '--disable-gpu', '--hide-scrollbars', '--window-size=1440,900', 'about:blank'], { stdio: 'ignore' });
+const ch = spawn(CHROME, ['--headless=new', '--remote-debugging-port=' + CDP, '--user-data-dir=' + prof, '--no-first-run', '--disable-gpu', '--hide-scrollbars', '--window-size=1440,900', '--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', 'about:blank'], { stdio: 'ignore' });
 let ws; const reqs = []; const errs = [];
 try {
   let list = null; for (let i = 0; i < 40 && !list; i++) { await sleep(250); try { list = await (await fetch('http://127.0.0.1:' + CDP + '/json/list')).json(); } catch {} }
@@ -227,7 +233,7 @@ try {
   ok(await until('navigator.serviceWorker.getRegistration("./").then(r=>!!r && /\\/a-e018bb82\\/jarvis\\/$/.test(r.scope))', 6000), 'P-9: its own service worker, scoped to /a-e018bb82/jarvis/ only');
   /* ================================================================ 3. no model call on load; only the expected reads */
   ok(!reqs.some(r => /action=(chat|write|send|savedraft|check|draft|helpsend|groadd|jvdesksend|jvpushtest)\b/.test(r)), 'page load makes no model call and sends nothing (' + reqs.filter(r => /action=(chat|write|send|check|draft)/.test(r)).join(', ') + ')');
-  const allowed = /\/a-e018bb82\/(api\.php\?action=(signin|state|home|jvstatus|gro|jvdesk)$|jarvis\/)|\/api\/(rounds|c-houston-lawn-test-rounds)\.php\?action=helplist$|\/outbox-092b0f\/api\.php\?action=state$|\/peak-desk-28d38d\/api\/desk\.php\?action=data$|^data:/;
+  const allowed = /\/a-e018bb82\/(api\.php\?action=(signin|state|home|jvstatus|gro|jvdesk|jvmeetlist)$|jarvis\/)|\/api\/(rounds|c-houston-lawn-test-rounds)\.php\?action=helplist$|\/outbox-092b0f\/api\.php\?action=state$|\/peak-desk-28d38d\/api\/desk\.php\?action=data$|^data:/;
   const odd = reqs.filter(r => !allowed.test(r.split(' ')[1]));
   ok(odd.length === 0, 'the page reads only its own sources (' + odd.join(' | ') + ')');
   ok(!reqs.some(r => /googleapis|anthropic|fonts\.g/.test(r)), 'nothing leaves for Google or Anthropic from the page');
@@ -579,7 +585,7 @@ try {
     /* a phone subscribes (a made-up device with real keys); the next alert is Web Push only, end to end */
     const ec = crypto.createECDH('prime256v1'); ec.generateKeys(); const auth = crypto.randomBytes(16);
     const b64 = b => Buffer.from(b).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    const sub = { endpoint: 'http://127.0.0.1:' + GPORT + '/push/phone1', keys: { p256dh: b64(ec.getPublicKey()), auth: b64(auth) } };
+    const sub = { endpoint: 'http://127.0.0.1:' + GPORT + '/push/phone1', keys: { p256dh: b64(ec.getPublicKey()), auth: b64(auth) } }; PUSHKEYS = { ec, auth };
     const bad = await apiPost('jvpushsub', { subscription: { endpoint: 'ftp://x', keys: {} }, device: 'x' });
     ok(!bad.ok, 'alerts: a broken subscription is refused');
     /* the push service check wants https; the test copy allows its own 127.0.0.1 listener only (JARVIS_PUSH_ALLOW_HTTP), so store it by hand */
@@ -959,6 +965,182 @@ try {
     await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(600);
   }
   ok(errs.length === 0, 'no script errors with the natural voice (' + errs.join(' | ') + ')');
+
+  /* ================================================================ 17. record a meeting (20 Nov, P-12): consent first, pieces as they come, gaps, the transcriber */
+  {
+    const MD = path.join(DATA, 'jarvis', 'meetings'), JMP = path.join(PRIV, 'jvmeet.php').replace(/\\/g, '/');
+    const metas = () => fs.existsSync(MD) ? fs.readdirSync(MD).filter(d => /^m\d{14}[0-9a-f]{4}$/.test(d)).map(d => JSON.parse(fs.readFileSync(path.join(MD, d, 'meta.json'), 'utf8'))) : [];
+    const meta = id => JSON.parse(fs.readFileSync(path.join(MD, id, 'meta.json'), 'utf8'));
+    const parts = id => fs.existsSync(path.join(MD, id)) ? fs.readdirSync(path.join(MD, id)).filter(f => /\.part$/.test(f)) : [];
+    const editMeta = (id, fn) => { const m = meta(id); fn(m); fs.writeFileSync(path.join(MD, id, 'meta.json'), JSON.stringify(m)); };
+    const jm = (args, input = '') => new Promise(res => { let o = '', e = ''; const p = spawn('php', [JMP, ...args], { env: { ...process.env, ...ENVX } }); p.stdout.on('data', d => o += d); p.stderr.on('data', d => e += d); p.on('close', code => res({ code, out: o, err: e })); p.stdin.end(input); });
+    const si = await fetch(BASE + '/a-e018bb82/api.php?action=signin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: PASSWORD }) });
+    const sc = (si.headers.get('set-cookie') || '').split(';')[0];
+    const mpost = async (a, b, q = '', raw = null) => { const r = await fetch(BASE + '/a-e018bb82/api.php?action=' + a + q, { method: 'POST', headers: { 'Content-Type': raw ? 'application/octet-stream' : 'application/json', Cookie: sc }, body: raw || JSON.stringify(b) }); const t = await r.text(); let j = {}; try { j = JSON.parse(t); } catch {} return { s: r.status, j }; };
+    /* a short tone as real audio (ffmpeg), for the upload and the gaps */
+    const MEETST = fs.mkdtempSync(path.join(os.tmpdir(), 'jvmeet-')), MREPO = path.join(MEETST, 'repo'), TONE = path.join(MEETST, 'tone.webm');
+    fs.mkdirSync(path.join(MREPO, 'matthew', 'clients', 'peak-pickleball'), { recursive: true });
+    spawnSync('ffmpeg', ['-nostdin', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=3', '-c:a', 'libopus', '-b:a', '32k', TONE]);
+    ok(fs.existsSync(TONE) && fs.statSync(TONE).size > 500, 'meeting: a test tone made with ffmpeg');
+    /* whisper.cpp stand-in: writes an SRT for -of; MOCK_FAIL fails, MOCK_LONG writes a long meeting */
+    const MOCKW = path.join(MEETST, 'mock-whisper.sh');
+    fs.writeFileSync(MOCKW, '#!/bin/bash\nof=""; while [ $# -gt 0 ]; do [ "$1" = -of ] && of="$2"; shift; done\n[ -n "${MOCK_FAIL:-}" ] && exit 1\n[ -n "$of" ] || exit 2\ncommand -v cygpath > /dev/null && of=$(cygpath -u "$of")\n' +
+      'if [ -n "${MOCK_LONG:-}" ]; then for i in $(seq 0 399); do s=$((i*2)); printf "%d\\n%02d:%02d:%02d,000 --> %02d:%02d:%02d,900\\nLong meeting words number %d about the sponsor offer and the aeration schedule and who does what by Friday.\\n\\n" $((i+1)) $((s/3600)) $((s%3600/60)) $((s%60)) $((s/3600)) $((s%3600/60)) $((s%60)) $i; done > "$of.srt"\n' +
+      'else printf "1\\n00:00:00,500 --> 00:00:02,000\\nMock words: we agreed the sponsor offer goes out Friday.\\n\\n" > "$of.srt"; fi\nexit 0\n');
+    fs.chmodSync(MOCKW, 0o755);
+    const worker = (env = {}) => new Promise(res => { let o = ''; const p = spawn('bash', [path.join(REPO, 'assistant', 'jarvis', 'tools', 'meeting-worker.sh')], { env: { ...process.env, ...ENVX, MEET_WHO: 'laptop', MEET_SG: 'bash -c', MEET_JM: 'php ' + JMP, MEET_ST: path.join(MEETST, 'st'), MEET_REPO: MREPO, MEET_NO_HTTPS: '1', MEET_WHISPER: MOCKW, MEET_MODEL: MOCKW, MEET_VAD: path.join(MEETST, 'no-vad.bin'), ...env } }); p.stdout.on('data', d => o += d); p.stderr.on('data', d => o += d); p.on('close', code => res({ code, out: o })); });
+    const wlog = () => { const f = path.join(MEETST, 'st', 'meeting-worker.log'); return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : ''; };
+
+    /* the server: signed out, nothing; consent is required before anything is kept */
+    for (const a of ['jvmeetlist', 'jvmeettext&id=m20261120000000aaaa']) { const [s] = await hget('/a-e018bb82/api.php?action=' + a); ok(s === 401, 'meeting: signed out, ' + a + ' answers 401 (got ' + s + ')'); }
+    for (const a of ['jvmeetstart', 'jvmeetchunk&id=m20261120000000aaaa&seg=0&n=0', 'jvmeetstate']) { const [s] = await hpost('/a-e018bb82/api.php?action=' + a, { company: 'Peak', consent: true, consentText: 'Everyone here knows this is being recorded' }); ok(s === 401, 'meeting: signed out, POST ' + a + ' answers 401 (got ' + s + ')'); }
+    { fs.rmSync(path.join(DATA, 'tries.json'), { force: true });   /* earlier sections spent this address's wrong tries */
+      const [s] = await hget('/a-e018bb82/api.php?action=jvmpending&who=laptop'); ok(s === 403, 'meeting: the transcriber door with no laptop key, refused');
+      const r2 = await fetch(BASE + '/a-e018bb82/api.php?action=jvmpending&who=laptop', { headers: { 'X-Jarvis-Key': 'y'.repeat(64) } }); ok(r2.status === 403, 'meeting: a wrong laptop key, refused');
+      fs.rmSync(path.join(DATA, 'tries.json'), { force: true }); const LK2 = crypto.randomBytes(32).toString('hex'); await cli(['setkey'], crypto.createHash('sha256').update(LK2).digest('hex'));
+      const r3 = await fetch(BASE + '/a-e018bb82/api.php?action=jvmpending&who=laptop', { headers: { 'X-Jarvis-Key': LK2 } }); ok(r3.status === 200 && (await r3.text()).trim() === '0', 'meeting: the laptop key gets a bare count'); }
+    let r = await mpost('jvmeetstart', { company: 'Peak' });
+    ok(!r.j.ok && r.j.consent === false && metas().length === 0, 'meeting: no consent tap, no recording (and nothing kept)');
+    r = await mpost('jvmeetstart', { company: 'Peak', consent: true, consentText: 'sure' });
+    ok(!r.j.ok && metas().length === 0, 'meeting: the consent line must be the exact one');
+    r = await mpost('jvmeetstart', { consent: true, consentText: 'Everyone here knows this is being recorded' });
+    ok(!r.j.ok && /company/i.test(r.j.error) && metas().length === 0, 'meeting: no company, no recording');
+    r = await mpost('jvmeetchunk', null, '&id=m20261120000000aaaa&seg=0&n=0', fs.readFileSync(TONE));
+    ok(!r.j.ok && r.j.gone, 'meeting: a piece for a recording that was never started is refused');
+
+    /* the page: record a meeting from Meeting notes; the microphone opens only after the consent tap */
+    await cdp('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__jvMeetSlice=1500;window.__hid=false;Object.defineProperty(Document.prototype,"hidden",{configurable:true,get:function(){return !!window.__hid}});Object.defineProperty(Document.prototype,"visibilityState",{configurable:true,get:function(){return window.__hid?"hidden":"visible"}});' +
+      'window.__wl=0;window.__wlRel=0;Object.defineProperty(navigator,"wakeLock",{configurable:true,value:{request:function(){window.__wl++;var h=[];var l={release:function(){window.__wlRel++;h.forEach(function(f){f()});return Promise.resolve()},addEventListener:function(e,f){if(e==="release")h.push(f)}};window.__wlLast=l;return Promise.resolve(l)}}});' +
+      'window.__gum=0;window.__streams=[];(function(){var md=navigator.mediaDevices;if(!md)return;var g=md.getUserMedia.bind(md);md.getUserMedia=function(c){window.__gum++;return g(c).then(function(s){window.__streams.push(s);return s})};})();' });
+    await cdp('Page.navigate', { url: PAGE }); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(700);
+    await ev('document.body.dispatchEvent(new MouseEvent("click",{bubbles:true}))');
+    await ev('[...document.querySelectorAll(".chip")].find(c=>/Meeting notes/.test(c.textContent)).click()'); await until('!!document.getElementById("meetrecord")');
+    ok(await ev('document.getElementById("meetrecord").disabled && document.getElementById("meetupload").disabled'), 'meeting: Record and Upload wait until the company is picked');
+    ok(await until('/No recordings yet/.test(document.getElementById("meetlist").textContent)'), 'meeting: the Recordings list starts empty');
+    await click('.cos button[data-co="Peak"]');
+    ok(await ev('!document.getElementById("meetrecord").disabled'), 'meeting: picked, Record is on');
+    await click('#meetrecord'); await until('!!document.getElementById("mrconsent")');
+    ok(await ev('!document.getElementById("sheet") && /Everyone here knows this is being recorded/.test(document.getElementById("mrconsent").textContent) && !document.getElementById("mrconsent").disabled && document.querySelector("#meetrec .cos button[data-co=Peak]").getAttribute("aria-pressed")==="true"'), 'meeting: the consent step, with the company carried over');
+    await sleep(500);
+    ok(await ev('window.__gum') === 0 && metas().length === 0, 'meeting: before the consent tap, the microphone is not opened and nothing is kept');
+    await shot('jarvis-meeting-consent');
+    const tap0 = Math.floor(Date.now() / 1000);
+    await click('#mrconsent');
+    ok(await until('!!document.querySelector("#meetrec.live")', 6000), 'meeting: the tap starts the recording screen');
+    ok(await nodeUntil(() => metas().length === 1 && parts(metas()[0].id).length >= 2, 9000), 'meeting: pieces reach the server as they are made (' + (metas()[0] ? parts(metas()[0].id).length : 0) + ')');
+    const M1 = metas()[0].id;
+    { const m = meta(M1); ok(m.consent && m.consent.line === 'Everyone here knows this is being recorded' && m.consent.by === 'Matthew Sharpe' && m.consent.at >= tap0 - 2 && m.consent.at <= (m.segs[0] || m.segs['0']).t + 2 && m.company === 'Peak' && m.status === 'recording' && !!m.consent.device, 'meeting: the consent tap is logged with the meeting (when, who, company, device), before the first piece (' + JSON.stringify(m.consent) + ')'); }
+    ok(/alog|meeting started/.test(fs.readFileSync(path.join(DATA, 'assistant.log'), 'utf8')) && /"what":"meeting started".*"consent":"Everyone here knows/.test(fs.readFileSync(path.join(DATA, 'assistant.log'), 'utf8')), 'meeting: the start and its consent line are in the Assistant\'s log');
+    ok(await ev('window.__gum') === 1 && await ev('window.__wl') >= 1, 'meeting: one microphone, and the screen asked to stay awake');
+    ok(await until('/Screen kept awake/.test(document.querySelector("#meetrec .mst").textContent) && /^0:00:0[1-9]|^0:00:[1-9]/.test(document.querySelector("#meetrec .mtime").textContent)'), 'meeting: the timer runs and it says the screen is kept awake');
+    await shot('jarvis-meeting-recording');
+    /* a second recording while one is open: refused */
+    r = await mpost('jvmeetstart', { company: 'Surge', consent: true, consentText: 'Everyone here knows this is being recorded' });
+    ok(!r.j.ok && r.j.active && r.j.active.id === M1, 'meeting: one live recording at a time');
+    /* the wake lock let go (the phone does that when the page hides): asked again when the page is back */
+    { const w0 = await ev('window.__wl'); await ev('window.__wlLast.release()'); ok(await until('window.__wl>' + w0, 3000), 'meeting: the screen lock is asked for again after the phone lets it go'); }
+    /* an interruption: the page hidden and the microphone taken (a call); back on screen it records again in a new segment, the gap marked */
+    await ev('window.__hid=true;document.dispatchEvent(new Event("visibilitychange"));window.__streams[window.__streams.length-1].getAudioTracks().forEach(function(t){t.stop()})');
+    await sleep(2500);
+    const wl1 = await ev('window.__wl');
+    await ev('window.__hid=false;document.dispatchEvent(new Event("visibilitychange"))');
+    ok(await nodeUntil(() => { const s = meta(M1).segs; return !!(s[1] || s['1']); }, 9000), 'meeting: back on screen, it carries on in a new segment');
+    { const g = meta(M1).segs[1]; ok(g && (g.why === 'hidden' || g.why === 'error' || g.why === 'ended') && g.gap >= 1 && g.t > meta(M1).segs[0].t, 'meeting: the new segment carries the gap and why (' + JSON.stringify(g) + ')'); }
+    ok(await ev('window.__gum') === 2 && await ev('window.__wl') > wl1 - 1, 'meeting: the microphone opened again by itself');
+    /* Pause and Resume: a new segment marked as paused by him */
+    await click('#mrpause'); ok(await nodeUntil(() => meta(M1).status === 'paused', 5000) && /Paused/.test(await ev('document.querySelector("#meetrec .mrh").textContent')), 'meeting: Pause (nothing recorded, the server knows)');
+    await sleep(600); await click('#mrpause');
+    ok(await nodeUntil(() => meta(M1).status === 'recording' && Object.values(meta(M1).segs).some(g => g.why === 'pause'), 8000), 'meeting: Resume carries on in the same meeting, in a segment marked paused');
+    await sleep(1800);
+    /* "Hey Jarvis, stop recording" on the laptop: the wake word presses F13, the page listens, and stops it */
+    await ev('window.__srQ=["stop recording"]');
+    await cdp('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'F13', code: 'F13', windowsVirtualKeyCode: 124, nativeVirtualKeyCode: 124 }); await cdp('Input.dispatchKeyEvent', { type: 'keyUp', key: 'F13', code: 'F13', windowsVirtualKeyCode: 124, nativeVirtualKeyCode: 124 });
+    { const st = await nodeUntil(() => meta(M1).status === 'ready', 12000); ok(st, 'meeting: "Hey Jarvis, stop recording" stops it, and it waits for the transcriber');
+      if (!st) { console.log('  debug:', meta(M1).status, await ev('JSON.stringify({sr:window.__srStarts,q:window.__srQ,ask:(document.getElementById("ask")||{}).value,chat:document.querySelector(".chat").innerText.slice(-300),mst:(document.querySelector("#meetrec .mst")||{}).textContent,h:(document.querySelector("#meetrec .mrh")||{}).textContent})')); await click('#mrstop'); await nodeUntil(() => meta(M1).status === 'ready', 12000); } }
+    ok(await until('!!document.getElementById("mrdone") && /Recording saved: Peak/.test(document.getElementById("meetrec").textContent)', 6000), 'meeting: the screen says saved, and where it is transcribed');
+    { const m = meta(M1), ex = m.expect || {}; ok(Object.keys(m.segs).length >= 3 && Object.keys(m.segs).every(k => ex[k] === parts(M1).filter(f => f.startsWith('s' + String(k).padStart(3, '0') + '-')).length), 'meeting: every piece the page made is on the server (' + JSON.stringify(ex) + ')'); }
+    ok(await ev('window.__wlRel') >= 1 && await ev('window.__streams.every(function(s){return s.getAudioTracks().every(function(t){return t.readyState==="ended"})})'), 'meeting: after Stop the microphone is closed and the screen may sleep again');
+    await shot('jarvis-meeting-saved');
+    await click('#mrdone');
+    /* the transcriber: the preferred one (the laptop) first; the cloud waits */
+    await jm(['peek', 'laptop']);
+    ok((await jm(['peek', 'cloud'])).out.trim() === '0', 'meeting: the cloud waits while the laptop is looking');
+    /* whisper fails once: back in the queue, audio kept */
+    let w = await worker({ MOCK_FAIL: '1' });
+    ok(meta(M1).status === 'ready' && meta(M1).attempts === 1 && /whisper stopped/.test(meta(M1).error || '') && parts(M1).length > 0, 'meeting: whisper failing: back in the queue, the audio kept (' + (meta(M1).error || '') + ')');
+    w = await worker();
+    const t1 = meta(M1);
+    ok(t1.status === 'done' && t1.worker === 'laptop' && fs.existsSync(path.join(MD, M1, 'transcript.txt')), 'meeting: transcribed on the laptop (' + wlog().trim().split('\n').pop() + ')');
+    ok(parts(M1).length === 0 && !!t1.audioDeletedAt, 'meeting: the audio is deleted once the transcript is saved and read back');
+    const tx1 = fs.readFileSync(path.join(MD, M1, 'transcript.txt'), 'utf8');
+    ok(/\[\d{1,2}:\d\d [ap]m\] Mock words/.test(tx1), 'meeting: the transcript has the clock time and the words (' + tx1.slice(0, 120) + ')');
+    const dm1 = deskMsgs().pop();
+    ok(t1.thread === dm1.id && /^\[MEETING NOTES\]\nCompany: Peak \(Matthew's own client work\)\nDate: \d{4}-\d\d-\d\d\nRecorded: /.test(dm1.text) && /Consent: Matthew tapped "Everyone here knows this is being recorded" at /.test(dm1.text) && /--- Transcript, part 1 of 1 ---/.test(dm1.text) && /draft file only \(never sent\)/.test(dm1.text) && /no speaker names/.test(dm1.text), 'meeting: the desk gets it as [MEETING NOTES], with the company, date, length and consent line (' + dm1.text.slice(0, 200).replace(/\n/g, ' | ') + ')');
+    ok(fs.existsSync(path.join(MREPO, 'matthew', 'clients', 'peak-pickleball', 'meetings', 'transcripts')) && fs.readdirSync(path.join(MREPO, 'matthew', 'clients', 'peak-pickleball', 'meetings', 'transcripts')).some(f => f.endsWith(M1 + '.txt')), 'meeting: the laptop keeps a private copy beside the Peak meeting notes');
+    ok(spawnSync('git', ['-C', REPO, 'check-ignore', '-q', 'matthew/clients/peak-pickleball/meetings/transcripts/x.txt']).status === 0 && spawnSync('git', ['-C', REPO, 'check-ignore', '-q', 'surge/meetings/transcripts/x.txt']).status === 0, 'meeting: transcripts folders are gitignored (never committed)');
+    { const tt = await ev('fetch("../api.php?action=jvmeettext&id=' + M1 + '").then(r=>r.text())'); ok(/Mock words/.test(tt), 'meeting: the raw transcript opens for him, signed in');
+      const pub = path.join(PUB, 'a-e018bb82'); const walk = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]);
+      ok(!walk(PUB).some(f => /\.part$|transcript\.txt$|meta\.json$/.test(f)), 'meeting: no audio or transcript anywhere in public_html'); }
+    /* the desk list carries a long transcript cut; the laptop's read gets it all */
+    /* the upload path, with Keep audio: a file through the same pipeline, its own consent line */
+    await ev('[...document.querySelectorAll(".chip")].find(c=>/Meeting notes/.test(c.textContent)).click()'); await until('!!document.getElementById("meetupload")');
+    ok(await until('/Peak/.test(document.getElementById("meetlist").textContent) && /Transcribed/.test(document.getElementById("meetlist").textContent) && /audio deleted/.test(document.getElementById("meetlist").textContent)'), 'meeting: Recordings lists it: transcribed, audio deleted');
+    await click('.cos button[data-co="Sixfold"]');
+    { const doc = await cdp('DOM.getDocument', { depth: -1, pierce: true }); const q = await cdp('DOM.querySelector', { nodeId: doc.result.root.nodeId, selector: '#meetfile' }); await cdp('DOM.setFileInputFiles', { nodeId: q.result.nodeId, files: [TONE] }); }
+    ok(await until('!!document.getElementById("mrconsent") && /Everyone in this recording knew it was being recorded/.test(document.getElementById("mrconsent").textContent)', 5000), 'meeting: an upload asks its own consent line first');
+    const gum0 = await ev('window.__gum'); await ev('document.getElementById("mrkeep").click()'); await click('#mrconsent');
+    ok(await until('!!document.querySelector("#meetrec .consent") && /Uploaded: tone\\.webm for Sixfold/.test(document.getElementById("meetrec").textContent)', 9000), 'meeting: the file goes up and it says so');
+    ok(await ev('window.__gum') === gum0, 'meeting: an upload never opens the microphone');
+    const M2 = metas().find(m => m.source === 'upload').id;
+    ok(meta(M2).status === 'ready' && meta(M2).keep === true && meta(M2).consent.line === 'Everyone in this recording knew it was being recorded' && parts(M2).length === 1, 'meeting: the upload is queued with its consent line and Keep audio');
+    await click('#meetrec .consent');
+    w = await worker();
+    ok(meta(M2).status === 'done' && parts(M2).length === 1 && meta(M2).keepUntil > Date.now() / 1000 + 29 * 86400, 'meeting: Keep audio: the audio stays 30 days after the transcript');
+    ok(/Recording: an uploaded file \(tone\.webm\)/.test(deskMsgs().pop().text) && /\[0:00:00\] Mock words/.test(fs.readFileSync(path.join(MD, M2, 'transcript.txt'), 'utf8')), 'meeting: an upload is timed from its start, and the desk is told it was a file');
+    ok(fs.existsSync(path.join(MREPO, 'sixfold', 'meetings', 'transcripts')), 'meeting: the Sixfold copy sits beside the Sixfold meeting notes');
+    editMeta(M2, m => { m.keepUntil = Math.floor(Date.now() / 1000) - 5; });
+    let sw0 = JSON.parse((await jm(['sweep'])).out || '{}');
+    ok(sw0.expired === 1 && parts(M2).length === 0 && !!meta(M2).audioDeletedAt, 'meeting: after 30 days the kept audio is deleted');
+    /* gaps between segments and a long meeting: marked, and sent to the desk in parts; the page's desk list gets it cut */
+    r = await mpost('jvmeetstart', { company: 'Other', other: 'Donny', consent: true, consentText: 'Everyone here knows this is being recorded', device: 'test' });
+    const M3 = r.j.meeting.id, T3 = Math.floor(Date.now() / 1000) - 600;
+    ok((await mpost('jvmeetchunk', null, '&id=' + M3 + '&seg=0&n=0&t=' + T3 + '&secs=3', fs.readFileSync(TONE))).j.ok, 'meeting: a piece with its segment start');
+    ok((await mpost('jvmeetchunk', null, '&id=' + M3 + '&seg=0&n=0&t=' + T3 + '&secs=3', fs.readFileSync(TONE))).j.dup, 'meeting: the same piece twice (a retry) is taken once');
+    /* the stalled-recording alert: recording, and no piece for over 2 minutes (the phone put away); once; a new piece clears it; paused by him: none */
+    PUSHES.length = 0; editMeta(M3, m => { m.lastChunkAt = Math.floor(Date.now() / 1000) - 200; });
+    let sw = JSON.parse((await jm(['sweep'])).out || '{}');
+    ok(sw.stall === 1 && !!meta(M3).alerts.stall && PUSHES.some(x => x.path === 'push/phone1'), 'meeting: no piece for 2 minutes: an alert to his phone (' + JSON.stringify(sw) + ')');
+    { let pj = null; const ph = PUSHES.find(x => x.path === 'push/phone1'); try { pj = PUSHDEC(ph.body); } catch {} ok(pj && /Recording paused/.test(pj.body) && /Open J\.A\.R\.V\.I\.S\. to resume/.test(pj.body) && pj.url === '/a-e018bb82/jarvis/?meeting=' + M3, 'meeting: the alert says Recording paused, open J.A.R.V.I.S. to resume, and opens that meeting (' + JSON.stringify(pj) + ')'); }
+    sw = JSON.parse((await jm(['sweep'])).out || '{}'); ok(sw.stall === 0, 'meeting: the alert goes once');
+    await mpost('jvmeetstate', { id: M3, op: 'pause' }); PUSHES.length = 0; editMeta(M3, m => { m.lastChunkAt = Math.floor(Date.now() / 1000) - 300; delete m.alerts.stall; });
+    sw = JSON.parse((await jm(['sweep'])).out || '{}'); ok(sw.stall === 0 && !PUSHES.length && meta(M3).status === 'paused', 'meeting: paused by him: no alert');
+    await mpost('jvmeetstate', { id: M3, op: 'resume' }); editMeta(M3, m => { m.alerts = { stall: 1 }; });
+    ok(!(await mpost('jvmeetchunk', null, '&id=' + M3 + '&seg=1&n=0', Buffer.from('not audio at all, just words that are long enough'))).j.ok, 'meeting: a piece that is not audio is refused');
+    await mpost('jvmeetchunk', null, '&id=' + M3 + '&seg=1&n=0&t=' + (T3 + 200) + '&gap=197&why=call&secs=6', fs.readFileSync(TONE));
+    ok(!meta(M3).alerts.stall, 'meeting: a new piece clears the alert');
+    r = await mpost('jvmeetstate', { id: M3, op: 'stop', expect: { 0: 1, 1: 2 }, secs: 6 });
+    ok(r.j.ok && r.j.where && /laptop/.test(r.j.where.say), 'meeting: Stop says where it is transcribed (' + (r.j.where || {}).say + ')');
+    w = await worker({ MOCK_LONG: '1' });
+    const tx3 = fs.readFileSync(path.join(MD, M3, 'transcript.txt'), 'utf8');
+    ok(/\[recording paused 3 min: the phone interrupted it\]/.test(tx3), 'meeting: the gap is marked in the transcript ("[recording paused 3 min…]")');
+    ok(/\[part of this stretch did not arrive, about 30 s\]/.test(tx3), 'meeting: a piece that never arrived is said, not hidden');
+    const dm3 = deskMsgs().pop();
+    ok(/Company: Other: Donny/.test(dm3.text) && /part 1 of [2-9]/.test(dm3.text) && /part 2 of/.test(dm3.text) && dm3.text.length > 30000, 'meeting: a long transcript goes to the desk in parts (' + dm3.text.length + ' characters)');
+    { const l = await ev('fetch("../api.php?action=jvdesk").then(r=>r.json())'); const th = l.threads.find(t => t.id === dm3.id); ok(th && th.msgs[0].text.length < 6200 && th.msgs[0].cut === true, 'meeting: the page\'s desk list gets the first 6,000 characters');
+      const nx = JSON.parse((await cli(['next', '--peek'])).out || '{}'); const full = (nx.conversation || []).find(c => /Company: Other: Donny/.test(c.text || '')); ok(!nx.id || nx.id !== dm3.id || (full && full.text.length > 30000), 'meeting: the laptop\'s read of the thread gets all of it'); }
+    ok(fs.readdirSync(path.join(MREPO, 'matthew', 'meetings', 'transcripts')).length === 1, 'meeting: Other with no client folder: the copy goes to matthew/meetings/transcripts');
+    /* record this meeting, said or typed: the same screen with the company, still waiting for the tap; Discard deletes everything */
+    const g1 = await ev('window.__gum');
+    await ev('document.getElementById("ask").value="Hey Jarvis, record this meeting for Sixfold";document.querySelector(".cmdbar .snd").click()');
+    ok(await until('!!document.getElementById("mrconsent") && document.querySelector("#meetrec .cos button[data-co=Sixfold]").getAttribute("aria-pressed")==="true"', 4000) && await ev('window.__gum') === g1, '"record this meeting for Sixfold": the consent step with Sixfold picked, the microphone still closed');
+    await click('#mrconsent'); ok(await until('!!document.querySelector("#meetrec.live")', 6000), 'meeting: recording again after the tap');
+    const M4 = await (async () => { await nodeUntil(() => metas().some(m => m.company === 'Sixfold' && m.source === 'live' && parts(m.id).length >= 1), 8000); return metas().find(m => m.company === 'Sixfold' && m.source === 'live').id; })();
+    await click('#mrdiscard'); await until('!!document.getElementById("cfyes")'); await click('#cfyes');
+    ok(await nodeUntil(() => meta(M4).status === 'discarded' && parts(M4).length === 0, 6000) && await ev('!document.getElementById("meetrec")'), 'meeting: Discard deletes what was recorded');
+    /* the voice door says to use the screen */
+    ok(errs.length === 0, 'no script errors while recording (' + errs.join(' | ') + ')');
+    fs.rmSync(MEETST, { recursive: true, force: true });
+  }
 
   /* ---- desktop idle shot: a fresh load */
   await cdp('Page.reload'); await until('document.querySelectorAll(".msg.ai").length>0', 9000); await sleep(1200);

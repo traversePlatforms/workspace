@@ -339,6 +339,33 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
 .dopts{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--mut)}
 .dopts .sw{border:1px solid #3ee8ff33;border-radius:999px;padding:5px 12px;color:var(--c);font:11px "JetBrains Mono",monospace}
 .dopts .sw.off{color:var(--mut);border-color:#ffffff22}
+/* 20 Nov (P-12): record a meeting: the consent tap, the big Recording screen, Saved */
+.mrec{z-index:35;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(20px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom));text-align:center;overflow-y:auto}
+.mrec>*{position:relative;z-index:1}
+.mrec .mrh{display:flex;align-items:center;gap:10px;font:600 13px "JetBrains Mono",monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--c)}
+.mrec.live .mrh{color:var(--bad)}.mrec.live.paused .mrh{color:var(--warn)}
+.mrec .mrh .dot{width:12px;height:12px;border-radius:50%;background:currentColor;box-shadow:0 0 12px currentColor;animation:mrp 1.4s infinite}
+.mrec.paused .mrh .dot{animation:none}
+@keyframes mrp{50%{opacity:.2}}
+.mrec .mco{font-size:15px;color:var(--ink);max-width:520px}
+.mrec .mtime{font:700 clamp(54px,16vw,88px)/1 Rajdhani,sans-serif;letter-spacing:.04em;color:var(--ink);font-variant-numeric:tabular-nums}
+.mrec .mlvl{width:min(420px,86vw);height:14px;border:1px solid #3ee8ff44;border-radius:8px;overflow:hidden;background:#04111b}
+.mrec .mlvl i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--okc),var(--c));transition:width .08s}
+.mrec .mst{font-size:13px;color:var(--mut);max-width:520px;line-height:1.5}
+.mrec .mst.w{color:var(--warn)}
+.mrec .mbtns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.mrec .mbtns button{min-width:150px;min-height:68px;border-radius:16px;font:600 19px Inter,sans-serif;border:1px solid #3ee8ff66;color:var(--ink);background:#071826e6;display:flex;align-items:center;justify-content:center;gap:8px}
+.mrec .mbtns button svg.i{width:22px;height:22px}
+.mrec .mbtns .stop{background:var(--bad);border-color:var(--bad);color:#2a0606}
+.mrec .mbtns button:disabled{opacity:.4}
+.mrec .mopts{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;align-items:center;font-size:12.5px;color:var(--mut)}
+.mrec .mopts label{display:flex;gap:6px;align-items:center;text-align:left;max-width:320px}
+.mrec .consent{max-width:440px;width:100%;min-height:80px;border-radius:16px;background:var(--c);color:#022231;font:600 18px Inter,sans-serif;padding:14px 18px;box-shadow:0 0 24px #3ee8ff66;display:flex;align-items:center;justify-content:center;gap:10px}
+.mrec .consent:disabled{opacity:.35;box-shadow:none}
+.mrec .cos{justify-content:center;max-width:560px}
+.mrec .fld{width:min(360px,100%);text-align:left}
+.mrec .hint{max-width:520px}
+.mlist{display:grid;gap:8px}.mi{border:1px solid #3ee8ff1a;padding:9px 11px;background:#3ee8ff06;display:grid;gap:4px;font-size:13px}.mi span{color:var(--mut);font-size:12px}.mi .wa{display:flex;gap:6px;flex-wrap:wrap}.mi .btn{padding:5px 10px}
 @media (max-width:760px){.sheetbg{padding:0}.sheet{max-height:100%;height:100%;width:100%;border:0}.sheet .txt{max-height:none}}
 </style>
 </head>
@@ -400,7 +427,9 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     leaf: '<path d="M5 19c0-8 5-14 15-15-1 10-7 15-15 15z"/><path d="M5 19l8-8"/>',
     cam: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
     app: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
-    wave: '<path d="M3 11v2M7 8v8M11 4v16M15 7v10M19 10v4"/>'
+    wave: '<path d="M3 11v2M7 8v8M11 4v16M15 7v10M19 10v4"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="1.5"/>',
+    pause: '<path d="M9 5v14M15 5v14"/>'
   };
   function ic(n) { var s = document.createElement('span'); s.style.display = 'contents'; s.innerHTML = '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">' + P[n] + '</svg>'; return s.firstChild; }
   function el(t, cls, txt) { var e = document.createElement(t); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
@@ -1075,6 +1104,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   }
   /* force: Brief me and driving mode read aloud even with Voice off. In driving mode, with "Listen again" on, the mic opens when it ends. */
   function say(t, force) {
+    if (MR && !MR.over && isPhoneUa()) return;   /* 20 Nov (P-12): a phone that is recording stays quiet: playing sound there can take the microphone */
     var s = speakable(t), nat = natOk();
     if (!(S.speak || force || S.drive || S.convo) || !(SY || nat) || !touched || !s) { if (S.convo && S.hands) followUp(1200); return; }   /* hands-free, but it cannot talk here: still listen again */
     if (!S.convo) hush();   /* in a voice conversation, answers queue rather than cut each other off */
@@ -1263,10 +1293,18 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     notes.id = 'meetnotes'; notes.placeholder = 'Type or dictate the notes: who was there, what was said, what was asked of you.'; notes.style.minHeight = '200px';
     var mic = btn('Dictate', 'mic', 'btn sec'), said = el('div', 'said', 'Pick the company first.'), go = btn('Send to the desk', 'send', 'btn pri'); go.id = 'meetsend'; go.disabled = true;
     mic.addEventListener('click', function () { dictate(notes, mic); });
-    function check() { go.disabled = !pick || (pick === 'Other' && who.value.trim().length < 2) || notes.value.trim().length < 10; said.textContent = !pick ? 'Pick the company first.' : go.disabled ? 'Then the notes.' : 'The desk files them, makes the to-dos, drafts any follow-up as a file (never sent) and replies with a summary.'; }
+    /* 20 Nov (P-12): or record it (the consent tap comes next), or upload a recording (Voice Memos through Files) */
+    var recB = btn('Record the meeting', 'mic', 'btn pri', function () { if (recB.disabled) return; sh.force(); mrOpen({ company: pick, other: who.value.trim() }); }); recB.id = 'meetrecord'; recB.disabled = true;
+    var upF = el('input'); upF.type = 'file'; upF.accept = 'audio/*,.m4a,.mp3,.wav,.webm,.ogg,.aac,.flac'; upF.style.display = 'none'; upF.id = 'meetfile';
+    var upB = btn('Upload a recording', 'out', 'btn sec', function () { if (!upB.disabled) upF.click(); }); upB.id = 'meetupload'; upB.disabled = true;
+    upF.addEventListener('change', function () { var f = upF.files && upF.files[0]; upF.value = ''; if (!f) return; sh.force(); mrOpen({ company: pick, other: who.value.trim(), file: f }); });
+    var recRow = el('div', 'racts'); add(recRow, el('div', 'said', 'Record it here (up to 3 hours), or upload one, e.g. from Voice Memos.'), btn('Phone tips', 'app', 'btn gh', function () { mrTips(); }), upB, recB, upF);
+    function check() { go.disabled = !pick || (pick === 'Other' && who.value.trim().length < 2) || notes.value.trim().length < 10; recB.disabled = upB.disabled = !pick || (pick === 'Other' && who.value.trim().length < 2); said.textContent = !pick ? 'Pick the company first.' : go.disabled ? 'Then the notes.' : 'The desk files them, makes the to-dos, drafts any follow-up as a file (never sent) and replies with a summary.'; }
     notes.addEventListener('input', check); who.addEventListener('input', check);
     var r = el('div', 'racts'); add(r, said, mic, go);
-    add(sh.body, el('label', 'rl', 'Which company? (required)'), cos, oth, fld('Date', dt), el('label', 'rl', 'Notes'), notes, r);
+    var ml = el('div', 'mlist'); ml.id = 'meetlist';
+    add(sh.body, el('label', 'rl', 'Which company? (required)'), cos, oth, recRow, fld('Date', dt), el('label', 'rl', 'Or type the notes'), notes, r, el('label', 'rl', 'Recordings'), ml);
+    mrList(ml);
     var dirty = false; notes.addEventListener('input', function () { dirty = true; }); sh.setGuard(function () { return !dirty || confirmBox('Close without sending the notes? They are not kept.', 'Close it'); });
     go.addEventListener('click', function () {
       check(); if (go.disabled) return;
@@ -1276,6 +1314,349 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       deskSend(text, { show: 'Meeting notes · ' + label + ' · ' + plural(notes.value.trim().split(/\n+/).length, 'line'), title: 'Meeting notes sent to the desk' });
     });
   }
+  /* ------------------------------------------------------------ 20 Nov (P-12): record a meeting
+     Matthew: "can i get jarvis to record audio from meetings like i said hey jarvis record this meeting" ... "i will let everyone know before
+     i start it that I am going to be recording. It will never be used without everyones acknowledgment" ... "when jarvis is recording an
+     audio from a meeting that it automatically stays on and doesnt sleep or no other apps switch it or interrupt it".
+     The company first (the Meeting notes list), then ONE tap "Everyone here knows this is being recorded" (the server logs when, which
+     company and which device with the meeting, and refuses to start without it), and only then the microphone records. The recorder hands
+     over a piece every 30 s and each goes straight to the server (../api.php?action=jvmeetchunk), kept in this browser's own storage
+     (IndexedDB) until the server has it, so a crash or a dropped connection loses at most the piece being made. A new recorder run (a
+     segment) starts every 10 minutes, after a pause, and after any interruption (a call, the page hidden, the microphone taken); the gap is
+     marked in the transcript. The screen is kept awake (Screen Wake Lock, asked again whenever the page is back). The server pushes
+     "Recording paused" when no piece has come for 2 minutes. Stop (a tap, or "Hey Jarvis, stop recording" on the laptop): the last pieces go
+     up, then the laptop (or the cloud machine) transcribes it and the desk files it as [MEETING NOTES]. The audio is deleted once the
+     transcript is saved, unless Keep audio is on (then 30 days). Upload a recording sends a file through the same path. */
+  var MR = null, MRS = { slice: +window.__jvMeetSlice || 30000, rotate: +window.__jvMeetRotate || 600000, max: +window.__jvMeetMax || 10800 };
+  var MCONSENT = 'Everyone here knows this is being recorded', MCONSENT_FILE = 'Everyone in this recording knew it was being recorded';
+  var MST = { recording: 'Recording now', paused: 'Paused', uploading: 'Uploading', ready: 'Waiting to be transcribed', transcribing: 'Being transcribed', done: 'Transcribed', failed: 'Could not be transcribed', discarded: 'Discarded' };
+  function hms(s) { s = Math.max(0, Math.floor(s)); var h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return h + ':' + ('0' + m).slice(-2) + ':' + ('0' + x).slice(-2); }
+  function mlen(s) { s = Math.round(s); if (s < 60) return s + ' s'; var h = Math.floor(s / 3600), m = Math.round(s % 3600 / 60); return h ? h + ' h' + (m ? ' ' + m + ' min' : '') : m + ' min'; }
+  function mbytes(b) { return b > 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+  /* this browser's own copy of each piece until the server has it */
+  var IDB = null;
+  function idb() {
+    if (IDB) return IDB;
+    IDB = new Promise(function (res) { try { var r = indexedDB.open('jarvis-meet', 1); r.onupgradeneeded = function () { r.result.createObjectStore('q', { keyPath: 'k' }); }; r.onsuccess = function () { res(r.result); }; r.onerror = function () { res(null); }; } catch (e) { res(null); } });
+    return IDB;
+  }
+  function idbDo(mode, fn) { return idb().then(function (db) { if (!db) return null; return new Promise(function (res) { try { var tx = db.transaction('q', mode), st = tx.objectStore('q'), r = fn(st); tx.oncomplete = function () { res(r && r.result); }; tx.onerror = tx.onabort = function () { res(null); }; } catch (e) { res(null); } }); }); }
+  var MQ = { items: [], busy: false, fails: 0, sent: 0, sentBytes: 0, err: '', t: null };
+  function mqKey(it) { return it.id + '|' + ('00' + it.seg).slice(-3) + '|' + ('0000' + it.n).slice(-5); }
+  function mqAdd(it, keepLocal) { it.k = mqKey(it); MQ.items.push(it); if (keepLocal) idbDo('readwrite', function (st) { return st.put(it); }); mqRun(); }
+  function mqRun() {
+    if (MQ.busy) return; var it = MQ.items[0]; if (!it) { mrPaint(); return; }
+    MQ.busy = true; clearTimeout(MQ.t);
+    var u = API + '?action=jvmeetchunk&id=' + encodeURIComponent(it.id) + '&seg=' + it.seg + '&n=' + it.n + '&secs=' + Math.round(it.secs || 0) + (it.n === 0 ? '&t=' + (it.t || 0) + '&gap=' + Math.round(it.gap || 0) + '&why=' + encodeURIComponent(it.why || '') : '');
+    var next = function (drop, err) {
+      MQ.busy = false;
+      if (drop) { MQ.items.shift(); idbDo('readwrite', function (st) { return st.delete(it.k); }); MQ.fails = 0; MQ.err = err || ''; if (!err) { MQ.sent++; MQ.sentBytes += it.blob.size || 0; } mqRun(); return; }
+      MQ.fails++; MQ.err = err || 'No connection'; mrPaint(); MQ.t = setTimeout(mqRun, Math.min(30000, 1500 * MQ.fails));
+    };
+    fetch(u, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/octet-stream' }, body: it.blob }).then(js).then(function (j) {
+      if (j.ok) return next(true);
+      if (j.gone || j.bad) return next(true, j.error || 'refused');
+      if (j.full && MR && MR.id === it.id) { next(true); toast('This recording reached its size limit: stopping it.'); mrStop(); return; }
+      next(false, j._status === 401 ? 'Signed out: sign in again and the pieces go up' : (j.error || 'The server said no'));
+    }, function () { next(false, 'No connection: kept on this device, sending when it is back'); });
+  }
+  function mqLeft(id) { return MQ.items.filter(function (x) { return !id || x.id === id; }).length; }
+  /* pieces left in this browser by a page that closed: send them now */
+  function mqResume() { return idbDo('readonly', function (st) { return st.getAll(); }).then(function (all) { (all || []).sort(function (a, b) { return a.k < b.k ? -1 : 1; }).forEach(function (it) { if (!MQ.items.some(function (x) { return x.k === it.k; })) MQ.items.push(it); }); mqRun(); }); }
+
+  function pickMime() { if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return ''; var c = ['audio/webm;codecs=opus', 'audio/mp4;codecs=mp4a.40.2', 'audio/mp4', 'audio/webm', 'audio/ogg;codecs=opus']; for (var i = 0; i < c.length; i++) if (MediaRecorder.isTypeSupported(c[i])) return c[i]; return ''; }
+  function getMic() { if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) return Promise.reject(new Error('This browser cannot record. Use Upload a recording instead.')); return navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+  function mrSecs() { if (!MR) return 0; return MR.doneSecs + (MR.segT0 && !MR.paused && !MR.broken ? (Date.now() - MR.segT0) / 1000 : 0); }
+  function wakeOn() {
+    if (!MR || MR.over || !('wakeLock' in navigator) || document.hidden || MR.wake) { if (MR && !('wakeLock' in navigator)) MR.wakeOk = false; return; }
+    navigator.wakeLock.request('screen').then(function (l) { if (!MR || MR.over) { l.release(); return; } MR.wake = l; MR.wakeOk = true; l.addEventListener('release', function () { if (MR) { MR.wake = null; MR.wakeOk = false; if (!MR.over && !document.hidden) setTimeout(wakeOn, 500); mrPaint(); } }); mrPaint(); }, function () { if (MR) { MR.wakeOk = false; mrPaint(); } });
+  }
+  function mrLevel(stream) {
+    try {
+      MR.ac = MR.ac || new (window.AudioContext || window.webkitAudioContext)(); if (MR.ac.state === 'suspended') MR.ac.resume();
+      var src = MR.ac.createMediaStreamSource(stream), an = MR.ac.createAnalyser(); an.fftSize = 512; src.connect(an); MR.an = an; MR.lvBuf = new Uint8Array(an.fftSize);
+    } catch (e) { MR.an = null; }
+  }
+  /* one recorder run on the stream: its pieces go up as they are made */
+  function mrSeg(stream, why, gap) {
+    var mime = pickMime(), rec, seg = MR.seg++, n = 0, t = Math.floor(Date.now() / 1000), id = MR.id, startSecs = mrSecs();
+    try { rec = new MediaRecorder(stream, mime ? { mimeType: mime, audioBitsPerSecond: 32000 } : { audioBitsPerSecond: 32000 }); } catch (e) { try { rec = new MediaRecorder(stream); } catch (e2) { mrBroken('error'); return null; } }
+    rec.ondataavailable = function (e) {
+      if (!e.data || !e.data.size) return; var k = n++; if (MR && MR.id === id) { MR.lastData = Date.now(); MR.counts[seg] = n; }
+      mqAdd({ id: id, seg: seg, n: k, blob: e.data, t: k === 0 ? t : 0, gap: k === 0 ? gap : 0, why: k === 0 ? why : '', secs: Math.round(mrSecs()) }, true);
+    };
+    rec.onerror = function () { if (MR && MR.mr === rec) mrBroken('error'); };
+    rec.start(MRS.slice); MR.mr = rec; MR.stream = stream; MR.segT0 = Date.now(); MR.lastData = Date.now(); MR.broken = false; MR.counts[seg] = MR.counts[seg] || 0;
+    var tr = stream.getAudioTracks()[0];
+    if (tr) { tr.onended = function () { if (MR && MR.stream === stream && !MR.paused && !MR.over) mrBroken('ended'); }; tr.onmute = function () { if (MR && MR.stream === stream) MR.mutedAt = Date.now(); }; tr.onunmute = function () { if (MR && MR.stream === stream && MR.mutedAt && Date.now() - MR.mutedAt > 3000) { var g = (Date.now() - MR.mutedAt) / 1000; MR.mutedAt = 0; mrRotate('muted', g); } else if (MR) MR.mutedAt = 0; }; }
+    clearTimeout(MR.rotT); MR.rotT = setTimeout(function () { mrRotate('rotate', 0); }, MRS.rotate);
+    return rec;
+  }
+  function mrClose(rec) { if (rec && rec.state !== 'inactive') try { rec.stop(); } catch (e) {} }
+  function mrRotate(why, gap) {   /* a fresh recorder on the same microphone: the new one starts before the old one stops, so nothing is lost */
+    if (!MR || MR.paused || MR.over || MR.broken || !MR.stream) return;
+    var old = MR.mr; MR.doneSecs += (Date.now() - MR.segT0) / 1000; MR.segT0 = 0;
+    if (!mrSeg(MR.stream, why, gap || 0)) return; setTimeout(function () { mrClose(old); }, 150);
+  }
+  function mrStopStream() { if (MR && MR.stream) { try { MR.stream.getTracks().forEach(function (x) { x.stop(); }); } catch (e) {} MR.stream = null; } }
+  /* the recorder stopped by itself (a call, the microphone taken, the page put away): pick up again when the page can */
+  function mrBroken(why) {
+    if (!MR || MR.over || MR.paused || MR.broken) return;
+    MR.broken = true; MR.brokenWhy = why; MR.doneSecs += Math.max(0, ((MR.lastData || Date.now()) - (MR.segT0 || Date.now())) / 1000); MR.segT0 = 0; MR.brokenAt = MR.lastData || Date.now();
+    clearTimeout(MR.rotT); mrClose(MR.mr); MR.mr = null; mrStopStream(); mrPaint();
+    if (!document.hidden) mrRestart();
+  }
+  function mrRestart(tapped) {
+    if (!MR || MR.over || MR.paused || !MR.broken || MR.restarting) return;
+    MR.restarting = true; mrPaint();
+    getMic().then(function (s) {
+      MR.restarting = false; if (!MR || MR.over || MR.paused) { s.getTracks().forEach(function (x) { x.stop(); }); return; }
+      var gap = (Date.now() - (MR.brokenAt || Date.now())) / 1000; mrLevel(s);
+      if (mrSeg(s, MR.brokenWhy === 'hidden' ? 'hidden' : (MR.brokenWhy || 'error'), gap)) { apost('jvmeetstate', { id: MR.id, op: 'resume' }); if (gap >= 20) toast('Recording again. The ' + mlen(gap) + ' gap is marked in the transcript.'); }
+      wakeOn(); mrPaint();
+    }, function () { MR.restarting = false; MR.needTap = true; mrPaint(); if (tapped) toast('The microphone did not open. Check that J.A.R.V.I.S. may use it.'); });
+  }
+  /* the watchdog, every 2 s while recording: the timer, the level, a recorder gone quiet, the 3-hour stop */
+  function mrTick() {
+    if (!MR || MR.over) return;
+    if (!document.hidden && !MR.paused && !MR.stopping) {
+      if (!MR.broken && (!MR.mr || MR.mr.state !== 'recording' || (MR.stream && MR.stream.getAudioTracks().every(function (x) { return x.readyState === 'ended'; })) || Date.now() - MR.lastData > MRS.slice + 15000)) mrBroken(MR.hiddenAt ? 'hidden' : 'error');
+      else if (MR.broken && !MR.restarting && !MR.needTap) mrRestart();
+      if (mrSecs() >= MRS.max) { toast('Three hours: the recording stops here.'); mrStop(); return; }
+    }
+    mrPaint();
+  }
+  document.addEventListener('visibilitychange', function () {
+    if (!MR || MR.over) return;
+    if (document.hidden) { MR.hiddenAt = Date.now(); return; }
+    var was = MR.hiddenAt; MR.hiddenAt = 0; wakeOn();
+    if (MR.paused || MR.stopping) return;
+    if (MR.broken) { MR.brokenWhy = MR.brokenWhy || 'hidden'; mrRestart(); return; }
+    if (was && (!MR.mr || MR.mr.state !== 'recording' || Date.now() - MR.lastData > MRS.slice + 5000)) mrBroken('hidden');
+  });
+  /* the level meter, only while the page is on screen */
+  function mrLevelLoop() {
+    if (!MR || MR.over) return; requestAnimationFrame(mrLevelLoop);
+    var bar = document.querySelector('#meetrec .mlvl i'); if (!bar || !MR.an || document.hidden) return;
+    if (MR.paused || MR.broken) { bar.style.width = '0%'; return; }
+    MR.an.getByteTimeDomainData(MR.lvBuf); var s = 0; for (var i = 0; i < MR.lvBuf.length; i++) { var v = (MR.lvBuf[i] - 128) / 128; s += v * v; }
+    bar.style.width = Math.min(100, Math.round(Math.sqrt(s / MR.lvBuf.length) * 340)) + '%';
+  }
+
+  /* the screen: the company and the consent tap first; then the big Recording screen; then Stopping; then Saved */
+  function mrOpen(o) {
+    o = o || {};
+    if (MR && !MR.over) { mrShow(); return; }
+    var old = document.getElementById('meetrec'); if (old) old.remove();
+    var v = el('div', 'jv mrec'); v.id = 'meetrec'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-label', o.file ? 'Upload a recording' : 'Record a meeting');
+    var pick = o.company || '', who = el('input'); who.id = 'mrwho'; who.placeholder = 'Who or what is it for?'; who.value = o.other || '';
+    var cos = el('div', 'cos'); cos.setAttribute('role', 'radiogroup'); cos.setAttribute('aria-label', 'Which company');
+    var oth = fld('Other: who or what', who);
+    var go = btn(o.file ? MCONSENT_FILE : MCONSENT, 'check', 'consent'); go.id = 'mrconsent';
+    var keep = el('input'); keep.type = 'checkbox'; keep.id = 'mrkeep'; var kl = el('label'); add(kl, keep, 'Keep the audio for 30 days (otherwise it is deleted once the transcript is saved)');
+    var err = el('div', 'mst w'); err.id = 'mrerr';
+    function check() { go.disabled = !pick || (pick === 'Other' && who.value.trim().length < 2); oth.style.display = pick === 'Other' ? '' : 'none'; }
+    COMPANIES.forEach(function (c) { var b = btn(c[1], null, null, function () { pick = c[0]; [].forEach.call(cos.children, function (x) { x.setAttribute('aria-pressed', String(x === b)); }); check(); }); b.setAttribute('aria-pressed', String(c[0] === pick)); b.setAttribute('data-co', c[0]); cos.appendChild(b); });
+    who.addEventListener('input', check); check();
+    var close = btn('Cancel', null, 'btn gh', function () { v.remove(); }); close.id = 'mrcancel';
+    var tips = btn('Phone tips', 'app', 'btn gh', function () { mrTips(); });
+    add(v, el('div', 'mrh', o.file ? 'Upload a recording' : 'Record a meeting'),
+      o.file ? el('div', 'mco', o.file.name + ' · ' + mbytes(o.file.size)) : null,
+      el('div', 'hint', 'Which company is it for? (required)'), cos, oth,
+      el('div', 'hint', o.file ? 'Upload only a recording everyone in it knew about. Tapping below is the record that they did: J.A.R.V.I.S. keeps the time, the company and this device with it (no names).' : 'Tell everyone before you start. Tapping below is the record that you did: J.A.R.V.I.S. keeps the time, the company and this device with the meeting (no names). Recording starts after the tap.'),
+      go, el('div', 'mopts', null), err);
+    var opts = v.querySelector('.mopts'); add(opts, kl, tips, close);
+    go.addEventListener('click', function () {
+      check(); if (go.disabled) return; go.disabled = true; err.textContent = ''; touched = true;
+      var other = who.value.trim();
+      if (o.file) { mrUpload(o.file, pick, other, keep.checked, v, err, go); return; }
+      var ac = null; try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}   /* made in the tap: iPhone needs that */
+      getMic().then(function (stream) {
+        apost('jvmeetstart', { company: pick, other: other, consent: true, consentText: MCONSENT, device: deviceName(), keep: keep.checked }).then(function (j) {
+          if (!j.ok) { stream.getTracks().forEach(function (x) { x.stop(); }); go.disabled = false; err.textContent = j.error || 'It did not start.'; if (j.active) mrOffer(j.active); return; }
+          mrBegin(j.meeting, stream, ac, 'start', 0);
+        }, function () { stream.getTracks().forEach(function (x) { x.stop(); }); go.disabled = false; err.textContent = 'No connection: nothing was recorded. Try again.'; });
+      }, function (e) { go.disabled = false; err.textContent = (e && e.message && /cannot record/.test(e.message)) ? e.message : 'The microphone did not open. Allow J.A.R.V.I.S. to use it (in the browser or Settings), then tap again.'; });
+    });
+    document.body.appendChild(v);
+  }
+  function mrBegin(m, stream, ac, why, gap) {
+    MR = { id: m.id, label: m.label, company: m.company, seg: m.nextSeg || 0, counts: {}, doneSecs: m.secs || 0, segT0: 0, lastData: Date.now(), paused: false, over: false, stopping: false, keep: !!m.keep, consentAt: m.consentAt, startedAt: m.startedAt, ac: ac, wakeOk: null };
+    store('jarvis.meetrec', { id: m.id, label: m.label, at: m.startedAt });
+    mrLevel(stream); mrSeg(stream, why, gap); wakeOn(); mrShow();
+    clearInterval(MR.tick); MR.tick = setInterval(mrTick, 1000); requestAnimationFrame(mrLevelLoop);
+  }
+  function mrShow() {
+    var v = document.getElementById('meetrec'); if (v) v.remove();
+    v = el('div', 'jv mrec live'); v.id = 'meetrec'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-label', 'Recording');
+    var pz = btn('Pause', 'pause', null, function () { MR.paused ? mrResume() : mrPause(); }); pz.id = 'mrpause';
+    var sp = btn('Stop', 'stop', 'stop', function () { mrStop(); }); sp.id = 'mrstop';
+    var tap = btn('Tap to record again', 'mic', 'consent', function () { MR.needTap = false; touched = true; mrRestart(true); }); tap.id = 'mrtap';
+    var keep = el('input'); keep.type = 'checkbox'; keep.id = 'mrkeep2'; keep.checked = MR.keep; var kl = el('label'); add(kl, keep, 'Keep audio 30 days');
+    keep.addEventListener('change', function () { MR.keep = keep.checked; apost('jvmeetstate', { id: MR.id, op: 'keep', keep: keep.checked }); });
+    var dis = btn('Discard', 'close', 'btn gh', function () { confirmBox('Discard this recording? Everything recorded so far is deleted and nothing is transcribed.', 'Yes, discard it').then(function (y) { if (y) mrDiscard(); }); }); dis.id = 'mrdiscard';
+    add(v, el('div', 'mrh', null), el('div', 'mco', MR.label), el('div', 'mtime', '0:00:00'), el('div', 'mlvl'), el('div', 'mst'), tap, el('div', 'mbtns'), el('div', 'mopts'), el('div', 'hint mhint'));
+    v.querySelector('.mrh').appendChild(el('span', 'dot')); v.querySelector('.mrh').appendChild(el('b', null, 'Recording'));
+    v.querySelector('.mlvl').appendChild(el('i'));
+    add(v.querySelector('.mbtns'), pz, sp); add(v.querySelector('.mopts'), kl, btn('Phone tips', 'app', 'btn gh', function () { mrTips(); }), dis);
+    v.querySelector('.mhint').textContent = 'Consent tapped ' + clock(MR.consentAt) + '. ' + (isPhoneUa() ? 'Keep J.A.R.V.I.S. on screen and the phone plugged in. Phone tips has the settings that stop calls and other apps getting in.' : 'Say “Hey Jarvis, stop recording” to stop, or tap Stop.');
+    document.body.appendChild(v); mrPaint();
+  }
+  function mrPaint() {
+    var v = document.getElementById('meetrec'); if (!v || !MR || !v.classList.contains('live')) return;
+    var left = mqLeft(MR.id), s = mrSecs();
+    v.classList.toggle('paused', !!MR.paused || !!MR.broken);
+    var h = v.querySelector('.mrh b'); if (h) h.textContent = MR.over ? 'Saved' : MR.stopping ? 'Finishing' : MR.paused ? 'Paused' : MR.broken ? 'Interrupted' : 'Recording';
+    var tm = v.querySelector('.mtime'); if (tm) tm.textContent = hms(s);
+    var pz = document.getElementById('mrpause'); if (pz) { pz.lastChild.textContent = MR.paused ? 'Resume' : 'Pause'; pz.disabled = MR.stopping || MR.over; }
+    var sp = document.getElementById('mrstop'); if (sp) sp.disabled = MR.stopping || MR.over;
+    var tap = document.getElementById('mrtap'); if (tap) tap.style.display = MR.needTap && !MR.over ? '' : 'none';
+    var st = v.querySelector('.mst'), wl = MR.wakeOk === true ? 'Screen kept awake.' : MR.wakeOk === false ? 'This browser cannot keep the screen awake: set Auto-Lock to Never (Phone tips).' : '';
+    var line = MR.over ? '' : MR.stopping ? (left ? 'Sending the last ' + plural(left, 'piece') + '… keep J.A.R.V.I.S. open.' : 'Saving…') :
+      MR.paused ? 'Paused: nothing is being recorded. Resume carries on in the same meeting.' :
+      MR.broken ? (MR.restarting ? 'Getting the microphone back…' : 'The recording was interrupted. It picks up again here; the gap is marked.') :
+      'Saved to the server as it goes: ' + plural(MQ.sent, 'piece') + (left ? ', ' + left + ' waiting' + (MQ.err ? ' (' + MQ.err + ')' : '') : '') + '. ' + wl;
+    if (st && !MR.over) { st.textContent = line; st.classList.toggle('w', !!(MQ.err && left) || MR.broken || MR.wakeOk === false); }
+  }
+  function mrPause() {
+    if (!MR || MR.paused || MR.stopping) return;
+    MR.paused = true; MR.doneSecs += MR.segT0 ? (Date.now() - MR.segT0) / 1000 : 0; MR.segT0 = 0; MR.pausedAt = Date.now(); clearTimeout(MR.rotT);
+    mrClose(MR.mr); MR.mr = null; setTimeout(mrStopStream, 300); apost('jvmeetstate', { id: MR.id, op: 'pause' }); mrPaint();
+  }
+  function mrResume() {
+    if (!MR || !MR.paused) return; touched = true;
+    getMic().then(function (s) { if (!MR || !MR.paused) { s.getTracks().forEach(function (x) { x.stop(); }); return; } var gap = (Date.now() - MR.pausedAt) / 1000; MR.paused = false; MR.broken = false; mrLevel(s); mrSeg(s, 'pause', gap); apost('jvmeetstate', { id: MR.id, op: 'resume' }); wakeOn(); mrPaint(); },
+      function () { toast('The microphone did not open. Allow J.A.R.V.I.S. to use it, then tap Resume.'); });
+  }
+  function mrStop() {
+    if (!MR || MR.stopping || MR.over) return;
+    var m = MR; m.stopping = true; clearTimeout(m.rotT);
+    if (!m.paused && m.segT0) m.doneSecs += (Date.now() - m.segT0) / 1000; m.segT0 = 0;
+    var rec = m.mr; m.mr = null;
+    var after = function () {
+      mrStopStream(); var t0 = Date.now();
+      var wait = function () {
+        if (MR !== m) return;
+        if (mqLeft(m.id) && Date.now() - t0 < 120000) { mrPaint(); setTimeout(wait, 700); return; }
+        apost('jvmeetstate', { id: m.id, op: 'stop', expect: m.counts, secs: Math.round(m.doneSecs), keep: m.keep }).then(function (j) {
+          if (!j.ok && !(j.meeting && j.meeting.status !== 'recording' && j.meeting.status !== 'paused')) { if (MR === m) { toast(j.error || 'Not stopped yet: trying again.'); setTimeout(wait, 4000); } return; }
+          mrOver(m, j);
+        }, function () { setTimeout(wait, 4000); });
+      };
+      wait();
+    };
+    if (rec && rec.state !== 'inactive') { rec.addEventListener('stop', function () { setTimeout(after, 50); }); mrClose(rec); } else after();
+    mrPaint();
+  }
+  function mrOver(m, j) {
+    m.over = true; clearInterval(m.tick); if (m.wake) try { m.wake.release(); } catch (e) {} if (m.ac) try { m.ac.close(); } catch (e) {}
+    store('jarvis.meetrec', null);
+    var left = mqLeft(m.id), w = (j && j.where) || {}, v = document.getElementById('meetrec');
+    var say1 = 'Recording saved: ' + m.label + ', ' + mlen(m.doneSecs) + '. ' + (w.say || '') + ' The desk files the notes and sends you a short summary.' + (left ? ' ' + plural(left, 'piece') + ' had not gone up yet; they still go up when the connection allows.' : '');
+    if (v) { v.textContent = ''; v.classList.remove('live'); add(v, el('div', 'mrh', 'Saved'), el('div', 'mco', m.label + ' · ' + mlen(m.doneSecs)), el('div', 'mst', say1), btn('Close', 'check', 'consent', function () { v.remove(); })); v.querySelector('.consent').id = 'mrdone'; }
+    msgAi(say1, 'J.A.R.V.I.S. · meeting'); setState('answer');
+    MR = null;
+  }
+  function mrDiscard() {
+    if (!MR) return; var m = MR; m.over = true; m.stopping = true; clearInterval(m.tick); clearTimeout(m.rotT); mrClose(m.mr); mrStopStream(); if (m.wake) try { m.wake.release(); } catch (e) {}
+    MQ.items = MQ.items.filter(function (x) { if (x.id === m.id) { idbDo('readwrite', function (st) { return st.delete(x.k); }); return false; } return true; });
+    apost('jvmeetstate', { id: m.id, op: 'discard' }).then(function () {}, function () {});
+    store('jarvis.meetrec', null); MR = null; var v = document.getElementById('meetrec'); if (v) v.remove(); toast('Discarded. Nothing from it is kept.');
+  }
+  /* a recording still open on the server (the page was closed, or the phone's alert): pick it up here, or stop it */
+  function mrOffer(m) {
+    if (MR && !MR.over) { mrShow(); return; }
+    var old = document.getElementById('meetrec'); if (old) old.remove();
+    var v = el('div', 'jv mrec'); v.id = 'meetrec'; v.setAttribute('role', 'dialog'); v.setAttribute('aria-label', 'A recording is still open');
+    var quiet = Math.max(0, Math.floor(Date.now() / 1000) - (m.lastChunkAt || m.startedAt));
+    var res = btn('Resume recording', 'mic', 'consent', function () {
+      res.disabled = true; touched = true; var ac = null; try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+      getMic().then(function (s) { apost('jvmeetstate', { id: m.id, op: 'resume' }).then(function (j) { if (!j.ok) { s.getTracks().forEach(function (x) { x.stop(); }); res.disabled = false; toast(j.error || 'It could not resume.'); return; } mrBegin(j.meeting, s, ac, m.status === 'paused' ? 'pause' : 'reload', quiet); }); },
+        function () { res.disabled = false; toast('The microphone did not open. Allow J.A.R.V.I.S. to use it.'); });
+    }); res.id = 'mrresume';
+    var sp = btn('Stop and transcribe it', 'check', 'btn sec', function () { sp.disabled = true; apost('jvmeetstate', { id: m.id, op: 'stop', secs: m.secs }).then(function (j) { store('jarvis.meetrec', null); v.remove(); msgAi(j.ok ? 'Stopped: ' + m.label + ', ' + mlen(m.secs || 0) + ' recorded. ' + ((j.where || {}).say || '') : (j.error || 'It did not stop.'), 'J.A.R.V.I.S. · meeting'); }); }); sp.id = 'mrofferstop';
+    add(v, el('div', 'mrh', m.status === 'paused' ? 'Recording paused' : 'Recording interrupted'), el('div', 'mco', m.label + ' · started ' + clock(m.startedAt) + (m.device ? ' on ' + m.device : '')),
+      el('div', 'mst w', 'Nothing has reached J.A.R.V.I.S. for ' + mlen(quiet) + '. Resume carries on in the same meeting (the gap is marked in the transcript), or stop it and what was recorded is transcribed.'), res, sp,
+      btn('Not now', null, 'btn gh', function () { v.remove(); }));
+    document.body.appendChild(v);
+  }
+  /* Upload a recording: the file in 4 MB pieces through the same path, with its own consent line */
+  function mrUpload(file, co, other, keep, v, err, go) {
+    apost('jvmeetstart', { company: co, other: other, consent: true, consentText: MCONSENT_FILE, source: 'upload', fileName: file.name, fileSize: file.size, device: deviceName(), keep: keep }).then(function (j) {
+      if (!j.ok) { go.disabled = false; err.textContent = j.error || 'It did not start.'; return; }
+      var id = j.meeting.id, P = 4194304, n = Math.ceil(file.size / P), t0 = Date.now();
+      for (var i = 0; i < n; i++) mqAdd({ id: id, seg: 0, n: i, blob: file.slice(i * P, Math.min(file.size, (i + 1) * P)), t: 0, gap: 0, why: '', secs: 0 }, false);
+      v.textContent = ''; var bar = el('div', 'mlvl'), bi = el('i'); bar.appendChild(bi); var st = el('div', 'mst'); st.id = 'mrupst';
+      add(v, el('div', 'mrh', 'Uploading'), el('div', 'mco', file.name + ' · ' + co + (other ? ': ' + other : '')), bar, st, el('div', 'hint', 'Keep J.A.R.V.I.S. open until it says saved.'));
+      var poll = function () {
+        var left = mqLeft(id), done = n - left; bi.style.width = Math.round(done / n * 100) + '%'; st.textContent = mbytes(Math.min(file.size, done * P)) + ' of ' + mbytes(file.size) + (MQ.err && left ? ' (' + MQ.err + ')' : '');
+        if (left) { setTimeout(poll, 500); return; }
+        apost('jvmeetstate', { id: id, op: 'stop', expect: { 0: n } }).then(function (k) {
+          if (!k.ok) { st.textContent = k.error || 'The server did not take it.'; return; }
+          var say1 = 'Uploaded: ' + file.name + ' for ' + k.meeting.label + ' (' + mbytes(file.size) + ' in ' + mlen((Date.now() - t0) / 1000) + '). ' + ((k.where || {}).say || '') + ' The desk files the notes and sends you a short summary.';
+          v.textContent = ''; add(v, el('div', 'mrh', 'Saved'), el('div', 'mst', say1), btn('Close', 'check', 'consent', function () { v.remove(); })); msgAi(say1, 'J.A.R.V.I.S. · meeting');
+        }, function () { setTimeout(poll, 3000); });
+      };
+      poll();
+    }, function () { go.disabled = false; err.textContent = 'No connection. Try again.'; });
+  }
+  /* his recordings, in the Meeting notes sheet */
+  function mrList(box) {
+    box.textContent = ''; box.appendChild(el('div', 'hint', 'Loading…'));
+    aget('jvmeetlist').then(function (j) {
+      box.textContent = ''; var l = (j.meetings || []).filter(function (m) { return m.status !== 'discarded'; }).slice(0, 8);
+      if (!l.length) { box.appendChild(el('div', 'hint', 'No recordings yet. The audio is deleted once its transcript is saved, unless you keep it.')); return; }
+      l.forEach(function (m) {
+        var r = el('div', 'mi'); r.setAttribute('data-meet', m.id);
+        var aud = m.audio ? (m.keepUntil ? 'audio kept to ' + dayName(ymdOf(new Date(m.keepUntil * 1000))) : m.status === 'done' ? 'audio still here' : 'audio held until the transcript is saved') : (m.audioDeletedAt ? 'audio deleted' : '');
+        add(r, el('b', null, m.label), el('span', null, dayName(ymdOf(new Date(m.startedAt * 1000))) + ' ' + clock(m.startedAt) + ' · ' + mlen(m.secs || 0) + ' · ' + (MST[m.status] || m.status) + (m.error && m.status !== 'done' ? ' (' + m.error + ')' : '') + (aud ? ' · ' + aud : '')));
+        var a = el('div', 'wa');
+        if (m.hasText) { var tx = el('a', 'btn sec', 'Transcript'); tx.href = API + '?action=jvmeettext&id=' + encodeURIComponent(m.id); tx.target = '_blank'; tx.rel = 'noopener'; a.appendChild(tx); }
+        if (m.thread) a.appendChild(btn('Desk chat', 'help', 'btn gh', function () { var s = document.getElementById('sheet'); if (s) s.remove(); openDesk(m.thread); }));
+        if (m.status === 'recording' || m.status === 'paused') a.appendChild(btn(MR && MR.id === m.id ? 'Open' : 'Resume or stop', 'mic', 'btn sec', function () { var s = document.getElementById('sheet'); if (s) s.remove(); if (MR && MR.id === m.id) mrShow(); else mrOffer(m); }));
+        if (m.audio && m.status !== 'transcribing') { var kb = btn(m.keep ? 'Don’t keep audio' : 'Keep audio 30 days', null, 'btn gh', function () { kb.disabled = true; apost('jvmeetstate', { id: m.id, op: 'keep', keep: !m.keep }).then(function () { mrList(box); }); }); a.appendChild(kb); }
+        r.appendChild(a); box.appendChild(r);
+      });
+    }, function () { box.textContent = 'No connection.'; });
+  }
+  /* "Hey Jarvis, record this meeting" (or typed): the same screen, the company already picked if it was said; the tap is still needed */
+  function mrFromWords(t) {
+    if (MR && !MR.over) { mrShow(); say('Already recording.', true); return; }
+    var c = /\b(surge|sixfold|traverse|peak|personal)\b/i.exec(t), co = c ? c[1].charAt(0).toUpperCase() + c[1].slice(1).toLowerCase() : '';
+    mrOpen({ company: co }); say(co ? 'Recording for ' + co + '. Tap the button to confirm everyone knows, and it starts.' : 'Which company is it for? Pick it, then tap the button to confirm everyone knows.', true);
+  }
+  /* Phone tips: what to set on the iPhone so a long meeting is not interrupted, and what a web app cannot prevent */
+  function mrTips() {
+    var sh = sheet('Recording on the phone', 'So it stays on and nothing gets in');
+    sh.body.appendChild(el('div', 'sub', 'Before the meeting'));
+    sh.body.appendChild(steps([
+      '**Plug it in.** A long recording with the screen on uses battery. Turn Low Power Mode off (it can stop the screen staying on).',
+      '**Do Not Disturb, so calls and alerts stay out:** Settings › Focus › Do Not Disturb › People › Allow calls from: No One (and Allow Repeated Calls off). Turn it on in Control Center before you start.',
+      '**Keep the screen on:** J.A.R.V.I.S. asks the phone to stay awake while it records. To be sure, Settings › Display & Brightness › Auto-Lock › Never for the meeting (set it back after).',
+      '**Guided Access, so no other app can take over:** Settings › Accessibility › Guided Access: on, set a passcode, and under Display Auto-Lock choose Never. In J.A.R.V.I.S., triple-click the side button › Start. Triple-click again and enter the passcode to leave.',
+      '**Open J.A.R.V.I.S. from the Home Screen icon,** tell everyone it is recording, tap Meeting notes › the company › Record the meeting › the consent button.'
+    ]));
+    sh.body.appendChild(el('div', 'sub', 'What a web app cannot stop'));
+    sh.body.appendChild(steps([
+      'It cannot keep recording with the screen locked or while you are in another app: the phone stops the microphone. Guided Access and Auto-Lock Never are what prevent that.',
+      'A phone call that gets through (Do Not Disturb off, or an emergency bypass) takes the microphone. When J.A.R.V.I.S. is back on screen it carries on in the same meeting and marks the gap, e.g. “[recording paused 2 min]”.',
+      'If nothing reaches J.A.R.V.I.S. for 2 minutes your phones get “Recording paused: open J.A.R.V.I.S. to resume”.',
+      '**For a meeting where the phone has to lock,** record in Voice Memos instead, then Share › Save to Files, and here: Meeting notes › the company › Upload a recording. It goes through the same transcript and notes.'
+    ]));
+    sh.body.appendChild(el('div', 'sub', 'Afterwards'));
+    sh.body.appendChild(el('div', 'hint', 'Your laptop turns it into text (the cloud machine when the laptop is away); the desk files the notes under the company, adds the to-dos and drafts any follow-up as a file (never sent), then sends you a short summary. The audio is deleted once the transcript is saved, unless you chose Keep audio (then 30 days). The raw transcript stays private: Meeting notes › Recordings.'));
+  }
+  /* on load: pieces left in this browser go up; a recording still open is offered back */
+  function mrStartup() {
+    mqResume();
+    aget('jvmeetlist').then(function (j) {
+      if (!j.ok || (MR && !MR.over)) return;
+      var a = (j.meetings || []).filter(function (m) { return m.source === 'live' && (m.status === 'recording' || m.status === 'paused'); })[0];
+      var mine = store('jarvis.meetrec');
+      if (a && (mine && mine.id === a.id || Math.floor(Date.now() / 1000) - (a.lastChunkAt || 0) > 90)) mrOffer(a);
+    }, function () {});
+  }
+
   /* Remember this (P-8 step 7) */
   function rememberSheet(text) {
     var sh = sheet('Remember this', 'Saved to your Claude Code memory, the same one VS Code uses'), ta = el('textarea'); ta.id = 'remember'; ta.value = text || ''; ta.placeholder = 'What should be remembered?'; ta.style.minHeight = '130px';
@@ -1322,6 +1703,12 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var t = field.value.trim(); if (!t) { field.focus(); return; }
     if (rec) try { rec.stop(); } catch (e) {}
     field.value = '';
+    /* 20 Nov (P-12): "record this meeting", and while recording "stop / pause / resume recording", answer here, whichever brain is chosen */
+    var pre = /^(?:(?:hey|ok|okay)\s+)?(?:jarvis[,\s]+)?(?:please\s+)?(?:can you\s+|could you\s+)?/i, tb = t.replace(pre, '').replace(/[.!?]+$/, '').trim();
+    if (/^(?:start\s+)?(?:record(?:ing)?|tape)\s+(?:this|the|a|my|our)\s+meeting\b|^start (?:a |the )?(?:meeting )?recording\b/i.test(tb)) { msgMe(t); mrFromWords(tb); return; }
+    if (MR && !MR.over && /^(?:stop|end|finish)\s+(?:the\s+)?(?:meeting\s+)?recording\b|^(?:stop|end|finish)\s+(?:the|this)\s+meeting\b/i.test(tb)) { msgMe(t); say('Stopping the recording.', true); mrStop(); return; }
+    if (MR && !MR.over && /^pause\s+(?:the\s+)?(?:meeting\s+)?recording\b|^pause$/i.test(tb)) { msgMe(t); mrPause(); say('Paused.', true); return; }
+    if (MR && !MR.over && /^(?:resume|continue|carry on)(?:\s+(?:the\s+)?(?:meeting\s+)?recording)?$/i.test(tb)) { msgMe(t); mrResume(); return; }
     /* 19 Nov: these answer here, whichever brain is chosen (a reminder lives on the server, not on the laptop) */
     if (/^(brief me|morning brief|give me the brief)\W*$/i.test(t)) { msgMe(t); localBrief(); return; }
     if (/^what'?s\s+new\W*$/i.test(t)) { msgMe(t); localNew(); return; }
@@ -1815,7 +2202,11 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   }
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open') openFromUrl(String(e.data.url || '')); });
   /* a tap on an alert, or a link: ?desk=<id> opens that desk chat */
-  function openFromUrl(u) { var m = /[?&]desk=(h[0-9]{14}[0-9a-f]{4})/.exec(u); if (!m) return; if (u === location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }   /* a reload does not open it again */ var go = function () { openDesk(m[1]); }; if (myDesk().some(function (x) { return x.id === m[1]; })) go(); else loadDesk().then(go); }
+  function openFromUrl(u) {
+    var mm = /[?&]meeting=(m[0-9]{14}[0-9a-f]{4})/.exec(u);   /* 20 Nov (P-12): "Recording paused" and the other meeting alerts */
+    if (mm) { if (u === location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} } if (MR && MR.id === mm[1] && !MR.over) { mrShow(); return; }
+      aget('jvmeetlist').then(function (j) { var x = (j.meetings || []).filter(function (m) { return m.id === mm[1]; })[0]; if (!x) return; if (x.status === 'recording' || x.status === 'paused') mrOffer(x); else meetingSheet(); }); return; }
+    var m = /[?&]desk=(h[0-9]{14}[0-9a-f]{4})/.exec(u); if (!m) return; if (u === location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }   /* a reload does not open it again */ var go = function () { openDesk(m[1]); }; if (myDesk().some(function (x) { return x.id === m[1]; })) go(); else loadDesk().then(go); }
 
   /* the other pages, inside this one: the Assistant's full inbox, Settings and Groceries; Outbox; the Peak desk; Posts; the Sixfold app; a team thread */
   function openView(kind, src, ticket) {
@@ -1860,7 +2251,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       var t = new Promise(function (res) { setTimeout(res, 2500); });
       Promise.race([Promise.all([Promise.all(DESKS.map(loadTeam)), loadDesk(), loadSlow()]), t]).then(function () {
         var q = location.search, lis = /[?&]listen=1\b/.test(q) || S.wantListen; S.wantListen = false;
-        draw(); if (!S.briefed) { S.briefed = true; if (!lis) greet(); } openFromUrl(q);
+        draw(); if (!S.briefed) { S.briefed = true; if (!lis) greet(); } openFromUrl(q); if (/[?&]meeting=/.test(q)) mqResume(); else mrStartup();
         if (/[?&](voice=setup|setup=voice)\b/.test(q)) { try { history.replaceState(null, '', location.pathname); } catch (e) {} voiceSheet(); }
         if (lis) listenFromUrl(q);
       });

@@ -1,0 +1,16 @@
+# J.A.R.V.I.S. meeting recordings on the cloud machine (20 Nov 2026, TASKS P-12): one look for a recording to transcribe, then exit.
+# Started every minute by jarvis-meetings.timer; installed by `bash traverse/ops/jarvis-cloud.sh meetings` on the laptop. It transcribes only
+# while the cloud's mode (~/jarvis/config) is live; the laptop is the preferred transcriber, so this takes a recording only when the laptop
+# has not looked for 3 minutes or the recording has waited 3 minutes. Log: ~/jarvis/state/meetings/meeting-worker.log.
+#   systemctl --user list-timers jarvis-meetings.timer      systemctl --user disable --now jarvis-meetings.timer   (stop it)
+[Unit]
+Description=J.A.R.V.I.S. meeting transcriber (one look)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash %h/jarvis/ops/meeting-worker.sh
+Nice=15
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+TimeoutStartSec=6h
