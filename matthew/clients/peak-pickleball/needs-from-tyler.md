@@ -1,6 +1,6 @@
 # Peak: what I need from Tyler (or Peak's admin)
 
-Made 19 Nov 2026, after the meeting; updated 20 Nov (evening: 8a sponsor add-ons, the GoDaddy note under 16, and the TVs). Matthew is holding the rest until the deal is committed. **DONE** marks what is already sorted.
+Made 19 Nov 2026, after the meeting; updated 20 Nov (evening: 8a sponsor add-ons, the GoDaddy note under 16, and the TVs) and 21 Nov (the website access under 16; a clean ask-list copy for Matthew on the Desktop, "Peak - what I need from Tyler.txt"). Matthew is holding the rest until the deal is committed. **DONE** marks what is already sorted.
 
 ## 1. The deal (first)
 1. A yes on price and scope, and the start date.
@@ -26,7 +26,12 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
 13. **Patch Retention:** view-only access, or a list of what it sends. Also its billing terms, renewal date and the text opt-in count.
 14. **CourtReserve:** the cancellation reasons report, exported to Excel. Tyler already OK'd running it read-only. Also the branded app: does it come with a 1-year contract? And who built the older iPhone app (HVPC LLC)?
 15. **CourtReserve's old "API" key with full access:** set up by a former IT employee and unused. Suggest he checks it and turns it off. We haven't touched it.
-16. **Website:** the host or WordPress admin login. (GoDaddy, the domain and DNS: done, he gave Matthew the login on 20 Nov.)
+16. **Website** (expanded 21 Nov). The site is WordPress, on the paid Avada theme plus a custom "Peak-Pickleball" theme. It runs on a server named host.lwdserver.com, probably the company that built it. The code lives in that hosting account, so getting it means getting the hosting.
+   - Who built and hosts the site, and whether Peak has a contract with them.
+   - A **WordPress Administrator** login (peakpickleball.us/wp-admin) in Matthew's own name.
+   - **SFTP or cPanel** on the hosting account, or a **full backup** (files plus database).
+   - The **Avada licence**, and confirmation that Peak (not the builder) owns the custom theme.
+   - GoDaddy, the domain and DNS: **DONE**. He gave Matthew the login on 20 Nov.
    - **For Tyler to know (no action):** on 20 Nov Matthew added three records at GoDaddy for peakpickleball.us, and changed nothing else. They are two DKIM records (selector1 and selector2) and one `links` record, so the links in Peak's emails show Peak's own name (links.peakpickleball.us) instead of the Traverse server's.
 16a. **Site metrics (read-only), so the reports can show website numbers:**
    - **Google Analytics:** add Matthew's Google account as a **Viewer** on the Peak Pickleball property. The site already runs Google Analytics 4 (tag G-WDBWJ1Q6HN). It shows visitors, where they came from, top pages, and whether email clicks turn into visits.
@@ -44,3 +49,7 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
 - The CourtReserve branded app's 1-year contract: from CourtReserve's pricing page, 19 Nov. Not confirmed for Peak's own account.
 - Lists of 43 and 35: from Outbox on 19 Nov.
 - The GA4 tag G-WDBWJ1Q6HN, and the site being WordPress on a separate host, not GoDaddy: checked from the live homepage on 20 Nov (the gtag script, the wp-json links, Server: LiteSpeed).
+- The theme and host, checked from the live homepage on 21 Nov:
+  - WordPress 7.1.5 (generator tag), with themes/Avada and themes/Peak-Pickleball in the page's file paths.
+  - The IP 170.249.198.162 resolves back to host.lwdserver.com.
+  - Who runs lwdserver.com: **unresolved**. Don't name a company until Tyler says.
