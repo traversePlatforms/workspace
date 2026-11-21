@@ -54,6 +54,9 @@ function jvWaiting(array $j): array {
         $id = (string) ($w['id'] ?? ''); if (!preg_match('/^[a-z0-9][a-z0-9-]{0,39}$/', $id) || jvBarred($w)) continue;
         $co = in_array($w['company'] ?? '', JV_COMPANIES, true) ? $w['company'] : 'Other';
         $at = (int) ($w['at'] ?? 0); $d = $dec[$id] ?? null;
+        /* 21 Nov (Matthew: "it should be removed when i hit approved"): once his tap has gone to the desk the item is off his list at once;
+           only a decision that never reached the desk stays, so he can send it again. jarvis-status.sh push drops it from the laptop's list too. */
+        if ($d && (int) ($d['itemAt'] ?? -1) === $at && (string) ($d['ticket'] ?? '') !== '') continue;
         $out[] = ['id' => $id, 'title' => jvClean($w['title'] ?? '', 160), 'detail' => jvClean($w['detail'] ?? '', 400), 'company' => $co, 'from' => jvClean($w['from'] ?? '', 80), 'at' => $at,
             'decided' => ($d && (int) ($d['itemAt'] ?? -1) === $at) ? ['decision' => (string) $d['decision'], 'note' => jvClean($d['note'] ?? '', 400), 'at' => (int) $d['at'], 'ticket' => (string) ($d['ticket'] ?? '')] : null];
     }

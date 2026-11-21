@@ -79,7 +79,21 @@ payload() {   # the one file the server keeps
     process.stdout.write(JSON.stringify({ pushedAt: Math.floor(Date.now() / 1000), overnight: over, builds, waiting, money }));
   ' "$BUILDS" "$LATEST" "$DIR/auto-jobs.tsv" "$WAITING" "$DIR"
 }
+prune() {   # 21 Nov: items he has decided on his page (the tap reached the desk) come off the laptop's list too, so a push never brings them back
+  local dec; dec=$($SG "cat $DEST/decisions.json 2>/dev/null" 2>/dev/null) || return 0
+  [ -n "$dec" ] || return 0
+  printf '%s' "$dec" | node -e '
+    const fs = require("fs"), f = process.argv[1]; let D = {}, L;
+    try { D = JSON.parse(fs.readFileSync(0, "utf8")) || {}; L = JSON.parse(fs.readFileSync(f, "utf8")); } catch (e) { process.exit(0); }
+    if (!Array.isArray(L)) process.exit(0);
+    const gone = L.filter(w => { const d = D[w.id]; return d && d.ticket && +d.itemAt === +w.at; });
+    if (!gone.length) process.exit(0);
+    fs.writeFileSync(f, JSON.stringify(L.filter(w => !gone.includes(w)), null, 1) + "\n");
+    console.log("off the waiting list (decided on his page): " + gone.map(w => w.id).join(", "));
+  ' "$WAITING"
+}
 push() {
+  prune
   payload | $SG "umask 077; mkdir -p $DEST && cat > $DEST/status.json.tmp && mv -f $DEST/status.json.tmp $DEST/status.json && echo pushed" 2>/dev/null | grep -q pushed \
     && echo "jarvis status pushed" || { echo "jarvis status NOT pushed (server out of reach; the next overnight check sends it)"; return 1; }
 }
@@ -106,7 +120,7 @@ wedit() {   # waiting add|drop: assistant/jarvis/waiting.json, by node
   node -e '
     const fs = require("fs"), [f, op, id, co, title, detail, from] = process.argv.slice(1);
     let L = []; try { L = JSON.parse(fs.readFileSync(f, "utf8")); } catch (e) {}
-    if (op === "drop") { const n = L.length; L = L.filter(w => w.id !== id); if (L.length === n) { console.error("nothing called " + id); process.exit(1); } }
+    if (op === "drop") { const n = L.length; L = L.filter(w => w.id !== id); if (L.length === n) console.log(id + " is already off the list"); }
     else {
       const C = ["Surge", "Sixfold", "Traverse", "Peak", "Personal", "Other"];
       if (!/^[a-z0-9][a-z0-9-]{0,39}$/.test(id || "")) { console.error("the id is lower-case letters, digits and dashes"); process.exit(1); }

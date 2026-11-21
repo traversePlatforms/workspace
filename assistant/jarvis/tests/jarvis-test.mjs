@@ -484,12 +484,16 @@ try {
     await click('#cfno'); await sleep(400);
     ok(hsAll().length === n0 && !fs.existsSync(path.join(DATA, 'jarvis', 'decisions.json')), 'Waiting on you: Cancel decides nothing and sends nothing');
     await ev('(()=>{const i=document.querySelector("[data-wait=\\"sixfold-followup-email-off\\"] input");i.value="turn it off today";i.dispatchEvent(new Event("input"))})()');
-    await click('[data-wait="sixfold-followup-email-off"] [data-act=approve]'); await sleep(300); await click('#cfyes');
+    await click('[data-wait="sixfold-followup-email-off"] [data-act=approve]'); await sleep(300);
+    ok(await ev('getComputedStyle(document.getElementById("cfyes")).backgroundColor==="rgb(62, 232, 255)"'), 'Approve confirm: the Yes button is bright cyan, not dim (21 Nov)');
+    await click('#cfyes');
     ok(await nodeUntil(() => hsAll().length === n0 + 1), 'Waiting on you: Approve sends one message to the desk');
     const d1 = hsAll().pop();
     ok(d1.by === 'Matthew Sharpe' && !deskMsgs().slice(0, -1).some(m => m.id === d1.id) && /^\[DECISION\] sixfold-followup-email-off\n/.test(d1.text) && /APPROVED/.test(d1.text) && /His note: turn it off today/.test(d1.text) && /this one item only/.test(d1.text) && /waiting drop sixfold-followup-email-off/.test(d1.text), 'Waiting on you: the desk gets the item, APPROVED, his note, the one-item rule and how to take it off');
     ok(await nodeUntil(() => fs.readFileSync(path.join(DATA, 'jarvis', 'decisions.json'), 'utf8').includes('"ticket":"' + d1.id + '"')), 'Waiting on you: the decision is kept on the server with the desk thread it went in');
-    ok(await until('/Approved/.test(document.querySelector("[data-wait=\\"sixfold-followup-email-off\\"]").innerText) && /sent to the desk/.test(document.querySelector("[data-wait=\\"sixfold-followup-email-off\\"]").innerText) && !document.querySelector("[data-wait=\\"sixfold-followup-email-off\\"] [data-act]")'), 'Waiting on you: the item shows Approved, sent to the desk, with no buttons left');
+    /* 21 Nov (Matthew: "it should be removed when i hit approved"): once it is with the desk the item leaves the list, on screen and on the server */
+    ok(await until('!document.querySelector("[data-wait=\\"sixfold-followup-email-off\\"]") && /1 TO DECIDE/i.test(document.querySelector("#p-waiting .ph").innerText) && !!document.querySelector("[data-wait=\\"surge-linkedin-mock-build\\"] [data-act=approve]")'), 'Waiting on you: once sent to the desk the approved item is off the list at once; the other stays');
+    { const st = await ev('fetch("../api.php?action=jvstatus").then(r=>r.json())'); ok(st && Array.isArray(st.waiting) && !st.waiting.some(w => w.id === "sixfold-followup-email-off") && st.waiting.some(w => w.id === "surge-linkedin-mock-build"), 'Waiting on you: the server leaves a decided item out too, so a reload never brings it back'); }
     const r4 = await apiPost('jvdecide', { id: 'sixfold-followup-email-off', at: now - 4000, decision: 'decline' });
     ok(!r4.ok && /Already decided/.test(r4.error), 'Waiting on you: a second tap on the same item is refused'); }
 

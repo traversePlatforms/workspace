@@ -94,7 +94,8 @@ the item's detail describes, once. It is not a standing approval and not approva
 - Do what the detail says Approve or Decline means (his note, if any, wins over the detail). Deploys, data changes, tests: the usual rules.
 - It is never an approval to publish, post or schedule social content (the post calendar approves posts; Sixfold posts are Jen's), and
   never a go to send an email or text. If the item turns out to need that, stop and say so.
-- Take it off the list: `bash assistant/jarvis/tools/jarvis-status.sh waiting drop <id>`. Reply with what you did.
+- Take it off the list: `bash assistant/jarvis/tools/jarvis-status.sh waiting drop <id>`. Reply with what you did. (Since 21 Nov his tap
+  already hides it on his page, and every push drops decided items from the laptop's list, so the drop may say "already off the list": fine.)
 To ADD a decision for him (any session, when something truly needs his yes or no):
 `bash assistant/jarvis/tools/jarvis-status.sh waiting add <id> <Surge|Sixfold|Traverse|Peak|Personal|Other> "<question>" "<what Approve and Decline each do>" "<where it came from>"`.
 

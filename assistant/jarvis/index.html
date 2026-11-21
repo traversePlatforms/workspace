@@ -718,7 +718,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     },
     /* 19 Nov (P-8 step 5): decisions only he can make, each with Approve / Decline and a note. One tap = that one item, sent to the desk. */
     waiting: function () {
-      var w = (S.st && S.st.waiting) || [], out = [];
+      var w = ((S.st && S.st.waiting) || []).filter(function (x) { return !(x.decided && x.decided.ticket); }), out = [];
       if (!S.st) return el('div', 'empty', 'Looking…');
       if (!w.length) return el('div', 'empty', 'Nothing is waiting on a decision from you.');
       w.forEach(function (x) {
@@ -1821,7 +1821,8 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var text = '[DECISION] ' + x.id + '\nItem: ' + x.title + (x.detail ? '\nDetail: ' + x.detail : '') + '\nCompany: ' + x.company + '\nMatthew\'s decision: ' + (d === 'approve' ? 'APPROVED' : 'DECLINED') + (note ? '\nHis note: ' + note : '') +
       '\n\n(Waiting on you: this covers this one item only, not anything like it. Act on it under the "Decisions" rules in your prompt, then take it off the list: bash assistant/jarvis/tools/jarvis-status.sh waiting drop ' + x.id + ')';
     deskSend(text, { show: (d === 'approve' ? 'Approved: ' : 'Declined: ') + x.title + (note ? ' (“' + oneLine(note, 80) + '”)' : ''), title: 'Your decision went to the desk' }).then(function (tk) {
-      if (tk) apost('jvdecide', { id: x.id, at: x.at, ticket: tk.id }).then(function (j) { if (j.ok) { x.decided = j.decided; draw(); } });
+      /* 21 Nov: once it is with the desk it comes off his list at once (Matthew: "it should be removed when i hit approved") */
+      if (tk) apost('jvdecide', { id: x.id, at: x.at, ticket: tk.id }).then(function (j) { if (j.ok) { x.decided = j.decided; if (S.st && S.st.waiting) S.st.waiting = S.st.waiting.filter(function (w) { return w !== x; }); draw(); toast('Off your list: ' + (d === 'approve' ? 'approved' : 'declined') + ' and sent to the desk.'); } });
     });
   }
   /* dictation into a box (meeting notes): keeps going until tapped again */
