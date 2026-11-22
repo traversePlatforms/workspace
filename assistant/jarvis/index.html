@@ -344,6 +344,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
 .mrow{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;border-top:1px solid #3ee8ff12}.mrow:first-child{border-top:0}
 .mrow b{font:600 15px Rajdhani,sans-serif;letter-spacing:.02em;white-space:nowrap}
 /* 21 Nov (P-15): money, read only: the panel's bank lines and the Money sheet */
+.mflags{margin:6px 0}.mflags>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;font:600 12.5px Inter,sans-serif;color:var(--warn);border:1px solid #ffb64855;background:#ffb64812;padding:7px 10px;border-radius:6px}.mflags>summary::-webkit-details-marker{display:none}.mflags>summary::before{content:"B8";transition:transform .15s}.mflags[open]>summary::before{transform:rotate(90deg)}.mflags[open]>summary{margin-bottom:4px}
 .mwarn{font-size:12.5px;line-height:1.45;color:var(--warn);border:1px solid #ffb64844;background:#ffb6480d;padding:7px 10px;border-radius:6px;margin:4px 0}
 .mrow span small{color:var(--mut);font-size:11.5px}
 .mtx{display:flex;width:100%;text-align:left;gap:8px;align-items:baseline;padding:6px 0;border-top:1px solid #3ee8ff12;font-size:13px;color:var(--ink)}
@@ -2180,7 +2181,10 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     out.push(mRow('Money in', usd(v.month.in)), mRow('Money out', usd(v.month.out)), mRow('Net', mUsd(v.month.net)));
     out.push(el('div', 'ls', 'Pending charges are included; transfers between your own accounts and the Bitcoin account are left out.'));
     if (v.warn) out.push(el('div', 'mwarn', 'Bill warning: ' + v.warn.text));
-    (v.flags || []).forEach(function (f) { out.push(el('div', 'mwarn', f)); });
+    /* 21 Nov (Matthew: "where it shows all the charges in yellow on the money page, lets make the a collaspable menu"): one folded list, closed by default; the bill warning stays open above it */
+    if ((v.flags || []).length) { var fd = el('details', 'mflags'), fs = el('summary'); fs.textContent = plural(v.flags.length, 'thing') + ' flagged'; fd.appendChild(fs); fd.id = 'mflags';
+      if (store('jarvis.mflags')) fd.open = true; fd.addEventListener('toggle', function () { store('jarvis.mflags', fd.open); });
+      v.flags.forEach(function (f) { fd.appendChild(el('div', 'mwarn', f)); }); out.push(fd); }
     if ((v.soon || []).length) { out.push(el('div', 'sub', 'Due in the next 7 days')); v.soon.forEach(function (x) { out.push(mRow(x.name, mUsd(x.amount), mDay(x.when) + (x.from === 'register' ? ' · Bills & debts' : ' · from the bank'))); }); }
     /* company tags */
     var tg = Object.keys(v.month.byTag || {});

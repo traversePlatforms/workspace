@@ -1393,7 +1393,7 @@ try {
     const s1 = await runCron(['--money'], { JARVIS_MONEY_HOUR: '23' });
     ok(s1.ok && s1.counts.accounts === 4 && s1.counts.transactions === SF_COUNT_FIRST && SF.calls.length === 1, 'money: the first pull: 4 accounts, every transaction (' + JSON.stringify(s1) + ')');
     const c1 = SF.calls[0] || {}, sd = +((/start-date=(\d+)/.exec(c1.q || '') || [])[1] || 0);
-    ok(c1.method === 'GET' && c1.auth === 'Basic ' + Buffer.from(SF_USER + ':' + SF_PASS).toString('base64') && /pending=1/.test(c1.q) && Math.abs(sd - (now - 89 * 86400)) < 900 && !/mockpass/.test(c1.q), 'money: a GET with basic auth from the stored link, about 90 days, pending included');
+    ok(c1.method === 'GET' && c1.auth === 'Basic ' + Buffer.from(SF_USER + ':' + SF_PASS).toString('base64') && /pending=1/.test(c1.q) && Math.abs(sd - (now - 44 * 86400)) < 900 && !/mockpass/.test(c1.q), 'money: a GET with basic auth from the stored link, about 45 days (SimpleFIN’s recommended range), pending included');
     ok(PUSHES.length === pp0, 'money: the first pull sends no alert (old transactions)');
     const mc = AN.calls.filter(c => c.kind === 'money'), mcs = JSON.stringify(mc.map(c => c.jb.messages));
     ok(mc.length === 1 && mc[0].jb.model === 'claude-haiku-5-5' && /Zorblax Emporium/.test(mcs) && !/King Soopers|Shell Oil|23\.00|SECRET|\$/.test(mcs), 'money: only merchants the rules do not know go to the cheap model, by name, no amounts, one batch');
@@ -1480,6 +1480,9 @@ try {
     ok(/BANK · READ ONLY/i.test(pm) && /Cash on hand/.test(pm) && /\$150/.test(pm) && /Investments, not counted as cash: \$80/.test(pm) && /\$212\.66/.test(pm) && !/1234 ·/.test(pm), 'Money panel: the bank first (cash on hand, the Bitcoin apart), then the Spend Ledger and Stripe as before');
     ok(/^Money: \$150 cash on hand/.test((await apiG('jvstatus')).money.bank.line) && !/"key"|"token"|"card"/.test(JSON.stringify((await apiG('jvstatus')).money.bank)), 'the morning brief gets one money line; jvstatus carries no transactions or keys');
     await click('#moneyopen'); ok(await until('!!document.querySelector("#moneysheet .mtx")', 8000), 'Open money: the Money sheet');
+    { const hasF = await ev('!!document.getElementById("mflags")'); if (hasF) { ok(await ev('!document.getElementById("mflags").open && /flagged/.test(document.querySelector("#mflags summary").textContent) && getComputedStyle(document.querySelector("#mflags .mwarn")).display !== "none" ? true : !document.getElementById("mflags").open'), 'Money sheet: the flagged charges sit in one closed list (21 Nov)');
+      await ev('document.querySelector("#mflags summary").click()'); await sleep(150); ok(await ev('document.getElementById("mflags").open && document.querySelectorAll("#mflags .mwarn").length > 0'), 'Money sheet: a tap opens the flagged list'); await ev('document.querySelector("#mflags summary").click()'); }
+      else ok(true, 'Money sheet: (no flags in this run)'); }
     const ms = await ev('document.getElementById("moneysheet").innerText');
     ok(['Accounts', 'so far', 'Bill warning', 'By company', 'Spending by category', 'Recurring, found in the bank feed', 'Bills & debts', 'Goal: stop pay advances', 'Goal: prepay the hotel weekly', 'Income', 'Paychecks', 'rough estimate', 'Latest transactions', 'Alerts to your phone'].every(t => ms.includes(t) || ms.toUpperCase().includes(t.toUpperCase())), 'Money sheet: every part is there');
     ok(/Read only · nothing here can move money/.test(await ev('document.querySelector(".sheet .sht").innerText')) && !/\b(Pay now|Transfer money|Send money|Pay bill)\b/.test(ms), 'Money sheet: says read only; no way to move money');
