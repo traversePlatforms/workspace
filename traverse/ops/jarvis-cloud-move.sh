@@ -1,6 +1,6 @@
 #!/bin/bash
-# Move the cloud J.A.R.V.I.S. from the trial machine (yardtest, Standard_D4as_v5) to a small paid one (Standard_B2s) before the free
-# credit ends (~23 Nov 2026). TASKS X-15; the clicks for making the machine are in JARVIS-CLOUD.md, "Moving to the B2s". Git Bash, laptop.
+# Move the cloud J.A.R.V.I.S. from the trial machine (yardtest, Standard_D4as_v5) to a paid one (Standard_D2as_v5, Matthew 22 Nov) before the free
+# credit ends (~23 Nov 2026). TASKS X-15; the clicks for making the machine are in JARVIS-CLOUD.md, "Moving to the D2as_v5". Git Bash, laptop.
 #   bash traverse/ops/jarvis-cloud-move.sh check  <new ip>   can the laptop reach it (same azure_yard key, user yard), what is installed
 #   bash traverse/ops/jarvis-cloud-move.sh prep   <new ip>   packages (ffmpeg jq git node 22 php-cli bsdtar chrome), Claude Code, linger
 #   bash traverse/ops/jarvis-cloud-move.sh copy   <new ip>   ~/jarvis from the old machine to the new one through the laptop (secrets,

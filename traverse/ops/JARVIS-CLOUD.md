@@ -158,7 +158,10 @@ queue-folder checks (a ticket must come from its own queue's folder; a desk thre
 Not covered: once live, sessions use `~/jarvis/bin/sg.sh` with the VM's key, which opens the whole Traverse account (same as the laptop's
 key). Anyone with `azure_yard` (the laptop) can reach it. Closing it needs per-bot keys with `command=` restrictions (target design).
 
-## Moving to the B2s (before ~23 Nov)
+## Moving to the D2as_v5 (before ~23 Nov)
+
+Matthew, 22 Nov 2026: picked option 3 ("lets do option 3"), a mid machine that can be the main home and hold every bot, over the
+$40 B2s. yardtest was checked the same morning: about 1 GB of 16 GB memory in use, load 0.1.
 
 **Matthew, in the Azure portal (needs his card):**
 
@@ -167,10 +170,10 @@ key). Anyone with `azure_yard` (the laptop) can reach it. Closing it needs per-b
 2. **Virtual machines** → **+ Create** → **Azure virtual machine**.
 3. **Basics**: Subscription: the upgraded one. Resource group: the same as `yardtest` (shown on yardtest's Overview). Name `jarvis`.
    Region **(Europe) Sweden Central**. Availability options: *No infrastructure redundancy required*. Security type: *Standard*.
-   Image **Ubuntu Server 24.04 LTS - x64 Gen2**. Size: **See all sizes** → search `B2s` → **Standard_B2s** → Select.
+   Image **Ubuntu Server 24.04 LTS - x64 Gen2**. Size: **See all sizes** → search `D2as_v5` → **Standard_D2as_v5** (2 vCPU, 8 GiB) → Select.
    Authentication: **SSH public key**; Username `yard`; SSH public key source: **Use existing public key**; paste the one line from
    `C:\Users\Matthew sharpe\.ssh\azure_yard.pub` (Notepad). Public inbound ports: **Allow selected ports**, **SSH (22)**.
-4. **Disks**: OS disk size **64 GiB**, type **Standard SSD (locally-redundant storage)**, *Delete with VM* ticked.
+4. **Disks**: OS disk size **128 GiB**, type **Standard SSD (locally-redundant storage)**, *Delete with VM* ticked.
 5. **Networking**: leave the new virtual network and new public IP. **Management**: Auto-shutdown **off**.
 6. **Review + create** → **Create**. When it says *Deployment is complete*: **Go to resource** → copy the **Public IP address**.
 7. Give the IP to a session; it runs, from the laptop:
@@ -180,9 +183,9 @@ key). Anyone with `azure_yard` (the laptop) can reach it. Closing it needs per-b
 8. After a day or two on the new machine, and once the `~/run` data below is saved: **yardtest** → **Stop** (deallocate). Delete it later
    only when nothing on it is wanted (its disk costs while it exists).
 
-Cost after the trial (prices.azure.com, Sweden Central, checked 12 Nov): B2s $0.0432/h = $31.54/mo; 64 GB Standard SSD (E6) $4.80/mo;
-static IPv4 $3.65/mo; outbound under 100 GB free: **≈ $40/mo**. Claude runs on his plan (no API cost). 64 GB rather than 32 GB ($2.40)
-because the VM is meant to become the main home (data and builds later).
+Cost after the trial (Azure PAYG, Sweden Central, Linux, checked 19 Nov): D2as_v5 $67.16/mo; 128 GB Standard SSD (E10) $9.60/mo;
+static IPv4 $3.65/mo; outbound under 100 GB free: **≈ $80/mo**. His own bot runs on his Claude plan; staff bots on an API key are
+extra (≈ $15-60/mo, capped per bot). 128 GB because the VM becomes the main home (repo, builds, data jobs). (Earlier B2s plan: ≈ $40/mo.)
 
 ### `~/run` on yardtest (42 GB; disk 81% full). Inventory 19 Nov, nothing deleted
 
