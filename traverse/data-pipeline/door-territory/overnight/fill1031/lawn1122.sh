@@ -14,7 +14,7 @@ W="$HOME/run/lawn1122"
 cd "$LT" || exit 1
 export YV2_OUT=yard-v4 YV2_SETTINGS=1122 YV2_GRID_DATA="$LT/data"   # the whole town lists set the cell grid (yard-v2-town.mjs)
 mkdir -p yard-v4 "$W/fin" "$W/out"
-NW=6
+NW=4
 work() {
   local w=$1 tier=$2 i=0 k ok try rc
   while read -r k; do
