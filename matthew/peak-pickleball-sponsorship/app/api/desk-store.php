@@ -74,6 +74,10 @@ function advanceFor(string $w, string $cur, string $m): string {
 function forwardTo(string $w, string $cur, string $to): string { $r = stageRank($w, $cur); return ($r < 0 || $r < stageRank($w, $to)) && $cur !== $to ? $to : ''; }
 
 /* ---- files ---- */
+/** the PHP to run desk-mail.php with (2026-11-21): PHP_BINARY on the command line, /usr/local/bin/php from the web. Under the web server (apache2handler)
+    PHP_BINARY is EMPTY, so proc_open([PHP_BINARY, ...]) started nothing and every booking heads-up from the booking page was silently lost (checked live
+    21 Nov with a probe: binary=[] gave no output, /usr/local/bin/php answered). The Prospect Desk's alert had the same fix (jvAlert). */
+function deskPhp(): string { return in_array(PHP_SAPI, ['cli', 'cli-server'], true) && PHP_BINARY !== '' ? PHP_BINARY : (is_file('/usr/local/bin/php') ? '/usr/local/bin/php' : 'php'); }
 function jread(string $f, $def) { $s = @file_get_contents(DATA_DIR . '/' . $f); if ($s === false) return $def; $j = json_decode($s, true); return $j === null ? $def : $j; }
 function jwrite(string $f, $v): bool { $t = DATA_DIR . '/' . $f . '.tmp' . bin2hex(random_bytes(3)); if (file_put_contents($t, json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) === false) return false; return rename($t, DATA_DIR . '/' . $f); }
 function jline(array $r): string { return json_encode($r, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n"; }

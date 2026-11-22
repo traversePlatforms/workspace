@@ -317,7 +317,7 @@ function bkNotify(string $subject, string $body): array {
     $f = bkTest() ? (string) getenv('DESK_MAIL_FILE') : '';
     if ($f !== '') { file_put_contents($f, json_encode(['to' => '@notify', 'subject' => $subject, 'body' => $body], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n", FILE_APPEND | LOCK_EX); return ['ok' => true, 'stage' => 'test file']; }
     try {
-        $p = proc_open([PHP_BINARY, __DIR__ . '/desk-mail.php'], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        $p = proc_open([deskPhp(), __DIR__ . '/desk-mail.php'], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (!is_resource($p)) return ['ok' => false, 'stage' => 'the mail helper did not start'];
         fwrite($pipes[0], (string) json_encode(['to' => '@notify', 'subject' => $subject, 'body' => $body])); fclose($pipes[0]);
         $o = (string) stream_get_contents($pipes[1]); fclose($pipes[1]); fclose($pipes[2]); proc_close($p);
