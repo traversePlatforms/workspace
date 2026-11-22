@@ -12,7 +12,7 @@
 . "$HOME/run/fill1031/lib.sh"
 W="$HOME/run/lawn1122"
 cd "$LT" || exit 1
-export YV2_OUT=yard-v4 YV2_SETTINGS=1122
+export YV2_OUT=yard-v4 YV2_SETTINGS=1122 YV2_GRID_DATA="$LT/data"   # the whole town lists set the cell grid (yard-v2-town.mjs)
 mkdir -p yard-v4 "$W/fin" "$W/out"
 NW=6
 work() {
@@ -21,6 +21,7 @@ work() {
     [ -z "$k" ] && continue; [ -f "$W/lists/$tier/$k.json" ] || continue
     i=$((i + 1)); [ $(( (i - 1) % NW )) -eq "$w" ] || continue
     [ -f "$W/fin/$tier.$k" ] && continue
+    [ -f "$LT/data/$k.json" ] || { echo "$tier $k (no whole door list)" >> "$W/skipped.txt"; continue; }
     [ -f "$W/stop" ] && return 0
     ok=0
     for try in $(seq 1 20); do

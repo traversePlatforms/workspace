@@ -65,7 +65,13 @@ console.log(`${TOWN}: ${doors.length} doors, ${todo.length} to do, ${CONC} at a 
 if (!todo.length) process.exit(0);
 const pc = existsSync(PCACHE) ? JSON.parse(readFileSync(PCACHE, 'utf8')) : { cells: {} };
 const S = 0.008; let minLat = Infinity, minLon = Infinity;
-for (const d of doors) { if (d.lat < minLat) minLat = d.lat; if (d.lon < minLon) minLon = d.lon; }   /* a loop, not Math.min(...): the spread overflows the stack on Denver-sized lists (12 Nov) */
+/* YV2_GRID_DATA (22 Nov 2026): a run over a SUBSET of a town's doors (the lawn1122 re-measure) must put its cells on the grid of the whole
+   town's door list, or the origin moves and the saved lot-line cells are thrown away and fetched again (it happened: five towns' caches
+   reset in the first hour). The folder holds the whole list (the cloud machine's ~/run/lawn-trial/data). */
+const gridDoors = process.env.YV2_GRID_DATA && existsSync(`${process.env.YV2_GRID_DATA}/${TOWN}.json`)
+  ? JSON.parse(readFileSync(`${process.env.YV2_GRID_DATA}/${TOWN}.json`, 'utf8')).areas.flatMap((a) => a.doors).filter((d) => d.lat && d.lon) : doors;
+if (process.env.YV2_GRID_DATA && gridDoors === doors) { console.error(`${TOWN}: no whole door list in YV2_GRID_DATA; not run (it would reset the saved cells)`); process.exit(1); }
+for (const d of gridDoors) { if (d.lat < minLat) minLat = d.lat; if (d.lon < minLon) minLon = d.lon; }   /* a loop, not Math.min(...): the spread overflows the stack on Denver-sized lists (12 Nov) */
 /* origin on a fixed 0.008° grid (2026-10-26): it was the town's lowest house, so new houses to the south or west (the 25 Oct gap fix)
    shifted every cell and the saved cells answered for the wrong ground. A cache saved on another origin starts again. */
 const la0 = Math.floor((minLat - 0.002) / S) * S, lo0 = Math.floor((minLon - 0.002) / S) * S;
