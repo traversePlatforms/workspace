@@ -51,6 +51,10 @@ const unb64 = (s, T) => { const b = Buffer.from(s, 'base64'); const ab = b.buffe
    median miss there 51% -> 31%, within 25% 1/7 -> 3/7. V2_1023 is the 23 Oct setting, live 26 Oct - Nov 2026. */
 export const V2_1023 = { green: 'lated6g', gate: 0.2, struct: true, roofBuf: 2, ever: 'lidar', everLow: 0.2, everGnd: 0.15, speck: 5, house: 25, fill: 12 };
 export const V2 = { ...V2_1023, ndvi: 0.33, speck: 4, roofBuf: 1 };
+/* 2026-11-22 retune (CLOUD-JOBS-2026-11-22.md): V2 plus the low-green knob, picked on the 26 lots up to 11 Nov among V2 + low settings only
+   (so only lots reading under 1,200 sq ft change); on Jen's 11 held-out lots of 13-20 Nov median miss 40% -> 29%, mean log miss 0.528 -> 0.320.
+   Used by yard-v2-town.mjs when YV2_SETTINGS=1122 (the 22 Nov re-measure of the low-reading doors); V2 stays the default until it goes live. */
+export const V2_1122 = { ...V2, low: 0.18, lowMin: 1200, lowSpeck: 2 };
 
 /* batch speed-ups (2026-10-24, for the whole-territory run): the photo and land-cover searches, the opened photo files and the laser
    surveys' ept.json are kept for the run, so neighbouring lots share them instead of asking again for every lot. A Planetary Computer
@@ -195,6 +199,16 @@ function preOf(S, W, H, M, s23, s21, sdc) {
 }
 /** classify one lot's sources with one set of settings */
 export function yardClassify(S, opt = {}) {
+  /* 2026-11-22 retune knob 'low' (off in V2): a second, lower green line for the lots the normal one finds (almost) no lawn on. If the
+     lawn read with the settings is under `lowMin` sq ft, the lot is read again with green line `low` (despeckle `lowSpeck`, default the
+     same) and the bigger reading kept. Only lots that read under lowMin change, so re-measuring just those doors (zero green, under-tree
+     ranges) gives every door the same method. Aimed at shaded or dormant lawns: 449 S Stuart St read 0 (nothing seen to fill from). */
+  if (opt.low != null || (opt.low === undefined && V2.low != null)) {
+    const lowV = opt.low ?? V2.low, R0 = yardClassify(S, { ...opt, low: null });
+    if (R0.lawn >= (opt.lowMin ?? V2.lowMin ?? 300)) return R0;
+    const R1 = yardClassify(S, { ...opt, low: null, ndvi: lowV, speck: opt.lowSpeck ?? opt.speck ?? V2.speck });
+    return R1.lawn > R0.lawn ? { ...R1, lowUsed: 1, settings: { ...V2, ...opt } } : R0;
+  }
   const v = { ...V2, ...opt }, { box, cell, rings, lz } = S;
   const M = rings.map((r) => r.map(([lo, la]) => merc(lo, la)));
   const W = lz ? lz.w : Math.ceil((box[2] - box[0]) / cell), H = lz ? lz.h : Math.ceil((box[3] - box[1]) / cell), N = W * H;

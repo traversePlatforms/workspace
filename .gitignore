@@ -416,3 +416,6 @@ traverse/data-pipeline/door-territory/lawn-trial/hand-logs.json
 
 # Follow-up address check 22 Nov 2026: holds company contact emails from the desk
 traverse/prospect-desk/drafts/followup-email-check-2026-11-22.csv
+# 22 Nov 2026 low-green re-measure (CLOUD-JOBS-2026-11-22.md): target door lists and the copied-back results, data with door ids
+traverse/data-pipeline/door-territory/lawn-trial/yard-low-targets/
+traverse/data-pipeline/door-territory/lawn-trial/yard-v4/

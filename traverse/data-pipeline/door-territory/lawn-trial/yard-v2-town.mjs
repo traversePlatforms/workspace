@@ -8,7 +8,9 @@
 //   ph photo date. null = no lot line at the door's point. Nothing reaches the app until build-yard-v2.mjs puts it in the door files.
 import { readFileSync, writeFileSync, renameSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { yardSources, yardClassify, V2 } from './yard-scan-v2.mjs';
+import { yardSources, yardClassify, V2 as V2_LIVE, V2_1122 } from './yard-scan-v2.mjs';
+/* YV2_SETTINGS=1122 (2026-11-22): the low-green retune, for the re-measure of the doors reading under 1,200 sq ft (CLOUD-JOBS-2026-11-22.md) */
+const V2 = process.env.YV2_SETTINGS === '1122' ? V2_1122 : V2_LIVE;
 import { markShared } from './build-yard-v2.mjs';
 /* tmp + rename (2026-10-25): the cloud disk filled overnight and left arvada.json cut short and 89 empty parcel files */
 const writeSafe = (f, s) => { const tmp = new URL(f.href + '.tmp'); writeFileSync(tmp, s); renameSync(tmp, f); };
@@ -102,7 +104,7 @@ async function one(d, lots, pkCount) {
   const lk = createHash('md5').update(JSON.stringify(rings)).digest('hex').slice(0, 16);
   if (acres(rings[0]) > 5) { out.doors[d.id] = { big: 1 }; return 'big'; }   /* acreage, open space, a park: not one yard, and slow to read */
   const S0 = await withTimeout(yardSources(rings), 180000), R = yardClassify(S0, V2);
-  out.doors[d.id] = { l: R.lawn, s: R.seen, u: R.under, o: R.open, t: R.trees, dt: R.drcogTurf ?? null, lot: R.lot, sv: R.survey || null, ph: R.photo23 || null, pk, lk };
+  out.doors[d.id] = { l: R.lawn, s: R.seen, u: R.under, o: R.open, t: R.trees, dt: R.drcogTurf ?? null, lot: R.lot, sv: R.survey || null, ph: R.photo23 || null, pk, lk, ...(R.lowUsed ? { lw: 1 } : {}) };
   return 'ok';
 }
 let done = 0, err = 0, nolot = 0, cellErr = 0; const t0 = Date.now();
