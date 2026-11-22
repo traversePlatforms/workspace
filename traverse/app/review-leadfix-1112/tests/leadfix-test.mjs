@@ -166,7 +166,7 @@ try {
       t(await until(`/Not emailed/.test((document.querySelector('.p2det .nomail')||{}).textContent||'') && /Marked by Pat Admin/.test(document.querySelector('.p2det .nomail').textContent)`), 'after tapping it: "Not emailed", marked by Pat Admin');
       await shot('nomail-lead.png');
       await click(`[...document.querySelectorAll('.p2det .nomail button')].find(b=>/Email them again/.test(b.textContent))`);
-      t(await until(`/Don.t email/.test((document.querySelector('.p2det .nomail')||{}).textContent||'')`), 'Email them again takes it off');
+      t(await until(`/Take off email list/.test((document.querySelector('.p2det .nomail')||{}).textContent||'')`), 'Email them again takes it off');   /* the button was renamed from "Don't email" on 12 Nov */
       await call('office', 'nomailset', { email: L.email, on: 1 });   /* the office marks it (the admin helper’s code is the browser’s now) */
       await js(`window.__cv('${cid2}')`);
       t(await until(`/Not emailed/.test((document.querySelector('.nomail')||{}).textContent||'') && /Marked by Jen Office/.test(document.querySelector('.nomail').textContent)`), 'the customer card shows "Not emailed" for the same address');
