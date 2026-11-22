@@ -108,7 +108,7 @@ const EDITIONS = {
       best: 'yards',   // best doors first: this trade's walking order (2026-10-07)
       alerts: withWinter(['Severe Thunderstorm Warning', 'Tornado Warning', 'Freeze Watch', 'Freeze Warning', 'Hard Freeze Warning', 'Frost Advisory', 'Red Flag Warning', 'Fire Weather Watch', 'Fire Warning', 'Wildfires']),
       townGroups: coloradoGroups(),   /* was: ['north-douglas', 'thornton', 'erie', 'commerce-city', 'centennial', 'south-denver', 'englewood', 'walden', 'aurora'] */   // +Aurora 2026-10-12 (Matthew asked for it); +Walden 2026-10-12 (a Sixfold job's neighbourhood); +South Denver and Englewood 2026-10-12 (a Sixfold rep there);   // the lawn towns and this edition's own best (2026-10-07, research/edition-towns-2026-10.md); +4 towns with lawn and trees measured 2026-10-12 (research/markets/yards-markets-2026-10.md)
-      features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false, billing: true, billexempt: true },   // billing on in every edition (Matthew 2026-10-29: "Turn on billing for all them")
+      features: { quote: false, communities: true, firecheck: true, skiptrace: false, hail: false, roof: false, billing: true, billexempt: true, measure: true },   // measure: the measure-only role (2026-11-21, Claire's hand lawn measures; set in the live company.json too, which the server owns). billing on in every edition (Matthew 2026-10-29: "Turn on billing for all them")
       card: { lawn: true, trees: true, fire: true, money: true, water: true, hail: false, roof: false },
       links: { googleReview: '' }
     })

@@ -4466,6 +4466,12 @@ if ($role === 'quote' && in_array($action, ['leadquote', 'leadhouse', 'leadconta
     if (!qMine($qL) && $isPost && in_array($action, ['leadquote', 'leadhouse', 'leadcontact', 'signsend'], true)) appendLine(leadsDir() . '/leadst.log', ['id' => $qlid, 'qown' => $me, 'note' => 'Taken on by ' . $me . ' from Leads to call.', 'by' => $me, 'at' => time()]);
 }
 if ($role === 'quote' && !in_array($action, ['me', 'signout', 'search', 'holdset', 'qwon', 'customerfrom', 'leadtry', 'qdrop', 'a365house', 'a365pricing', 'a365calc', 'squarestate', 'leads', 'leadadd', 'leadmatch', 'leadquote', 'leadhouse', 'leadcontact', 'signsend', 'a365mailsigned', 'squarecheck', 'jobs', 'schedview', 'jobblockadd', 'jobblockdel', 'lawnhand', 'lawnrange', 'jobsave', 'leadtown', 'proppull', 'myjobs', 'jobcharge', 'jobpaylink', 'jobpaid', 'aftercare', 'jobdone', 'ridetime', 'squarelook', 'jobwork', 'followupjob', 'followupsend', 'receipt', 'receiptmail', 'aftercaremark', 'tosched', 'fuconfirm', 'hours', 'hoursset', 'alertlist', 'alertcount', 'alertread', 'alertclear', 'pwmine', 'pwadd', 'pwoff'], true))   /* + her own email sign-in (2026-10-30) */   /* the schedule is back (Matthew 2026-10-15: "at least with the schedule there she can look back to see the appointments she's made"): her own jobs in full, everyone else's as Booked/Held */ fail('Not allowed.', 403);   /* quote-only accounts (2026-10-15) */
+/* measure-only accounts (2026-11-21, Matthew: "A small 'measure' account type on Traverse Yards: she can only search, open a house and save a
+   measure"). Sign in and out, the terms, find an address, open that one house (a trimmed answer, see a365house), its lot line on the photo,
+   and save a hand lawn measure. Everything else is refused here, before any other handler runs. Only an install whose company.json has
+   features.measure offers the role in Accounts (ROLES below); no other role or install changes. */
+const MEASURE_OK = ['me', 'signout', 'termsaccept', 'search', 'a365house', 'parcelat', 'lawnhand'];
+if ($role === 'measure' && !in_array($action, MEASURE_OK, true)) fail('Not allowed.', 403);
 if (!defined('SIXFOLD_CLI') && ($cookieNow = (string) ($_COOKIE[COOKIE] ?? '')) !== '') {
     $tagNow = curTag();
     $sessNow = sessLoad();
@@ -5167,7 +5173,7 @@ if ($action === 'me') out(array_replace(['ok' => true, 'viewing' => $viewing, 'n
    private data folder because its address is a real one; the page holds no copy. Nothing the page does to it is sent back. */
 /* teams (2026-10-05): who is on whose team, worked out once per request; the functions and actions are further down */
 /* 'office' (2026-10-14, the walk desk): calls, emails and booking walks, nothing else of the admin's; only where features.walkdesk is on */
-define('ROLES', feature('walkdesk') ? (company()['a365'] ? ['crew', 'office', 'quote', 'manager', 'admin'] : ['crew', 'setter', 'tech', 'office', 'manager', 'admin']) : (edition() ? ['crew', 'setter', 'tech', 'manager', 'admin'] : ['crew', 'manager', 'admin']));   /* + setter and tech in the editions (2026-10-29) */
+define('ROLES', array_merge(feature('walkdesk') ? (company()['a365'] ? ['crew', 'office', 'quote', 'manager', 'admin'] : ['crew', 'setter', 'tech', 'office', 'manager', 'admin']) : (edition() ? ['crew', 'setter', 'tech', 'manager', 'admin'] : ['crew', 'manager', 'admin']), feature('measure') ? ['measure'] : []));   /* + measure only, where features.measure is on (2026-11-21, Traverse Yards) */   /* + setter and tech in the editions (2026-10-29) */
 /* 'quote' (2026-10-15, Matthew: "an account that goes straight to the quote generator and only shows that"): the Quick quote and nothing else; the server refuses every other action */
 $TEAM = teamInfo($basePeople, $acct, $sessionKey);
 $myTeam = (string) ($TEAM['byName'][$me]['team'] ?? '');
@@ -7222,11 +7228,12 @@ if ($action === 'proppull') {
     if (is_array($ix) && !in_array(LOOKED_UP, array_column((array) ($ix['regions'] ?? []), 'key'), true)) { $ix['regions'][] = ['key' => LOOKED_UP, 'label' => 'Looked up', 'c' => [round($door['lat'], 4), round($door['lon'], 4)], 'areas' => 0, 'doors' => 0]; writeJsonAtomic($ixf, $ix); }
     out(['ok' => true, 'house' => ['region' => LOOKED_UP, 'id' => $id, 'address' => $door['address'], 'town' => $door['town']], 'lawn' => $lw]);
 }
-if (in_array($action, ['a365house', 'leadhouse', 'leadask', 'lawncheck'], true) && !feature('walkdesk')) fail('Not here.', 404);
+if (in_array($action, ['a365house', 'leadhouse', 'leadask', 'lawncheck'], true) && !feature('walkdesk') && $role !== 'measure') fail('Not here.', 404);
 if ($action === 'a365house') {
-    if (!desk() && $role !== 'quote' && !(edition() && $role === 'crew' && edSub() === '')) fail('Not allowed.', 403);   /* + a sales rep: the house on their quote, a door card they see anyway (2026-10-29) */
+    if (!desk() && $role !== 'quote' && $role !== 'measure' && !(edition() && $role === 'crew' && edSub() === '')) fail('Not allowed.', 403);   /* + a sales rep: the house on their quote, a door card they see anyway (2026-10-29) */
     $h = houseFacts((string) ($_GET['region'] ?? ''), (string) ($_GET['id'] ?? ''));
     if (!$h) fail('No such house.', 404);
+    if ($role === 'measure') $h = array_intersect_key($h, array_flip(['region', 'id', 'address', 'town', 'area', 'acres', 'lat', 'lon', 'hand', 'lookup']));   /* measure only (2026-11-21): where the house is and its hand measure; no owner, value, marks or our lawn figure (it would steer the tracing) */
     out(['ok' => true, 'house' => $h]);
 }
 /* change a lead's name, phone or email (2026-10-15: the Quick quote reused a lead by its phone number and sent the form to its old email);
@@ -13911,11 +13918,12 @@ if ($action === 'matfix') {
 }
 /* save a hand measurement, or clear it (2026-10-21) */
 if ($action === 'lawnhand') {
-    if (!desk() && $role !== 'quote') fail('Not allowed.', 403);
+    if (!desk() && $role !== 'quote' && $role !== 'measure') fail('Not allowed.', 403);   /* + measure only (2026-11-21) */
     if (!$isPost) fail('POST required', 405);
     $key = (string) ($body['region'] ?? ''); $id = (string) ($body['id'] ?? '');
     if (!regionAvailable($key) || !preg_match('/^[a-z0-9-]{1,80}$/D', $id)) fail('No such house.', 404);
     $hf = houseFacts($key, $id); if (!$hf) fail('No such house.', 404); $key = (string) $hf['region'];
+    if ($role === 'measure' && !empty($hf['hand']['sq']) && !in_array((string) ($hf['hand']['by'] ?? ''), meNames(), true)) fail('Someone else measured this one already. Ask Matthew before changing it.', 403);   /* a measure-only account changes its own measures, never anyone else's */
     $sq = (int) round((float) ($body['sq'] ?? 0));
     if ($sq !== 0 && ($sq < 100 || $sq > 400000)) fail('Type the lawn size in square feet, between 100 and 400,000.');
     $src = in_array($body['src'] ?? '', ['ge', 'wheel', 'other'], true) ? (string) $body['src'] : 'other';
@@ -14923,7 +14931,7 @@ if ($action === 'search') {
     $words = array_values(array_filter($words, fn($w, $i) => !in_array($w, ['CO', 'COLO', 'COLORADO', 'USA'], true) && !($i > 0 && preg_match('/^8[01]\d{3}$/D', $w)), ARRAY_FILTER_USE_BOTH));
     $named = array_filter($words, fn($w) => strlen($w) >= 3 && !ctype_digit($w) && !in_array($w, SEARCH_TYPES, true));
     if (!$named) out(['ok' => true, 'q' => $q, 'results' => [], 'need' => 'street']);
-    $withLookup = !empty($_GET['lookup']) && feature('walkdesk') && (desk() || $role === 'quote' || fqOn());   /* + the field quick quote (2026-10-21) */
+    $withLookup = !empty($_GET['lookup']) && ((feature('walkdesk') && (desk() || $role === 'quote' || fqOn())) || $role === 'measure');   /* + measure only: rented homes are lawns too (2026-11-21) */   /* + the field quick quote (2026-10-21) */
     if (!throttleTake(rateFile('search|' . (string) ($session['c'] ?? $me)), 150, 600)) fail('That is a lot of searches. Wait a few minutes.', 429);
     $find = function (array $words) use ($withLookup, $LONGW): array {
         $hits = [];
@@ -14996,6 +15004,7 @@ if ($action === 'search') {
     usort($hits, fn($x, $y) => [$x['rank'], $x['address']] <=> [$y['rank'], $y['address']]);
     $more = count($hits) > 25;
     $hits = array_map(function ($h) { unset($h['rank']); return $h; }, array_slice($hits, 0, 25));
+    if ($role === 'measure') $hits = array_map(fn($h) => array_intersect_key($h, array_flip(['region', 'town', 'area', 'id', 'address', 'lookup'])), $hits);   /* measure only (2026-11-21): the address, never our lawn level */
     out(['ok' => true, 'q' => $q, 'results' => $hits, 'more' => $more]);
 }
 

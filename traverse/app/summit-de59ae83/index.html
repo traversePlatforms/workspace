@@ -2463,6 +2463,7 @@ try{var FRW={'1':430,'tablet':820,'tabletw':1180}[localStorage.getItem('doorapp.
   .cuchip button{border:0;background:none;color:var(--soft);font:700 15px var(--sans);width:24px;height:24px;border-radius:50%;cursor:pointer;flex:none}
   .cuchip button:hover{background:var(--line);color:var(--ink)}
   .handx .handcx{color:var(--soft)}
+  .mout{display:block;margin:18px auto 30px;background:none;border:0;color:var(--soft);font:700 14px var(--sans);text-decoration:underline;cursor:pointer}.mpoint{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}.mpoint .lnk{background:none;border:0;padding:0;color:var(--accent);font:700 13.5px var(--sans);cursor:pointer}.mhelp{margin-bottom:10px}
   .pipepick{margin-top:6px}
   .rangex .rgturf{font-size:14px}.rangex .rgturf small{color:var(--soft)}.rangex .rgcred{font-size:11.5px}
   .rangex{background:var(--sunk)}.rangex .rgn{font:800 18px var(--sans)}.rangex small{color:var(--soft)}.rga{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.rga button{min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:700 13px var(--sans);cursor:pointer}
@@ -3186,7 +3187,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     pest: { crew: 'Rep', setter: 'Setter', tech: 'Technician' },
     security: { crew: 'Rep', setter: 'Setter', tech: 'Technician' },
     yards: { crew: 'Rep', setter: 'Setter', tech: 'Crew' },
-    _: { admin: 'Admin', manager: 'Manager', office: 'Office', crew: 'Sales rep', setter: 'Setter', tech: 'Technician', super: 'Traverse', quote: 'Quote only' }
+    _: { admin: 'Admin', manager: 'Manager', office: 'Office', crew: 'Sales rep', setter: 'Setter', tech: 'Technician', super: 'Traverse', quote: 'Quote only', measure: 'Measure only' }
   };
   /* what each role can do, one plain line each, for the Accounts form (2026-10-29, Matthew: a description per role). Worded from what the
      server enforces (edGate, ED_SETTER_NO, ED_TECH_NO, desk(), repSendOn() and the per-person switches in the API), with the trade's labels;
@@ -3199,6 +3200,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (r === 'office') return pw('works every lead: quotes, agreements and deposits, the jobs schedule, customers and payments; door lists only if you tick Knocks doors');
     if (r === 'crew') return 'knocks doors and works their own leads' + (kit ? ', prices them with the quote kit' : '') + (kit && S.repSend ? ', sends the agreement and takes the deposit' : kit ? '; the office sends the agreement' : '') + '; no customer list' + pay;
     if (r === 'setter') return 'knocks doors and books appointments on their own leads; no prices, quotes, customers or payments';
+    if (r === 'measure') return 'finds an address and saves a lawn size they measured by hand; nothing else (no leads, quotes, customers, money or team)';   /* 2026-11-21 */
     if (r === 'tech') return pw('does the work: their own jobs, schedule, notes, photos and Done; no leads, quotes or customers; doors only if you tick Knocks doors') + pay;
     return '';
   }
@@ -3227,7 +3229,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      edition's page source). The editions' build swaps this one line for plain words, and fails if a name is still in the page. */
   var WHO = { jen: 'Jen', brad: 'Brad', brandon: 'Brandon', bryce: 'Bryce', siteone: 'SiteOne', clickup: 'ClickUp' };
   function who(k) { return WHO[k] || k; }
-  function edRoles() { return ['crew', 'setter', 'tech'].concat(feat('walkdesk') ? ['office'] : [], ['manager', 'admin']); }
+  function edRoles() { return ['crew', 'setter', 'tech'].concat(feat('walkdesk') ? ['office'] : [], ['manager', 'admin'], feat('measure') ? ['measure'] : []); }   /* + measure only where features.measure is on (2026-11-21) */
   function setterOn() { return edOn() && S.sub === 'setter'; }
   function techOn() { return edOn() && S.sub === 'tech'; }
   function repOn() { return edOn() && ((S.role === 'crew' && !S.sub) || pAdd('quote.make')); }   /* + a role given Make quotes (2026-10-29): the rep's own-lead quote flow */
@@ -3943,7 +3945,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   }
   /* ---- the tap log (2026-10-12) ---- screens opened and buttons tapped, sent every 2 minutes; nothing typed, no labels with digits */
   var TAPQ = [], TAPLAST = '';
-  function tapPush(t) { if (!S.me || !S.screen) return; TAPQ.push({ s: String(S.screen), t: t || '', at: Math.floor(Date.now() / 1000), d: document.body.classList.contains('dnav-on') ? 'd' : 'p' }); if (TAPQ.length > 400) TAPQ.splice(0, TAPQ.length - 400); }
+  function tapPush(t) { if (!S.me || !S.screen || mView()) return;   /* not for a measure-only account: the server refuses it (2026-11-21) */ TAPQ.push({ s: String(S.screen), t: t || '', at: Math.floor(Date.now() / 1000), d: document.body.classList.contains('dnav-on') ? 'd' : 'p' }); if (TAPQ.length > 400) TAPQ.splice(0, TAPQ.length - 400); }
   document.addEventListener('click', function (e) {
     var el = e.target && e.target.closest ? e.target.closest('button, a, [role=button], select') : null; if (!el) return;
     var t = (el.getAttribute('aria-label') || el.textContent || '').replace(/\s+/g, ' ').trim();
@@ -4068,7 +4070,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       var sb = q('button', 'srchbtn'); sb.type = 'button'; sb.setAttribute('aria-label', 'Find an address');
       sb.appendChild(ico('search', 2.4)); sb.addEventListener('click', function () { searchView(renderAreas); });
       b.appendChild(sb);
-      if (S.me && !dnavOn()) b.appendChild(bellBtn());   /* the in-app alerts (2026-10-27) */
+      if (S.me && !dnavOn() && !mView()) b.appendChild(bellBtn());   /* the in-app alerts (2026-10-27) */
       b.appendChild(avatarBtn(chooseView, 'Field tools' + (S.me ? ' — signed in as ' + S.me : '')));
       return;
     }
@@ -4083,7 +4085,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     t.appendChild(brandName(o.title || ''));
     if (o.sub) t.appendChild(q('span', null, o.sub));
     b.appendChild(t);
-    if (S.me && !dnavOn()) b.appendChild(bellBtn());   /* the in-app alerts (2026-10-27); a computer has it in the top bar */
+    if (S.me && !dnavOn() && !mView()) b.appendChild(bellBtn());   /* the in-app alerts (2026-10-27); a computer has it in the top bar; never a measure-only account */
     if (o.avatar) b.appendChild(avatarBtn(profileView, 'Your profile: photo, alerts, look and sign out'));
     if (typeof o.count === 'number') {
       var c = q('div', 'count'); c.id = 'barCount';
@@ -5039,6 +5041,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     if (termsDue()) { termsView(); return; }   /* the terms, before anything else (the editions, 2026-10-29) */
     if (lockOn()) { setupHome(); return; }   /* ...and the admin gets the company ready (2026-10-29) */
     if (qView()) { quickQuoteView(); return; }   /* quote-only accounts: the Quick quote is all there is (2026-10-15) */
+    if (mView()) { measureView(); return; }   /* measure-only accounts: find the house, save the measure (2026-11-21) */
     hideSplash(); hideToast();
     S.signin = null; S.screen = 'tools'; S.inOffice = false; setupClear();
     if (S.region === SAMPLE_KEY) { S.region = S.sampleWas || null; S.returnTo = null; }
@@ -6178,6 +6181,82 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
   function ownHide() { return !!(CO && CO.a365 && S.role === 'admin' && !!S.ownHide); }
   /* the quote-only screen (Jen's): her account, or an admin looking at it (2026-10-15, Matthew: "make it so i see the quick quote") */
   function qView() { return S.role === 'quote' || (S.role === 'admin' && S.viewAs === 'quote' && feat('walkdesk')); }
+  /* measure-only accounts (2026-11-21, Matthew: "she can only search, open a house and save a measure"; Traverse Yards, for Claire): one screen.
+     Find the house by its address, see where it is (the aerial photo with its lot line, and the point to paste into Google Earth), and save the
+     lawn size measured by hand. No lawn figure of ours is shown anywhere on it: it would steer the tracing. The server refuses everything else
+     (MEASURE_OK in the API) and trims the house to where it is and its hand measure. */
+  function mView() { return S.role === 'measure'; }
+  function measureView() {
+    hideToast(); S.signin = null; S.screen = 'measure'; foot.hidden = true; setDock(null);
+    setBar('back', { title: CO.short, sub: 'Lawn measures' + (S.me ? ' \u00b7 ' + S.me : '') });
+    view.textContent = '';
+    if (S.viewing) view.appendChild(q('div', 'msg soft', 'Looking only: this is ' + S.viewing.name + '\u2019s screen.'));
+    var intro = q('div', 'door mhelp'); intro.appendChild(q('div', 'addr', 'Save a lawn measure'));
+    intro.appendChild(q('div', 'meta', '1. Type the house number and street. 2. Open the house. 3. Measure the grass in Google Earth. 4. Type the square feet and tap Save my measure.'));
+    view.appendChild(intro);
+    var box = q('div', 'search hlook');
+    var inp = q('input'); inp.type = 'search'; inp.placeholder = 'House number and street, e.g. 1840 Ponderosa'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Address'); inp.id = 'measureq';
+    var lab = q('label', 'sfield'); lab.appendChild(ico('search', 2.4)); lab.appendChild(inp); box.appendChild(lab);
+    var res = q('div', 'sres'), pan = q('div'); box.appendChild(res); box.appendChild(pan);
+    view.appendChild(box);
+    var seq = 0, tm = null;
+    function show(region, id) {
+      res.textContent = ''; pan.textContent = ''; pan.appendChild(q('div', 'skel'));
+      api('a365house', { params: { region: region, id: id } }).then(function (j) {
+        pan.textContent = '';
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { pan.appendChild(q('div', 'msg bad', j.error || 'Could not open that house.')); return; }
+        var again = q('button', 'lnk subnav', '\u2039 Search again'); again.type = 'button'; again.addEventListener('click', function () { pan.textContent = ''; run(); try { inp.focus(); } catch (e) {} });
+        pan.appendChild(again);
+        pan.appendChild(measureCard(j.house, function () { show(region, id); }));
+      }).catch(function () { pan.textContent = ''; pan.appendChild(q('div', 'msg', 'Opening a house needs signal.')); });
+    }
+    function run() {
+      var v = inp.value.trim(); pan.textContent = ''; res.textContent = '';
+      if (v.replace(/[^A-Za-z0-9]/g, '').length < 3) { res.appendChild(q('div', 'msg soft', 'Type the house number and street, as on your list.')); return; }
+      var my = ++seq; res.appendChild(q('div', 'msg soft', 'Searching\u2026'));
+      api('search', { params: { q: v, lookup: 1 } }).then(function (j) {
+        if (my !== seq) return; res.textContent = '';
+        if (j._status === 401) return signinView('Signed out. Enter your code again.');
+        if (!j.ok) { res.appendChild(q('div', 'msg bad', j.error || 'Search did not work.')); return; }
+        if (j.need === 'street') { res.appendChild(q('div', 'msg', 'Add the street name, e.g. \u201c1840 Ponderosa\u201d.')); return; }
+        if (!j.results.length) { res.appendChild(q('div', 'msg', 'No house on our lists matches \u201c' + v + '\u201d. Check the spelling, or leave the town off. If it still is not there, write the measure on your list for Matthew.')); return; }
+        j.results.forEach(function (r) {
+          var b = q('button', 'door drow srow'); b.type = 'button';
+          b.appendChild(q('div', 'addr', r.address)); b.appendChild(q('div', 'swhere', r.town + (r.area ? ' \u00b7 ' + r.area : '')));
+          b.addEventListener('click', function () { show(r.region, r.id); });
+          res.appendChild(b);
+        });
+        if (j.more) res.appendChild(q('div', 'msg soft', 'More match. Add more of the address.'));
+      }).catch(function () { if (my === seq) { res.textContent = ''; res.appendChild(q('div', 'msg', 'Search needs signal.')); } });
+    }
+    inp.addEventListener('input', function () { clearTimeout(tm); tm = setTimeout(run, 450); });
+    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { clearTimeout(tm); run(); } });
+    var out = q('button', 'lnk tout mout', 'Sign out'); out.type = 'button';
+    out.addEventListener('click', function () { markOut(true); clearSaved().then(function () { signinView(); }); tellServerOut(); });
+    view.appendChild(out);
+    setTimeout(function () { try { inp.focus(); } catch (e) {} }, 0);
+  }
+  /* one house, for a measure-only account: where it is, the photo with its lot line, and the measure box (open from the start) */
+  function measureCard(h, redraw) {
+    var box = q('div', 'door hpanel mcard');
+    box.appendChild(q('div', 'addr', streetCase(h.address)));
+    box.appendChild(q('div', 'meta', (h.town || '') + (h.area ? ' \u00b7 ' + streetCase(h.area) : '')));
+    if (h.acres) box.appendChild(q('div', 'meta', 'Lot: about ' + Number(h.acres).toFixed(2) + ' acres (' + Math.round(h.acres * 43560).toLocaleString(LOCALE) + ' sq ft: the whole lot, not the lawn)'));
+    if (h.lat != null && h.lon != null) {
+      var pt = Number(h.lat).toFixed(6) + ', ' + Number(h.lon).toFixed(6), row = q('div', 'meta mpoint');
+      row.appendChild(q('span', null, 'For Google Earth\u2019s search box: ' + pt + ' '));
+      var cp = q('button', 'lnk', 'Copy'); cp.type = 'button';
+      cp.addEventListener('click', function () { try { navigator.clipboard.writeText(pt).then(function () { toast('Copied', pt, null); }, function () {}); } catch (e) {} });
+      row.appendChild(cp); box.appendChild(row);
+      var hp = q('div', 'lpmap hpmap'); hp.setAttribute('role', 'img'); hp.setAttribute('aria-label', 'Aerial photo of ' + streetCase(h.address) + ' with its lot line'); hp.style.cursor = 'default'; box.appendChild(hp);
+      box.appendChild(q('div', 'ltrynote', 'The yellow line is the lot. Measure only the grass inside it.'));
+      setTimeout(function () { miniAerial(hp, h); }, 0);
+    }
+    var hb = handBox(h, redraw); box.appendChild(hb);
+    if (!(h.hand && h.hand.sq)) { var op = hb.querySelector('.handop'); if (op) op.click(); }
+    return box;
+  }
   function adminView() { return S.role === 'admin' && !S.viewAs && !offAdm(); }
   function viewAsBar() {
     var b = q('div', 'viewas'); b.appendChild(q('span', null, S.viewAs === 'quote' ? 'You are seeing ' + who('jen') + '\u2019s screen: her quote-only account, the Quick quote and the schedule.' : 'You are seeing the Office screen (the full office account).'));
@@ -9096,7 +9175,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     var chips = function (title, opts, cur, set) { f.appendChild(q('div', 'dwsub', title)); var r = q('div', 'dwlen'); opts.forEach(function (o) { var b = q('button', null, o[1]); b.type = 'button'; b.setAttribute('aria-pressed', String(cur === o[0])); b.addEventListener('click', function () { set(o[0]); [].forEach.call(r.children, function (c) { c.setAttribute('aria-pressed', String(c === b)); }); }); r.appendChild(b); }); f.appendChild(r); };
     chips('How', [['ge', 'Google Earth'], ['wheel', 'Measuring wheel'], ['other', 'Other']], src, function (v) { src = v; });
     chips('What it includes', [['grass', 'Grass only'], ['trees', 'Grass under the trees too'], ['beds', 'Grass and beds']], incl, function (v) { incl = v; });
-    var err = q('div', 'err'), sv = q('button', 'save', 'Save the measurement'); sv.type = 'button'; f.appendChild(sv);
+    var err = q('div', 'err'), sv = q('button', 'save', mView() ? 'Save my measure' : 'Save the measurement'); sv.type = 'button'; f.appendChild(sv);
     var cx = q('button', 'lnk handcx', 'Cancel'); cx.type = 'button'; cx.addEventListener('click', shut); f.appendChild(cx); f.appendChild(err);
     f.appendChild(q('div', 'ltrynote', 'It becomes the size this house is quoted at, on every card, for everyone. It also teaches us how far off the photo is.'));
     sv.addEventListener('click', function () {
@@ -12238,7 +12317,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return it;
   }
   var DNAV_ICO = { home: 'home', pipe: 'clip', jobs: 'cal', card: 'card', house: 'leaf', fq: 'leaf', cal: 'clock', numbers: 'chart', doors: 'door', walks: 'route', team: 'users', office: 'table', plan: 'map', storms: 'hail' };
-  function dnavOn() { return !!(DESK_MQ && DESK_MQ.matches) && !!S.me && S.screen !== 'signin' && !lockOn(); }   /* no top bar while the app is locked (2026-10-29): its links are the locked screens */
+  function dnavOn() { return !!(DESK_MQ && DESK_MQ.matches) && !!S.me && S.screen !== 'signin' && !lockOn() && !mView(); }   /* + never for a measure-only account (2026-11-21): its one screen has its own bar */   /* no top bar while the app is locked (2026-10-29): its links are the locked screens */
   function dnavPaint() {
     var on = dnavOn();
     document.body.classList.toggle('dnav-on', on); dnav.hidden = !on;
