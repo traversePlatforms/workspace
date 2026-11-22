@@ -164,7 +164,11 @@ const BRF = {
   'https://feeds.arstechnica.com/arstechnica/index': '<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Ars</title><entry><title type="html"><![CDATA[New chip fabs announced in Arizona]]></title><link rel="alternate" type="text/html" href="https://arstechnica.com/2026/11/fabs/"/><published>' + new Date((now - 7200) * 1000).toISOString() + '</published><summary>Two plants were announced.</summary></entry></feed>',
   'https://news.ycombinator.com/rss': rssDoc([{ t: 'Show HN: A tiny weather station', l: 'https://example.org/post', c: 'https://news.ycombinator.com/item?id=1' }])
 };
-const NWS = { 'points': { properties: { forecast: 'https://api.weather.gov/gridpoints/BOU/63,57/forecast' } },
+const NWS = { 'points': { properties: { forecast: 'https://api.weather.gov/gridpoints/BOU/63,57/forecast', forecastHourly: 'https://api.weather.gov/gridpoints/BOU/63,57/forecast/hourly' } },
+  /* 21 Nov: the top bar's weather now: the hourly forecast's current period (NWS.hourlyDown: it answers 500) */
+  'hourly': { properties: { periods: [{ startTime: new Date((now - 3 * 3600) * 1000).toISOString(), endTime: new Date((now - 2 * 3600) * 1000).toISOString(), temperature: 30, temperatureUnit: 'F', shortForecast: 'Snow' },
+    { startTime: new Date((now - 3600) * 1000).toISOString(), endTime: new Date((now + 6 * 3600) * 1000).toISOString(), temperature: 41, temperatureUnit: 'F', shortForecast: 'Partly Cloudy' },
+    { startTime: new Date((now + 6 * 3600) * 1000).toISOString(), endTime: new Date((now + 7 * 3600) * 1000).toISOString(), temperature: 35, temperatureUnit: 'F', shortForecast: 'Clear' }] } },
   'forecast': { properties: { updateTime: new Date().toISOString(), periods: [{ name: 'Today', isDaytime: true, temperature: 47, temperatureUnit: 'F', shortForecast: 'Chance Snow Showers', detailedForecast: 'A chance of snow showers before 2pm. High near 47.' },
     { name: 'Tonight', isDaytime: false, temperature: 21, temperatureUnit: 'F', shortForecast: 'Clear', detailedForecast: 'Clear. Low around 21.' }, { name: 'Sunday', isDaytime: true, temperature: 46, temperatureUnit: 'F', shortForecast: 'Mostly Sunny', detailedForecast: 'Mostly sunny.' }] } },
   'alerts': { features: [{ properties: { event: 'Winter Weather Advisory', headline: 'Winter Weather Advisory until 5 PM MST', severity: 'Moderate' } }] } };
@@ -181,7 +185,8 @@ const gsrv = http.createServer((req, res) => {
       if (EL.mode === '402') return E(402, 'payment_required'); if (EL.mode === '429quota') return E(429, 'quota_exceeded'); if (EL.mode === '429busy') return E(429, 'too_many_concurrent_requests'); if (EL.mode === '500') return E(500, 'internal');
       res.writeHead(200, { 'Content-Type': 'audio/mpeg' }); res.write('ID3' + 'A'.repeat(400)); setTimeout(() => res.end('FAKE-MP3:' + (jb.text || '')), 30); return; }
     if (p === 'brief') { const tu = u.searchParams.get('u') || ''; BR.calls.push({ u: tu, ua: req.headers['user-agent'] || '' });
-      const k = /api\.weather\.gov\/points\//.test(tu) ? 'points' : /\/gridpoints\/BOU\/63,57\/forecast$/.test(tu) ? 'forecast' : /\/alerts\/active\?point=/.test(tu) ? 'alerts' : '';
+      const k = /api\.weather\.gov\/points\//.test(tu) ? 'points' : /\/gridpoints\/BOU\/63,57\/forecast\/hourly$/.test(tu) ? (NWS.hourlyDown ? 'down' : 'hourly') : /\/gridpoints\/BOU\/63,57\/forecast$/.test(tu) ? 'forecast' : /\/alerts\/active\?point=/.test(tu) ? 'alerts' : '';
+      if (k === 'down') { res.writeHead(500); res.end('down'); return; }
       if (k) { res.writeHead(200, { 'Content-Type': 'application/geo+json' }); res.end(JSON.stringify(NWS[k])); return; }
       if (BRF[tu]) { res.writeHead(200, { 'Content-Type': 'application/rss+xml' }); res.end(BRF[tu]); return; }
       res.writeHead(500); res.end('down'); return; }   /* The Verge (and anything else): down, so the brief must skip it and say so */
@@ -308,7 +313,7 @@ try {
   ok(await until('navigator.serviceWorker.getRegistration("./").then(r=>!!r && /\\/a-e018bb82\\/jarvis\\/$/.test(r.scope))', 6000), 'P-9: its own service worker, scoped to /a-e018bb82/jarvis/ only');
   /* ================================================================ 3. no model call on load; only the expected reads */
   ok(!reqs.some(r => /action=(chat|write|send|savedraft|check|draft|helpsend|groadd|jvdesksend|jvpushtest)\b/.test(r)), 'page load makes no model call and sends nothing (' + reqs.filter(r => /action=(chat|write|send|check|draft)/.test(r)).join(', ') + ')');
-  const allowed = /\/a-e018bb82\/(api\.php\?action=(signin|state|home|jvstatus|gro|jvdesk|jvmeetlist)$|jarvis\/)|\/api\/(rounds|c-houston-lawn-test-rounds)\.php\?action=helplist$|\/outbox-092b0f\/api\.php\?action=state$|\/peak-desk-28d38d\/api\/desk\.php\?action=data$|^data:/;
+  const allowed = /\/a-e018bb82\/(api\.php\?action=(signin|state|home|jvstatus|jvweather|gro|jvdesk|jvmeetlist)$|jarvis\/)|\/api\/(rounds|c-houston-lawn-test-rounds)\.php\?action=helplist$|\/outbox-092b0f\/api\.php\?action=state$|\/peak-desk-28d38d\/api\/desk\.php\?action=data$|^data:/;
   const odd = reqs.filter(r => !allowed.test(r.split(' ')[1]));
   ok(odd.length === 0, 'the page reads only its own sources (' + odd.join(' | ') + ')');
   ok(!reqs.some(r => /googleapis|anthropic|fonts\.g/.test(r)), 'nothing leaves for Google or Anthropic from the page');
@@ -1515,6 +1520,131 @@ try {
     ok(errs.length === 0, 'no script errors in money (' + errs.join(' | ') + ')');
   }
 
+  /* ================================================================ 20. (21 Nov) the top bar's glance items: the weather now, the next calendar event, the next money
+     date, cash on hand (Matthew picked all four). The weather goes through the server (the NWS mock); the event and money states are made-up
+     answers put into the page's own jvstatus reads by a hook on fetch. */
+  {
+    const WXF = path.join(DATA, 'jarvis', 'weather-now.json');
+    const apiG = a => ev('fetch("../api.php?action=' + a + '").then(r=>r.json())');
+    const gl = () => ev('[...document.querySelectorAll("#glance .gi")].map(b=>({k:b.dataset.gl,cls:b.className,l:(b.querySelector("b")||{}).textContent||"",v:b.querySelector("span").dataset.full||b.querySelector("span").textContent,shown:b.querySelector("span").textContent,blur:b.querySelector("span").classList.contains("blur"),title:b.title}))');
+    const item = async k => (await gl()).find(x => x.k === k);
+    const reload = async () => { await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(700); };
+    const hook = () => ev('(()=>{if(window.__jvHooked)return true;window.__jvHooked=true;const of=window.fetch;window.fetch=function(u){return of.apply(this,arguments).then(function(r){if(window.__jvMut&&/action=jvstatus$/.test(String(u)))return r.clone().json().then(function(j){return new Response(JSON.stringify(window.__jvMut(j)),{status:r.status,headers:{"Content-Type":"application/json"}})});return r;});};return true})()');
+    /* a new status answer (the page's own refresh, which a return to the tab runs), then wait for what it should show */
+    const restat = async (mut, cond) => { await ev('window.__jvMut=' + mut); await ev('document.dispatchEvent(new Event("visibilitychange"))'); return until(cond, 6000); };
+    const isoL = ms => { const d = new Date(ms), o = -d.getTimezoneOffset(), p = n => String(n).padStart(2, '0'); return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + 'T' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':00' + (o >= 0 ? '+' : '-') + p(Math.floor(Math.abs(o) / 60)) + ':' + p(Math.abs(o) % 60); };
+    const hm = ms => { const d = new Date(ms); return (d.getHours() % 12 || 12) + ':' + String(d.getMinutes()).padStart(2, '0'); };
+    const tmrw = (() => { const d = new Date(Date.now() + 86400000); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); })();
+    const err0 = errs.length;
+
+    /* ---- the weather now: the server's light action, cached */
+    if (fs.existsSync(WXF)) fs.unlinkSync(WXF);
+    const b0 = BR.calls.length, w = await apiG('jvweather');
+    ok(w.ok && w.temp === 41 && w.short === 'Partly Cloudy' && w.high === 47 && w.low === 21 && w.lowName === 'Tonight' && w.alerts[0].event === 'Winter Weather Advisory' && /forecast\.weather\.gov/.test(w.link), 'weather now: the hourly forecast\'s current period (41°, Partly Cloudy), today\'s high and low, the active alert (' + JSON.stringify(w).slice(0, 200) + ')');
+    ok(!('hourlyUrl' in w) && !('forecastUrl' in w) && !('pointAt' in w), 'weather now: the page gets only what it shows');
+    const wc = BR.calls.slice(b0);
+    ok(wc.some(c => /\/forecast\/hourly$/.test(c.u)) && wc.some(c => /\/alerts\/active\?point=39\.6478,-104\.9878$/.test(c.u)) && wc.every(c => /^JarvisMorningBrief\/1\.0 \(/.test(c.ua) && !/matthew|sharpe|@|traverse|surge|sixfold/i.test(c.ua)), 'weather now: NWS hourly forecast and alerts for Englewood, the generic User-Agent');
+    const b1 = BR.calls.length; await apiG('jvweather');
+    ok(BR.calls.length === b1 && fs.existsSync(WXF), 'weather now: within 25 minutes the kept copy is used, nothing fetched');
+    await reload();
+    let x = await item('wx');
+    ok(x && x.v === '41° Partly Cloudy' && /amber/.test(x.cls) && /Englewood/.test(x.l), 'top bar: the weather now, amber while an NWS alert is active (' + JSON.stringify(x) + ')');
+    await click('#glance .gi[data-gl=wx]'); ok(await until('!!document.getElementById("wxsheet")', 3000), 'tap the weather: its sheet opens');
+    { const t = await ev('document.getElementById("wxsheet").innerText');
+      ok(/High 47°/.test(t) && /Low 21°/.test(t) && /Tonight/.test(t) && /Winter Weather Advisory/.test(t), 'weather sheet: today\'s high and low, and the alert');
+      ok(await ev('(()=>{const a=document.querySelector("#wxsheet a");return !!a && /^https:\\/\\/forecast\\.weather\\.gov\\//.test(a.href) && a.target==="_blank" && /noopener/.test(a.rel)})()'), 'weather sheet: the forecast link opens in a new tab, no opener'); }
+    await click('#shclose'); await sleep(150);
+    const AL0 = NWS.alerts; NWS.alerts = { features: [] }; fs.unlinkSync(WXF); await reload();
+    x = await item('wx'); ok(x && !/amber/.test(x.cls), 'top bar: the weather is not amber with no alert');
+    await click('#glance .gi[data-gl=wx]'); await until('!!document.getElementById("wxsheet")', 3000);
+    ok(/No active weather alerts/.test(await ev('document.getElementById("wxsheet").innerText')), 'weather sheet: says when there is no alert'); await click('#shclose');
+    NWS.hourlyDown = true; fs.unlinkSync(WXF); await reload();
+    ok(!(await item('wx')) && (await apiG('jvweather')).ok === false, 'top bar: no weather when the NWS cannot be read (hidden, not blank)');
+    NWS.hourlyDown = false; NWS.alerts = AL0; fs.unlinkSync(WXF); await reload();
+    ok(await until('!!document.querySelector("#glance .gi[data-gl=wx].amber")', 4000), 'weather back');
+
+    /* ---- the next calendar event */
+    await hook();
+    const toMid = (() => { const d = new Date(); d.setHours(24, 0, 0, 0); return (d - Date.now()) / 60000; })();
+    if (toMid > 50) {
+      const at40 = Date.now() + 40.5 * 60000;
+      ok(await restat('j=>{j.calendar={source:"Traverse",events:[{title:"Peak call",start:' + JSON.stringify(isoL(at40)) + ',end:"",allDay:false,where:""},{title:"Nolan lunch",start:' + JSON.stringify(tmrw) + ',end:"",allDay:true,where:""}]};return j}', '(()=>{const b=document.querySelector("#glance .gi[data-gl=ev] span");return b && /^Peak call/.test(b.textContent)})()'), 'top bar: the next event shows');
+      x = await item('ev'); ok(x && new RegExp('^Peak call ' + hm(at40) + ' · in (40|41) min$').test(x.v) && !/amber/.test(x.cls) && x.l === 'Next', 'next event: "Peak call ' + hm(at40) + ' · in 40 min", not amber yet (' + (x && x.v) + ')');
+      const at10 = Date.now() + 10 * 60000;
+      ok(await restat('j=>{j.calendar={source:"Traverse",events:[{title:"Peak call",start:' + JSON.stringify(isoL(at10)) + ',end:"",allDay:false,where:""}]};return j}', '/amber/.test((document.querySelector("#glance .gi[data-gl=ev]")||{}).className||"")'), 'next event: amber in the last 15 minutes before it starts');
+    } else console.log('  (next-event timing checks skipped: under 50 minutes to midnight)');
+    ok(await restat('j=>{j.calendar={source:"Traverse",events:[{title:"Earlier thing",start:' + JSON.stringify(isoL(Date.now() - 2 * 3600000)) + ',end:"",allDay:false,where:""},{title:"Nolan lunch",start:' + JSON.stringify(tmrw) + ',end:"",allDay:true,where:""}]};return j}', '(()=>{const b=document.querySelector("#glance .gi[data-gl=ev] span");return b && /^Nothing else today/.test(b.textContent)})()'), 'next event: "Nothing else today" once today\'s are past');
+    x = await item('ev'); ok(x && x.v === 'Nothing else today · tomorrow Nolan lunch', 'next event: then tomorrow\'s first event (' + (x && x.v) + ')');
+    if (await ev('!!document.querySelector("#p-cal .ph .fold")')) await click('#p-cal .ph .fold');
+    await until('!document.getElementById("p-cal")', 2000);
+    await click('#glance .gi[data-gl=ev]');
+    ok(await until('!!document.getElementById("p-cal")', 3000), 'tap the next event: the Calendar panel opens (unfolded)');
+    ok(await restat('j=>{j.calendar={source:"none",need:"Connect"};return j}', '!document.querySelector("#glance .gi[data-gl=ev]")'), 'next event: hidden when the calendar is not connected');
+
+    /* ---- the next money date, from the money light view (jvstatus) */
+    const st = await apiG('jvstatus'), nb = st.money.bank.next;
+    ok(nb && ['pay', 'bill'].includes(nb.kind) && typeof nb.days === 'number' && nb.day && nb.red === !!st.money.bank.warn && !/"desc"|"acct"/.test(JSON.stringify(nb)), 'money light view: the next money date, red exactly when the bill warning is up (' + JSON.stringify(nb) + ')');
+    await ev('window.__jvMut=null'); await ev('document.dispatchEvent(new Event("visibilitychange"))'); await until('!!document.querySelector("#glance .gi[data-gl=ev]")', 5000);
+    x = await item('mn'); ok(x && (/red/.test(x.cls) === nb.red), 'top bar: the next money date from the real view (' + JSON.stringify(x) + ')');
+    ok(await restat('j=>{j.money.bank.next={kind:"pay",label:"Payday",amount:null,when:0,late:false,days:3,day:"Fri",red:false,warn:""};return j}', '(()=>{const b=document.querySelector("#glance .gi[data-gl=mn] span");return b && b.textContent==="Payday Fri"})()'), 'next money date: "Payday Fri"');
+    x = await item('mn'); ok(x.l === 'Payday' && !/red/.test(x.cls), 'next money date: payday, not red');
+    ok(await restat('j=>{j.money.bank.next={kind:"bill",label:"U-Haul",amount:245.89,when:0,late:false,days:3,day:"Tue",red:true,warn:"Before payday Fri, 2 expected payments come to $545.89; Chime Checking has $150, so it would drop to -$395.89, under your $50 floor."};return j}', '(()=>{const b=document.querySelector("#glance .gi[data-gl=mn] span");return b && b.textContent==="U-Haul $245.89 in 3 days"})()'), 'next money date: "U-Haul $245.89 in 3 days"');
+    x = await item('mn'); ok(/red/.test(x.cls) && x.l === 'Next bill' && /under your \$50 floor/.test(x.title), 'next money date: red when the bill warning says the balance goes under the floor');
+    await shot('jarvis-topbar-laptop-red');
+    ok(await restat('j=>{j.money.bank.next={kind:"bill",label:"Payment to them",amount:null,when:0,late:false,days:1,day:"tomorrow",red:false,warn:""};return j}', '(()=>{const b=document.querySelector("#glance .gi[data-gl=mn] span");return b && b.textContent==="Payment to them tomorrow"})()'), 'next money date: a private bill by its plain label, no amount when unknown');
+    await click('#glance .gi[data-gl=mn]'); ok(await until('!!document.getElementById("moneysheet")', 4000), 'tap the money date: the Money sheet opens');
+    await click('#shclose'); await sleep(200);
+    ok(await restat('j=>{j.money.bank.next=null;return j}', '!document.querySelector("#glance .gi[data-gl=mn]") && !!document.querySelector("#glance .gi[data-gl=cash]")'), 'next money date: hidden when there is none');
+    { const r = await new Promise(res => { let o = ''; const php = "foreach (['store','claude','jarvis','money','paystub'] as $f) require " + JSON.stringify(PRIV.replace(/\\/g, '/') + '/lib/') + ".$f.'.php';"
+        + "$t = mnToday(); $D = 86400; $pin = ['dir' => 'in', 'next' => $t + 3 * $D, 'name' => 'Payer'];"
+        + "$ob = fn($next, $x = []) => $x + ['status' => 'active', 'kind' => 'bill', 'every' => 'monthly', 'next' => $next, 'label' => 'Payment to Pat', 'amount' => 100.0, 'left' => null, 'payee' => 'Pat Smith'];"
+        + "$out = [ 'billFirst' => mnNextDate([$pin, ['dir' => 'out', 'name' => 'Streamflix', 'amount' => 17.99, 'next' => $t + 5 * $D]], [$ob($t + 2 * $D)], [], null),"
+        + " 'payFirst' => mnNextDate([$pin, ['dir' => 'out', 'name' => 'Streamflix', 'amount' => 17.99, 'next' => $t + 5 * $D]], [$ob($t + 6 * $D)], [$t + 4 * $D], null),"
+        + " 'dailyOut' => mnNextDate([$pin], [$ob($t, ['every' => 'daily'])], [], null),"
+        + " 'dupe' => mnNextDate([['dir' => 'out', 'name' => 'Pat Smith Rent', 'amount' => 300.0, 'next' => $t + 1 * $D]], [$ob($t + 8 * $D)], [], null),"
+        + " 'red' => mnNextDate([], [$ob($t + 1 * $D)], [$t + 3 * $D], ['text' => 'would drop under']),"
+        + " 'debt' => mnNextDate([], [$ob($t - 1 * $D, ['kind' => 'debt', 'every' => 'once', 'left' => 40.0])], [], null),"
+        + " 'none' => mnNextDate([], [], [], null), 'day3' => mnDay($t + 3 * $D) ]; echo json_encode($out);";
+      const p = spawn('php', ['-r', php], { env: { ...process.env, ...ENVX } }); p.stdout.on('data', d => o += d); p.stderr.on('data', d => o += d); p.on('close', () => { try { res(JSON.parse(o)); } catch { res({ raw: o }); } }); });
+      ok(r.billFirst && r.billFirst.kind === 'bill' && r.billFirst.label === 'Payment to Pat' && r.billFirst.amount === 100 && r.billFirst.days === 2 && r.billFirst.red === false, 'mnNextDate: the register\'s bill before payday comes first, by its private label (' + JSON.stringify(r.billFirst || r.raw) + ')');
+      ok(r.payFirst && r.payFirst.kind === 'pay' && r.payFirst.days === 3 && r.payFirst.day === r.day3, 'mnNextDate: payday first when it comes before any bill (recurring income or the income profile, whichever is sooner)');
+      ok(r.dailyOut && r.dailyOut.kind === 'pay', 'mnNextDate: a daily register entry is never "the next bill"');
+      ok(r.dupe && r.dupe.label === 'Payment to Pat' && r.dupe.days === 8, 'mnNextDate: a recurring charge already in the register is not counted twice');
+      ok(r.red && r.red.kind === 'bill' && r.red.red === true && r.red.warn === 'would drop under', 'mnNextDate: red with the bill warning');
+      ok(r.debt && r.debt.amount === 40 && r.debt.late === true && r.debt.days === -1, 'mnNextDate: a debt shows what is left, and late when past due');
+      ok(r.none === null, 'mnNextDate: nothing, when there are no bills and no paydays'); }
+
+    /* ---- cash on hand: blurred until tapped, back after 15 seconds or a second tap, never stored */
+    /* the money date carries a marker, so the wait ends only once this answer (with the made-up cash) is on screen */
+    ok(await restat('j=>{j.money.bank.cash=4321.87;j.money.bank.next={kind:"bill",label:"Cash test",amount:1,when:0,late:false,days:2,day:"Mon",red:false,warn:""};return j}', '!!document.querySelector("#glance .gi[data-gl=cash]") && /Cash test/.test((document.querySelector("#glance .gi[data-gl=mn] span")||{}).textContent||"")'), 'cash on hand shows');
+    x = await item('cash');
+    ok(x && x.blur && x.v === '$0,000' && x.l === 'Cash on hand' && !/4,?321/.test(await ev('document.getElementById("glance").innerText + document.getElementById("glance").innerHTML')), 'cash on hand: blurred, a stand-in figure, the real one not on the page');
+    ok(/tap to show/i.test(await ev('document.querySelector("#glance .gi[data-gl=cash]").getAttribute("aria-label")')), 'cash on hand: says how to show it');
+    await click('#glance .gi[data-gl=cash]'); x = await item('cash');
+    ok(x && !x.blur && x.v === '$4,321.87', 'cash on hand: a tap shows it (' + (x && x.v) + ')');
+    await ev('document.dispatchEvent(new Event("visibilitychange"))'); await sleep(800); x = await item('cash');
+    ok(x && !x.blur && x.v === '$4,321.87', 'cash on hand: a status refresh keeps it shown until its time is up');
+    await shot('jarvis-topbar-laptop-cash');
+    const stores = await ev('(async()=>{let s=JSON.stringify(Object.assign({},localStorage))+JSON.stringify(Object.assign({},sessionStorage));try{for(const k of await caches.keys()){const c=await caches.open(k);for(const r of await c.keys()){s+=await (await c.match(r)).text();}}}catch(e){}return s})()');
+    ok(!/4321|4,321/.test(stores) && !/cash/i.test(stores), 'cash on hand: never kept in localStorage, sessionStorage or a cache');
+    await click('#glance .gi[data-gl=cash]'); x = await item('cash'); ok(x && x.blur && x.v === '$0,000', 'cash on hand: a second tap blurs it again');
+    await click('#glance .gi[data-gl=cash]'); ok((await item('cash')).blur === false, 'cash on hand: shown again');
+    await sleep(15400); x = await item('cash'); ok(x && x.blur && x.v === '$0,000', 'cash on hand: blurred again after 15 seconds');
+    ok(await restat('j=>{j.money.bank=null;return j}', '!document.querySelector("#glance .gi[data-gl=cash]") && !document.querySelector("#glance .gi[data-gl=mn]")'), 'cash and money date: hidden with no bank link');
+    ok(await restat('j=>{j.money.bank=null;j.calendar={source:"none"};return j}', '!document.querySelector("#glance .gi[data-gl=ev]")') && await ev('!!document.querySelector("#glance .gi[data-gl=wx]") && document.querySelectorAll("#glance .gi").length===1'), 'only the items with something to show are there');
+    /* the bar itself: in one line, between the laptop status and the icons, not wider than the window */
+    await ev('window.__jvMut=null'); await ev('document.dispatchEvent(new Event("visibilitychange"))'); ok(await until('document.querySelectorAll("#glance .gi").length===4', 5000) && await ev('[...document.querySelectorAll("#glance .gi")].filter(b=>b.style.display!=="none").map(b=>b.dataset.gl).slice(0,3).join()==="wx,ev,mn"'), 'laptop at 1440: weather, event and money date showing with real data');
+    ok(await ev('[...document.querySelectorAll("#glance .gi:not([style*=none]) span")].every(s=>s.classList.contains("blur") || s.scrollWidth<=s.clientWidth+1 || !s.dataset.short)'), 'laptop: a trimmed event switches to its short form');
+    await shot('jarvis-topbar-laptop');
+    ok(await ev('(()=>{const t=document.querySelector(".top"),g=document.getElementById("glance"),s=t.querySelector(".st"),v=t.querySelector(".vw");const G=g.getBoundingClientRect(),S=s.getBoundingClientRect(),V=v.getBoundingClientRect();return G.left>=S.right && G.right<=V.left && t.scrollWidth<=t.clientWidth+1 && G.height<=34})()'), 'laptop: the glance sits between the laptop status and the icons, in one line, nothing spilling over');
+    await cdp('Emulation.setDeviceMetricsOverride', { width: 1680, height: 900, deviceScaleFactor: 1, mobile: false }); await sleep(500);
+    ok(await ev('[...document.querySelectorAll("#glance .gi")].filter(b=>b.style.display!=="none").length===4'), 'laptop at 1680 px: all four showing');
+    for (const wpx of [1280, 1100]) { await cdp('Emulation.setDeviceMetricsOverride', { width: wpx, height: 800, deviceScaleFactor: 1, mobile: false }); await sleep(500);
+      ok(await ev('(()=>{const t=document.querySelector(".top"),g=document.getElementById("glance"),v=t.querySelector(".vw");return !!g && g.getBoundingClientRect().right<=v.getBoundingClientRect().left+1 && t.scrollWidth<=t.clientWidth+1 && document.documentElement.scrollWidth<=' + wpx + '})()'), 'laptop at ' + wpx + ' px: the glance fits (it trims, never pushes the icons off)'); }
+    await desk(); await sleep(400);
+    ok(errs.length === err0, 'no script errors in the glance items (' + errs.slice(err0).join(' | ') + ')');
+  }
+
   /* ---- desktop idle shot: a fresh load */
   await cdp('Page.reload'); await until('document.querySelectorAll(".msg.ai").length>0', 9000); await sleep(1200);
   await shot('jarvis-desktop-idle');
@@ -1538,6 +1668,17 @@ try {
   ok(await ev('(()=>{const b=document.querySelector(".cmdbar").getBoundingClientRect();return b.bottom<=844 && b.top>300})()'), 'phone: the command bar sits above the tabs, on screen');
   ok(/Answering: Assistant, instant/.test(await ev('document.getElementById("brainlabel").textContent')), 'phone: the brain is named on the bar');
   await shot('jarvis-phone-idle');
+  /* 21 Nov: the phone header's glance: the weather and the next event only, on their own line under the wordmark */
+  { const kinds = await ev('[...document.querySelectorAll(".phone .hd .gl .gi")].map(b=>b.dataset.gl).join()');
+    ok(kinds === 'wx,ev' && await ev('!document.getElementById("glance") && !document.querySelector(".phone [data-gl=mn],.phone [data-gl=cash]")'), 'phone header: only the weather and the next event (' + kinds + ')');
+    ok(await ev('(()=>{const g=document.getElementById("glance-ph").getBoundingClientRect(),w=document.querySelector(".phone .hd .wm").getBoundingClientRect(),d=document.getElementById("drivebtn").getBoundingClientRect(),l=document.querySelector(".phone .hd .mono").getBoundingClientRect();return g.top>=Math.max(w.bottom,d.bottom,l.bottom)-1 && g.right<=390 && g.left>=0 && d.right<=390 && [...document.querySelectorAll(".phone .hd .gl .gi")].every(b=>b.getBoundingClientRect().right<=391)})()'), 'phone header: the glance has its own line under the wordmark, laptop dot and Drive, inside the screen');
+    ok(await ev('document.documentElement.scrollWidth<=390 && document.body.scrollWidth<=390'), 'phone: still nothing wider than the screen with the glance');
+    await click('.phone .hd .gi[data-gl=ev]'); await sleep(300);
+    ok(await ev('document.querySelector(".tabs button[data-tab=today]").getAttribute("aria-selected")==="true" && !!document.getElementById("p-cal")'), 'phone: tap the next event: the Today tab, with the Calendar');
+    await click('.tabs button[data-tab=home]'); await sleep(300);
+    await click('.phone .hd .gi[data-gl=wx]'); ok(await until('!!document.getElementById("wxsheet")', 3000) && await ev('(()=>{const s=document.querySelector(".sheet").getBoundingClientRect();return s.width<=390 && s.left>=0})()'), 'phone: tap the weather: its sheet, inside the screen');
+    await click('#shclose'); await sleep(200);
+    await shot('jarvis-phone-topbar'); }
   /* 21 Nov: the globe on the phone: a satellite opens its tab; hold reaches the consent tap */
   await ev('[...document.querySelectorAll(".phone .jvg-mk")].find(m=>/^Decide/.test(m.textContent)).click()'); await sleep(300);
   ok(await ev('document.querySelector(".tabs button[data-tab=team]").getAttribute("aria-selected")==="true" && !!document.getElementById("p-waiting")'), 'phone: the Decide satellite opens the Decide tab');

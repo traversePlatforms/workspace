@@ -95,7 +95,7 @@ button.li:hover .lt{color:#fff}
 .prog{height:4px;border-radius:4px;overflow:hidden;background:#3ee8ff14;margin:7px 0 4px}
 .prog i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--c2),var(--c));box-shadow:0 0 8px var(--c)}
 .okt{color:var(--okc)}
-.top{display:flex;align-items:center;gap:22px;font:11px "JetBrains Mono",monospace;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;white-space:nowrap;min-width:0}
+.top{display:flex;align-items:center;gap:18px;font:11px "JetBrains Mono",monospace;letter-spacing:.12em;color:var(--mut);text-transform:uppercase;white-space:nowrap;min-width:0}
 .wm{font:700 22px Rajdhani,sans-serif;letter-spacing:.42em;color:#eafcff;text-shadow:0 0 18px #3ee8ff88}
 .st{display:flex;align-items:center;gap:6px}
 .st i{width:6px;height:6px;border-radius:50%;background:var(--okc);box-shadow:0 0 8px var(--okc)}
@@ -104,6 +104,24 @@ button.li:hover .lt{color:#fff}
 .top .vw button{width:30px;height:30px;display:grid;place-items:center;border-radius:6px;color:var(--mut);border:1px solid transparent}
 .top .vw button:hover{color:var(--c);border-color:#3ee8ff33;background:#3ee8ff0a}
 .top .clock{color:var(--mut)}
+/* 21 Nov: the glance items (weather, next event, next money date, cash on hand); a small label over the value, a hairline between */
+.gl{display:flex;align-items:stretch;min-width:0;flex:0 1 auto;overflow:hidden}
+.gl .gi{display:flex;flex-direction:column;justify-content:center;gap:3px;padding:1px 12px;border-left:1px solid #3ee8ff24;min-width:0;flex:0 1 auto;text-align:left;color:#cfe9f2;max-width:320px}
+.gl .gi b{font:500 8.5px "JetBrains Mono",monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gl .gi span{font:11.5px "JetBrains Mono",monospace;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.gl .gi:hover span,.gl .gi:focus-visible span{color:#fff;text-shadow:0 0 10px #3ee8ff66}
+.gl .gi.amber span,.gl .gi.amber b{color:var(--warn)}
+.gl .gi.red span,.gl .gi.red b{color:var(--bad)}
+.gl .gi.red span{text-shadow:0 0 10px #ff5a6a55}
+.gl .gi span.blur{filter:blur(4.5px);user-select:none}
+.top .gl{margin-left:-8px}.top .gl .gi{flex:none}.top .gl .gi.ev{flex:0 1 auto;min-width:150px}
+.phone .hd .gl .gi.wx{flex:none}
+@media (max-width:1280px){.gl .gi{padding:1px 10px;max-width:230px}}
+.phone .hd{flex-wrap:wrap;row-gap:7px}
+.phone .hd .gl{flex:1 0 100%;order:3;min-width:0}
+.phone .hd .gl .gi{padding:0 10px;max-width:none}
+.phone .hd .gl .gi:first-child{padding-left:0;border-left:0}
+.phone .hd .gl .gi span{font-size:10px;letter-spacing:.08em}
 /* the conversation */
 .chat{display:flex;flex-direction:column;gap:12px;overflow-y:auto;min-height:0;scrollbar-width:none;-webkit-mask-image:linear-gradient(transparent 0,#000 40px);mask-image:linear-gradient(transparent 0,#000 40px)}
 .chat::-webkit-scrollbar{display:none}
@@ -1117,7 +1135,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   if (window.MutationObserver) new MutationObserver(function () { clearTimeout(fitT); fitT = setTimeout(fitGlobe, 30); }).observe(chatLog, { childList: true });
   function gTalk() { touched = true; if (!field || !micB) return; if (S.hands && !rec) listenNow(); else voice({}); }
   function gRecord() { touched = true; mrOpen({}); }
-  var GMK = { reply: ['inbox', 'inbox'], decide: ['waiting', 'team'], remind: ['remind', 'today'], build: ['builds', 'today'] };
+  var GMK = { reply: ['inbox', 'inbox'], decide: ['waiting', 'team'], remind: ['remind', 'today'], build: ['builds', 'today'], cal: ['cal', 'today'] };   /* cal: the top bar's next event (21 Nov) */
   function gMarker(k) {
     var m = GMK[k]; if (!m) return;
     if (isPhone) { S.tab = m[1]; draw(); }
@@ -1603,12 +1621,100 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var st = el('span', 'st' + (lp.on ? '' : ' off')); add(st, el('i'), lp.text); st.title = 'From the overnight check, which reports from your laptop every 30 minutes';
     /* 21 Nov (Matthew): no "4 inboxes linked" and no API cost here ("just notify me instead when we are getting close to the budget": cron.php
        pushes at 75%, 90% and 100%); Phone alerts and Talk without Siri now sit inside Settings, the gear */
-    add(t, el('span', 'wm', 'J.A.R.V.I.S.'), st);
+    add(t, el('span', 'wm', 'J.A.R.V.I.S.'), st, glance(false));
     var vw = el('div', 'vw');
     [['inbox', 'Full inbox'], ['cart', 'Groceries'], ['out', 'Outbox'], ['peak', 'Peak desk'], ['posts', 'Posts'], ['leaf', 'Sixfold app'], ['cog', 'Settings']].forEach(function (v) { var b = btn(null, v[0], null, v[0] === 'cog' ? function () { settingsSheet(); } : function () { openView({ inbox: 'inbox', cart: 'groceries', out: 'outbox', peak: 'peak', posts: 'posts', leaf: 'sixfold', cog: 'settings' }[v[0]]); }); b.title = v[1]; b.setAttribute('aria-label', v[1]); b.setAttribute('data-view', v[0]); vw.appendChild(b); });
     /* 21 Nov: no Drive button on the laptop (Matthew: "we should remove the driving button up top on the laptop version that way the banner has less"); the phone header keeps it */
     add(t, vw, el('span', 'clock mono', nowLine()));
     return t;
+  }
+  /* 21 Nov: the glance items. Matthew took the inbox count and the API cost off the top bar, asked what else could go up there, and picked all
+     four: the weather now, the next calendar event, the next money date, and cash on hand. The laptop shows all four between the laptop
+     status and the icons; the phone header shows the weather and the next event only. An item with nothing to show is left out. They are
+     drawn from what the page already has (the status refresh every minute; the weather on its own 25-minute timer) and repainted by the
+     clock's 20-second tick, so "in 40 min" stays right without asking the server again. */
+  S.wx = null; S.wxAt = 0; S.cashUntil = 0; var cashT = null;
+  var GL_TWO = function (n) { return (n < 10 ? '0' : '') + n; };
+  function glYmd(d) { return d.getFullYear() + '-' + GL_TWO(d.getMonth() + 1) + '-' + GL_TWO(d.getDate()); }
+  function glHm(ms) { var d = new Date(ms); return (d.getHours() % 12 || 12) + ':' + GL_TWO(d.getMinutes()); }
+  function glIn(mins) { return mins < 60 ? mins + ' min' : Math.floor(mins / 60) + ' h' + (mins % 60 ? ' ' + (mins % 60) + ' min' : ''); }
+  function loadWx() {
+    S.wxAt = Date.now();
+    return aget('jvweather').then(function (r) { if (r && r._status === 401) return; S.wx = r && r.ok ? r : null; paintGlance(); }, function () {});
+  }
+  function gWx() {
+    var w = S.wx; if (!w || !w.ok || w.temp == null) return null;
+    var al = (w.alerts || []).length;
+    return { k: 'wx', l: 'Englewood' + (al ? ' · alert' : ''), v: w.temp + '° ' + (w.short || ''), cls: al ? 'amber' : '', fn: wxSheet,
+      t: (al ? w.alerts.map(function (a) { return a.event; }).join(', ') + '. ' : '') + 'National Weather Service, Englewood. Tap for today’s high and low' + (al ? ' and the alert' : '') + '.' };
+  }
+  function gEv() {
+    var c = S.st && S.st.calendar; if (!c || !c.events || c.error || c.source === 'none') return null;
+    var now = Date.now(), tY = glYmd(new Date(now)), tT = glYmd(new Date(now + 86400000));
+    var at = function (e) { return e.allDay ? NaN : Date.parse(e.start); };
+    var next = c.events.filter(function (e) { var t = at(e); return !isNaN(t) && t > now && glYmd(new Date(t)) === tY; }).sort(function (a, b) { return at(a) - at(b); })[0];
+    if (next) {
+      var mins = Math.max(1, Math.ceil((at(next) - now) / 60000));
+      return { k: 'ev', l: 'Next', v: oneLine(next.title, 26) + ' ' + glHm(at(next)) + ' · in ' + glIn(mins), s: oneLine(next.title, 12) + ' ' + glHm(at(next)) + ' · ' + glIn(mins), cls: mins <= 15 ? 'amber' : '', fn: function () { gMarker('cal'); },
+        t: next.title + (next.where ? ' · ' + next.where : '') + '. Tap to open the calendar.' };
+    }
+    var tm = c.events.filter(function (e) { return String(e.start).slice(0, 10) === tT || (!e.allDay && !isNaN(at(e)) && glYmd(new Date(at(e))) === tT); })
+      .sort(function (a, b) { return (a.allDay ? 0 : at(a)) - (b.allDay ? 0 : at(b)); })[0];
+    return { k: 'ev', l: 'Next', v: 'Nothing else today' + (tm ? ' · tomorrow ' + (tm.allDay ? '' : glHm(at(tm)) + ' ') + oneLine(tm.title, 22) : ''), s: 'Nothing else today', cls: '', fn: function () { gMarker('cal'); },
+      t: 'Nothing else on the Traverse calendar today' + (tm ? '; tomorrow: ' + tm.title : '') + '. Tap to open the calendar.' };
+  }
+  function gMoney() {
+    var b = S.st && S.st.money && S.st.money.bank, n = b && b.next; if (!n) return null;
+    var when = n.days < 0 ? 'late' : n.days === 0 ? 'today' : n.days === 1 ? 'tomorrow' : 'in ' + n.days + ' days';
+    var v = n.kind === 'pay' ? 'Payday ' + n.day : oneLine(n.label, 18) + (n.amount != null ? ' ' + usd(n.amount) : '') + ' ' + when;
+    return { k: 'mn', l: n.kind === 'pay' ? 'Payday' : 'Next bill', v: v, cls: n.red ? 'red' : '', fn: function () { moneySheet(); },
+      t: (n.red && n.warn ? 'Bill warning: ' + n.warn + ' ' : '') + 'Tap to open Money (read only).' };
+  }
+  function gCash() {
+    var b = S.st && S.st.money && S.st.money.bank; if (!b || !b.accounts || !b.accounts.length || b.cash == null) return null;
+    var on = S.cashUntil > Date.now();
+    /* hidden: a stand-in, blurred, so a shared screen shows nothing; a tap shows the real figure for 15 seconds or until tapped again. It is
+       kept only in this page's memory (never localStorage). */
+    return { k: 'cash', l: 'Cash on hand', v: on ? mUsd(b.cash) : '$0,000', blur: !on, cls: '', fn: function () {
+      clearTimeout(cashT);
+      if (S.cashUntil > Date.now()) S.cashUntil = 0; else { S.cashUntil = Date.now() + 15000; cashT = setTimeout(paintGlance, 15050); }
+      paintGlance();
+    }, aria: on ? 'Cash on hand ' + mUsd(b.cash) + ': tap to hide' : 'Cash on hand, hidden: tap to show it for 15 seconds', t: on ? 'Tap to hide' : 'Hidden while your screen may be shared. Tap to show it for 15 seconds.' };
+  }
+  function fillGlance(g) {
+    var ph = g.getAttribute('data-ph') === '1'; g.textContent = '';
+    (ph ? [gWx, gEv] : [gWx, gEv, gMoney, gCash]).forEach(function (f) {
+      var x = null; try { x = f(); } catch (e) { if (window.console) console.error(e); }
+      if (!x) return;
+      var b = btn(null, null, 'gi ' + x.k + (x.cls ? ' ' + x.cls : ''), x.fn); b.setAttribute('data-gl', x.k); b.title = x.t || '';
+      if (x.aria) b.setAttribute('aria-label', x.aria);
+      if (!ph) b.appendChild(el('b', null, x.l));
+      var s = el('span', x.blur ? 'blur' : null, x.v); if (x.blur) s.setAttribute('aria-hidden', 'true'); if (x.s && !ph) { s.setAttribute('data-full', x.v); s.setAttribute('data-short', x.s); } b.appendChild(s);
+      g.appendChild(b);
+    });
+    g.style.display = g.childNodes.length ? '' : 'none';
+    if (g.isConnected) fitGlance(g);
+  }
+  /* the laptop bar keeps its icons: the items trim first (each down to a readable minimum); when the window is still too narrow, the last ones step out (cash, then the money date, then the event) */
+  function fitGlance(g) {
+    if (g.getAttribute('data-ph') === '1') return;
+    var kids = [].slice.call(g.children); kids.forEach(function (k) { k.style.display = ''; });
+    [].forEach.call(g.querySelectorAll('span[data-short]'), function (s) { s.textContent = s.getAttribute('data-full'); if (s.scrollWidth > s.clientWidth + 1) s.textContent = s.getAttribute('data-short'); });   /* trimmed: the short form */
+    for (var i = kids.length - 1; i > 0 && g.scrollWidth > g.clientWidth + 1; i--) kids[i].style.display = 'none';
+  }
+  function glance(ph) { var g = el('div', 'gl'); g.id = ph ? 'glance-ph' : 'glance'; g.setAttribute('data-ph', ph ? '1' : '0'); fillGlance(g); return g; }
+  function paintGlance() { [].forEach.call(document.querySelectorAll('.gl'), fillGlance); }
+  function wxSheet() {
+    var w = S.wx; if (!w || !w.ok) return;
+    var sh = sheet('Weather · Englewood', 'National Weather Service'); sh.body.id = 'wxsheet'; sh.body.classList.add('mny');
+    var out = [mRow('Now', w.temp + '° ' + (w.short || ''))];
+    if (w.high != null) out.push(mRow(w.highName || 'Today', 'High ' + w.high + '°'));
+    if (w.low != null) out.push(mRow(w.lowName || 'Tonight', 'Low ' + w.low + '°'));
+    (w.alerts || []).forEach(function (a) { out.push(el('div', 'mwarn', a.event + (a.headline ? ': ' + a.headline : ''))); });
+    if (!(w.alerts || []).length && w.alertsOk) out.push(el('div', 'ls', 'No active weather alerts for Englewood.'));
+    var a = el('a', 'btn sec'); a.appendChild(ic('open')); a.appendChild(document.createTextNode('Forecast at weather.gov')); a.href = w.link; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.style.alignSelf = 'flex-start'; a.style.marginTop = '8px';
+    out.push(a, el('div', 'lm', 'Updated ' + whenStr(w.fetched) + ' · read about every 25 minutes'));
+    add(sh.body, out);
   }
   /* 18 Nov (Matthew: "i clicked it again assumed itd close it but then it just made multiple replicas"): a chip toggles its answer. Tapped
      again while its answer is showing, the answer closes; another chip's answer replaces the last chip answer instead of stacking up. */
@@ -1683,6 +1789,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     if (S.drive) drawDrive(); else if (isPhone) drawPhone(); else drawDesk();
     if (keepVal) field.value = keepVal; if (hadFocus) field.focus();
     setState(S.state); globeSync();
+    [].forEach.call(document.querySelectorAll('.gl'), fitGlance);
   }
   /* 19 Nov (P-8 step 8): driving mode. Four big buttons, the last few answers, every reply read aloud (Voice off is ignored here), and the
      mic opens again after a reply only if he turned that on. iPhone Safari: the voice is unlocked by his first tap (touchend/click), and the
@@ -1746,7 +1853,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     add(on, dt, lp.on ? 'Laptop awake' : 'Laptop asleep'); on.title = lp.desk;
     var dv = btn('Drive', 'car', 'btn sec', function () { setDrive(true); }); dv.id = 'drivebtn'; dv.style.padding = '5px 10px';
     var rt = el('div'); rt.style.cssText = 'display:flex;gap:10px;align-items:center'; add(rt, on, dv);
-    add(hd, el('span', 'wm', 'J.A.R.V.I.S.'), rt); app.appendChild(hd);
+    add(hd, el('span', 'wm', 'J.A.R.V.I.S.'), rt, glance(true)); app.appendChild(hd);   /* 21 Nov: the phone header's second line: weather and the next event only */
     var body = el('div', 'pbody');
     if (S.tab === 'home') {
       G = globeAt(170); stateLbl = null; coreBox = null;
@@ -3425,9 +3532,11 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
         if (lis) listenFromUrl(q);
       });
       pushCheck().then(draw);
+      loadWx();   /* 21 Nov: the top bar's weather, then every 25 minutes (the server keeps its copy as long) */
+      setInterval(function () { if (!document.hidden) loadWx(); }, 25 * 60000);
       setInterval(function () { if (!document.hidden && !document.getElementById('view')) refresh(); }, 60000);
       setInterval(function () { if (!document.hidden) loadSlow().then(draw); }, 300000);
-      setInterval(function () { var c = document.querySelector('.top .clock'); if (c) c.textContent = nowLine(); }, 20000);
+      setInterval(function () { var c = document.querySelector('.top .clock'); if (c) c.textContent = nowLine(); paintGlance(); }, 20000);
     });
   }
   /* 19 Nov: ?listen=1 (the wake word's window, a Home Screen link): listen at once; a phone, or a browser that will not, gets one big Tap to talk */
@@ -3452,7 +3561,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   }
   var lastPhone = isPhone;
   window.addEventListener('resize', function () { clearTimeout(window.__rz); window.__rz = setTimeout(function () { if (phoneMq.matches !== lastPhone || !lastPhone) { lastPhone = phoneMq.matches; draw(); } }, 120); });
-  document.addEventListener('visibilitychange', function () { if (!document.hidden && S.home) refresh(); });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && S.home) { refresh(); if (Date.now() - S.wxAt > 25 * 60000) loadWx(); } });
   start();
 })();
 </script>

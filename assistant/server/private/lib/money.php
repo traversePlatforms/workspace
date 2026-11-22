@@ -430,13 +430,39 @@ function mnView(bool $full = true): array {
     usort($soon, fn($a, $b) => $a['when'] <=> $b['when']);
     $v = ['ok' => true, 'at' => (int) ($sy['okAt'] ?? 0), 'tried' => (int) ($sy['lastTry'] ?? 0), 'synced' => !empty($sy['ok']), 'problem' => (string) ($sy['problem'] ?? ''), 'errors' => array_values((array) ($sy['errors'] ?? [])),
         'accounts' => $accts, 'cash' => round($cash, 2), 'invest' => round($inv, 2), 'month' => mnMonthSums($rows, $mon), 'warn' => $warn, 'flags' => $flags, 'soon' => array_slice($soon, 0, 6), 'owed' => $ob['totals'], 'pay' => function_exists('stView') ? stView($rows, $s) : null,
-        'income' => array_diff_key($inc, ['nexts' => 1, 'alerts' => 1]), 'advances' => $adv, 'hotel' => $hotel, 'afterBills' => $main];
+        'income' => array_diff_key($inc, ['nexts' => 1, 'alerts' => 1]), 'advances' => $adv, 'hotel' => $hotel, 'afterBills' => $main,
+        'next' => mnNextDate($rec, $ob['items'], $inc['nexts'], $warn)];
     $v['line'] = mnLine($v);
     if (!$full) return $v;
     $v += ['monthName' => mnDate($now, 'F'), 'last' => mnMonthSums($rows, $lm), 'lastName' => (new DateTime('first day of last month', mnTz()))->format('F'), 'recurring' => $rec, 'register' => $ob,
         'latest' => array_map(fn($r) => array_diff_key($r, ['acct' => 1, 'desc' => 1]) + ['acctKind' => $A[$r['acct']]['kind'] ?? 'spend', 'acctName' => mnAcctLabel($A[$r['acct']] ?? [])], array_values(array_slice($rows, 0, 20))),
         'count' => count($rows), 'settings' => $s, 'profile' => mnProfile(), 'cats' => MN_CATS, 'tags' => MN_TAGS, 'alertKinds' => MN_ALERTS, 'cooldown' => max(0, MN_COOL - ($now - (int) ($sy['lastTry'] ?? 0)))];
     return $v;
+}
+/** 21 Nov (the top bar): the next money date, whichever comes first: payday (the recurring income or the income profile) or the next bill (the
+    register's bills and debts, by their plain label when private, plus the recurring charges not already in the register). Daily register
+    entries are left out (one every day says nothing). red: the bill warning says the balance would go under the floor before payday. */
+function mnNextDate(array $rec, array $obl, array $incomeNext, ?array $warn): ?array {
+    $today = mnToday();
+    $pays = array_values(array_filter(array_merge(array_map(fn($r) => $r['next'], array_filter($rec, fn($r) => $r['dir'] === 'in')), $incomeNext), fn($t) => $t >= $today));
+    $pay = $pays ? min($pays) : null;
+    $payees = array_map(fn($o) => $o['payee'], array_filter($obl, fn($o) => ($o['payee'] ?? '') !== '' && $o['status'] === 'active'));
+    $bills = [];
+    foreach ($rec as $r) {
+        if ($r['dir'] !== 'out' || $r['next'] < $today - 2 * 86400 || array_filter($payees, fn($p) => obPayeeHit($p, $r['name']))) continue;   /* over 2 days late: it may have stopped */
+        $bills[] = ['label' => $r['name'], 'amount' => round((float) $r['amount'], 2), 'when' => max($r['next'], $today), 'late' => false];
+    }
+    foreach ($obl as $o) {
+        if ($o['status'] !== 'active' || $o['kind'] === 'planned' || $o['every'] === 'daily' || ($o['next'] ?? null) === null) continue;
+        $amt = $o['kind'] === 'debt' ? $o['left'] : $o['amount'];
+        $bills[] = ['label' => $o['label'], 'amount' => $amt === null ? null : round((float) $amt, 2), 'when' => (int) $o['next'], 'late' => $o['next'] < $today];
+    }
+    usort($bills, fn($a, $b) => $a['when'] <=> $b['when']);
+    $bill = $bills[0] ?? null;
+    if ($bill === null && $pay === null) return null;
+    $x = $bill !== null && ($pay === null || $bill['when'] <= $pay) ? ['kind' => 'bill'] + $bill : ['kind' => 'pay', 'label' => 'Payday', 'amount' => null, 'when' => $pay, 'late' => false];
+    $x['days'] = (int) round(($x['when'] - $today) / 86400); $x['day'] = mnDay($x['when']); $x['red'] = $warn !== null; $x['warn'] = $warn ? $warn['text'] : '';
+    return $x;
 }
 /** the morning brief's one money line (said aloud: the register's private entries by their plain label) */
 function mnLine(array $v): string {
@@ -456,7 +482,7 @@ function mnSummary(): ?array {
     return ['ok' => true, 'at' => $v['at'], 'synced' => $v['synced'], 'problem' => $v['problem'], 'accounts' => $v['accounts'], 'cash' => $v['cash'], 'invest' => $v['invest'],
         'month' => ['in' => $v['month']['in'], 'out' => $v['month']['out'], 'net' => $v['month']['net']], 'warn' => $v['warn'] ? $v['warn']['text'] : null, 'flags' => $v['flags'],
         'soon' => array_map(fn($x) => ['name' => $x['name'], 'amount' => $x['amount'], 'when' => $x['when']], $v['soon']), 'owed' => array_diff_key($v['owed'], ['dueAlerts' => 1]), 'line' => $v['line'],
-        'advLine' => $v['advances']['yesterday'] ?? '', 'advances' => $v['advances'] ? ['week' => $v['advances']['week'], 'feesPerMonth' => $v['advances']['feesPerMonth']] : null,
+        'next' => $v['next'], 'advLine' => $v['advances']['yesterday'] ?? '', 'advances' => $v['advances'] ? ['week' => $v['advances']['week'], 'feesPerMonth' => $v['advances']['feesPerMonth']] : null,
         'income' => ['perWeek' => $v['income']['perWeek'], 'perWeekSoon' => $v['income']['perWeekSoon']],
         'pay' => $v['pay'] ? ['latest' => $v['pay']['latest'] ? array_intersect_key($v['pay']['latest'], array_flip(['label', 'payDate', 'gross', 'taxTotal', 'net', 'status'])) : null, 'missing' => $v['pay']['missing'], 'setAside' => $v['pay']['w1099']['setAsideMonth'], 'pct' => $v['pay']['w1099']['pct']] : null];
 }

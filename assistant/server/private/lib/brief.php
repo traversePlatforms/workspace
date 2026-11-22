@@ -240,3 +240,67 @@ function brCronMaybe(): array {
     $b = brRefresh('cron');
     return ['made' => (int) ($b['at'] ?? 0), 'failed' => count($b['failed'] ?? [])];
 }
+
+/* ---------------------------------------------------------------- the top bar's weather now (21 Nov; Matthew picked it for the top bar)
+   "41° Partly cloudy" for Englewood: the NWS hourly forecast's current period, today's high and low from the forecast, and active alerts.
+   One small read, kept 25 minutes in data/jarvis/weather-now.json; a failed read is tried again after 5 minutes and the last good copy is
+   shown for up to 3 hours. Same generic User-Agent as the brief (no name or email). */
+const BR_NOW_TTL = 1500;
+const BR_NOW_RETRY = 300;
+const BR_NOW_KEEP = 10800;
+function brNowFile(): string { @mkdir(aDataDir() . '/jarvis', 0700, true); return 'jarvis/weather-now.json'; }
+function brNowFetch(array $prev): array {
+    $geo = 'application/geo+json';
+    $rxH = '~^https://api\.weather\.gov/gridpoints/[A-Z]{3}/\d+,\d+/forecast/hourly$~'; $rxF = '~^https://api\.weather\.gov/gridpoints/[A-Z]{3}/\d+,\d+/forecast$~';
+    $hu = (string) ($prev['hourlyUrl'] ?? ''); $fu = (string) ($prev['forecastUrl'] ?? ''); $pa = (int) ($prev['pointAt'] ?? 0);
+    if (!preg_match($rxH, $hu) || !preg_match($rxF, $fu) || $pa < time() - 30 * 86400) {
+        $pt = 'https://api.weather.gov/points/' . BR_LAT . ',' . BR_LON;
+        $r = brFetchAll([$pt], [$pt => $geo])[$pt]; $j = json_decode($r[1], true);
+        $hu = (string) ($j['properties']['forecastHourly'] ?? ''); $fu = (string) ($j['properties']['forecast'] ?? '');
+        if ($r[0] !== 200 || !preg_match($rxH, $hu) || !preg_match($rxF, $fu)) return ['ok' => false];
+        $pa = time();
+    }
+    $al = 'https://api.weather.gov/alerts/active?point=' . BR_LAT . ',' . BR_LON;
+    $rs = brFetchAll([$hu, $fu, $al], [$hu => $geo, $fu => $geo, $al => $geo]);
+    $keep = ['hourlyUrl' => $hu, 'forecastUrl' => $fu, 'pointAt' => $pa];
+    $h = json_decode($rs[$hu][1], true); $hp = $h['properties']['periods'] ?? null;
+    if ($rs[$hu][0] !== 200 || !is_array($hp) || !$hp) return ['ok' => false] + $keep;
+    $now = time(); $cur = $hp[0];
+    foreach ($hp as $p) { $s = strtotime((string) ($p['startTime'] ?? '')) ?: 0; $e = strtotime((string) ($p['endTime'] ?? '')) ?: 0; if ($s <= $now && $now < $e) { $cur = $p; break; } }
+    if (!is_numeric($cur['temperature'] ?? null)) return ['ok' => false] + $keep;
+    $high = null; $low = null; $hn = ''; $ln = '';
+    $f = json_decode($rs[$fu][1], true);
+    if ($rs[$fu][0] === 200 && is_array($f['properties']['periods'] ?? null)) foreach (array_slice($f['properties']['periods'], 0, 2) as $p) {
+        if (!is_numeric($p['temperature'] ?? null)) continue;
+        if (!empty($p['isDaytime']) && $high === null) { $high = (int) $p['temperature']; $hn = brClean($p['name'] ?? '', 30); }
+        if (empty($p['isDaytime']) && $low === null) { $low = (int) $p['temperature']; $ln = brClean($p['name'] ?? '', 30); }
+    }
+    $alerts = []; $a = json_decode($rs[$al][1], true); $alertsOk = $rs[$al][0] === 200 && is_array($a['features'] ?? null);
+    if ($alertsOk) foreach (array_slice($a['features'], 0, 4) as $x) { $p = (array) ($x['properties'] ?? []); $ev = brClean($p['event'] ?? '', 80); if ($ev !== '') $alerts[] = ['event' => $ev, 'headline' => brClean($p['headline'] ?? '', 220), 'severity' => brClean($p['severity'] ?? '', 20)]; }
+    return ['ok' => true, 'temp' => (int) $cur['temperature'], 'unit' => brClean($cur['temperatureUnit'] ?? 'F', 2), 'short' => brClean($cur['shortForecast'] ?? '', 60),
+        'high' => $high, 'highName' => $hn, 'low' => $low, 'lowName' => $ln, 'alerts' => $alerts, 'alertsOk' => $alertsOk, 'fetched' => $now,
+        'link' => 'https://forecast.weather.gov/MapClick.php?lat=' . BR_LAT . '&lon=' . BR_LON] + $keep;
+}
+/** what the top bar shows: the cached copy, or a fresh read when it is over 25 minutes old */
+function brNow(): array {
+    $c = jget(brNowFile()); $t = time();
+    $good = !empty($c['data']['ok']) ? $c['data'] : null;
+    if ((!$good || $t - (int) ($good['fetched'] ?? 0) > BR_NOW_TTL) && $t - (int) ($c['tried'] ?? 0) > BR_NOW_RETRY) {
+        $lk = fopen(aDataDir() . '/' . brNowFile() . '.run', 'c');
+        if ($lk && flock($lk, LOCK_EX | LOCK_NB)) {
+            try {
+                $c = jget(brNowFile());
+                if ($t - (int) ($c['tried'] ?? 0) > BR_NOW_RETRY) {
+                    $n = brNowFetch((array) ($c['data'] ?? []) + (array) ($c['urls'] ?? []));
+                    $c['tried'] = $t; $c['urls'] = array_intersect_key($n, array_flip(['hourlyUrl', 'forecastUrl', 'pointAt'])) ?: ($c['urls'] ?? []);
+                    if (!empty($n['ok'])) $c['data'] = array_diff_key($n, array_flip(['hourlyUrl', 'forecastUrl', 'pointAt']));
+                    else alog('weather now failed', ['source' => 'nws']);
+                    jput(brNowFile(), $c);
+                }
+            } finally { flock($lk, LOCK_UN); fclose($lk); }
+        } elseif ($lk) fclose($lk);
+        $good = !empty($c['data']['ok']) ? $c['data'] : null;
+    }
+    if (!$good || $t - (int) ($good['fetched'] ?? 0) > BR_NOW_KEEP) return ['ok' => false];
+    return $good + ['place' => 'Englewood, CO', 'outlet' => 'National Weather Service'];
+}

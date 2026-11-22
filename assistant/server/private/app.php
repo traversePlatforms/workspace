@@ -101,6 +101,8 @@ if ($action === 'home') {
 /* 21 Nov (P-13): the full morning brief's weather and news (lib/brief.php): the copy made at 5:30 am, or made now when it is over 2 hours
    old (&fresh=1: his Refresh, at most every 10 minutes). The session is let go first, so the page keeps working while the feeds are read. */
 if ($action === 'jvbrief') { session_write_close(); @set_time_limit(90); out(brGet(!empty($_GET['fresh'])) + ['tts' => ttsState()]); }
+/* 21 Nov: the top bar's weather now (lib/brief.php brNow): kept 25 minutes on the server, so the page's own 25-minute timer reads it at most once each */
+if ($action === 'jvweather') { session_write_close(); @set_time_limit(30); out(brNow()); }
 /* J.A.R.V.I.S., the merged page (2026-11-18): the laptop's pushed status (overnight check, builds) and the calendar placeholder; lib/jarvis.php */
 if ($action === 'jvstatus') out(jvStatus());
 /* 21 Nov (P-15): money, read only (lib/money.php, lib/paystub.php): the Money sheet, his Refresh (at most every 10 minutes; SimpleFIN's fair use
