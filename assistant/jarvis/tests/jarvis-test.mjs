@@ -1,4 +1,4 @@
-// J.A.R.V.I.S., the merged page (2026-11-18): end-to-end (21 Nov: section 18, P-13: the full morning brief with a news/weather mock and a Claude mock, and the Assistant routing to the desk; 19 Nov: section 15, talk without Siri: the voice API, its keys, the setup page, hands-free; 20 Nov: section 16, the natural voice, with an ElevenLabs mock) on a throwaway copy of the server's layout, in headless Chrome.
+// J.A.R.V.I.S., the merged page (2026-11-18): end-to-end (21 Nov: section 19, P-15: money, read only, with a SimpleFIN mock and made-up data; 21 Nov: section 18, P-13: the full morning brief with a news/weather mock and a Claude mock, and the Assistant routing to the desk; 19 Nov: section 15, talk without Siri: the voice API, its keys, the setup page, hands-free; 20 Nov: section 16, the natural voice, with an ElevenLabs mock) on a throwaway copy of the server's layout, in headless Chrome.
 // NOTHING here reaches Google, Anthropic or the live site: Gmail is a mock on 127.0.0.1 (every call it gets is counted), the Assistant
 // has no Anthropic key, and the Field app, the Houston install, Outbox and the Peak desk are small stub files that answer like them.
 //   node assistant/jarvis/tests/jarvis-test.mjs            (SHOTS=<folder> to also save screenshots; default assistant/jarvis/shots)
@@ -119,6 +119,40 @@ const EL_KEY = 'sk_' + 'mockelevenlabskey'.padEnd(48, 'q'), EL = { calls: [], mo
 const b64u = s => Buffer.from(s).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 /* 21 Nov (P-13): the morning brief's sources (BRIEF_MOCK: every feed and api.weather.gov, by its real address in ?u=) and Claude (ANTHROPIC_MOCK) */
 const BR = { calls: [] }, AN = { calls: [] };
+/* 21 Nov (P-15): SimpleFIN Bridge, a mock (made-up accounts and transactions; no real bank data); SF.mode: first | second | errors */
+const SF = { calls: [], mode: 'first' }, SF_USER = 'mockuser-abcdefgh12', SF_PASS = 'mockpass-SECRET99xyz', STUBMODE = { m: 'good' };
+function sfData(mode, now) {
+  const D = d => now - Math.round(d * 86400), tx = (id, d, amt, desc, extra = {}) => ({ id, posted: D(d), amount: amt.toFixed(2), description: desc, transacted_at: D(d), ...extra });
+  const chk = [];
+  [3, 17, 31, 45, 59, 73].forEach(d => chk.push(tx('pay' + d, d, 400, 'DIRECT DEP EXAMPLE CO PAYROLL')));
+  [65, 35].forEach(d => chk.push(tx('sf' + d, d, -15.49, 'STREAMFLIX.COM 800-555-0100')));
+  chk.push(tx('sf5', 5, -17.99, 'STREAMFLIX.COM 800-555-0100'));
+  [80, 50, 20].forEach(d => chk.push(tx('tm' + d, d, -60, 'T-MOBILE AUTOPAY')));
+  [90, 60, 29].forEach(d => chk.push(tx('rent' + d, d, -300, 'SUNNY APARTMENTS RENT')));
+  [[4, 600], [11, 630], [18, 630]].forEach(([d, a]) => chk.push(tx('sg' + d, d, a, 'SURGE TESTCO DES:PAYMENT')));
+  [1, 2].forEach(d => chk.push(tx('pa' + d, d, 55, 'PAYACTIV ADVANCE'), tx('pf' + d, d, -5.99, 'PAYACTIV FEE')));
+  chk.push(tx('pr3', 3, -220, 'PAYACTIV REPAYMENT'));
+  chk.push(tx('gas2', 2, -42.10, 'SHELL OIL 57444 ENGLEWOOD CO'), tx('gas9', 9, -38, 'SHELL OIL 57444 ENGLEWOOD CO'));
+  chk.push(tx('ks1', 1, -84.22, 'KING SOOPERS #0612 ENGLEWOOD CO'), tx('ks40', 40, -60, 'KING SOOPERS #0612 ENGLEWOOD CO'));
+  chk.push(tx('zx4', 4, -23, 'ZORBLAX EMPORIUM'), tx('site12', 12, -17.99, 'SITEGROUND HOSTING'));
+  chk.push(tx('xf6', 6, -50, 'TRANSFER TO TEST SAVINGS'), tx('ca7', 7, -30, 'Cash App*Matthew S'), tx('uh6', 6, -245.89, 'U-HAUL STORAGE 0042'));
+  if (mode === 'first') chk.push({ id: 'pend1', posted: 0, amount: '-6.50', description: 'COFFEE HOUSE', transacted_at: D(0.1), pending: true });
+  else chk.push(tx('pend1x', 0.1, -6.50, 'COFFEE HOUSE'), tx('big0', 0.05, -245.10, 'BIG BOX ELECTRONICS'), tx('bb1', 0.2, -12.40, 'BURGER BARN 22'), tx('bb2', 0.15, -12.40, 'BURGER BARN 22'),
+    tx('dep0', 0.05, 55, 'DIRECT DEP OTHER CO PAYROLL'));
+  return { errors: mode === 'errors' ? ['Connection to Test Bank may need attention. Sign in at https://bridge.example/fix?u=' + SF_USER] : [], accounts: [
+    { id: 'ACT-chk', org: { name: 'Test Bank', domain: 'testbank.example' }, name: 'Everyday Checking (1234)', currency: 'USD', balance: mode === 'first' ? '250.00' : '80.00', 'available-balance': mode === 'first' ? '250.00' : '80.00', 'balance-date': now - 600, transactions: chk },
+    { id: 'ACT-sav', org: { name: 'Test Bank' }, name: 'Test Savings (9876)', currency: 'USD', balance: '50.00', 'balance-date': now - 600, transactions: [tx('xs6', 6, 50, 'TRANSFER FROM EVERYDAY CHECKING')] },
+    { id: 'ACT-cash', org: { name: 'Cash App' }, name: 'Cash', currency: 'USD', balance: '20.00', 'balance-date': now - 600, transactions: [tx('ac7', 7, 30, 'Add Cash from Test Bank'), tx('btc10', 10, -10, 'Bitcoin purchase')] },
+    { id: 'ACT-btc', org: { name: 'Cash App' }, name: 'Bitcoin', currency: 'USD', balance: '80.00', 'balance-date': now - 600, transactions: [tx('btcin10', 10, 10, 'Bitcoin purchase')] }] };
+}
+const STUBS = {
+  good: now => ({ employer: 'Peak Test LLC', pay_date: new Date((now - 3 * 86400) * 1000).toLocaleDateString('en-CA', { timeZone: 'America/Denver' }), period_start: null, period_end: null, gross: 520, net: 400, hours: 26, rate: 20,
+    taxes: { federal: 40, social_security: 32.24, medicare: 7.54, state: 20.22, other: null }, deductions: [{ name: 'Advance acct 123456789', amount: 20 }], ytd: { gross: 5200, federal: 400, social_security: 322.4, medicare: 75.4, state: 202.2, net: 4000 } }),
+  off: now => ({ employer: 'Peak Test LLC', pay_date: new Date((now - 17 * 86400) * 1000).toLocaleDateString('en-CA', { timeZone: 'America/Denver' }), period_start: null, period_end: null, gross: 520, net: 450, hours: 26, rate: 20,
+    taxes: { federal: 40, social_security: 32.24, medicare: 7.54, state: 20.22, other: null }, deductions: [], ytd: { gross: 4680, federal: null, social_security: null, medicare: null, state: null, net: 3600 } })
+};
+const SF_COUNT_FIRST = sfData('first', 0).accounts.reduce((n, a) => n + a.transactions.length, 0);
+
 const rssDoc = (items) => '<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Feed</title>' + items.map(i => '<item><title>' + i.t + '</title><link>' + i.l + '</link><description>' + (i.d || '') + '</description><pubDate>' + new Date((i.at || now - 3600) * 1000).toUTCString() + '</pubDate>' + (i.c ? '<comments>' + i.c + '</comments>' : '') + '</item>').join('') + '</channel></rss>';
 const BRF = {
   'https://www.cpr.org/feed/': rssDoc([{ t: '&lt;img src=x onerror=window.__xss2=1&gt;Light rail closure on the D Line', l: 'https://www.cpr.org/2026/11/21/d-line/', d: 'RTD says the D Line closes this weekend for track work.' },
@@ -151,13 +185,23 @@ const gsrv = http.createServer((req, res) => {
       if (k) { res.writeHead(200, { 'Content-Type': 'application/geo+json' }); res.end(JSON.stringify(NWS[k])); return; }
       if (BRF[tu]) { res.writeHead(200, { 'Content-Type': 'application/rss+xml' }); res.end(BRF[tu]); return; }
       res.writeHead(500); res.end('down'); return; }   /* The Verge (and anything else): down, so the brief must skip it and say so */
+    /* 21 Nov (P-15): SimpleFIN Bridge (JARVIS_MONEY_MOCK: the stored link points here): GET /simplefin/accounts with basic auth */
+    if (p.startsWith('simplefin/')) { SF.calls.push({ method: req.method, auth: req.headers.authorization || '', q: u.search, p });
+      if (req.headers.authorization !== 'Basic ' + Buffer.from(SF_USER + ':' + SF_PASS).toString('base64')) { res.writeHead(403); res.end('Forbidden'); return; }
+      res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(sfData(SF.mode, now))); return; }
     if (p === 'anthropic') { let jb = {}; try { jb = JSON.parse(body); } catch {}
       const msgs = jb.messages || [], last = msgs[msgs.length - 1] || {};
       const R = o => { res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ model: jb.model, usage: { inputTokens: 2400, outputTokens: 300, cacheReadInputTokens: 0, cacheCreationInputTokens: 0 }, ...o })); };
+      /* 21 Nov (P-15): a pay stub (a PDF document block), and the cheap model's merchant categories */
+      if (Array.isArray(last.content) && last.content.some(c => c && c.type === 'document')) { AN.calls.push({ kind: 'stub', jb }); return R({ stopReason: 'end_turn', content: [{ type: 'text', text: JSON.stringify(STUBS[STUBMODE.m](now)) }] }); }
+      if (/bank transaction merchants/.test(JSON.stringify(jb.system || ''))) { AN.calls.push({ kind: 'money', jb }); const ls = String(last.content || '').split('\n').filter(l => /^\d+\./.test(l));
+        return R({ stopReason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ merchants: ls.map((l, i) => ({ n: i + 1, category: 'shopping' })) }) }] }); }
+      if (Array.isArray(last.content) && last.content.some(c => c && c.type === 'tool_result' && /His money, read only/.test(JSON.stringify(c.content)))) { AN.calls.push({ kind: 'moneytool', jb, res: JSON.stringify(last.content) }); return R({ stopReason: 'end_turn', content: [{ type: 'text', text: 'Mock: you spent $80.10 on gas this month.' }] }); }
       if (jb.outputConfig && jb.outputConfig.format) { AN.calls.push({ kind: 'brief', jb }); const raw = String(last.content || ''); let d = {}; try { d = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1)); } catch {}
         const first = k => ((d[k] || [])[0] || {}).title || '';
         return R({ stopReason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ weather: 'The National Weather Service says there is a chance of snow showers today, with a high of 47 and a low of 21, and a Winter Weather Advisory is in effect.', local: 'Colorado Public Radio reports: ' + first('local') + '.', world: 'BBC News reports: ' + first('world') + '.', tech: 'Ars Technica reports: ' + first('tech') + '.' }) }] }); }
       const txt = typeof last.content === 'string' ? last.content : ''; AN.calls.push({ kind: 'chat', jb, txt });
+      if (txt && /spend on gas/i.test(txt)) return R({ stopReason: 'tool_use', content: [{ type: 'tool_use', id: 'toolu_money1', name: 'money', input: { category: 'gas' } }] });
       if (txt && /\b(fix|build|deploy)\b/i.test(txt)) return R({ stopReason: 'tool_use', content: [{ type: 'tool_use', id: 'toolu_mock1', name: 'send_to_desk', input: { why: 'changes an app' } }] });
       return R({ stopReason: 'end_turn', content: [{ type: 'text', text: txt ? 'Mock Assistant: two emails need an answer from you.' : 'Done.' }] }); }
     G.calls.push(req.method + ' ' + p);
@@ -182,7 +226,7 @@ await new Promise(r => gsrv.listen(GPORT, '127.0.0.1', r));
 /* 19 Nov: the phone alert a due reminder makes, as a stub that logs what it was given (the real one is jvpush.php, the Field app's alert) */
 const PUSHLOG = path.join(R, 'push.log');
 mk(path.join(R, 'push-stub.php'), `<?php file_put_contents(${JSON.stringify(PUSHLOG.replace(/\\/g, '/'))}, stream_get_contents(STDIN) . "\\n", FILE_APPEND); echo "pushed\\n";`);
-const ENVX = { JARVIS_PUSH_ALLOW_HTTP: '1', ASSISTANT_PRIVATE: PRIV, ASSISTANT_GMAIL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_CAL_MOCK: 'http://127.0.0.1:' + GPORT + '/', ELEVENLABS_MOCK: 'http://127.0.0.1:' + GPORT + '/eleven/', BRIEF_MOCK: 'http://127.0.0.1:' + GPORT + '/brief', ANTHROPIC_MOCK: 'http://127.0.0.1:' + GPORT + '/anthropic', JARVIS_PUSH_CMD: 'php ' + JSON.stringify(path.join(R, 'push-stub.php').replace(/\\/g, '/')) };
+const ENVX = { JARVIS_PUSH_ALLOW_HTTP: '1', JARVIS_MONEY_MOCK: '1', ASSISTANT_PRIVATE: PRIV, ASSISTANT_GMAIL_MOCK: 'http://127.0.0.1:' + GPORT + '/', JARVIS_CAL_MOCK: 'http://127.0.0.1:' + GPORT + '/', ELEVENLABS_MOCK: 'http://127.0.0.1:' + GPORT + '/eleven/', BRIEF_MOCK: 'http://127.0.0.1:' + GPORT + '/brief', ANTHROPIC_MOCK: 'http://127.0.0.1:' + GPORT + '/anthropic', JARVIS_PUSH_CMD: 'php ' + JSON.stringify(path.join(R, 'push-stub.php').replace(/\\/g, '/')) };
 const srv = spawn('php', ['-S', '127.0.0.1:' + PORT, '-t', PUB], { stdio: 'ignore', env: { ...process.env, ...ENVX } });
 /* async: the calendar mock lives in this same process, so a blocking spawn would starve it */
 const cronReminders = () => new Promise(res => { let o = ''; const p = spawn('php', [path.join(PRIV, 'cron.php'), '--reminders'], { env: { ...process.env, ...ENVX } }); p.stdout.on('data', d => o += d); p.on('close', () => { try { res(JSON.parse(o.trim().split('\n').pop() || '{}')); } catch { res({}); } }); });
@@ -1327,6 +1371,145 @@ try {
     ok(await ev('localStorage.getItem("jarvis.brain")===null && !document.getElementById("brainswitch") && /Answering: Assistant, instant/.test(document.getElementById("brainlabel").textContent)'), 'P-13: the old switch\'s stored choice is cleared on load');
     fs.writeFileSync(CFG, cfg0);   /* the rest of the run: no key, as before */
     ok(errs.length === 0, 'no script errors in the brief and routing (' + errs.join(' | ') + ')');
+  }
+
+  /* ================================================================ 19. P-15 (21 Nov): money, READ ONLY: SimpleFIN (a mock), the Money sheet, Bills & debts, pay stubs,
+     the income profile, pay advances, the hotel goal, alerts. Made-up data only. */
+  {
+    const FIN = path.join(DATA, 'finance'), CFG = path.join(DATA, 'config.json'), cfg0 = fs.readFileSync(CFG, 'utf8');
+    const runCron = (args, env = {}, input) => new Promise(res => { let o = ''; const p = spawn('php', [path.join(PRIV, 'cron.php'), ...args], { env: { ...process.env, ...ENVX, ...env } }); p.stdout.on('data', d => o += d); if (input) p.stdin.write(input); p.stdin.end(); p.on('close', () => { try { res(JSON.parse(o.trim().split('\n').pop() || '{}')); } catch { res({ raw: o }); } }); });
+    const fj = f => JSON.parse(fs.readFileSync(path.join(FIN, f), 'utf8'));
+    const apiG = a => ev('fetch("../api.php?action=' + a + '").then(r=>r.json())');
+    const pushed = () => PUSHES.filter(x => x.path === 'push/phone1').map(x => { try { return PUSHDEC(x.body); } catch { return null; } }).filter(Boolean);
+    const ymdD = t => new Date(t * 1000).toLocaleDateString('en-CA', { timeZone: 'America/Denver' });
+    ok(!fs.existsSync(path.join(FIN, 'tx.json')) && (await apiG('jvstatus')).money.bank === null, 'money: nothing before the bank link is there');
+    /* the link, stored the way the server stores it (AES-256-GCM, its key beside it) */
+    const key = crypto.randomBytes(32), iv = crypto.randomBytes(12), ci = crypto.createCipheriv('aes-256-gcm', key, iv);
+    const ct = Buffer.concat([ci.update('http://' + SF_USER + ':' + SF_PASS + '@127.0.0.1:' + GPORT + '/simplefin'), ci.final()]);
+    fs.mkdirSync(FIN, { recursive: true }); fs.writeFileSync(path.join(FIN, 'key'), key.toString('base64'));
+    fs.writeFileSync(path.join(FIN, 'simplefin.json'), JSON.stringify({ v: 1, iv: iv.toString('base64'), tag: ci.getAuthTag().toString('base64'), ct: ct.toString('base64') }));
+    fs.writeFileSync(CFG, JSON.stringify({ ...JSON.parse(cfg0), anthropicKey: 'test-anthropic-key-mock' }));   /* the cheap model (a mock) sorts unknown merchants and reads stubs */
+    SF.mode = 'first'; SF.calls.length = 0; AN.calls.length = 0; const pp0 = PUSHES.length;
+    const s1 = await runCron(['--money'], { JARVIS_MONEY_HOUR: '23' });
+    ok(s1.ok && s1.counts.accounts === 4 && s1.counts.transactions === SF_COUNT_FIRST && SF.calls.length === 1, 'money: the first pull: 4 accounts, every transaction (' + JSON.stringify(s1) + ')');
+    const c1 = SF.calls[0] || {}, sd = +((/start-date=(\d+)/.exec(c1.q || '') || [])[1] || 0);
+    ok(c1.method === 'GET' && c1.auth === 'Basic ' + Buffer.from(SF_USER + ':' + SF_PASS).toString('base64') && /pending=1/.test(c1.q) && Math.abs(sd - (now - 89 * 86400)) < 900 && !/mockpass/.test(c1.q), 'money: a GET with basic auth from the stored link, about 90 days, pending included');
+    ok(PUSHES.length === pp0, 'money: the first pull sends no alert (old transactions)');
+    const mc = AN.calls.filter(c => c.kind === 'money'), mcs = JSON.stringify(mc.map(c => c.jb.messages));
+    ok(mc.length === 1 && mc[0].jb.model === 'claude-haiku-5-5' && /Zorblax Emporium/.test(mcs) && !/King Soopers|Shell Oil|23\.00|SECRET|\$/.test(mcs), 'money: only merchants the rules do not know go to the cheap model, by name, no amounts, one batch');
+    const others = fs.readdirSync(FIN).filter(f => !['simplefin.json', 'key'].includes(f) && fs.statSync(path.join(FIN, f)).isFile());
+    ok(others.length >= 4 && others.every(f => { const t = fs.readFileSync(path.join(FIN, f), 'utf8'); return !t.includes(SF_PASS) && !t.includes(SF_USER); }), 'money: the bank link is in no file but its encrypted copy (' + others.join(', ') + ')');
+    let v = await apiG('jvmoney'); let vs = JSON.stringify(v);
+    ok(v.ok && !vs.includes(SF_PASS) && !vs.includes(SF_USER) && !vs.includes(':' + GPORT) && !/"desc"/.test(vs), 'money: the page never gets the link or the raw descriptions');
+    ok(v.accounts.length === 4 && v.cash === 320 && v.invest === 80 && v.accounts.find(a => a.name === 'Cash').wallet === true && v.accounts.find(a => a.name === 'Bitcoin').kind === 'invest', 'money: balances per account; the Bitcoin account apart from cash on hand; Cash App a payment app');
+    const row = n => v.latest.find(t => t.name === n) || {};
+    ok(row('Coffee House').pending === true && row('Shell Oil').cat === 'gas' && row('King Soopers').cat === 'groceries' && row('Zorblax Emporium').by === 'model', 'money: categories by the rules first, the model only for the unknown, pending shown');
+    ok(row('Pay advance').cat === 'advance' && row('Pay advance').internal === true && row('Advance fee').cat === 'fees' && v.latest.some(t => t.adv === 'repay' && t.internal), 'money: PayActiv: an advance is not income, the repayment not spending, the fee a fee');
+    ok(row('Transfer To Test Savings').internal && row('Cash App Matthew').internal && !('transfers' in v.month.byCat) && !('advance' in v.month.byCat), 'money: transfers between his own accounts (and to Cash App) count as neither in nor out');
+    const allRows = await new Promise(res => { let o = ''; const p = spawn('php', ['-r', "foreach (['store','claude','jarvis','money','paystub'] as $f) require " + JSON.stringify(PRIV.replace(/\\/g, '/') + '/lib/') + ".$f.'.php'; echo json_encode(array_values(mnRows()));"], { env: { ...process.env, ...ENVX } }); p.stdout.on('data', d => o += d); p.on('close', () => { try { res(JSON.parse(o)); } catch { res([]); } }); });
+    const rowA = n => allRows.find(t => t.name === n) || {};
+    ok(rowA('Siteground Hosting').tag === 'Traverse' && rowA('Shell Oil').tag === 'Personal' && rowA('Surge 1099 pay').cat === 'income' && rowA('Surge 1099 pay').pay === '1099','money: SiteGround is Traverse, the rest Personal; Surge deposits are 1099 pay');
+    const rec = n => v.recurring.find(r => r.name === n);
+    ok(rec('Streamflix Com') && rec('Streamflix Com').every === 'month' && rec('Streamflix Com').up && rec('Streamflix Com').up.from === 15.49 && rec('Streamflix Com').up.to === 17.99 && rec('Sunny Apartments') && rec('T Mobile Autopay'), 'money: recurring charges found, with the next date; a price rise flagged');
+    ok(v.warn && /under your \$50 floor/.test(v.warn.text) && /Sunny Apartments/.test(v.warn.first.name) && v.flags.some(f => /went up/.test(f)), 'money: the bill warning: rent before the next pay takes checking under $50 (' + (v.warn && v.warn.text) + ')');
+    /* his register, income profile and hotel price come from the one-time imports (made-up data here) */
+    const due3 = ymdD(now + 3 * 86400);
+    const imp = await runCron(['--obligations-import'], {}, JSON.stringify([{ name: 'Test debt', payee: 'Zorblax', kind: 'debt', amount: 100, every: 'once', due: { type: 'date', date: due3 }, priority: 'high', alertDays: [7, 3, 0] },
+      { name: 'Storage', payee: 'U-Haul', kind: 'bill', amount: 245.89, every: 'monthly', due: { type: 'day', day: 15 } }, { name: 'Person, support', payee: 'Person', kind: 'bill', amount: 100, every: 'weekly', private: true, due: { type: 'date', date: due3 } },
+      { name: 'Hotel room', kind: 'bill', amount: 64, every: 'daily' }, { name: 'Unknown co', payee: 'Shell Oil', kind: 'debt', amount: null }, { name: 'Plan', kind: 'planned', amount: 10, every: 'monthly' }]));
+    const imp2 = await runCron(['--obligations-import'], {}, JSON.stringify([{ name: 'Test debt', kind: 'debt', amount: 1 }]));
+    ok(imp.added === 6 && imp2.added === 0 && imp2.skipped === 1, 'Bills & debts: the one-time import adds each entry once, never over one');
+    const inc = await runCron(['--income-import'], {}, JSON.stringify({ sources: [{ name: 'Payer A', payee: 'Surge', every: 'weekly', parts: [{ name: 'Base pay', amount: 400, taxable: true }, { name: 'Truck', amount: 211 }, { name: 'Computer', amount: 19 }] },
+      { name: 'Peak', every: 'weekly', withheld: true, parts: [{ name: 'Gross', amount: 300, taxable: true }], active: false }] }));
+    ok(inc.set === true && inc.sources === 2, 'income profile: imported once');
+    ok((await apiPost('jvmoneyset', { op: 'settings', settings: { hotelWeekly: 300 } })).ok, 'hotel goal: the weekly price is a setting');
+    v = await apiG('jvmoney');
+    const ob = n => v.register.items.find(o => o.name === n) || {};
+    ok(ob('Storage').paidNow === true && ob('Storage').paid.some(p => p.by === 'bank') && ob('Storage').next > now, 'Bills & debts: a U-Haul payment in the bank feed marks that month paid; next is next month');
+    ok(ob('Unknown co').amount === null && ob('Unknown co').suggest && ob('Unknown co').suggest.amount === 42.1 && ob('Unknown co').suggest.count === 2, 'Bills & debts: an unknown amount gets a suggestion from past payments (never set by itself)');
+    ok(v.register.totals.owedUnknown === 1 && v.register.totals.owed === 100 && v.register.totals.plannedCount === 1 && v.register.totals.planned === 10 && Math.abs(v.register.totals.monthly - (245.89 + 100 * 52 / 12 + 64 * 30.4)) < 0.02, 'Bills & debts: monthly commitments (daily x 30.4, weekly x 52/12), owed on debts (+ unknowns), planned apart');
+    ok(ob('Person, support').label === 'Payment to Person', 'Bills & debts: a private entry is "Payment to <payee>" in alerts and the spoken brief');
+    ok(row('Surge 1099 pay') && (await apiG('jvmoney')).latest.some(t => t.name === 'Payer A pay' && t.pay === '1099'), 'income profile: Surge deposits are labelled with the payer');
+    const I = v.income.sources.find(s => s.name === 'Payer A');
+    ok(I && I.expected === 630 && I.short === 30 && v.flags.some(f => /Payer A paid \$600/.test(f)), 'income profile: a short paycheck is spotted ($600 against $630)');
+    ok(v.advances && v.advances.month.count >= 2 && v.advances.goal.cushion > 0 && /simple first step|has started/.test(v.advances.goal.step) && !/should|must/i.test(v.advances.goal.text + v.advances.goal.step), 'pay advances: counted, fees a month, a cushion goal, said plainly');
+    ok(v.hotel && v.hotel.daily === 64 && v.hotel.weekly === 300 && v.hotel.savingWeek === 148 && Math.abs(v.hotel.saving - 148 * 52 / 12) < 0.01, 'hotel goal: a week at the daily rate against the prepaid week, and a month of it');
+    ok(v.pay.w1099.taxableShare < 0.64 && v.pay.w1099.taxableShare > 0.63 && /rough estimate, not tax advice/.test(v.pay.w1099.note) && v.pay.w1099.nextIrs === '2027-01-15', '1099 set-aside: on the base pay only by default, marked a rough estimate; the next IRS date from Form 1040-ES');
+    /* the second pull: pending posts, new charges; quiet hours hold every alert until 7 am */
+    SF.mode = 'second'; const pp1 = PUSHES.length;
+    const s2 = await runCron(['--money'], { JARVIS_MONEY_HOUR: '23' });
+    ok(s2.ok && s2.counts.posted === 1 && s2.counts.new === 4 && PUSHES.length === pp1, 'money: the pending charge posted in place (no double), 4 new; at 11 pm nothing is pushed yet (' + JSON.stringify(s2.counts) + ')');
+    ok(fj('alerts.json').queue.length >= 5, 'money: alerts held over quiet hours');
+    const fl = await runCron(['--money-cron'], { JARVIS_MONEY_HOUR: '8' });
+    const P = pushed().slice(-30), PT = P.map(x => x.title + ' / ' + x.body).join('\n');
+    ok(/Charge over \$200[^\n]*\$245\.10 at Big Box/.test(PT) && /Deposit landed[^\n]*\$55 from/.test(PT) && /Possible double charge[^\n]*Burger Barn/.test(PT) && /Balance under \$100[^\n]*Everyday Checking is at \$80/.test(PT), 'alerts at 8 am: a charge over $200, a deposit, a doubled charge, a low balance (' + JSON.stringify(fl) + ')');
+    ok(/Bill warning/.test(PT) && /Paycheck looks short/.test(PT) && /Test debt due/.test(PT) && /Payment to Person due/.test(PT) && !/support/.test(PT), 'alerts: the bill warning, a short paycheck, register entries due (a private one by its plain label)');
+    ok(!/1234|9876|Pay advance|Advance repayment|Advance fee|Transfer|Bitcoin/.test(PT) && P.every(x => x.url === '/a-e018bb82/jarvis/?money=1'), 'alerts: never an account number; none for advances, repayments or transfers; each opens the Money sheet');
+    const n1 = PUSHES.length; await runCron(['--money-cron'], { JARVIS_MONEY_HOUR: '9' });
+    ok(PUSHES.length === n1, 'alerts: each kind once per event');
+    /* pay stubs: from the page (base64), and the laptop folder; checked, matched, scrubbed */
+    const pdf = Buffer.concat([Buffer.from('%PDF-1.4\n'), Buffer.alloc(600, 32)]);
+    STUBMODE.m = 'good'; let st = await apiPost('jvstub', { name: 'stub one.pdf', data: pdf.toString('base64') });
+    ok(st.ok && st.status === 'read' && !st.check, 'pay stub from the page: read (' + JSON.stringify(st) + ')');
+    const sc = AN.calls.filter(c => c.kind === 'stub').pop();
+    ok(sc && sc.jb.model === 'claude-haiku-5-5' && sc.jb.outputConfig.format.type === 'json_schema' && /social security number/.test(JSON.stringify(sc.jb.system)) && sc.jb.messages[0].content[0].source.mediaType === 'application/pdf', 'pay stub: the cheap model, a PDF document block, a strict schema, told to leave identifiers out');
+    STUBMODE.m = 'off'; st = await apiPost('jvstub', { name: 'stub two.pdf', data: Buffer.concat([pdf, Buffer.from('2')]).toString('base64') });
+    ok(st.ok && st.status === 'check', 'pay stub: numbers that do not add up within $1 say "check this stub"');
+    ok((await apiPost('jvstub', { name: 'again.pdf', data: pdf.toString('base64') })).dup === true && !(await apiPost('jvstub', { name: 'x.pdf', data: Buffer.from('not a pdf at all, just text').toString('base64') })).ok, 'pay stub: the same file once; a non-PDF refused');
+    v = await apiG('jvmoney'); vs = JSON.stringify(v);
+    ok(v.pay.latest && v.pay.latest.label === 'Peak payroll' && v.pay.latest.matched && v.pay.latest.taxTotal === 100 && v.pay.ytd && v.pay.ytd.gross === 5200 && v.latest.some(t => t.name === 'Peak payroll' && t.pay === 'stub'), 'pay stub: matched to its deposit, labelled Peak payroll; taxes and the year to date');
+    ok(!/123456789/.test(vs) && !/123456789/.test(fs.readFileSync(path.join(FIN, 'paystubs.json'), 'utf8')) && v.pay.missing && v.pay.missing.count >= 1, 'pay stub: no 9-digit number kept; payroll deposits with no stub are pointed out');
+    ok(fs.readdirSync(path.join(FIN, 'stubs')).filter(f => /\.pdf$/.test(f)).length === 2, 'pay stub: the PDFs kept on the server, in finance/stubs');
+    { const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'stubs-')), stt = fs.mkdtempSync(path.join(os.tmpdir(), 'stubst-')), sg = path.join(stt, 'sg.sh'), f = path.join(dir, 'abc-123.pdf');
+      mk(sg, '#!/bin/bash\nname=$(printf "%s" "$1" | sed -n "s/.*add \'\\(.*\\)\'.*/\\1/p")\nphp "$PRIVDIR/jvstub.php" add "$name"\n');
+      STUBMODE.m = 'good'; fs.writeFileSync(f, Buffer.concat([pdf, Buffer.from('laptop')])); const old = new Date(Date.now() - 120000); fs.utimesSync(f, old, old);
+      const env = { ...process.env, ...ENVX, PAYSTUB_DIR: dir.replace(/\\/g, '/'), PAYSTUB_SG: 'bash ' + sg.replace(/\\/g, '/'), PAYSTUB_ST: stt.replace(/\\/g, '/'), PRIVDIR: PRIV.replace(/\\/g, '/') };
+      const n0 = Object.keys(fj('paystubs.json')).length;
+      await new Promise(r => { const p = spawn('bash', [path.join(REPO, 'assistant', 'jarvis', 'tools', 'paystub-watch.sh')], { env }); p.on('close', r); });
+      ok(!fs.existsSync(f) && fs.existsSync(path.join(dir, 'Done', 'abc-123.pdf')) && Object.keys(fj('paystubs.json')).length === n0 + 1 && /sent: abc-123\.pdf/.test(fs.readFileSync(path.join(stt, 'paystubs.log'), 'utf8')), 'paystubs folder: a new PDF is sent, read, and moved to Done');
+      fs.copyFileSync(path.join(dir, 'Done', 'abc-123.pdf'), f); fs.utimesSync(f, old, old); const a0 = AN.calls.length;
+      await new Promise(r => { const p = spawn('bash', [path.join(REPO, 'assistant', 'jarvis', 'tools', 'paystub-watch.sh')], { env }); p.on('close', r); });
+      ok(!fs.existsSync(f) && AN.calls.length === a0 && /already sent/.test(fs.readFileSync(path.join(stt, 'paystubs.log'), 'utf8')) && !/\d{3}\.\d\d/.test(fs.readFileSync(path.join(stt, 'paystubs.log'), 'utf8')), 'paystubs folder: the same file again is not sent twice (by its hash); the log has no amounts'); }
+    /* his Refresh: at most every 10 minutes (SimpleFIN fair use) */
+    const sc0 = SF.calls.length, rr = await apiPost('jvmoneysync', {});
+    ok(rr.ok === false && rr.cool === true && SF.calls.length === sc0, 'Refresh: refused within 10 minutes of the last pull, SimpleFIN not asked');
+    /* the page: the panel's bank lines, the Money sheet, his choices */
+    await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 9000); await sleep(500);
+    if (await ev('!document.getElementById("p-money")')) await click('.rail button[data-panel=money]');
+    const pm = await ev('document.getElementById("p-money").innerText');
+    ok(/BANK · READ ONLY/i.test(pm) && /Cash on hand/.test(pm) && /\$150/.test(pm) && /Investments, not counted as cash: \$80/.test(pm) && /\$212\.66/.test(pm) && !/1234 ·/.test(pm), 'Money panel: the bank first (cash on hand, the Bitcoin apart), then the Spend Ledger and Stripe as before');
+    ok(/^Money: \$150 cash on hand/.test((await apiG('jvstatus')).money.bank.line) && !/"key"|"token"|"card"/.test(JSON.stringify((await apiG('jvstatus')).money.bank)), 'the morning brief gets one money line; jvstatus carries no transactions or keys');
+    await click('#moneyopen'); ok(await until('!!document.querySelector("#moneysheet .mtx")', 8000), 'Open money: the Money sheet');
+    const ms = await ev('document.getElementById("moneysheet").innerText');
+    ok(['Accounts', 'so far', 'Bill warning', 'By company', 'Spending by category', 'Recurring, found in the bank feed', 'Bills & debts', 'Goal: stop pay advances', 'Goal: prepay the hotel weekly', 'Income', 'Paychecks', 'rough estimate', 'Latest transactions', 'Alerts to your phone'].every(t => ms.includes(t) || ms.toUpperCase().includes(t.toUpperCase())), 'Money sheet: every part is there');
+    ok(/Read only · nothing here can move money/.test(await ev('document.querySelector(".sheet .sht").innerText')) && !/\b(Pay now|Transfer money|Send money|Pay bill)\b/.test(ms), 'Money sheet: says read only; no way to move money');
+    await shot('jarvis-money-sheet');
+    await ev('[...document.querySelectorAll("#moneysheet .mtx[data-tx]")].find(b=>/Zorblax/.test(b.innerText)).click()'); await until('!!document.getElementById("mcat")');
+    await ev('document.getElementById("mcat").value="fun";document.getElementById("mtag").value="Peak";document.getElementById("mttag").value="Peak"'); await click('#msave');
+    ok(await nodeUntil0(() => { const p = fj('prefs.json'); return p.mcat && p.mcat['zorblax emporium'] === 'fun' && p.mtag['zorblax emporium'] === 'Peak'; }), 'a merchant re-categorised and tagged once is remembered');
+    await until('!!document.querySelector("#moneysheet #obadd")', 6000); await click('#obadd'); await until('!!document.getElementById("obname")');
+    await ev('document.getElementById("obname").value="UI test bill";document.getElementById("obamount").value="12";document.getElementById("obpayee").value="Testpay"'); await click('#obsave');
+    ok(await nodeUntil0(() => Object.values(fj('obligations.json').items).some(o => o.name === 'UI test bill' && o.amount === 12 && o.status === 'active')), 'Bills & debts: added from the sheet');
+    await until('!!document.querySelector("#moneysheet [data-suggest] button")', 6000); await ev('document.querySelector("#moneysheet [data-suggest] button").click()');
+    ok(await nodeUntil0(() => Object.values(fj('obligations.json').items).find(o => o.name === 'Unknown co').amount === 42.1), 'Bills & debts: a suggested amount is set only on his tap');
+    await until('!!document.querySelector("#moneysheet [data-ob]")', 6000);
+    await ev('[...document.querySelectorAll("#moneysheet .mtx[data-ob]")].find(b=>/Test debt/.test(b.innerText)).click()'); await until('!!document.getElementById("obpaid")'); await click('#obpaid');
+    ok(await nodeUntil0(() => { const o = Object.values(fj('obligations.json').items).find(o => o.name === 'Test debt'); return o.status === 'paid' && o.paid.some(p => p.by === 'you' && p.amount === 100); }), 'Bills & debts: Mark paid logs the day and the amount');
+    await until('!!document.getElementById("mbig")', 6000); await ev('document.getElementById("mbig").value="300"'); await click('#msetsave');
+    ok(await nodeUntil0(() => fj('prefs.json').settings.bigCharge === 300 && fj('prefs.json').settings.hotelWeekly === 300), 'alert settings saved from the sheet (and the hotel price kept)');
+    await ev('document.getElementById("shclose").click()'); await sleep(200);
+    await cdp('Page.navigate', { url: PAGE + '?money=1' }); ok(await until('!!document.getElementById("moneysheet")', 9000), 'a money alert (?money=1) opens the Money sheet');
+    await ev('document.getElementById("shclose") && document.getElementById("shclose").click()'); await sleep(200);
+    /* the Assistant's read-only money tool */
+    AN.calls.length = 0;
+    await ev('document.getElementById("ask").value="How much did I spend on gas this month?"'); await click('.cmdbar .snd');
+    ok(await until('/you spent \\$80\\.10 on gas/.test(document.querySelector(".chat").innerText)', 9000), 'the Assistant answers a money question with its money tool');
+    const tc = AN.calls.find(c => c.kind === 'moneytool'), chat1 = AN.calls.find(c => c.kind === 'chat' && c.txt);
+    ok(tc && tc.res.includes('Shell Oil') && /category\\*":\\*"Gas/.test(tc.res) &&!tc.res.includes(SF_PASS) && chat1 && chat1.jb.tools.some(t => t.name === 'money') && /Nothing can move money/.test(JSON.stringify(chat1.jb.system)), 'money tool: read only, gas transactions for the month; the Assistant is told nothing can move money');
+    const mp = fs.readFileSync(path.join(REPO, 'assistant', 'server', 'private', 'lib', 'money.php'), 'utf8');
+    ok(!/CURLOPT_POST\b|CURLOPT_CUSTOMREQUEST|CURLOPT_POSTFIELDS/.test(mp), 'nothing in the money code can send anything to the bank feed but a read');
+    fs.writeFileSync(CFG, cfg0);
+    ok(errs.length === 0, 'no script errors in money (' + errs.join(' | ') + ')');
   }
 
   /* ---- desktop idle shot: a fresh load */

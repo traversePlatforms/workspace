@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 $vendor = __DIR__ . '/vendor/autoload.php';
 if (is_file($vendor)) require $vendor;
-foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk', 'voice', 'tts', 'meet', 'brief'] as $f) require __DIR__ . '/lib/' . $f . '.php';
+foreach (['store', 'auth', 'google', 'mail', 'claude', 'sorter', 'chat', 'groceries', 'kroger', 'jarvis', 'desk', 'voice', 'tts', 'meet', 'brief', 'money', 'paystub'] as $f) require __DIR__ . '/lib/' . $f . '.php';
 
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
@@ -103,6 +103,14 @@ if ($action === 'home') {
 if ($action === 'jvbrief') { session_write_close(); @set_time_limit(90); out(brGet(!empty($_GET['fresh'])) + ['tts' => ttsState()]); }
 /* J.A.R.V.I.S., the merged page (2026-11-18): the laptop's pushed status (overnight check, builds) and the calendar placeholder; lib/jarvis.php */
 if ($action === 'jvstatus') out(jvStatus());
+/* 21 Nov (P-15): money, read only (lib/money.php, lib/paystub.php): the Money sheet, his Refresh (at most every 10 minutes; SimpleFIN's fair use
+   is about 24 pulls a day), his choices (a category, a company tag, the alert settings, the Bills & debts register) and a pay stub from the
+   phone. Nothing here can move money. */
+if ($action === 'jvmoney') { session_write_close(); out(mnView(true)); }
+if ($action === 'jvmoneysync') { if (!$isPost) out(['ok' => false], 405); session_write_close(); @set_time_limit(150); $r = mnSync('manual'); out(['ok' => $r['ok'], 'error' => $r['error'] ?? '', 'cool' => !empty($r['cool']), 'counts' => $r['counts'] ?? null, 'view' => mnView(true)]); }
+if ($action === 'jvmoneyset') { if (!$isPost) out(['ok' => false], 405); out(mnSet($body)); }
+if ($action === 'jvstub') { if (!$isPost) out(['ok' => false], 405); session_write_close(); @set_time_limit(150); $pdf = base64_decode((string) ($body['data'] ?? ''), true);
+    out($pdf === false ? ['ok' => false, 'error' => 'That file did not come through.'] : stAdd($pdf, (string) ($body['name'] ?? 'pay stub.pdf'), 'page')); }
 if ($action === 'jvteamhide') { if (!$isPost) out(['ok' => false], 405); out(jvTeamHide((string) ($body['key'] ?? ''), (int) ($body['updated'] ?? 0))); }
 if ($action === 'jvbuildhide') { if (!$isPost) out(['ok' => false], 405); out(jvHide((string) ($body['id'] ?? ''), (int) ($body['at'] ?? 0))); }
 /* 19 Nov (P-8): reminders (add, done, undo, snooze, delete) and Matthew's tap on one "Waiting on you" item; lib/jarvis.php */

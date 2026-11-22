@@ -343,6 +343,21 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
 .rmb.todesk{margin-left:6px}.rmb.todesk[disabled]{opacity:.6}
 .mrow{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 0;border-top:1px solid #3ee8ff12}.mrow:first-child{border-top:0}
 .mrow b{font:600 15px Rajdhani,sans-serif;letter-spacing:.02em;white-space:nowrap}
+/* 21 Nov (P-15): money, read only: the panel's bank lines and the Money sheet */
+.mwarn{font-size:12.5px;line-height:1.45;color:var(--warn);border:1px solid #ffb64844;background:#ffb6480d;padding:7px 10px;border-radius:6px;margin:4px 0}
+.mrow span small{color:var(--mut);font-size:11.5px}
+.mtx{display:flex;width:100%;text-align:left;gap:8px;align-items:baseline;padding:6px 0;border-top:1px solid #3ee8ff12;font-size:13px;color:var(--ink)}
+.mtx .d{width:56px;flex:none;font:11px "JetBrains Mono",monospace;color:var(--mut)}
+.mtx .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mtx .c{font:10px "JetBrains Mono",monospace;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.mtx b{font:600 14px Rajdhani,sans-serif;white-space:nowrap}.mtx b.in{color:var(--okc)}
+.medit{border:1px solid #3ee8ff33;border-radius:8px;padding:10px;margin:4px 0 8px;display:grid;gap:8px;background:#3ee8ff06}
+.medit textarea{min-height:60px;border:1px solid #3ee8ff40;background:#04111b;border-radius:8px;padding:9px 11px;font-size:14px;color:var(--ink)}
+.mny .up{color:var(--warn)}
+.mbadge{font:10px "JetBrains Mono",monospace;border:1px solid #3ee8ff44;border-radius:4px;padding:1px 5px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;flex:none}
+.mbadge.hi{color:var(--warn);border-color:#ffb64866}.mbadge.ok{color:var(--okc);border-color:#4ade8066}
+.mchk{display:flex;gap:8px;align-items:center;font-size:13px}
+.mbtns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px}
 /* driving mode: big buttons, little else */
 .drive{display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top)) 16px calc(14px + env(safe-area-inset-bottom));gap:12px}
 .drive>*{position:relative;z-index:1}
@@ -1455,7 +1470,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     /* 19 Nov (P-8 step 6): totals only. Renewals from the reminders, Stripe (read only) and the Spend Ledger from the laptop's push. */
     money: function () {
       if (!S.st) return el('div', 'empty', 'Looking…');
-      var m = S.st.money || {}, out = [], ren = remOpen().filter(function (r) { return r.money; }).sort(function (a, b) { return a.money.on < b.money.on ? -1 : 1; });
+      var m = S.st.money || {}, out = moneyBank(m.bank), ren = remOpen().filter(function (r) { return r.money; }).sort(function (a, b) { return a.money.on < b.money.on ? -1 : 1; });
       out.push(el('div', 'sub', 'Renewals and trial ends'));
       if (!ren.length) out.push(el('div', 'empty', 'None coming up.'));
       ren.forEach(function (r) { var row = el('div', 'mrow'); add(row, el('span', null, r.money.what), el('b', null, ({ renews: 'renews ', trial: 'trial ends ', charges: 'charges ', expires: 'expires ' })[r.money.kind] + dayName(r.money.on))); out.push(row); });
@@ -1509,6 +1524,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var tn = teamNeedsMe().length, to = teamOpen().length; if (to) L.push(plural(to, 'team request') + ' open' + (tn ? ', ' + tn + ' waiting on you.' : '.'));
     var b = (S.st && S.st.builds) || [], br = b.filter(function (x) { return x.state === 'running'; }), bd = b.filter(function (x) { return x.state === 'done'; });
     if (br.length || bd.length) L.push((br.length ? plural(br.length, 'build') + ' running' + (br.length <= 2 ? ': ' + br.map(function (x) { return x.name; }).join(' and ') : '') : 'Nothing building') + (bd.length ? '; ' + bd.length + ' finished.' : '.'));
+    var mb = S.st && S.st.money && S.st.money.bank; if (mb && mb.line) L.push(mb.line); if (mb && mb.advLine) L.push(mb.advLine);   /* 21 Nov (P-15): the money line, and a pay advance taken yesterday */
     var ob = outboxSum(); if (ob) L.push('Outbox: ' + ob.sent + ' sent today, ' + ob.waiting + ' waiting, ' + ob.failed + ' failed' + (ob.bounces ? ', ' + ob.bounces + ' bounced in 30 days' : '') + '.');
     return L;
   }
@@ -2093,6 +2109,318 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       go.disabled = true; remindAdd({ text: tx.value.trim(), date: dt.value, time: tm.value }).then(function (j) { go.disabled = false; if (j.ok) sh.force(); else said.textContent = j.error || 'Not saved.'; });
     });
     setTimeout(function () { tx.focus(); }, 50);
+  }
+  /* ------------------------------------------------------------ 21 Nov (P-15): money, READ ONLY (../api.php?action=jvmoney and friends)
+     Matthew's first picks: "the money view, bill warnings, alerts"; then the Bills & debts register ("can we add these to some sort of
+     structure") and pay stubs ("do stub reading with the money build"). His banks come through SimpleFIN Bridge (read only). Nothing here
+     can move money: a payment is always his own tap in his bank's app. */
+  function mDay(t) { var d = new Date(t * 1000); return DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MON[d.getMonth()]; }
+  function mUsd(n) { return n == null ? 'unknown' : (n < 0 ? '-' : '') + usd(Math.abs(n)); }
+  function mRow(label, val, sub) { var r = el('div', 'mrow'), l = el('span', null, label); if (sub) { l.appendChild(el('br')); l.appendChild(el('small', null, sub)); } add(r, l, el('b', null, val)); return r; }
+  function mSync(done) {
+    toast('Asking the banks (read only)…');
+    return apost('jvmoneysync', {}).then(function (r) {
+      if (r._status === 401) { signin(); return; }
+      toast(r.ok ? 'Up to date: ' + plural((r.counts && r.counts.new) || 0, 'new transaction') + '.' : (r.error || 'The refresh did not work.'));
+      return refresh().then(function () { if (done) done(r.view); });
+    }, function () { toast('No connection.'); });
+  }
+  /* the panel's part: balances, this month, the warning, what is due; the full view is the Money sheet */
+  function moneyBank(b) {
+    var out = [];
+    if (!b) return out;
+    out.push(el('div', 'sub', 'Bank · read only'));
+    if (b.problem) out.push(el('div', 'mwarn', b.problem));
+    var acc = b.accounts || [];
+    if (!acc.length && !b.problem) out.push(el('div', 'empty', 'Waiting for the first sync.'));
+    acc.filter(function (a) { return a.kind !== 'invest'; }).forEach(function (a) { out.push(mRow(a.bank && a.name.indexOf(a.bank) < 0 ? a.bank + ' · ' + a.name : a.name, mUsd(a.balance))); });
+    if (acc.length) out.push(mRow('Cash on hand', mUsd(b.cash)));
+    if (acc.some(function (a) { return a.kind === 'invest'; })) out.push(el('div', 'ls', 'Investments, not counted as cash: ' + mUsd(b.invest)));
+    if (b.month && acc.length) out.push(mRow('This month · in · out', usd(b.month.in) + ' · ' + usd(b.month.out)));
+    if (b.warn) out.push(el('div', 'mwarn', b.warn));
+    (b.soon || []).slice(0, 3).forEach(function (x) { out.push(el('div', 'ls', 'Due ' + mDay(x.when) + ': ' + x.name + (x.amount != null ? ' ' + mUsd(x.amount) : ''))); });
+    if (b.flags && b.flags.length) out.push(el('div', 'ls', plural(b.flags.length, 'thing') + ' flagged: open Money.'));
+    var p = b.pay;
+    if (p && p.latest) out.push(el('div', 'ls', 'Last paycheck: ' + p.latest.label + ' ' + mUsd(p.latest.net) + (p.latest.payDate ? ' (' + dayName(p.latest.payDate) + ')' : '')));
+    if (p && p.missing) out.push(el('div', 'ls', plural(p.missing.count, 'payroll deposit') + ' with no pay stub yet.'));
+    if (b.advances && b.advances.week && b.advances.week.count) out.push(el('div', 'ls', 'Pay advances this week: ' + usd(b.advances.week.advanced) + ' (' + plural(b.advances.week.count, 'advance') + ', fees ' + usd(b.advances.week.fees) + ').'));
+    if (b.owed && (b.owed.bills || b.owed.debts)) out.push(el('div', 'ls', 'Bills & debts: ' + usd(b.owed.monthly) + ' a month' + (b.owed.monthlyUnknown ? ' + ' + b.owed.monthlyUnknown + ' unknown' : '') + ' · ' + usd(b.owed.owed) + ' owed' + (b.owed.owedUnknown ? ' + ' + b.owed.owedUnknown + ' unknown' : '')));
+    var bt = el('div', 'mbtns'), op = btn('Open money', 'coin', 'btn sec', function () { moneySheet(); }), rf = btn('Refresh', null, 'btn gh', function () { rf.disabled = true; mSync().then(function () { rf.disabled = false; }); });
+    op.id = 'moneyopen'; rf.id = 'moneyrefresh'; add(bt, op, rf); out.push(bt);
+    out.push(el('div', 'lm', (b.at ? 'Synced ' + whenStr(b.at) : 'Not synced yet') + ' · read only, through SimpleFIN'));
+    return out;
+  }
+  function moneySheet() {
+    var sh = sheet('Money', 'Read only · nothing here can move money'); sh.body.classList.add('mny'); sh.body.id = 'moneysheet';
+    sh.body.appendChild(el('div', 'empty', 'Reading your accounts…'));
+    var drawM = function (v) {
+      sh.body.textContent = '';
+      if (!v || !v.ok) { sh.body.appendChild(el('div', 'mwarn', (v && v.error) || 'Could not read the money view.')); return; }
+      try { add(sh.body, moneyParts(v, drawM)); } catch (e) { sh.body.appendChild(el('div', 'mwarn', 'This could not draw (' + (e && e.message || e) + ').')); if (window.console) console.error(e); }
+    };
+    var load = function () { return aget('jvmoney').then(function (v) { if (v._status === 401) { sh.force(); signin(); return; } drawM(v); }, function () { drawM({ ok: false, error: 'No connection.' }); }); };
+    sh.reload = load; load();
+    return sh;
+  }
+  function moneyParts(v, redraw) {
+    var out = [], reload = function () { return aget('jvmoney').then(redraw); };
+    var set = function (body, msg) { return apost('jvmoneyset', body).then(function (r) { if (!r.ok) { toast(r.error || 'Not saved.'); return r; } if (msg) toast(msg); refresh(); return reload().then(function () { return r; }); }, function () { toast('No connection.'); }); };
+    if (v.problem) out.push(el('div', 'mwarn', v.problem));
+    var top = el('div', 'mbtns'), rf = btn('Refresh', null, 'btn sec', function () { rf.disabled = true; mSync(function (nv) { rf.disabled = false; if (nv) redraw(nv); }); }); rf.id = 'mnrefresh';
+    add(top, rf, el('span', 'ls', (v.at ? 'Synced ' + whenStr(v.at) : 'Not synced yet') + '. SimpleFIN is asked about every 6 hours; Refresh at most every 10 minutes.')); out.push(top);
+    /* accounts */
+    out.push(el('div', 'sub', 'Accounts'));
+    if (!v.accounts.length) out.push(el('div', 'empty', 'No accounts yet.'));
+    v.accounts.filter(function (a) { return a.kind !== 'invest'; }).forEach(function (a) { out.push(mRow((a.bank && a.name.indexOf(a.bank) < 0 ? a.bank + ' · ' : '') + a.name, mUsd(a.balance), (a.available != null && a.available !== a.balance ? 'available ' + mUsd(a.available) + ' · ' : '') + (a.kind === 'savings' ? 'savings · ' : a.wallet ? 'payment app · ' : '') + (a.asOf ? 'as of ' + whenStr(a.asOf) : ''))); });
+    out.push(mRow('Cash on hand', mUsd(v.cash)));
+    var inv = v.accounts.filter(function (a) { return a.kind === 'invest'; });
+    if (inv.length) { out.push(el('div', 'sub', 'Investments · not counted as cash')); inv.forEach(function (a) { out.push(mRow((a.bank ? a.bank + ' · ' : '') + a.name, mUsd(a.balance), a.asOf ? 'as of ' + whenStr(a.asOf) : '')); }); }
+    /* this month */
+    out.push(el('div', 'sub', v.monthName + ' so far'));
+    out.push(mRow('Money in', usd(v.month.in)), mRow('Money out', usd(v.month.out)), mRow('Net', mUsd(v.month.net)));
+    out.push(el('div', 'ls', 'Pending charges are included; transfers between your own accounts and the Bitcoin account are left out.'));
+    if (v.warn) out.push(el('div', 'mwarn', 'Bill warning: ' + v.warn.text));
+    (v.flags || []).forEach(function (f) { out.push(el('div', 'mwarn', f)); });
+    if ((v.soon || []).length) { out.push(el('div', 'sub', 'Due in the next 7 days')); v.soon.forEach(function (x) { out.push(mRow(x.name, mUsd(x.amount), mDay(x.when) + (x.from === 'register' ? ' · Bills & debts' : ' · from the bank'))); }); }
+    /* company tags */
+    var tg = Object.keys(v.month.byTag || {});
+    if (tg.length) { out.push(el('div', 'sub', 'By company')); tg.forEach(function (t) { var x = v.month.byTag[t]; out.push(mRow(t, usd(x.out) + ' out', x.in ? usd(x.in) + ' in' : '')); }); }
+    /* categories, this month against last */
+    out.push(el('div', 'sub', 'Spending by category · ' + v.monthName + ' vs ' + v.lastName));
+    var cats = Object.keys(v.month.byCat || {}); Object.keys(v.last.byCat || {}).forEach(function (c) { if (cats.indexOf(c) < 0) cats.push(c); });
+    if (!cats.length) out.push(el('div', 'empty', 'No spending yet.'));
+    cats.forEach(function (c) { var a = (v.month.byCat || {})[c] || 0, b = (v.last.byCat || {})[c] || 0; var r = mRow(v.cats[c] || c, usd(a), v.lastName + ' ' + usd(b)); r.setAttribute('data-cat', c); out.push(r); });
+    /* recurring, from the bank */
+    out.push(el('div', 'sub', 'Recurring, found in the bank feed'));
+    if (!v.recurring.length) out.push(el('div', 'empty', 'None found yet (it needs a few months of history).'));
+    v.recurring.forEach(function (r) { var row = mRow(r.name + (r.dir === 'in' ? ' (in)' : ''), mUsd(r.amount), 'every ' + r.every + ' · ' + (r.late ? 'expected now (' + mDay(r.next) + ')' : 'next ' + mDay(r.next))); out.push(row);
+      if (r.up) out.push(el('div', 'ls up', 'Went up from ' + usd(r.up.from) + ' to ' + usd(r.up.to) + '.')); });
+    /* Bills & debts */
+    out.push.apply(out, moneyRegister(v, set));
+    /* goals: stop pay advances, prepay the hotel weekly */
+    out.push.apply(out, moneyAdvances(v));
+    out.push.apply(out, moneyHotel(v, set));
+    /* income, paychecks and taxes */
+    out.push.apply(out, moneyIncome(v, set));
+    out.push.apply(out, moneyPay(v, set, reload));
+    /* the latest 20 */
+    out.push(el('div', 'sub', 'Latest transactions'));
+    if (!v.latest.length) out.push(el('div', 'empty', 'None yet.'));
+    v.latest.forEach(function (t) {
+      var b = btn(null, null, 'mtx'); b.setAttribute('data-tx', t.k);
+      add(b, el('span', 'd', mDay(t.when).replace(/^\w+ /, '')), el('span', 'n', t.name + (t.pending ? ' · pending' : '')), el('span', 'c', (t.adv === 'repay' ? 'Repayment' : t.cat === 'advance' ? 'Pay advance' : t.internal ? 'Transfer' : v.cats[t.cat] || t.cat) + (t.tag !== 'Personal' ? ' · ' + t.tag : '')), el('b', t.amount > 0 ? 'in' : null, (t.amount > 0 ? '+' : '') + mUsd(t.amount)));
+      var ed = null;
+      b.addEventListener('click', function () {
+        if (ed) { ed.remove(); ed = null; return; }
+        ed = el('div', 'medit'); var cs = el('select'), ts = el('select'), tt = el('select');
+        Object.keys(v.cats).forEach(function (k) { var o = el('option', null, v.cats[k]); o.value = k; if (k === t.cat) o.selected = true; cs.appendChild(o); });
+        v.tags.forEach(function (x) { var o = el('option', null, x); o.value = x; if (x === t.tag) o.selected = true; ts.appendChild(o); var o2 = o.cloneNode(true); tt.appendChild(o2); });
+        cs.id = 'mcat'; ts.id = 'mtag'; tt.id = 'mttag';
+        var sv = btn('Save', 'check', 'btn pri', function () {
+          var jobs = [];
+          if (cs.value !== t.cat) jobs.push(set({ op: 'cat', m: t.m, cat: cs.value }));
+          if (ts.value !== t.tag) jobs.push(set({ op: 'tag', m: t.m, tag: ts.value }));
+          if (tt.value !== ts.value) jobs.push(set({ op: 'ttag', id: t.k, tag: tt.value }));
+          if (!jobs.length) { ed.remove(); ed = null; return; }
+          Promise.all(jobs).then(function () { toast('Saved. It is remembered for ' + t.name + '.'); });
+        }); sv.id = 'msave';
+        add(ed, el('div', 'ls', t.name + ' · ' + mUsd(t.amount) + ' · ' + mDay(t.when) + ' · ' + t.acctName + (t.by === 'model' ? ' · sorted by the model' : t.by === 'you' ? ' · your choice' : '')),
+          fld('Category, for every ' + t.name + ' charge', cs), fld('Company, for every ' + t.name + ' charge', ts), fld('Company, this one only', tt), sv);
+        b.after(ed);
+      });
+      out.push(b);
+    });
+    /* alert settings */
+    out.push(el('div', 'sub', 'Alerts to your phone'));
+    var s = v.settings, num = function (id, val) { var i = el('input'); i.type = 'number'; i.min = '0'; i.step = '1'; i.id = id; i.value = val; return i; };
+    var bc = num('mbig', s.bigCharge), lb = num('mlow', s.lowBalance), fl = num('mfloor', s.floor), tp = num('mtax', s.taxPct); tp.max = '50';
+    var fr = el('div', 'frow'); add(fr, fld('A charge over ($)', bc), fld('Balance under ($)', lb)); var fr2 = el('div', 'frow'); add(fr2, fld('Bill warning floor ($)', fl), fld('Tax set-aside on 1099 pay (%)', tp));
+    out.push(fr, fr2);
+    var boxes = {};
+    Object.keys(v.alertKinds).forEach(function (k) { var l = el('label', 'mchk'), c = el('input'); c.type = 'checkbox'; c.checked = !!s.on[k]; c.setAttribute('data-alert', k); boxes[k] = c; add(l, c, v.alertKinds[k]); out.push(l); });
+    var ri = el('input'); ri.type = 'checkbox'; ri.id = 'mtaxreimb'; ri.checked = !!s.taxIncludeReimb; var rl = el('label', 'mchk'); add(rl, ri, 'Count the reimbursements (truck, computer) in the tax set-aside too'); out.push(rl);
+    var sa = btn('Save the settings', 'check', 'btn sec', function () { var on = {}; Object.keys(boxes).forEach(function (k) { on[k] = boxes[k].checked; });
+      set({ op: 'settings', settings: { bigCharge: +bc.value, lowBalance: +lb.value, floor: +fl.value, taxPct: +tp.value, taxIncludeReimb: ri.checked, on: on } }, 'Settings saved.'); }); sa.id = 'msetsave'; out.push(sa);
+    out.push(el('div', 'hint', 'Each alert comes once per event. Quiet hours 9 pm to 7 am: anything then waits until 7 am. Alerts never show an account number.'));
+    out.push(el('div', 'hint', 'The Spend Ledger is separate and is not filled from the bank yet.'));
+    return out;
+  }
+  /* the Bills & debts register: what he owes, typed by him; payments matched from the bank feed */
+  function moneyRegister(v, set) {
+    var out = [], R = v.register, T = R.totals;
+    out.push(el('div', 'sub', 'Bills & debts'));
+    out.push(mRow('Monthly commitments', usd(T.monthly) + (T.monthlyUnknown ? ' + ' + T.monthlyUnknown + ' unknown' : ''), 'daily × 30.4, weekly × 52 ÷ 12'));
+    out.push(mRow('Owed on debts', usd(T.owed) + (T.owedUnknown ? ' + ' + T.owedUnknown + ' unknown' : '')));
+    if (T.plannedCount) out.push(mRow('Planned add-ons (not started)', usd(T.planned) + ' a month'));
+    var list = el('div'); list.id = 'mreg';
+    R.items.forEach(function (o) {
+      var b = btn(null, null, 'mtx'); b.setAttribute('data-ob', o.id);
+      var when = o.status !== 'active' ? o.status : o.kind === 'planned' ? 'planned' : o.every === 'daily' ? 'daily' : o.next ? (o.late ? 'late: ' : '') + mDay(o.next) : 'no due day';
+      add(b, el('span', 'd', when), el('span', 'n', o.name), o.priority === 'high' ? el('span', 'mbadge hi', 'high') : o.priority === 'flexible' ? el('span', 'mbadge', 'flexible') : null,
+        o.paidNow && o.status === 'active' ? el('span', 'mbadge ok', 'paid') : null, el('b', null, o.kind === 'debt' && o.left != null ? mUsd(o.left) : mUsd(o.amount)));
+      var ed = null; b.addEventListener('click', function () { if (ed) { ed.remove(); ed = null; return; } ed = obEditor(v, o, set); b.after(ed); });
+      list.appendChild(b);
+      if (o.suggest && o.status === 'active') { var sg = el('div', 'ls'); sg.setAttribute('data-suggest', o.id);
+        add(sg, 'Suggested ' + usd(o.suggest.amount) + ' from ' + plural(o.suggest.count, 'past payment') + ' to ' + o.payee + ' (last ' + o.suggest.last + '). ',
+          btn('Use ' + usd(o.suggest.amount), null, 'rmb', function () { set({ op: 'oamount', id: o.id, amount: o.suggest.amount }, 'Amount set for ' + o.name + '.'); })); list.appendChild(sg); }
+    });
+    if (!R.items.length) list.appendChild(el('div', 'empty', 'Nothing in the register yet.'));
+    out.push(list);
+    var ad = btn('Add a bill or debt', 'plus', 'more'); ad.id = 'obadd'; var ed = null;
+    ad.addEventListener('click', function () { if (ed) { ed.remove(); ed = null; return; } ed = obEditor(v, null, set); ad.after(ed); });
+    out.push(ad, el('div', 'hint', 'A payment to the payee in the bank feed marks that period paid. An unknown amount gets a suggestion from past payments, for you to confirm.'));
+    return out;
+  }
+  function obEditor(v, o, set) {
+    var e = el('div', 'medit'), x = o || { kind: 'bill', every: 'monthly', priority: 'normal', status: 'active', tag: 'Personal', due: { type: 'none' }, amount: null, name: '', payee: '', notes: '' };
+    var inp = function (id, val, type) { var i = el('input'); i.id = id; i.value = val == null ? '' : val; if (type) i.type = type; return i; };
+    var sel = function (id, opts, val) { var s = el('select'); s.id = id; opts.forEach(function (p) { var op = el('option', null, p[1]); op.value = p[0]; if (p[0] === val) op.selected = true; s.appendChild(op); }); return s; };
+    var nm = inp('obname', x.name), py = inp('obpayee', x.payee), am = inp('obamount', x.amount, 'number'); am.step = '0.01'; am.placeholder = 'blank = unknown';
+    var kd = sel('obkind', [['bill', 'Bill (repeats)'], ['debt', 'Debt (owed once)'], ['planned', 'Planned (not started)']], x.kind);
+    var ev = sel('obevery', [['daily', 'Daily'], ['weekly', 'Weekly'], ['monthly', 'Monthly'], ['once', 'Once']], x.every);
+    var dt = sel('obduetype', [['none', 'No due day'], ['day', 'Day of the month'], ['date', 'A date']], x.due.type);
+    var dd = inp('obday', x.due.day || '', 'number'); dd.min = '1'; dd.max = '31'; var da = inp('obdate', x.due.date || '', 'date');
+    var pr = sel('obpri', [['high', 'High'], ['normal', 'Normal'], ['flexible', 'Flexible']], x.priority);
+    var tg = sel('obtag', v.tags.map(function (t) { return [t, t]; }), x.tag);
+    var st = sel('obstatus', [['active', 'Active'], ['paused', 'Paused'], ['paid', 'Paid']], x.status);
+    var nt = el('textarea'); nt.id = 'obnotes'; nt.value = x.notes || '';
+    var pv = el('input'); pv.type = 'checkbox'; pv.id = 'obprivate'; pv.checked = !!x.private; var pl = el('label', 'mchk'); add(pl, pv, 'Keep the reason off alerts and the spoken brief (they say "Payment to ' + (x.payee || 'the payee') + '")');
+    var dueRow = el('div', 'frow'), showDue = function () { dd.parentNode.style.display = dt.value === 'day' ? '' : 'none'; da.parentNode.style.display = dt.value === 'date' ? '' : 'none'; };
+    var r1 = el('div', 'frow'), r2 = el('div', 'frow'), r3 = el('div', 'frow');
+    add(r1, fld('Name', nm), fld('Payee (as on the bank statement)', py)); add(r2, fld('Kind', kd), fld('Amount ($)', am), fld('How often', ev));
+    add(dueRow, fld('Due', dt), fld('Day', dd), fld('Date', da)); add(r3, fld('Priority', pr), fld('Company', tg), o ? fld('Status', st) : null);
+    var said = el('div', 'said', ''), sv = btn(o ? 'Save' : 'Add it', 'check', 'btn pri'); sv.id = 'obsave';
+    add(e, r1, r2, dueRow, r3, fld('Notes', nt), pl, said, sv); showDue(); dt.addEventListener('change', showDue);
+    sv.addEventListener('click', function () {
+      if (nm.value.trim().length < 1) { said.textContent = 'Give it a name.'; return; }
+      var entry = { name: nm.value.trim(), payee: py.value.trim(), kind: kd.value, amount: am.value === '' ? null : +am.value, every: ev.value, priority: pr.value, tag: tg.value, notes: nt.value, private: pv.checked,
+        due: dt.value === 'day' ? { type: 'day', day: +dd.value } : dt.value === 'date' ? { type: 'date', date: da.value } : { type: 'none' } };
+      if (o) entry.status = st.value;
+      sv.disabled = true; set(o ? { op: 'oedit', id: o.id, entry: entry } : { op: 'oadd', entry: entry }, o ? 'Saved.' : 'Added to Bills & debts.').then(function (r) { sv.disabled = false; if (r && !r.ok) said.textContent = r.error || 'Not saved.'; });
+    });
+    if (o && o.status === 'active' && o.kind !== 'planned') {   /* Mark paid: logs the day and the amount */
+      var pa = inp('obpaidamt', o.kind === 'debt' && o.left != null ? o.left : o.amount, 'number'), pd = inp('obpaiddate', ymdOf(new Date()), 'date'); pa.step = '0.01';
+      var pr2 = el('div', 'frow'); add(pr2, fld('Paid ($)', pa), fld('On', pd));
+      var mp = btn('Mark paid', 'check', 'btn sec', function () { set({ op: 'opaid', id: o.id, amount: pa.value === '' ? null : +pa.value, date: pd.value }, 'Logged as paid.'); }); mp.id = 'obpaid';
+      var ps = btn('Pause', null, 'btn gh', function () { set({ op: 'ostatus', id: o.id, status: 'paused' }, 'Paused.'); }); ps.id = 'obpause';
+      var bt = el('div', 'mbtns'); add(bt, mp, ps); add(e, el('div', 'sub', 'Payment'), pr2, bt);
+    } else if (o && o.status === 'paused') { var rs = btn('Resume', null, 'btn sec', function () { set({ op: 'ostatus', id: o.id, status: 'active' }, 'Active again.'); }); rs.id = 'obresume'; e.appendChild(rs); }
+    if (o && o.paid && o.paid.length) { e.appendChild(el('div', 'sub', 'Paid')); o.paid.forEach(function (p) { e.appendChild(el('div', 'ls', p.date + ' · ' + usd(p.amount) + (p.by === 'bank' ? ' · seen in the bank feed' : ' · marked by you'))); }); }
+    return e;
+  }
+  /* paychecks (from his pay stubs) and the rough tax set-aside on 1099 pay */
+  function moneyPay(v, set, reload) {
+    var out = [], p = v.pay; if (!p) return out;
+    out.push(el('div', 'sub', 'Paychecks'));
+    var L = p.latest;
+    if (!L) out.push(el('div', 'empty', 'No pay stub read yet. Drop the PDFs in the paystubs folder on your Desktop, or add one here.'));
+    else {
+      out.push(mRow(L.label + (L.payDate ? ' · ' + dayName(L.payDate) : ''), mUsd(L.net) + ' net', (L.hours != null ? L.hours + ' h' + (L.rate != null ? ' at ' + usd(L.rate) : '') + ' · ' : '') + 'gross ' + mUsd(L.gross)));
+      var tx = L.taxes || {}, TN = { federal: 'Federal', social_security: 'Social Security', medicare: 'Medicare', state: 'Colorado', other: 'Other' };
+      out.push(el('div', 'ls', 'Taxes ' + usd(L.taxTotal) + ': ' + Object.keys(TN).filter(function (k) { return tx[k] != null; }).map(function (k) { return TN[k] + ' ' + usd(tx[k]); }).join(' · ')));
+      if ((L.deductions || []).length) out.push(el('div', 'ls', 'Deductions: ' + L.deductions.map(function (d) { return d.name + ' ' + usd(d.amount); }).join(' · ')));
+      if (L.status === 'check') out.push(el('div', 'mwarn', 'Check this stub: ' + L.checkWhy + '.'));
+      if (!L.matched) out.push(el('div', 'ls', 'Its deposit has not shown up in the bank feed yet.'));
+    }
+    if (p.month && p.month.count) out.push(mRow('This month from stubs', usd(p.month.net) + ' net', 'gross ' + usd(p.month.gross) + ' · taxes ' + usd(p.month.taxes) + ' · deductions ' + usd(p.month.deductions)));
+    if (p.ytd) out.push(mRow('Year to date · ' + p.ytd.label, mUsd(p.ytd.gross) + ' gross', 'net ' + mUsd(p.ytd.net) + ' · federal ' + mUsd(p.ytd.federal) + ' · Social Security ' + mUsd(p.ytd.social_security) + ' · Medicare ' + mUsd(p.ytd.medicare) + ' · Colorado ' + mUsd(p.ytd.state) + ' (from the ' + dayName(p.ytd.asOf) + ' stub)'));
+    if (p.missing) out.push(el('div', 'mwarn', plural(p.missing.count, 'payroll deposit') + ' in the last 45 days ' + (p.missing.count === 1 ? 'has' : 'have') + ' no pay stub (latest ' + usd(p.missing.amount) + ', ' + mDay(p.missing.when) + '). Drop the stub in the paystubs folder.'));
+    (p.stubs || []).filter(function (s) { return s.status !== 'read' && s.status !== 'check'; }).forEach(function (s) { out.push(el('div', 'ls', s.file + ': ' + (s.status === 'waiting' ? 'waiting to be read' : s.error || 'not read yet') + '.')); });
+    var fi = el('input'); fi.type = 'file'; fi.accept = 'application/pdf,.pdf'; fi.style.display = 'none'; fi.id = 'stubfile';
+    var up = btn('Add a pay stub (PDF)', 'out', 'btn sec', function () { fi.click(); }); up.id = 'stubadd';
+    fi.addEventListener('change', function () {
+      var f = fi.files && fi.files[0]; fi.value = ''; if (!f) return;
+      if (f.size > 8 * 1024 * 1024) { toast('That file is over 8 MB.'); return; }
+      var rd = new FileReader(); up.disabled = true; toast('Reading the stub…');
+      rd.onload = function () { var b64 = String(rd.result).replace(/^data:[^,]*,/, '');
+        apost('jvstub', { name: f.name, data: b64 }).then(function (r) { up.disabled = false;
+          toast(!r.ok ? (r.error || 'Not added.') : r.dup ? 'That stub was already in.' : r.status === 'read' ? 'Stub read.' : r.status === 'check' ? 'Stub read: check it (the numbers do not add up).' : 'Stub kept; it will be read shortly.');
+          refresh(); reload(); }, function () { up.disabled = false; toast('No connection.'); }); };
+      rd.readAsDataURL(f);
+    });
+    out.push(up, fi);
+    var w = p.w1099;
+    out.push(el('div', 'sub', 'Taxes on Surge 1099 pay · rough estimate'));
+    out.push(mRow('Surge 1099 pay this month', usd(w.month), 'set aside about ' + usd(w.setAsideMonth) + ' (' + w.pct + '%)'));
+    out.push(mRow('This year' + (w.since ? ', since ' + w.since : ''), usd(w.year), 'set aside about ' + usd(w.setAsideYear)));
+    if (w.nextIrs) out.push(el('div', 'ls', 'Next federal estimated tax date: ' + dayName(w.nextIrs) + ' (IRS Form 1040-ES).'));
+    out.push(el('div', 'hint', w.note));
+    return out;
+  }
+  /* "Stop pay advances": PayActiv this week, this month, the year; what the fees cost; the cushion he would need (facts, kindly) */
+  function moneyAdvances(v) {
+    var out = [], a = v.advances; if (!a) return out;
+    out.push(el('div', 'sub', 'Pay advances (PayActiv)'));
+    out.push(mRow('This week', usd(a.week.advanced) + ' advanced', plural(a.week.count, 'advance') + ' · fees ' + usd(a.week.fees) + ' · repaid ' + usd(a.week.repaid)));
+    out.push(mRow(v.monthName, usd(a.month.advanced) + ' advanced', plural(a.month.count, 'advance') + ' · fees ' + usd(a.month.fees) + ' · repaid ' + usd(a.month.repaid)));
+    out.push(mRow('Fees this year', usd(a.yearFees), 'since ' + a.yearSince + ', in the bank feed'));
+    out.push(el('div', 'ls', 'What advances cost you: about ' + usd(a.feesPerMonth) + ' a month in fees. Advances are not counted as income, and the payday repayment is not counted as spending.'));
+    var g = a.goal, box = el('div', 'medit'); box.id = 'goaladv';
+    add(box, el('b', null, 'Goal: stop pay advances'), el('div', 'ls', g.text));
+    if (g.cushion > 0) box.appendChild(mRow('Toward the cushion', g.pct + '%'));
+    if (g.step) box.appendChild(el('div', 'ls', g.step));
+    out.push(box);
+    return out;
+  }
+  /* "Prepay the hotel weekly": his estimate of the prepaid week, the saving against the daily rate, and a nudge when it could be covered */
+  function moneyHotel(v, set) {
+    var out = [], h = v.hotel; if (!h) return out;
+    var box = el('div', 'medit'); box.id = 'goalhotel';
+    add(box, el('b', null, 'Goal: prepay the hotel weekly'), mRow(h.name + ' at the daily rate', mUsd(h.daily) + ' a day', h.weekDaily != null ? usd(h.weekDaily) + ' a week' : ''));
+    if (h.spentMonth) box.appendChild(mRow('Hotel spend this month (bank)', usd(h.spentMonth)));
+    if (h.weekly != null) {
+      box.appendChild(mRow('Prepaid week (your estimate)', usd(h.weekly)));
+      box.appendChild(mRow('Saving', usd(h.savingWeek) + ' a week', 'about ' + usd(h.saving) + ' a month (a week × 52 ÷ 12)'));
+      if (h.nudge) box.appendChild(el('div', 'mwarn', h.nudge));
+    } else box.appendChild(el('div', 'ls', 'Add the weekly prepaid price to see the saving.'));
+    var wi = el('input'); wi.type = 'number'; wi.step = '0.01'; wi.id = 'mhotelweek'; wi.value = h.weekly != null ? h.weekly : ''; wi.placeholder = 'the weekly price';
+    var sv = btn('Update', null, 'btn gh', function () { set({ op: 'settings', settings: { hotelWeekly: wi.value === '' ? null : +wi.value } }, 'Hotel price saved.'); }); sv.id = 'mhotelsave';
+    var r = el('div', 'frow'); add(r, fld('Prepaid week, your estimate ($)', wi)); add(box, r, sv);
+    out.push(box);
+    return out;
+  }
+  /* his income profile: who pays, how often, the parts (base pay, reimbursements), withheld or not; editable */
+  function moneyIncome(v, set) {
+    var out = [], I = v.income || { sources: [] }, prof = v.profile || { sources: [] }, EV = { weekly: 'week', '2 weeks': '2 weeks', monthly: 'month' };
+    out.push(el('div', 'sub', 'Income'));
+    if (!I.sources.length) out.push(el('div', 'empty', 'No income profile yet.'));
+    I.sources.forEach(function (s) {
+      out.push(mRow(s.name + (s.active ? '' : ' (not started)'), s.expected != null ? usd(s.expected) + (s.withheld ? ' net' : '') : usd(s.gross) + ' gross',
+        'every ' + EV[s.every] + (s.last ? ' · last ' + usd(s.last.amount) + ', ' + mDay(s.last.when) : ' · not seen in the bank yet') + (s.next && s.active ? ' · next about ' + mDay(s.next) : '')));
+      if (s.short) out.push(el('div', 'mwarn', 'The last one was about ' + usd(s.short) + ' short.'));
+      if (s.missing) out.push(el('div', 'mwarn', 'Not seen for longer than usual.'));
+    });
+    if (I.sources.length) out.push(el('div', 'ls', 'Expected about ' + usd(I.perWeek) + ' a week' + (I.perWeekSoon ? ', plus about ' + usd(I.perWeekSoon) + ' a week when the rest starts' : '') + '.'));
+    var ed = null, eb = btn('Edit the income profile', 'pen', 'more'); eb.id = 'incedit';
+    eb.addEventListener('click', function () {
+      if (ed) { ed.remove(); ed = null; return; }
+      ed = el('div', 'medit'); var rows = [];
+      var srcEd = function (s) {
+        s = s || { name: '', payee: '', every: 'weekly', parts: [{ name: 'Base pay', amount: '', taxable: true }], withheld: false, expectedNet: null, active: true };
+        var box = el('div', 'medit'), nm = el('input'), py = el('input'), ev = el('select'), wh = el('input'), en = el('input'), ac = el('input');
+        nm.value = s.name; py.value = s.payee || ''; py.placeholder = 'a word on the deposit';
+        [['weekly', 'Weekly'], ['2 weeks', 'Every 2 weeks'], ['monthly', 'Monthly']].forEach(function (p) { var o = el('option', null, p[1]); o.value = p[0]; if (p[0] === s.every) o.selected = true; ev.appendChild(o); });
+        wh.type = 'checkbox'; wh.checked = !!s.withheld; en.type = 'number'; en.step = '0.01'; en.value = s.expectedNet != null ? s.expectedNet : ''; ac.type = 'checkbox'; ac.checked = s.active !== false;
+        var r1 = el('div', 'frow'); add(r1, fld('Payer', nm), fld('Payee word', py), fld('How often', ev));
+        var parts = el('div'), addPart = function (p) {
+          var r = el('div', 'frow'), pn = el('input'), pa = el('input'), pt = el('input'); pn.value = p.name; pa.type = 'number'; pa.step = '0.01'; pa.value = p.amount == null ? '' : p.amount; pt.type = 'checkbox'; pt.checked = !!p.taxable;
+          var tl = el('label', 'mchk'); add(tl, pt, 'taxable'); add(r, fld('Part', pn), fld('Amount ($)', pa), tl);
+          r._get = function () { return { name: pn.value, amount: pa.value === '' ? null : +pa.value, taxable: pt.checked }; }; parts.appendChild(r); };
+        (s.parts || []).forEach(addPart);
+        var wl = el('label', 'mchk'); add(wl, wh, 'Tax is withheld (payroll)'); var al = el('label', 'mchk'); add(al, ac, 'Paying now');
+        add(box, r1, parts, btn('Add a part', 'plus', 'rmb', function () { addPart({ name: '', amount: null, taxable: false }); }), wl, fld('Expected net, if withheld ($)', en), al);
+        box._get = function () { return { id: s.id, name: nm.value, payee: py.value, every: ev.value, withheld: wh.checked, expectedNet: en.value === '' ? null : +en.value, active: ac.checked,
+          parts: [].map.call(parts.children, function (r) { return r._get(); }).filter(function (p) { return p.amount != null; }) }; };
+        rows.push(box); return box;
+      };
+      (prof.sources || []).forEach(function (s) { ed.appendChild(srcEd(s)); });
+      var more = btn('Add a payer', 'plus', 'rmb', function () { more.before(srcEd(null)); });
+      var sv = btn('Save the income profile', 'check', 'btn pri', function () { set({ op: 'income', profile: { sources: rows.map(function (b) { return b._get(); }).filter(function (s) { return s.name.trim(); }) } }, 'Income profile saved.'); }); sv.id = 'incsave';
+      add(ed, more, el('div', 'hint', 'Used to label deposits, spot a short or missing paycheck, and know when the next pay comes for the bill warning.'), sv);
+      eb.after(ed);
+    });
+    out.push(eb);
+    return out;
   }
   /* Meeting mode (P-8 step 2): the company first, from a fixed list (never guessed, never blended), then the notes, to the desk */
   var COMPANIES = [['Surge', 'Surge'], ['Sixfold', 'Sixfold'], ['Traverse', 'Traverse'], ['Peak', 'Peak (your own client work)'], ['Personal', 'Personal'], ['Other', 'Other']];
@@ -3032,6 +3360,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open') openFromUrl(String(e.data.url || '')); });
   /* a tap on an alert, or a link: ?desk=<id> opens that desk chat */
   function openFromUrl(u) {
+    if (/[?&]money=1\b/.test(u)) { if (u === location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} } moneySheet(); return; }   /* 21 Nov (P-15): a money alert opens the Money sheet */
     /* 21 Nov: the Record meeting icon (record.html; Matthew: "make the record icon") opens ?record=1 (and &for=peak and so on): straight to
        the Record a meeting screen. Only the screen: the tap "Everyone here knows this is being recorded" is still needed before the microphone opens. */
     if (/[?&]record=1\b/.test(u)) { if (u === location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }

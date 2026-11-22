@@ -505,6 +505,7 @@ END=$(( $(date +%s) + 3480 ))
 # background loop, so a long session never stops it; it ends with this copy (a sleeping laptop sends nothing, which is the point).
 ( while kill -0 $$ 2>/dev/null; do
     [ -f "$ST/pause" ] || bash "$REPO/assistant/jarvis/tools/jarvis-status.sh" beat > /dev/null 2>&1
+    [ -f "$ST/pause" ] || bash "$REPO/assistant/jarvis/tools/paystub-watch.sh" > /dev/null 2>&1   # 21 Nov (P-15): pay stubs dropped in Desktop\paystubs go to J.A.R.V.I.S.
     printf '%s %s\n' "$(date +%s)" "$(git -C "$REPO" rev-parse HEAD 2>/dev/null)" | $SG 'mkdir -p ~/www/traverseplatforms.com/jarvis-cloud && chmod 700 ~/www/traverseplatforms.com/jarvis-cloud && cat > ~/www/traverseplatforms.com/jarvis-cloud/laptop.txt' > /dev/null 2>&1   # the cloud's write turn (19 Nov)
     for _b in $(seq 60); do kill -0 $$ 2>/dev/null || exit 0; [ -f "$ST/pause" ] || meet_tick; sleep 5; done   # gone within 5 s of this copy, so the next one starts on time
   done ) < /dev/null > /dev/null 2>&1 &

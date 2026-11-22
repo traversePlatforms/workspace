@@ -97,7 +97,9 @@ function jvMoney(array $j): array {
     return ['ledger' => $l ? ['perMonth' => $num($l['perMonth'] ?? null), 'monthly' => $num($l['monthly'] ?? null), 'yearly' => $num($l['yearly'] ?? null), 'once' => $num($l['once'] ?? null),
             'planned' => $num($l['planned'] ?? null), 'items' => max(0, (int) ($l['items'] ?? 0)), 'byEntity' => $by, 'asOf' => jvClean($l['asOf'] ?? '', 20)] : null,
         'stripe' => $s ? ['month' => $num($s['month'] ?? null), 'available' => $num($s['available'] ?? null), 'pending' => $num($s['pending'] ?? null), 'charges' => max(0, (int) ($s['charges'] ?? 0)),
-            'at' => (int) ($s['at'] ?? 0), 'error' => jvClean($s['error'] ?? '', 120)] : null];
+            'at' => (int) ($s['at'] ?? 0), 'error' => jvClean($s['error'] ?? '', 120)] : null,
+        /* 21 Nov (P-15): his banks, read only, through SimpleFIN (lib/money.php): balances, this month, warnings; no transactions here */
+        'bank' => function_exists('mnSummary') ? mnSummary() : null];
 }
 
 /* ---------------------------------------------------------------- Reminders (19 Nov, P-8 step 3)
