@@ -24,5 +24,21 @@
   "waiting": [
     { "k": "Example", "text": "One plain line per thing Matthew has to do or decide." }
   ],
+  "_auto": "Leave numbers, team and tomorrow out and run with --auto: daily.mjs fills them, read only. A JSON that has one of them wins over --auto. Their shape, for a hand-written day, is in _autoShape (ignored).",
+  "_autoShape": {
+    "numbers": [
+      { "co": "Sixfold 365", "stats": [{ "n": 1, "label": "leads" }, { "n": 0, "label": "quotes sent" }, { "n": 0, "label": "jobs booked" }], "note": "Sixfold 365 app" },
+      { "co": "Peak Pickleball", "stats": [{ "n": 10, "label": "emails sent" }, { "n": 0, "label": "replies" }, { "n": 0, "label": "tours booked" }] },
+      { "co": "Traverse", "stats": [{ "n": 1, "label": "site visitors" }, { "n": 0, "label": "demos booked" }] }
+    ],
+    "team": [
+      { "who": "Jen McPherson", "app": "Sixfold app help desk", "n": 1, "items": [{ "text": "Example: the first line of what she asked", "status": "answered" }] }
+    ],
+    "tomorrow": {
+      "meetings": [{ "time": "8:00 am to 8:30 am", "title": "Example meeting" }],
+      "deadlines": [{ "date": "2026-11-24", "text": "Example dated reminder from TASKS.md" }],
+      "note": "Traverse calendar, as the Assistant last read it"
+    }
+  },
   "foot": "EXAMPLE input for shared/tools/eod/daily.mjs: not a real report."
 }

@@ -2,7 +2,10 @@
 // Reads the store only (no network). Writes data/pulls/<date>/impact.json and prints a summary (--quiet: one line).
 // Definitions are spelled out in ../impact-measurement-2026-11-23.md; change them there and here together.
 // Usage: node impact.mjs [--day=YYYY-MM-DD] [--quiet] [--json]
-import { existsSync, readdirSync } from 'node:fs';
+//        node impact.mjs --week-end=YYYY-MM-DD [--json]   the weekly club scorecard (Monday to Sunday, Colorado time; the date is a Sunday):
+//        that week, the week before, the same week last year (364 days earlier) and the 12-month normal (baseline B). Prints only;
+//        writes nothing. Day one of Matthew's work for Peak = 23 Nov 2026, so Week 0 is 16-22 Nov 2026 (see WEEK MODE below).
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PULLS, readStore, readGz, writeJson, denverDate, addDays } from './pull-lib.mjs';
 
@@ -189,6 +192,155 @@ function email(r, cls) {
   const xs = msgs.filter((m) => m.ev === 'message.out' && inR(d10(m.at), r) && (!cls || m.cls === cls));
   const n = xs.length, del = xs.filter((m) => m.stats?.delivered).length;
   return { sent: n, sms: xs.filter((m) => m.ch === 'SMS').length, openRate: pct(xs.filter((m) => m.stats?.opened).length, del), clickRate: pct(xs.filter((m) => m.stats?.clicked).length, del), unsubRate: pct(xs.filter((m) => m.stats?.unsubscribed).length, del) };
+}
+
+// ==== WEEK MODE: the weekly club scorecard (Matthew, 23 Nov 2026: "I am considering today the first day of work for peak ... track
+// where they are at currently so that I can see how much they are growing week to week ... I need to be measuring whatever we can").
+// The numbers go ONLY in his Sunday business report (shared/tools/eod/weekly.mjs runs this with --json). Same definitions as above:
+// sponsorship rows left out, plan history never read from plan names (CourtReserve labels old rows with the CURRENT plan), annuals
+// count as 12 months of dues. Week = Monday to Sunday, Colorado time (CourtReserve times are local; Patch times are UTC, converted).
+const weekEnd = arg('week-end');
+if (weekEnd) {
+  const START_DAY = '2026-11-23'; // day one of Matthew's work for Peak
+  if (!/^\d{4}-\d\d-\d\d$/.test(weekEnd) || new Date(weekEnd + 'T12:00:00Z').getUTCDay() !== 0) { console.error('--week-end=YYYY-MM-DD must be a Sunday'); process.exit(2); }
+  const W = { from: addDays(weekEnd, -6), to: weekEnd }, WL = { from: addDays(weekEnd, -13), to: addDays(weekEnd, -7) }, WY = { from: addDays(W.from, -364), to: addDays(weekEnd, -364) };
+  const weekNo = Math.round((Date.parse(weekEnd) - Date.parse(addDays(START_DAY, -1))) / (7 * 864e5)); // Week 0 = 16-22 Nov 2026
+  const dataDay = latestSnap || today; // the newest nightly pull; a week is complete once a pull ran after its Sunday
+  // holiday weeks are seasonal (Thanksgiving = 4th Thursday of November; Christmas; New Year)
+  const thanks = (y) => { const d = new Date(Date.UTC(y, 10, 1)); const first = (4 - d.getUTCDay() + 7) % 7; return `${y}-11-${String(1 + first + 21).padStart(2, '0')}`; };
+  const holiday = (r) => { const y = +r.to.slice(0, 4); const hs = [[thanks(y), 'Thanksgiving'], [thanks(y - 1), 'Thanksgiving'], [`${y}-12-25`, 'Christmas'], [`${y - 1}-12-25`, 'Christmas'], [`${y}-01-01`, 'New Year'], [`${y + 1}-01-01`, 'New Year']]; return (hs.find(([d]) => inR(d, r)) || [])[1] || ''; };
+
+  // Patch times are UTC: the Colorado day, cached per UTC hour (offsets are whole hours)
+  const dc = new Map(); const denDay = (iso) => { const k = String(iso).slice(0, 13); let v = dc.get(k); if (!v) { v = denverDate(new Date(k + ':00:00Z')); dc.set(k, v); } return v; };
+
+  // dues cover: a monthly dues payment covers the 35 days from its paid day (a month plus a few days for billing timing and card
+  // retries); a prepaid annual covers 365 days. Paying at day d = covered on d. Lapsed in a week = a cover ran out that week with no
+  // new payment before it ran out, and none within the 30 days after (so a week is final 30 days after its Sunday).
+  const pays = new Map(); // member -> [[day, coverDays]] sorted
+  for (const r of dues) if (!isRefund(r) && r.Amount > 0 && r.OrgMemberId) (pays.get(r.OrgMemberId) || pays.set(r.OrgMemberId, []).get(r.OrgMemberId)).push([d10(r.PaidDate), 35]);
+  for (const r of annual) if (r.OrgMemberId) (pays.get(r.OrgMemberId) || pays.set(r.OrgMemberId, []).get(r.OrgMemberId)).push([d10(r.PaidDate), 365]);
+  for (const a of pays.values()) a.sort((x, y) => (x[0] < y[0] ? -1 : 1));
+  const payingAt = (d) => { let n = 0; for (const a of pays.values()) if (a.some(([p, c]) => p <= d && addDays(p, c - 1) >= d)) n++; return n; };
+  const lapsedIn = (r) => {
+    let n = 0;
+    for (const a of pays.values()) {
+      let end = null; // last covered day so far
+      for (const [p, c] of a) {
+        if (end && p > end) { const out = addDays(end, 1); if (inR(out, r) && p > addDays(out, 30)) n++; end = addDays(p, c - 1); }
+        else { const e = addDays(p, c - 1); if (!end || e > end) end = e; }
+      }
+      if (end && inR(addDays(end, 1), r)) n++; // ran out that week and nothing paid since
+    }
+    return n;
+  };
+  const sundays = (r) => { const o = []; for (let d = r.from; d <= r.to; d = addDays(d, 1)) if (new Date(d + 'T12:00:00Z').getUTCDay() === 0) o.push(d); return o; };
+  const avg = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+
+  // dues collected: Membership Fee rows net of refunds by paid day, plus prepaid annuals paid that week (whole amount: cash in)
+  const duesCash = (r) => { let fee = 0, ann = 0; for (const x of dues) if (inR(d10(x.PaidDate), r)) fee += isRefund(x) ? -Math.abs(x.Amount) : x.Amount; for (const x of annual) if (inR(d10(x.PaidDate), r)) ann += x.Amount; return { fee, ann, total: fee + ann }; };
+  // free class: first-timers = people whose FIRST free class fell that week; attendance = kept free-class registrations that week
+  const freeAttend = (r) => regs.filter((x) => isFree(x) && past(x) && inR(d10(x.StartTime), r)).length;
+  const freeCohort = (r, win) => { let people = 0, eligible = 0, joined = 0; for (const [id, d] of firstFree) { if (!inR(d, r)) continue; people++; const fp = firstPaid.get(id); if (fp && fp < d) continue; eligible++; if (fp && (Date.parse(fp) - Date.parse(d)) / 864e5 <= win) joined++; } return { people, eligible, joined }; };
+  const newAccounts = (r) => members.filter((m) => m.CreatedDate && inR(d10(m.CreatedDate), r)).length;
+  // Open Play fill: "Open Play" category sessions that week (not cancelled, already started): booked places / places offered,
+  // each session capped at 100%. Waitlist = people still waiting when the session list was pulled.
+  const elSeen = new Set(); const eventlist = readStore('courtreserve/eventlist').filter((e) => { const k = e.EventId + '|' + e.StartDateTime; if (elSeen.has(k)) return false; elSeen.add(k); return true; });
+  const openPlay = (r) => { let cap = 0, booked = 0, n = 0, full = 0, wait = 0; for (const e of eventlist) { if ((e.EventCategoryName || '').trim() !== 'Open Play' || e.IsCanceled || !(e.MaxRegistrants > 0)) continue; const d = d10(e.StartDateTime); if (!inR(d, r) || d >= today) continue; n++; cap += e.MaxRegistrants; booked += Math.min(e.RegisteredCount || 0, e.MaxRegistrants); if ((e.RegisteredCount || 0) >= e.MaxRegistrants) full++; wait += e.WaitlistCount || 0; } return { sessions: n, fill: pct(booked, cap), full, wait }; };
+  const waitRows = readStore('courtreserve/eventreg-waitlist'); const waitIn = (r) => waitRows.filter((x) => inR(d10(x.StartTime), r)).length;
+  // unique active players: anyone (not a guest) who checked in, was on a kept event registration that already happened, or was a
+  // listed player on a court booking that week
+  const players = (r) => { const s = new Set(); for (const x of checkins) if (x.IsGuest !== 'Yes' && x.OrganizationMemberId && inR(d10(x.CheckinDateTime || x.ReservationStartDateTime), r)) s.add(x.OrganizationMemberId); for (const x of regs) if (!x.IsGuest && x.OrganizationMemberId && past(x) && inR(d10(x.StartTime), r)) s.add(x.OrganizationMemberId); for (const x of resv) if (inR(d10(x.StartTime), r) && d10(x.StartTime) < today) for (const id of x.PlayerIds || []) if (id) s.add(id); return s.size; };
+  // Patch: every message out, by Colorado day; blasts = CAMPAIGN, automations = AUTOMATION, rows with no class are one-off sends
+  const blockNames = (() => { try { return JSON.parse(readFileSync(join(PULLS, 'store', 'patch', 'block-names.json'), 'utf8')); } catch { return {}; } })();
+  const outMsgs = msgs.filter((m) => m.ev === 'message.out').map((m) => ({ m, d: denDay(m.at) }));
+  const patch = (r) => {
+    const xs = outMsgs.filter((x) => inR(x.d, r)).map((x) => x.m); const del = xs.filter((m) => m.stats?.delivered).length;
+    const auto = {}, camp = {};
+    for (const m of xs) { const nm = (m.subj || blockNames[m.seq + '|' + m.blk]?.subject || '').replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').replace(/\s+/g, ' ').trim() || 'unnamed (block ' + String(m.blk || '').slice(-6) + ')'; const safe = /@|\d{3}[\s.-]?\d{4}/.test(nm) ? '(subject withheld)' : nm; if (m.cls === 'AUTOMATION') auto[safe] = (auto[safe] || 0) + 1; else if (m.cls === 'CAMPAIGN') camp[safe] = (camp[safe] || 0) + 1; }
+    return { sent: xs.length, email: xs.filter((m) => m.ch === 'EMAIL').length, sms: xs.filter((m) => m.ch === 'SMS').length, blasts: xs.filter((m) => m.cls === 'CAMPAIGN').length, automations: xs.filter((m) => m.cls === 'AUTOMATION').length, other: xs.filter((m) => m.cls !== 'CAMPAIGN' && m.cls !== 'AUTOMATION').length, delivered: del, openRate: pct(xs.filter((m) => m.stats?.opened).length, del), clickRate: pct(xs.filter((m) => m.stats?.clicked).length, del), unsubRate: pct(xs.filter((m) => m.stats?.unsubscribed).length, del), automationsSent: Object.entries(auto).sort((a, b) => b[1] - a[1]).map(([subject, sent]) => ({ subject, sent })), blastsSent: Object.entries(camp).sort((a, b) => b[1] - a[1]).map(([subject, sent]) => ({ subject, sent })) };
+  };
+  // member list (status now): only a snapshot taken within a day of the week's Sunday says where the week ended
+  const snapNear = (d) => readdirSync(PULLS).filter((x) => /^\d{4}-\d{2}-\d{2}$/.test(x) && x >= addDays(d, -1) && x <= addDays(d, 1) && existsSync(join(PULLS, x, 'courtreserve', 'members.noname.json.gz'))).sort().pop();
+  const listAt = (d) => { const s = snapNear(d); if (!s) return null; const ms = s === latestSnap ? members : readGz(join(PULLS, s, 'courtreserve', 'members.noname.json.gz')); const paid = (m) => m.MembershipTypeName && !freePlan.test(m.MembershipTypeName); return { snapshot: s, active: ms.filter((m) => m.MembershipStatus === 'Active' && paid(m)).length, suspended: ms.filter((m) => m.MembershipStatus === 'Suspended' && paid(m)).length }; };
+
+  const perWk = (n, r) => (n == null ? null : round((n / days(r)) * 7));
+  const calc = (r, isBase) => {
+    const dc$ = duesCash(r), f7 = freeCohort(r, 7), f60 = freeCohort(r, 60), op = openPlay(r), p = patch(r), kept = regsIn(r), canc = cancelsIn(r);
+    const flow = (n) => (isBase ? perWk(n, r) : n);
+    const list = isBase ? null : listAt(r.to);
+    return {
+      payingDues: isBase ? round(avg(sundays(r).map(payingAt)), 0) : payingAt(r.to),
+      listActive: list ? list.active : null, listSuspended: list ? list.suspended : null, listSnapshot: list ? list.snapshot : null,
+      newMembers: flow(newIn(r)), lapsed: flow(lapsedIn(r)),
+      duesCollected: isBase ? Math.round((dc$.total / days(r)) * 7) : Math.round(dc$.total), duesFee: Math.round(dc$.fee), duesAnnual: Math.round(dc$.ann),
+      freeFirstTimers: flow(f7.people), freeAttendance: flow(freeAttend(r)), freeEligible: f7.eligible, freeJoined7d: pct(f7.joined, f7.eligible), freeJoined7dCount: f7.joined, freeJoined60d: pct(f60.joined, f60.eligible), freeJoined60dCount: f60.joined,
+      newAccounts: flow(newAccounts(r)),
+      util: utilIn(r), util3to5: utilIn(r, (h, d) => h >= 15 && h < 17 && !/Sat|Sun/.test(d)), util5to8: utilIn(r, (h) => h < 8),
+      openPlayFill: op.fill, openPlaySessions: flow(op.sessions), openPlayFull: flow(op.full), openPlayWaiting: flow(op.wait),
+      eventRegs: flow(kept), eventCancels: flow(canc), cancelRate: pct(canc, canc + kept), waitlist: flow(waitIn(r)),
+      checkins: flow(checkinsIn(r)), players: isBase ? null : players(r),
+      patchSent: flow(p.sent), patchBlasts: flow(p.blasts), patchAutomations: flow(p.automations), patchOther: flow(p.other), patchSms: flow(p.sms),
+      openRate: p.openRate, clickRate: p.clickRate, unsubRate: p.unsubRate,
+      automationsSent: isBase ? undefined : p.automationsSent, blastsSent: isBase ? undefined : p.blastsSent,
+    };
+  };
+  const T = calc(W), L = calc(WL), Y = calc(WY), N = calc(B, true);
+  const final30 = dataDay > addDays(weekEnd, 30), final7 = dataDay > addDays(weekEnd, 7), complete = dataDay > weekEnd;
+  // the scorecard rows: label, unit ('n', '$', '%'), better ('up' | 'down' | ''), the four values, and a note
+  const M = [
+    ['payingDues', 'Paying members (dues)', 'n', 'up', 'members whose dues cover the Sunday: a monthly payment covers 35 days, a prepaid annual 365. Normal = average of the baseline\'s Sundays'],
+    ['listActive', 'Active on a paid plan (member list)', 'n', 'up', `CourtReserve member list${T.listSnapshot ? ' of ' + T.listSnapshot : ''}, status Active on a plan that charges (family members included). Only exists from the nightly pulls (first: 23 Nov 2026), so earlier weeks have none`],
+    ['listSuspended', 'Suspended on a paid plan (member list)', 'n', 'down', 'the same member list, status Suspended'],
+    ['newMembers', 'New members', 'n', 'up', 'first-ever dues payment (or prepaid annual) that week'],
+    ['lapsed', 'Lapsed members', 'n', 'down', `a dues cover ran out that week with nothing paid before or within 30 days after.${final30 ? '' : ' Not final for this week until 30 days after its Sunday: a late payment takes people off, so it can fall'}`],
+    ['duesCollected', 'Dues collected', '$', 'up', 'Membership Fee payments net of refunds, plus prepaid annuals paid that week in full (cash in that week, sponsorships left out). Normal = the baseline\'s cash per week'],
+    ['freeFirstTimers', 'Free-class first-timers', 'n', 'up', 'people whose first-ever Learn to Play class was that week'],
+    ['freeAttendance', 'Free-class attendance', 'n', 'up', 'kept Learn to Play registrations for classes that week'],
+    ['freeJoined7d', 'Joined within 7 days of a free class', '%', 'up', `share of that week's first-timers (not already members) whose first dues came within 7 days of the class: ${T.freeJoined7dCount} of ${T.freeEligible} this week.${final7 ? '' : ' Not final until 7 days after the Sunday.'} The 60-day rate (${T.freeJoined60dCount} of ${T.freeEligible} so far; ${N.freeJoined60d}% in the baseline) lags 60 days`],
+    ['newAccounts', 'New accounts', 'n', 'up', 'CourtReserve accounts created that week (from the current member list, so deleted accounts are not counted)'],
+    ['util', 'Court utilisation, all hours', '%', 'up', 'CourtReserve Court Utilization report, 5 am to 9 pm, the plain average over every day and hour'],
+    ['util3to5', 'Court utilisation, weekday 3-5 pm', '%', 'up', 'the same report, Monday to Friday, 3 to 5 pm (the quiet slot)'],
+    ['util5to8', 'Court utilisation, 5-8 am', '%', 'up', 'the same report, every day, 5 to 8 am'],
+    ['openPlayFill', 'Open Play fill', '%', 'up', '"Open Play" sessions that week: places booked / places offered, each session capped at 100% (CourtReserve event list)'],
+    ['openPlayFull', 'Open Play sessions full', 'n', 'up', 'sessions booked to capacity (out of the week\'s Open Play sessions)'],
+    ['eventRegs', 'Event registrations (kept)', 'n', 'up', 'kept registrations for events that week (Open Play, leagues, classes, socials, all categories)'],
+    ['eventCancels', 'Event cancellations', 'n', 'down', 'cancelled registrations for events that week'],
+    ['cancelRate', 'Event cancellation rate', '%', 'down', 'cancelled / (cancelled + kept)'],
+    ['waitlist', 'Waitlist sign-ups', 'n', '', 'waitlist entries for events that week (whatever became of them)'],
+    ['checkins', 'Check-ins', 'n', 'up', 'CourtReserve check-in report'],
+    ['players', 'Unique active players', 'n', 'up', 'different people (not guests) who checked in, played a registered event or were listed on a court booking. No normal: a weekly count of different people does not average'],
+    ['patchSent', 'Patch messages sent', 'n', '', 'every Patch message out that week (Colorado day)'],
+    ['patchBlasts', 'Patch: blasts', 'n', '', 'campaign sends'],
+    ['patchAutomations', 'Patch: automations', 'n', 'up', 'automation sends (welcomes, birthday, thank-you and the rest)'],
+    ['openRate', 'Patch open rate', '%', 'up', 'opened / delivered (Apple Mail inflates opens: compare like with like)'],
+    ['clickRate', 'Patch click rate', '%', 'up', 'clicked / delivered'],
+    ['unsubRate', 'Patch unsubscribe rate', '%', 'down', 'unsubscribed / delivered'],
+  ].map(([key, label, unit, better, note]) => ({ key, label, unit, better, this: T[key], last: L[key], lastYear: Y[key], normal: N[key], note }));
+  const notAvailable = [
+    { label: 'Website visitors and conversions (Google Analytics)', why: 'not available yet (waiting on access from Peak)' },
+    { label: 'Meta ads (spend, reach, leads)', why: 'not available yet (waiting on access from Peak)' },
+    { label: 'Membership Report and leagues from the API', why: 'CourtReserve answers 401 (not granted); leagues are counted inside event registrations' },
+    { label: 'Monthly churn', why: 'a month rule (impact.json churn), readable two months after the month; weekly lapses above stand in for it' },
+  ];
+  const wk = {
+    mode: 'week', startDay: START_DAY, weekEnd, week: W, weekNumber: weekNo, weekLabel: weekNo === 0 ? 'Week 0 (the starting point, before day one)' : weekNo > 0 ? `Week ${weekNo} since day one (${START_DAY})` : `${-weekNo} week${weekNo === -1 ? '' : 's'} before Week 0`,
+    seasonal: holiday(W) ? `${holiday(W)} week: seasonal, read against the same week last year` : '', lastWeek: WL, sameWeekLastYear: WY, sameWeekLastYearSeasonal: holiday(WY) || '',
+    normal: { ...B, what: '12-month normal: baseline B (12 months before Tyler\'s go), per week for counts, the rate over the 12 months for rates' },
+    dataDay, complete, final7d: final7, final30d: final30, memberSnapshot: latestSnap,
+    metrics: M, automationsThisWeek: T.automationsSent, blastsThisWeek: T.blastsSent, automationsLastWeek: L.automationsSent, automationsSameWeekLastYear: Y.automationsSent,
+    breakdown: { duesFee: { this: T.duesFee, last: L.duesFee, lastYear: Y.duesFee }, duesAnnual: { this: T.duesAnnual, last: L.duesAnnual, lastYear: Y.duesAnnual }, freeEligible: { this: T.freeEligible, last: L.freeEligible, lastYear: Y.freeEligible }, freeJoined7dCount: { this: T.freeJoined7dCount, last: L.freeJoined7dCount, lastYear: Y.freeJoined7dCount }, freeJoined60d: { this: T.freeJoined60dCount, last: L.freeJoined60dCount, lastYear: Y.freeJoined60dCount, thisRate: T.freeJoined60d, normalRate: N.freeJoined60d }, openPlaySessions: { this: T.openPlaySessions, last: L.openPlaySessions, lastYear: Y.openPlaySessions, normal: N.openPlaySessions }, openPlayWaitingAtPull: { this: T.openPlayWaiting, last: L.openPlayWaiting }, patchOther: { this: T.patchOther, last: L.patchOther }, patchSms: { this: T.patchSms, last: L.patchSms, lastYear: Y.patchSms } },
+    notAvailable,
+  };
+  if (process.argv.includes('--json')) console.log(JSON.stringify(wk, null, 1));
+  else {
+    const f = (v, u) => (v == null ? 'n/a' : u === '$' ? '$' + Math.round(v).toLocaleString('en-US') : u === '%' ? v + '%' : String(v));
+    console.log(`Peak scorecard, ${wk.weekLabel}: ${W.from}..${W.to} (last week ${WL.from}..${WL.to}; same week last year ${WY.from}..${WY.to}; data to ${dataDay}${complete ? '' : ', WEEK NOT COMPLETE'})${wk.seasonal ? '\n' + wk.seasonal : ''}`);
+    console.log(['metric'.padEnd(44), 'this'.padStart(9), 'last'.padStart(9), 'last yr'.padStart(9), 'normal'.padStart(9)].join(' '));
+    for (const m of M) console.log([m.label.padEnd(44), f(m.this, m.unit).padStart(9), f(m.last, m.unit).padStart(9), f(m.lastYear, m.unit).padStart(9), f(m.normal, m.unit).padStart(9)].join(' '));
+    console.log('automations that sent this week: ' + (T.automationsSent.map((a) => `${a.subject} (${a.sent})`).join('; ') || 'none'));
+    console.log('blasts this week: ' + (T.blastsSent.map((a) => `${a.subject} (${a.sent})`).join('; ') || 'none'));
+  }
+  process.exit(0);
 }
 
 // ---- put it together ---------------------------------------------------------------------------------------------

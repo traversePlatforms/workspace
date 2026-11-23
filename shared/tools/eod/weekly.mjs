@@ -9,8 +9,9 @@
 //   node shared/tools/eod/weekly.mjs --no-pdf            skip the PDF
 //
 // READ ONLY everywhere: server numbers come over bash ~/jarvis/bin/sg.sh trav with two read scripts piped to php (server/*.php: they are
-// never installed there) and the existing profit-check.php --line; Stripe through jarvis-money.mjs (GET only); Peak's club numbers from
-// the nightly pulls' impact.json when they exist. Nothing is sent, nothing on the server changes.
+// never installed there) and the existing profit-check.php --line; Stripe through jarvis-money.mjs (GET only); Peak's club scorecard from
+// matthew/clients/peak-pickleball/tools/impact.mjs --week-end=<end> --json on this machine (the nightly pulls' local store; day one 23 Nov
+// 2026, Week 0 = 16-22 Nov; these club numbers go only in this report). Nothing is sent, nothing on the server changes.
 // Rule: no number without a source. A metric with no source yet shows "not available yet (why)".
 // Snapshot: $LOCALAPPDATA/ProjectBackup/eod/weekly-<end>.json (~/jarvis/localappdata on this machine), so next week can compare.
 // Output: changelog/weekly-<end>.html and .pdf (the laptop's sync copies weekly-*.html/pdf to the Desktop's End of Day Reports).
@@ -60,13 +61,10 @@ function collect() {
     execFileSync('node', [path.join(REPO, 'assistant/jarvis/tools/jarvis-money.mjs'), 'stripe', '--force'], { env, timeout: 90000, stdio: 'ignore' });
     raw.stripe = JSON.parse(fs.readFileSync(path.join(mdir, 'stripe.json'), 'utf8'));
   } catch (e) { raw.stripe = { error: 'the money summary could not read Stripe' }; }
-  // Peak club numbers: the nightly pulls (matthew/clients/peak-pickleball/tools/nightly-pull.sh) write data/pulls/<day>/impact.json
-  const pulls = path.join(REPO, 'matthew/clients/peak-pickleball/data/pulls');
-  try {
-    const days = fs.readdirSync(pulls).filter((d) => /^\d{4}-\d\d-\d\d$/.test(d) && d <= END && fs.existsSync(path.join(pulls, d, 'impact.json'))).sort();
-    if (days.length) { const d = days.pop(); const j = JSON.parse(fs.readFileSync(path.join(pulls, d, 'impact.json'), 'utf8')); raw.peakImpact = { day: d, activeNow: j.activeMembers?.paidActiveNowFromMemberList ?? null, newByWeek: j.newMembers?.byWeek || {} }; }
-    else raw.peakImpact = { error: 'pull not running yet' };
-  } catch (e) { raw.peakImpact = { error: 'pull not running yet' }; }
+  // Peak club scorecard: matthew/clients/peak-pickleball/tools/impact.mjs --week-end (reads the local store the nightly pulls keep; no
+  // network, writes nothing). Monday-to-Sunday weeks, so it only runs when the report ends on a Sunday.
+  if (new Date(END + 'T12:00:00Z').getUTCDay() !== 0) raw.peakScore = { error: `the club scorecard runs for Monday-to-Sunday weeks; this report ends on a ${longDay(END, { weekday: 'long' })}` };
+  else raw.peakScore = tryJson('Peak scorecard', () => execFileSync('node', [path.join(REPO, 'matthew/clients/peak-pickleball/tools/impact.mjs'), `--week-end=${END}`, '--json'], { timeout: 180000, maxBuffer: 16 << 20, stdio: ['ignore', 'pipe', 'pipe'] }).toString());
   return raw;
 }
 
@@ -81,7 +79,7 @@ function previous() {
 // ---------------------------------------------------------------------------------------------------------------- metrics
 // A metric: { label, src, last, this, unit ('n' | '$'), better ('up' | 'down' | ''), na: 'why' (both weeks), lastNa: 'why', text }
 const usd = (v) => (v < 0 ? '-' : '') + '$' + Math.abs(Math.round(v)).toLocaleString('en-US');
-const num = (v, u) => (v == null ? '' : u === '$' ? usd(v) : Number(v).toLocaleString('en-US'));
+const num = (v, u) => (v == null ? '' : u === '$' ? usd(v) : u === '%' ? Number(v).toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%' : Number(v).toLocaleString('en-US', { maximumFractionDigits: 1 }));
 function build(raw, prev) {
   const S = { sixfold: [], traverse: [], peak: [] };
   const err = (x) => x && x.error;
@@ -184,14 +182,39 @@ function build(raw, prev) {
     S.peak.push({ label: 'Sponsor desk: in "meeting"', src: 'php desk.php check', last: pd ? mt(pd.sponsor) : null, this: mt(rd.peakdesk.sponsor), lastNa: pd ? '' : noSnap, better: 'up' });
     S.peak.push({ label: 'Tours on the desk', src: 'php desk.php check (sponsor + expo)', last: pd ? (pd.sponsor?.tours || 0) + (pd.expo?.tours || 0) : null, this: (rd.peakdesk.sponsor.tours || 0) + (rd.peakdesk.expo?.tours || 0), lastNa: pd ? '' : noSnap, better: 'up' });
   } else S.peak.push({ label: 'Desk pipeline', src: 'php desk.php check', na: `not available yet (${(rd.peakdesk && rd.peakdesk.error) || rd.error || 'no answer'})` });
-  const pi = raw.peakImpact || {};
-  if (pi.error) S.peak.push({ label: 'Club numbers (members, new members)', src: 'the nightly CourtReserve and Patch pulls (matthew/clients/peak-pickleball/data/pulls)', na: 'pull not running yet' });
+  // tours and signed deals, from the desk's own logs (reads.php peakwins)
+  const pw = rd.peakwins;
+  if (pw && !pw.error && pw.sponsor) {
+    const sum = (w, k) => (pw.sponsor[w][k] || 0) + ((pw.expo && pw.expo[w][k]) || 0);
+    const at = pw.sponsor.allTime, ax = (pw.expo && pw.expo.allTime) || { tours: 0, held: 0, signed: 0, signedDollars: 0 };
+    S.peak.push({ label: 'Tours booked', src: `the desk's logs, sponsor + expo, by the day the tour was booked (cancelled: ${sum('this', 'toursCancelled')} this week, ${sum('last', 'toursCancelled')} last; ${at.tours + ax.tours} on the books ever)`, last: sum('last', 'toursBooked'), this: sum('this', 'toursBooked'), better: 'up' });
+    S.peak.push({ label: 'Tours held', src: `tours marked "Toured Peak", by the tour's date (${sum('this', 'toursOnCalendar')} on the calendar this week, ${sum('this', 'toursNoShow')} no-show${sum('this', 'toursNoShow') === 1 ? '' : 's'}; ${at.held + ax.held} held ever)`, last: sum('last', 'toursHeld'), this: sum('this', 'toursHeld'), better: 'up' });
+    S.peak.push({ label: 'Sponsors signed', src: `the desk's "signed" rows, by the day written (${at.signed} ever, ${usd(at.signedDollars)})`, last: pw.sponsor.last.signed, this: pw.sponsor.this.signed, better: 'up' });
+    S.peak.push({ label: 'Sponsors signed, value', src: 'the signed totals (each line\'s price x quantity, for the whole term)', last: pw.sponsor.last.signedDollars, this: pw.sponsor.this.signedDollars, unit: '$', better: 'up' });
+    if (pw.expo) {
+      S.peak.push({ label: 'Expos booked', src: `expo desk moved to "Booked", by the day written (${ax.signed} ever, ${usd(ax.signedDollars)})`, last: pw.expo.last.signed, this: pw.expo.this.signed, better: 'up' });
+      S.peak.push({ label: 'Expos booked, value', src: 'the amount typed on the booking', last: pw.expo.last.signedDollars, this: pw.expo.this.signedDollars, unit: '$', better: 'up' });
+    }
+  } else S.peak.push({ label: 'Tours and signed deals', src: 'peak-desk-data logs', na: `not available yet (${(pw && pw.error) || rd.error || 'no answer'})` });
+
+  // ---- Peak Pickleball: the club scorecard (impact.mjs --week-end; day one 23 Nov 2026, Week 0 = 16-22 Nov). Only in this report.
+  const sc = raw.peakScore || {};
+  S.peakClub = [];
+  if (sc.error || !Array.isArray(sc.metrics)) S.peakClub.push({ label: 'Club scorecard', src: 'matthew/clients/peak-pickleball/tools/impact.mjs --week-end (the nightly CourtReserve and Patch pulls)', na: `not available yet (${sc.error || 'no answer'})` });
   else {
-    const pPi = P && P.peakImpact && !P.peakImpact.error ? P.peakImpact : null;
-    S.peak.push({ label: 'Paid active members', src: `CourtReserve member list, nightly pull of ${shortDay(pi.day)} (impact.json)`, last: pPi ? pPi.activeNow : null, this: pi.activeNow, lastNa: pPi ? '' : noSnap, better: 'up' });
-    const sumW = (a, b) => Object.entries(pi.newByWeek).filter(([d]) => d >= a && d <= b).reduce((s, [, v]) => s + v, 0);
-    S.peak.push({ label: 'New members', src: 'first-ever dues payment, counted by the Monday of its week (impact.json newMembers.byWeek)', last: sumW(LAST_START, LAST_END), this: sumW(START, END), better: 'up' });
+    const pSc = P && P.peakScore && Array.isArray(P.peakScore.metrics) ? P.peakScore : null;
+    for (const m of sc.metrics) {
+      let last = m.last, lastNa = '';
+      // the member list only exists from the nightly pulls: last week's value comes from last Sunday's report
+      if (last == null && m.key.startsWith('list')) { const pm = pSc && pSc.metrics.find((x) => x.key === m.key); last = pm ? pm.this : null; lastNa = last == null ? 'the member list is only kept from 23 Nov 2026' : ''; }
+      S.peakClub.push({ label: m.label, src: m.note, last, this: m.this, lastYear: m.lastYear, normal: m.normal, unit: m.unit === 'n' ? undefined : m.unit, better: m.better, lastNa, lastYearNa: m.lastYear == null ? 'no member list a year ago' : '' });
+    }
+    const aw = (xs) => (xs && xs.length ? xs.map((a) => `${a.subject} (${a.sent})`).join('; ') : 'none');
+    S.peakClub.push({ label: 'Patch automations that sent anything', src: `last week: ${aw(sc.automationsLastWeek)}. Same week last year: ${aw(sc.automationsSameWeekLastYear)}`, text: aw(sc.automationsThisWeek) });
+    S.peakClub.push({ label: 'Patch blasts', src: 'campaign subjects and how many people each went to', text: aw(sc.blastsThisWeek) });
   }
+  S.peakClub.push({ label: 'Website visitors and conversions', src: 'Google Analytics on Peak\'s site', na: 'not available yet (waiting on access from Peak)' });
+  S.peakClub.push({ label: 'Meta ads', src: 'Peak\'s ad account (spend, reach, leads)', na: 'not available yet (waiting on access from Peak)' });
   return S;
 }
 
@@ -201,7 +224,9 @@ function change(m) {
   const d = Math.round((m.this - m.last) * 100) / 100;
   if (d === 0) return '<span class="chg">no change</span>';
   const tone = !m.better ? '' : (d > 0) === (m.better === 'up') ? ' up' : ' down';
-  const pct = m.last ? ` (${d > 0 ? '+' : ''}${Math.round((100 * d) / Math.abs(m.last))}%)` : '';
+  if (m.unit === '%') return `<span class="chg${tone}">${d > 0 ? '+' : '−'}${Math.abs(Math.round(d * 10) / 10)} pts</span>`;
+  const pc = m.last ? Math.round((100 * d) / Math.abs(m.last)) : null;
+  const pct = pc != null && Math.abs(pc) < 1000 ? ` (${d > 0 ? '+' : ''}${pc}%)` : '';
   return `<span class="chg${tone}">${d > 0 ? '+' : '−'}${num(Math.abs(d), m.unit)}${m.unit === '$' ? '' : pct}</span>`;
 }
 function rowHtml(m) {
@@ -221,6 +246,32 @@ ${list.map(rowHtml).join('\n')}
 </div>${notes.length ? `\n<div class="foot" style="margin-top:6px;border:0;padding-top:0">n/a last week: ${esc(notes.join('; '))}.</div>` : ''}
 </div>`;
 }
+// the club scorecard: one more column, the same week last year; the 12-month normal is named under each metric
+function clubRow(m) {
+  const norm = m.normal != null ? `<i class="norm">12-month normal: ${esc(num(m.normal, m.unit))}${m.unit === '%' ? '' : ' a week'}</i>` : '';
+  const lab = `<div class="m">${esc(m.label)}<i>${esc(m.src)}</i>${norm}</div>`;
+  if (m.na) return `<div class="mrow c5">${lab}<div class="na">${esc(m.na)}</div></div>`;
+  if (m.text != null) return `<div class="mrow c5">${lab}<div class="txt">${esc(m.text)}</div></div>`;
+  const cell = (v, why) => (v == null ? `<span class="dash" title="${esc(why || '')}">${why ? 'n/a' : '–'}</span>` : esc(num(v, m.unit)));
+  return `<div class="mrow c5">${lab}<div class="n">${cell(m.last, m.lastNa)}</div><div class="n this">${esc(num(m.this, m.unit))}</div><div class="n">${change(m)}</div><div class="n ly">${cell(m.lastYear, m.lastYearNa)}</div></div>`;
+}
+function clubSection(list, sc) {
+  const wk = sc && sc.weekLabel ? `${sc.weekNumber > 0 ? `Week ${sc.weekNumber} since day one (23 Nov)` : sc.weekLabel}` : '';
+  const notes = [];
+  if (sc && sc.seasonal) notes.push(sc.seasonal);
+  if (sc && sc.sameWeekLastYear) notes.push(`Same week last year: ${shortDay(sc.sameWeekLastYear.from)} to ${shortDay(sc.sameWeekLastYear.to)} ${sc.sameWeekLastYear.from.slice(0, 4)}${sc.sameWeekLastYearSeasonal ? ' (' + sc.sameWeekLastYearSeasonal + ' week)' : ''}.`);
+  if (sc && sc.dataDay) notes.push(`From the nightly CourtReserve and Patch pull of ${shortDay(sc.dataDay)}${sc.complete ? '' : ': THIS WEEK IS NOT COMPLETE in the data yet'}.`);
+  if (sc && !sc.final30d) notes.push('Lapsed members settle 30 days after the Sunday and the 7-day join rate after 7 days.');
+  notes.push('Starting point: matthew/clients/peak-pickleball/peak-scorecard-start-2026-11-23.md. These numbers are for this report only.');
+  return `<div class="sec">
+<h2>Peak Pickleball: club scorecard <span class="n">${list.length}</span>${wk ? ` <small style="font:600 13px 'DM Sans',sans-serif;color:var(--orange)">${esc(wk)}${sc.seasonal ? ' · seasonal' : ''}</small>` : ''}</h2>
+<div class="card">
+<div class="mrow c5 th"><div>Metric and source</div><div class="n">Last week</div><div class="n">This week</div><div class="n">Change</div><div class="n">Same week last year</div></div>
+${list.map(clubRow).join('\n')}
+</div>
+<div class="foot" style="margin-top:6px;border:0;padding-top:0">${esc(notes.join(' '))}</div>
+</div>`;
+}
 function render(snap) {
   const S = snap.metrics, f = (k, lab) => (S[k].find((m) => m.label === lab) || {});
   const t = (m, unit, label, sub) => ({ n: m.na || m.this == null ? 'n/a' : num(m.this, unit), label, sub: m.na ? m.na : m.last == null ? sub : `${num(m.last, unit)} last week; ${sub}` });
@@ -235,7 +286,8 @@ function render(snap) {
     tiles(T),
     section('Sixfold 365', S.sixfold),
     section('Traverse', S.traverse),
-    section('Peak Pickleball', S.peak),
+    section('Peak Pickleball: outreach and sponsor desk', S.peak),
+    S.peakClub ? clubSection(S.peakClub, snap.raw.peakScore && !snap.raw.peakScore.error ? snap.raw.peakScore : null) : '',
     `<div class="foot">Week ${esc(longDay(snap.start, { weekday: 'short', day: 'numeric', month: 'short' }))} to ${esc(longDay(snap.end, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }))}, compared with the 7 days before it, Colorado time. Every number above comes from the source named under it, read only; ${na} metric${na === 1 ? ' has' : 's have'} no source yet and ${na === 1 ? 'says' : 'say'} why. Collected ${esc(new Date(snap.raw.collectedAt).toLocaleString('en-US', { timeZone: 'America/Denver', dateStyle: 'medium', timeStyle: 'short' }))} MT by shared/tools/eod/weekly.mjs; snapshot weekly-${esc(snap.end)}.json in ProjectBackup/eod. Sixfold figures are company numbers: keep this inside the company. Surge's numbers are not in this report.</div>`,
   ].join('\n\n');
   return page({

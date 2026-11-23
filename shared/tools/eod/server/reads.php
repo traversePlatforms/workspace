@@ -13,7 +13,8 @@ declare(strict_types=1);
  *              (traverse-shared/clients/registry.json): counts by status only
  *   prospects  the Traverse Prospect Desk's events.log: sent, bounced, unsubscribed, clicked, new leads, status changes, per week
  *   peakmail   the Peak outreach sender's events.log (peak-mail-data, the same rows cron.php stats counts): per week, per list
- *   peakdesk   the Peak sponsor desk's own counts (php desk.php check: companies and stages per pipeline, tours) */
+ *   peakdesk   the Peak sponsor desk's own counts (php desk.php check: companies and stages per pipeline, tours)
+ *   peakwins   the desk's tours (booked, held, no-show, cancelled) and signed sponsors / booked expos with dollars, from its logs */
 if (PHP_SAPI !== 'cli') exit;
 date_default_timezone_set('America/Denver');
 $a0 = (string) ($argv[1] ?? ''); $a1 = (string) ($argv[2] ?? '');
@@ -111,6 +112,42 @@ $part('peakdesk', function () use ($S) {
     $out = []; exec('cd ' . escapeshellarg($d) . ' && ' . escapeshellarg(PHP_BINARY) . ' desk.php check 2>/dev/null', $out, $rc);
     $j = json_decode(implode("\n", $out), true); if ($rc !== 0 || !is_array($j)) return ['error' => 'desk.php check did not answer'];
     $o = []; foreach ($j as $w => $x) $o[$w] = array_intersect_key((array) $x, ['companies' => 1, 'removed' => 1, 'stages' => 1, 'tours' => 1, 'touches' => 1, 'owned' => 1]);
+    return $o;
+});
+
+/* peakwins: tours and signed deals from the desk's own logs (peak-desk-data/events.log for sponsors, expo-events.log for expos), read
+ * line by line; the desk's code and database are not loaded. Tours: booked = a tour's first row, by the day it was booked; held = marked
+ * "Toured Peak", by the tour's date; no-shows the same; cancelled by the day it was taken off. Signed: a sponsor's "signed" row (the
+ * signed total, its lines' price x qty) and an expo moved to "booked" (its amount), by the day written. Counts and dollars only. */
+$part('peakwins', function () use ($S, $wk, $jsonl, $tz) {
+    $D = $S . '/peak-desk-data'; if (!is_dir($D)) return ['error' => 'desk data not found'];
+    $o = [];
+    foreach (['sponsor' => ['events.log', '', 'status', 'signed'], 'expo' => ['expo-events.log', 'x', 'stage', 'booked']] as $w => [$file, $p, $field, $win]) {
+        $z = fn() => ['toursBooked' => 0, 'toursHeld' => 0, 'toursNoShow' => 0, 'toursCancelled' => 0, 'toursOnCalendar' => 0, 'signed' => 0, 'signedDollars' => 0];
+        $x = ['this' => $z(), 'last' => $z(), 'allTime' => ['tours' => 0, 'held' => 0, 'signed' => 0, 'signedDollars' => 0]];
+        $tours = []; $wins = [];
+        foreach ($jsonl($D . '/' . $file) as $r) {
+            $t = (string) ($r['t'] ?? ''); $at = (int) ($r['at'] ?? 0); $tid = (string) ($r['tid'] ?? '');
+            if ($t === $p . 'tour' && $tid !== '') { if (!isset($tours[$tid])) { $tours[$tid] = ['at' => $at, 'date' => (string) ($r['date'] ?? ''), 'off' => 0, 'offAt' => 0, 'out' => '']; } else $tours[$tid]['date'] = (string) ($r['date'] ?? $tours[$tid]['date']); }
+            elseif ($t === $p . 'tourmove' && isset($tours[$tid])) { $tours[$tid]['date'] = (string) ($r['date'] ?? ''); $tours[$tid]['out'] = ''; }
+            elseif ($t === $p . 'tourdel' && isset($tours[$tid])) { $tours[$tid]['off'] = 1; $tours[$tid]['offAt'] = $at; }
+            elseif ($t === $p . 'tourout' && isset($tours[$tid])) $tours[$tid]['out'] = (string) ($r['out'] ?? '');
+            elseif ($w === 'sponsor' && $t === 'signed' && is_array($r['signed'] ?? null)) $wins[(string) ($r['id'] ?? '')] = ['at' => $at, 'usd' => (float) ($r['signed']['total'] ?? 0)];
+            elseif ($w === 'expo' && $t === 'xstage' && ($r[$field] ?? '') === $win) $wins[(string) ($r['id'] ?? '')] = ['at' => $at, 'usd' => (float) (($r['booked'] ?? [])['amount'] ?? 0)];
+        }
+        foreach ($tours as $T) {
+            if (($k = $wk($T['at'])) !== '') $x[$k]['toursBooked']++;
+            if ($T['off'] && ($k = $wk($T['offAt'])) !== '') $x[$k]['toursCancelled']++;
+            if ($T['off']) continue; $x['allTime']['tours']++;
+            $dt = preg_match('/^\d{4}-\d\d-\d\d$/', $T['date']) ? (new DateTime($T['date'] . ' 12:00', $tz))->getTimestamp() : 0;
+            if ($T['out'] === 'toured') $x['allTime']['held']++;
+            if (($k = $wk($dt)) === '') continue;
+            $x[$k]['toursOnCalendar']++;
+            if ($T['out'] === 'toured') $x[$k]['toursHeld']++; elseif ($T['out'] === 'noshow') $x[$k]['toursNoShow']++;
+        }
+        foreach ($wins as $W) { $x['allTime']['signed']++; $x['allTime']['signedDollars'] += $W['usd']; if (($k = $wk($W['at'])) !== '') { $x[$k]['signed']++; $x[$k]['signedDollars'] += $W['usd']; } }
+        $o[$w] = $x;
+    }
     return $o;
 });
 

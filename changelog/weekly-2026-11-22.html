@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Business numbers: week to 22 November 2026</title>
+<!-- Matthew's weekly business numbers, week 2026-11-16 to 2026-11-22. Made by shared/tools/eod (README.md there). Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License). -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+h3{font:600 14px 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sec{break-inside:avoid;page-break-inside:avoid}
+.row{break-inside:avoid}h2{break-after:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .k i{display:block;font-style:normal;font-weight:400;color:var(--soft);font-size:12px}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.run{background:var(--warnbg);color:var(--warn)}
+.wait .row .k{color:var(--orange)}
+.mrow{display:grid;grid-template-columns:1fr 120px 120px 110px;gap:12px;padding:10px 18px;border-top:1px solid var(--line);align-items:baseline}
+.mrow:first-child{border-top:0}
+.mrow.th{background:#f8f9fb;font:700 11.5px 'DM Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--soft);padding-top:7px;padding-bottom:7px}
+.mrow .m{font-weight:700}
+.mrow .m i{display:block;font-style:normal;font-weight:400;color:var(--soft);font-size:12px;line-height:1.35}
+.mrow .n{text-align:right;font-variant-numeric:tabular-nums}
+.mrow .n.this{font-weight:700;color:var(--navy)}
+.mrow .na{grid-column:2 / 5;color:var(--soft);font-style:italic;text-align:right}
+.mrow .txt{grid-column:2 / 5;text-align:right;color:#2a3446}
+.mrow.c5{grid-template-columns:1fr 92px 92px 100px 100px}
+.mrow.c5 .na,.mrow.c5 .txt{grid-column:2 / 6}
+.mrow .n.ly{color:var(--soft)}
+.mrow .m i.norm{color:var(--navy);font-weight:600;margin-top:1px}
+.chg{white-space:nowrap;display:inline-block;font:700 12.5px 'DM Sans',sans-serif;border-radius:999px;padding:1px 9px;background:#eef0f4;color:var(--soft)}
+.chg.up{background:var(--goodbg);color:var(--good)}
+.chg.down{background:var(--warnbg);color:var(--warn)}
+.dash{color:#9aa3b2}
+.nstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.nc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.nc .co{font:700 12px 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.nc .st{display:flex;gap:18px;margin-top:6px;color:var(--soft);font-size:12.5px;line-height:1.25}
+.nc .st span{display:flex;flex-direction:column}
+.nc .st b{font:800 26px/1.05 Outfit,sans-serif;color:var(--navy)}
+.nc small{display:block;color:var(--soft);font-size:11.5px;margin-top:4px}
+.row .v b{font-weight:700;color:var(--ink)}
+.tmrw .row.dl .k{color:var(--warn)}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media print{body{font-size:12px;line-height:1.36}.page{padding:0 4px 8px}.head{padding:14px 22px}.head h1{font-size:26px}.kpis{margin:12px 0 4px;gap:10px}.kpi{padding:8px 14px}.kpi b{font-size:28px}.kpi small{font-size:11.5px}h2{font-size:16px;margin:10px 0 5px}h3{margin:8px 0 4px}.row{padding:4px 14px;grid-template-columns:140px 1fr}.mrow{padding:4px 14px}.mrow .m i{font-size:10.5px}.foot{margin-top:6px;padding-top:6px;font-size:11px}.nc{padding:6px 12px}.nc .st b{font-size:20px}.sec{break-inside:auto;page-break-inside:auto}}
+@media (max-width:620px){.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}.mrow{grid-template-columns:1fr 70px 70px 70px}.mrow.c5{grid-template-columns:1fr 60px 60px 70px 60px}.nstrip{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="head">
+  <div><div class="tag">Business numbers · weekly</div><h1>Week to Sunday 22 November</h1><div class="d">Mon 16 Nov to Sun 22 Nov, against Mon 9 Nov to Sun 15 Nov</div></div>
+  <div class="d">Sixfold 365 · Traverse · Peak</div>
+</div>
+<div class="kpis">
+  <div class="kpi"><b>$1,417</b><span>Sixfold 365 money in</span><small>$982 last week; Square, net of refunds</small></div>
+  <div class="kpi"><b>44</b><span>Sixfold 365 new leads</span><small>42 last week; in the app</small></div>
+  <div class="kpi"><b>0</b><span>Peak outreach emails sent</span><small>1 replied</small></div>
+  <div class="kpi"><b>3</b><span>Traverse website visitors</span><small>0 demo bookings</small></div>
+</div>
+
+<div class="sec">
+<h2>Sixfold 365 <span class="n">14</span></h2>
+<div class="card">
+<div class="mrow th"><div>Metric and source</div><div class="n">Last week</div><div class="n">This week</div><div class="n">Change</div></div>
+<div class="mrow"><div class="m">New leads<i>Sixfold 365 app, leads by the day they came in. Facebook form leads arrive by themselves; Messenger only when typed in. This week: Facebook form 39, Other 2, Phone 1, Messenger (as entered) 1, Website 1</i></div><div class="n">42</div><div class="n this">44</div><div class="n"><span class="chg up">+2 (+5%)</span></div></div>
+<div class="mrow"><div class="m">Quotes sent<i>Sixfold 365 app, a quote counts on the day it was first sent (eod-report.php rule)</i></div><div class="n">9</div><div class="n this">18</div><div class="n"><span class="chg up">+9 (+100%)</span></div></div>
+<div class="mrow"><div class="m">Quotes sent, value<i>the same quotes, their prices</i></div><div class="n">$3,917</div><div class="n this">$7,639</div><div class="n"><span class="chg up">+$3,722</span></div></div>
+<div class="mrow"><div class="m">Jobs booked<i>Sixfold 365 app, by the day the job was booked</i></div><div class="n">3</div><div class="n this">3</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Jobs booked, value<i>the same jobs, their prices</i></div><div class="n">$1,258</div><div class="n this">$1,106</div><div class="n"><span class="chg down">−$152</span></div></div>
+<div class="mrow"><div class="m">Jobs done<i>Sixfold 365 app, jobs dated that week and marked done</i></div><div class="n">3</div><div class="n this">5</div><div class="n"><span class="chg up">+2 (+67%)</span></div></div>
+<div class="mrow"><div class="m">Jobs done, value<i>the same jobs, their prices</i></div><div class="n">$858</div><div class="n this">$2,065</div><div class="n"><span class="chg up">+$1,207</span></div></div>
+<div class="mrow"><div class="m">Money collected<i>Square, completed payments net of refunds (the same count as Brandon's end-of-day report). 5 payments this week, 4 last week</i></div><div class="n">$982</div><div class="n this">$1,417</div><div class="n"><span class="chg up">+$435</span></div></div>
+<div class="mrow"><div class="m">Ad spend, all time<i>Stats page &quot;Update ad spend&quot; (lifetime Meta totals, typed in Thu 19 Nov; the app cannot read the ad account)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">$5,774</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Ad spend this week<i>the change in the all-time total between two weekly snapshots</i></div><div class="na">not available yet (the app keeps only the all-time total typed in Stats; the first weekly figure comes next week)</div></div>
+<div class="mrow"><div class="m">Profit, by month (known costs)<i>sixfold-tools/profit-check.php --line: jobs done less crew share, materials, card fees, ads and fixed costs; insurance, phone, gas and owner pay are not seen anywhere and not counted</i></div><div class="txt">Oct 2026 $542, Nov 2026 so far -$667, since Sep -$685, your 5% since Nov $0</div></div>
+<div class="mrow"><div class="m">Sixfold 365 (365aeration.com) website visitors<i>our cookie-free site counting, a visitor counted once a day; bots and our own visits left out. This week counts from Fri 20 Nov (counting began then).</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">8</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Sixfold 365 (365aeration.com) page views<i>the same counting</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">8</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Sixfold 365 (365aeration.com) website conversions<i>conversion events counted on the site (quote request, quote accepted, agreement signed, deposit tap, call, text).</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">3</div><div class="n"><span class="dash">–</span></div></div>
+</div>
+<div class="foot" style="margin-top:6px;border:0;padding-top:0">n/a last week: first weekly snapshot: the change shows from next week; counting began Fri 20 Nov.</div>
+</div>
+
+<div class="sec">
+<h2>Traverse <span class="n">15</span></h2>
+<div class="card">
+<div class="mrow th"><div>Metric and source</div><div class="n">Last week</div><div class="n">This week</div><div class="n">Change</div></div>
+<div class="mrow"><div class="m">traverseplatforms.com website visitors<i>our cookie-free site counting, a visitor counted once a day; bots and our own visits left out. This week counts from Fri 20 Nov (counting began then).</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">3</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">traverseplatforms.com page views<i>the same counting</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">8</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">traverseplatforms.com website conversions<i>conversion events counted on the site (demo booked, checkout started, paid sign-up, call, text, email).</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Demo bookings<i>the website's /demo/ page bookings, by the day booked (cancelled: 0 this week, 0 last week; 1 ever)</i></div><div class="n">0</div><div class="n this">0</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Installs in a Stripe trial<i>every install's billing.json, status &quot;trialing&quot; (0 installs have a billing record)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Paying installs<i>every install's billing.json, status &quot;active&quot; (Stripe webhooks write it)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">New paying installs<i>billing.json first-payment day (paid_at) in the week</i></div><div class="n">0</div><div class="n this">0</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Website sign-ups<i>the /start/ checkout's client registry (traverse-shared/clients/registry.json), all time</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Stripe charges, month so far<i>J.A.R.V.I.S. money summary, read only: succeeded charges net of refunds since the 1st (0 charges); balance $0 available, $0 pending</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">$0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Prospect emails sent<i>Prospect Desk events.log (sent rows; send failures: 0 this week, 16 last). Nothing on the desk since Sun 15 Nov.</i></div><div class="n">1,018</div><div class="n this">0</div><div class="n"><span class="chg">−1,018 (-100%)</span></div></div>
+<div class="mrow"><div class="m">Prospect bounces<i>Prospect Desk events.log</i></div><div class="n">7</div><div class="n this">0</div><div class="n"><span class="chg up">−7 (-100%)</span></div></div>
+<div class="mrow"><div class="m">Prospect unsubscribes<i>Prospect Desk events.log</i></div><div class="n">1</div><div class="n this">0</div><div class="n"><span class="chg up">−1 (-100%)</span></div></div>
+<div class="mrow"><div class="m">Prospect link clicks<i>Prospect Desk events.log (clicks; mail scanners kept apart)</i></div><div class="n">0</div><div class="n this">0</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Prospects added<i>Prospect Desk events.log (lead rows)</i></div><div class="n">141</div><div class="n this">0</div><div class="n"><span class="chg">−141 (-100%)</span></div></div>
+<div class="mrow"><div class="m">Prospect replies<i>the desk does not record replies (they land in m.sharpe@ and the Assistant)</i></div><div class="na">not available yet (no reply count is kept anywhere readable)</div></div>
+</div>
+<div class="foot" style="margin-top:6px;border:0;padding-top:0">n/a last week: counting began Fri 20 Nov; first weekly snapshot: the change shows from next week.</div>
+</div>
+
+<div class="sec">
+<h2>Peak Pickleball: outreach and sponsor desk <span class="n">16</span></h2>
+<div class="card">
+<div class="mrow th"><div>Metric and source</div><div class="n">Last week</div><div class="n">This week</div><div class="n">Change</div></div>
+<div class="mrow"><div class="m">Outreach emails sent<i>the Peak sender's events.log (what cron.php stats counts). This week by list: none</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">People who replied<i>the same log, first reply per person (STOP replies included)</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">1</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Bookings from the emails<i>the same log, booked rows (the booking link)</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Bounces<i>the same log</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Unsubscribes<i>the same log</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">People who opened<i>the same log, first open per person (Apple Mail opens every email, Outlook often blocks: a rough signal)</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Sponsor desk: companies past &quot;new&quot;<i>php desk.php check (stages now: called 4, emailed 16, meeting 2, new 207, notnow 3; 232 companies, 2 tours)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">25</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Expo desk: companies past &quot;new&quot;<i>php desk.php check (stages now: contacted 4, new 60; 64 companies, 0 tours)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">4</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Sponsor desk: in &quot;meeting&quot;<i>php desk.php check</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">2</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Tours on the desk<i>php desk.php check (sponsor + expo)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">2</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Tours booked<i>the desk's logs, sponsor + expo, by the day the tour was booked (cancelled: 0 this week, 0 last; 2 on the books ever)</i></div><div class="n">0</div><div class="n this">2</div><div class="n"><span class="chg up">+2</span></div></div>
+<div class="mrow"><div class="m">Tours held<i>tours marked &quot;Toured Peak&quot;, by the tour's date (0 on the calendar this week, 0 no-shows; 0 held ever)</i></div><div class="n">0</div><div class="n this">0</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Sponsors signed<i>the desk's &quot;signed&quot; rows, by the day written (0 ever, $0)</i></div><div class="n">0</div><div class="n this">0</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Sponsors signed, value<i>the signed totals (each line's price x quantity, for the whole term)</i></div><div class="n">$0</div><div class="n this">$0</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Expos booked<i>expo desk moved to &quot;Booked&quot;, by the day written (0 ever, $0)</i></div><div class="n">0</div><div class="n this">0</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Expos booked, value<i>the amount typed on the booking</i></div><div class="n">$0</div><div class="n this">$0</div><div class="n"><span class="chg">no change</span></div></div>
+</div>
+<div class="foot" style="margin-top:6px;border:0;padding-top:0">n/a last week: lists started Mon 23 Nov; first weekly snapshot: the change shows from next week.</div>
+</div>
+
+<div class="sec">
+<h2>Peak Pickleball: club scorecard <span class="n">31</span> <small style="font:600 13px 'DM Sans',sans-serif;color:var(--orange)">Week 0 (the starting point, before day one)</small></h2>
+<div class="card">
+<div class="mrow c5 th"><div>Metric and source</div><div class="n">Last week</div><div class="n">This week</div><div class="n">Change</div><div class="n">Same week last year</div></div>
+<div class="mrow c5"><div class="m">Paying members (dues)<i>members whose dues cover the Sunday: a monthly payment covers 35 days, a prepaid annual 365. Normal = average of the baseline's Sundays</i><i class="norm">12-month normal: 794 a week</i></div><div class="n">735</div><div class="n this">727</div><div class="n"><span class="chg down">−8 (-1%)</span></div><div class="n ly">793</div></div>
+<div class="mrow c5"><div class="m">Active on a paid plan (member list)<i>CourtReserve member list of 2026-11-23, status Active on a plan that charges (family members included). Only exists from the nightly pulls (first: 23 Nov 2026), so earlier weeks have none</i></div><div class="n"><span class="dash" title="the member list is only kept from 23 Nov 2026">n/a</span></div><div class="n this">807</div><div class="n"><span class="dash">–</span></div><div class="n ly"><span class="dash" title="no member list a year ago">n/a</span></div></div>
+<div class="mrow c5"><div class="m">Suspended on a paid plan (member list)<i>the same member list, status Suspended</i></div><div class="n"><span class="dash" title="the member list is only kept from 23 Nov 2026">n/a</span></div><div class="n this">21</div><div class="n"><span class="dash">–</span></div><div class="n ly"><span class="dash" title="no member list a year ago">n/a</span></div></div>
+<div class="mrow c5"><div class="m">New members<i>first-ever dues payment (or prepaid annual) that week</i><i class="norm">12-month normal: 14.7 a week</i></div><div class="n">10</div><div class="n this">13</div><div class="n"><span class="chg up">+3 (+30%)</span></div><div class="n ly">27</div></div>
+<div class="mrow c5"><div class="m">Lapsed members<i>a dues cover ran out that week with nothing paid before or within 30 days after. Not final for this week until 30 days after its Sunday: a late payment takes people off, so it can fall</i><i class="norm">12-month normal: 19.4 a week</i></div><div class="n">15</div><div class="n this">26</div><div class="n"><span class="chg down">+11 (+73%)</span></div><div class="n ly">10</div></div>
+<div class="mrow c5"><div class="m">Dues collected<i>Membership Fee payments net of refunds, plus prepaid annuals paid that week in full (cash in that week, sponsorships left out). Normal = the baseline's cash per week</i><i class="norm">12-month normal: $13,187 a week</i></div><div class="n">$7,744</div><div class="n this">$9,696</div><div class="n"><span class="chg up">+$1,952</span></div><div class="n ly">$12,254</div></div>
+<div class="mrow c5"><div class="m">Free-class first-timers<i>people whose first-ever Learn to Play class was that week</i><i class="norm">12-month normal: 21.2 a week</i></div><div class="n">14</div><div class="n this">16</div><div class="n"><span class="chg up">+2 (+14%)</span></div><div class="n ly">26</div></div>
+<div class="mrow c5"><div class="m">Free-class attendance<i>kept Learn to Play registrations for classes that week</i><i class="norm">12-month normal: 22.9 a week</i></div><div class="n">15</div><div class="n this">18</div><div class="n"><span class="chg up">+3 (+20%)</span></div><div class="n ly">27</div></div>
+<div class="mrow c5"><div class="m">Joined within 7 days of a free class<i>share of that week's first-timers (not already members) whose first dues came within 7 days of the class: 4 of 15 this week. Not final until 7 days after the Sunday. The 60-day rate (4 of 15 so far; 43.7% in the baseline) lags 60 days</i><i class="norm">12-month normal: 37.3%</i></div><div class="n">21.4%</div><div class="n this">26.7%</div><div class="n"><span class="chg up">+5.3 pts</span></div><div class="n ly">53.8%</div></div>
+<div class="mrow c5"><div class="m">New accounts<i>CourtReserve accounts created that week (from the current member list, so deleted accounts are not counted)</i><i class="norm">12-month normal: 94.3 a week</i></div><div class="n">46</div><div class="n this">50</div><div class="n"><span class="chg up">+4 (+9%)</span></div><div class="n ly">99</div></div>
+<div class="mrow c5"><div class="m">Court utilisation, all hours<i>CourtReserve Court Utilization report, 5 am to 9 pm, the plain average over every day and hour</i><i class="norm">12-month normal: 41%</i></div><div class="n">40.2%</div><div class="n this">41.5%</div><div class="n"><span class="chg up">+1.3 pts</span></div><div class="n ly">42.1%</div></div>
+<div class="mrow c5"><div class="m">Court utilisation, weekday 3-5 pm<i>the same report, Monday to Friday, 3 to 5 pm (the quiet slot)</i><i class="norm">12-month normal: 26.8%</i></div><div class="n">25.3%</div><div class="n this">27.1%</div><div class="n"><span class="chg up">+1.8 pts</span></div><div class="n ly">30.3%</div></div>
+<div class="mrow c5"><div class="m">Court utilisation, 5-8 am<i>the same report, every day, 5 to 8 am</i><i class="norm">12-month normal: 15.3%</i></div><div class="n">16.3%</div><div class="n this">18.4%</div><div class="n"><span class="chg up">+2.1 pts</span></div><div class="n ly">18.2%</div></div>
+<div class="mrow c5"><div class="m">Open Play fill<i>&quot;Open Play&quot; sessions that week: places booked / places offered, each session capped at 100% (CourtReserve event list)</i><i class="norm">12-month normal: 46.7%</i></div><div class="n">21.3%</div><div class="n this">23.6%</div><div class="n"><span class="chg up">+2.3 pts</span></div><div class="n ly">53.7%</div></div>
+<div class="mrow c5"><div class="m">Open Play sessions full<i>sessions booked to capacity (out of the week's Open Play sessions)</i><i class="norm">12-month normal: 5.2 a week</i></div><div class="n">0</div><div class="n this">1</div><div class="n"><span class="chg up">+1</span></div><div class="n ly">14</div></div>
+<div class="mrow c5"><div class="m">Event registrations (kept)<i>kept registrations for events that week (Open Play, leagues, classes, socials, all categories)</i><i class="norm">12-month normal: 1,283.3 a week</i></div><div class="n">1,153</div><div class="n this">1,234</div><div class="n"><span class="chg up">+81 (+7%)</span></div><div class="n ly">1,390</div></div>
+<div class="mrow c5"><div class="m">Event cancellations<i>cancelled registrations for events that week</i><i class="norm">12-month normal: 265.8 a week</i></div><div class="n">160</div><div class="n this">177</div><div class="n"><span class="chg down">+17 (+11%)</span></div><div class="n ly">328</div></div>
+<div class="mrow c5"><div class="m">Event cancellation rate<i>cancelled / (cancelled + kept)</i><i class="norm">12-month normal: 17.2%</i></div><div class="n">12.2%</div><div class="n this">12.5%</div><div class="n"><span class="chg down">+0.3 pts</span></div><div class="n ly">19.1%</div></div>
+<div class="mrow c5"><div class="m">Waitlist sign-ups<i>waitlist entries for events that week (whatever became of them)</i><i class="norm">12-month normal: 103.1 a week</i></div><div class="n">79</div><div class="n this">88</div><div class="n"><span class="chg">+9 (+11%)</span></div><div class="n ly">213</div></div>
+<div class="mrow c5"><div class="m">Check-ins<i>CourtReserve check-in report</i><i class="norm">12-month normal: 1,753.8 a week</i></div><div class="n">1,396</div><div class="n this">1,537</div><div class="n"><span class="chg up">+141 (+10%)</span></div><div class="n ly">1,930</div></div>
+<div class="mrow c5"><div class="m">Unique active players<i>different people (not guests) who checked in, played a registered event or were listed on a court booking. No normal: a weekly count of different people does not average</i></div><div class="n">820</div><div class="n this">854</div><div class="n"><span class="chg up">+34 (+4%)</span></div><div class="n ly">960</div></div>
+<div class="mrow c5"><div class="m">Patch messages sent<i>every Patch message out that week (Colorado day)</i><i class="norm">12-month normal: 1,652.9 a week</i></div><div class="n">206</div><div class="n this">6,004</div><div class="n"><span class="chg">+5,798</span></div><div class="n ly">241</div></div>
+<div class="mrow c5"><div class="m">Patch: blasts<i>campaign sends</i><i class="norm">12-month normal: 1,351.4 a week</i></div><div class="n">0</div><div class="n this">5,874</div><div class="n"><span class="chg">+5,874</span></div><div class="n ly">0</div></div>
+<div class="mrow c5"><div class="m">Patch: automations<i>automation sends (welcomes, birthday, thank-you and the rest)</i><i class="norm">12-month normal: 300.1 a week</i></div><div class="n">206</div><div class="n this">127</div><div class="n"><span class="chg down">−79 (-38%)</span></div><div class="n ly">241</div></div>
+<div class="mrow c5"><div class="m">Patch open rate<i>opened / delivered (Apple Mail inflates opens: compare like with like)</i><i class="norm">12-month normal: 18.5%</i></div><div class="n">18.5%</div><div class="n this">39.7%</div><div class="n"><span class="chg up">+21.2 pts</span></div><div class="n ly">24.9%</div></div>
+<div class="mrow c5"><div class="m">Patch click rate<i>clicked / delivered</i><i class="norm">12-month normal: 1.2%</i></div><div class="n">1%</div><div class="n this">3.4%</div><div class="n"><span class="chg up">+2.4 pts</span></div><div class="n ly">2.5%</div></div>
+<div class="mrow c5"><div class="m">Patch unsubscribe rate<i>unsubscribed / delivered</i><i class="norm">12-month normal: 0.4%</i></div><div class="n">1%</div><div class="n this">0.4%</div><div class="n"><span class="chg up">−0.6 pts</span></div><div class="n ly">1.2%</div></div>
+<div class="mrow c5"><div class="m">Patch automations that sent anything<i>last week: Celebrate your birthday with 50% OFF Peak gear! (206). Same week last year: Celebrate your birthday with 50% OFF Peak gear! (167); Thank you for visiting today! (50); Your Free Intro to Pickleball Class is tomorrow! (12); Welcome to Peak Play — your flexible membership starts now (5); Welcome to Peak Senior Play — mornings just got better (3); Welcome to Peak Unlimited — all play, no limits (3); Peak Senior Unlimited unlocked: your court time is wide open (1)</i></div><div class="txt">Celebrate your birthday with 50% OFF Peak gear! (127)</div></div>
+<div class="mrow c5"><div class="m">Patch blasts<i>campaign subjects and how many people each went to</i></div><div class="txt">We Heard You! Thanksgiving Morning at Peak (5001); What's Happening at Peak? Friendsgiving, Christmas Cup &amp; More! (873)</div></div>
+<div class="mrow c5"><div class="m">Website visitors and conversions<i>Google Analytics on Peak's site</i></div><div class="na">not available yet (waiting on access from Peak)</div></div>
+<div class="mrow c5"><div class="m">Meta ads<i>Peak's ad account (spend, reach, leads)</i></div><div class="na">not available yet (waiting on access from Peak)</div></div>
+</div>
+<div class="foot" style="margin-top:6px;border:0;padding-top:0">Same week last year: Mon 17 Nov to Sun 23 Nov 2025. From the nightly CourtReserve and Patch pull of Mon 23 Nov. Lapsed members settle 30 days after the Sunday and the 7-day join rate after 7 days. Starting point: matthew/clients/peak-pickleball/peak-scorecard-start-2026-11-23.md. These numbers are for this report only.</div>
+</div>
+
+<div class="foot">Week Mon 16 Nov to Sun, 22 Nov 2026, compared with the 7 days before it, Colorado time. Every number above comes from the source named under it, read only; 4 metrics have no source yet and say why. Collected Nov 23, 2026, 11:09 AM MT by shared/tools/eod/weekly.mjs; snapshot weekly-2026-11-22.json in ProjectBackup/eod. Sixfold figures are company numbers: keep this inside the company. Surge's numbers are not in this report.</div>
+</div>
+</body>
+</html>

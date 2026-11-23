@@ -177,6 +177,7 @@ The after "all" rate is two small newsletters: 892 people on 3 Nov and 873 on 17
 
 - **Nightly:** `tools/nightly-pull.sh` runs CourtReserve, then Patch, then `impact.mjs`. It writes `data/pulls/<date>/impact.json` and logs one line to `data/pulls/pull.log`.
 - **By hand:** `node tools/impact.mjs` (a readable summary), `--json` (everything) or `--day=YYYY-MM-DD` (as of a past snapshot).
+- **Weekly scorecard:** `node tools/impact.mjs --week-end=YYYY-MM-DD` (a Sunday; add `--json` for everything). It shows the week, the week before, the same week last year and the 12-month normal, and writes nothing. Matthew's Sunday business report runs it. Week 0 and day one are in `peak-scorecard-start-2026-11-23.md`.
 - The definitions above are the same ones used in the code. **Change them in both places together.**
 
 ## Fact-check log
