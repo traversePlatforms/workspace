@@ -1,4 +1,4 @@
-# Follow-up offering the free map: DRAFT for Matthew (8 Nov 2026)
+# Follow-up offering the free map: DRAFT for Matthew (8 Nov 2026; 7-day trial line added on his ask)
 
 For companies already sent the main email (roofing and lawn), instead of sending the same email again.
 Short and personal; the free map is the reason for writing. Placeholders as the desk fills them:
@@ -20,6 +20,8 @@ I'd be happy to put together a free map of {city} for {company}, showing the str
 
 If you'd like one, just reply and I'll send it over. And if you'd rather see the whole app, I can walk you through it in a 15-minute demo (traverseplatforms.com/demo).
 
+Or if you'd rather just try it, every plan starts with 7 days free once your app is live. Cancel before day 7 and you pay nothing. You can start at traverseplatforms.com/start.
+
 ## Lawn & landscape
 
 **Subject:** Following up from Matthew at Traverse
@@ -32,7 +34,11 @@ I'd be happy to put together a free map of {city} for {company}, showing the str
 
 If you'd like one, just reply and I'll send it over. And if you'd rather see the whole app, I can walk you through it in a 15-minute demo (traverseplatforms.com/demo).
 
+Or if you'd rather just try it, every plan starts with 7 days free once your app is live. Cancel before day 7 and you pay nothing. You can start at traverseplatforms.com/start.
+
 ---
+
+**Trial wording** matches the live site ("7 days free once your app is live ... cancel before day 7 and you pay nothing"); /start/ is the live sign-up page.
 
 **Wording rules kept:** radar "put hail over" homes, never "hit" or "damaged"; no numbers; no client named; no data sources beyond what the main email already named (none here).
 
