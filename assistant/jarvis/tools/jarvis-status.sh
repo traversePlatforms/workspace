@@ -27,6 +27,9 @@
 #   bash assistant/jarvis/tools/jarvis-status.sh alert "<text>"
 #       19 Nov: tell Matthew something now: a message in his main J.A.R.V.I.S. desk thread, pushed to his phone (J.A.R.V.I.S.'s own alerts,
 #       nothing through the Sixfold app). Same as: bash assistant/jarvis/tools/jarvis-reply.sh main answered <<< "<text>"
+#   bash assistant/jarvis/tools/jarvis-status.sh needs "<text>"
+#       23 Nov: this machine NEEDS him (a sign-in, a code, a yes): the main thread with status matthew ("needs you" alert), and the
+#       message shows in his J.A.R.V.I.S. chat too. Works on the cloud machine and the laptop.
 #   Money (19 Nov): every push also sends the money summary that jarvis-money.mjs keeps (the Spend Ledger's totals, Traverse's Stripe read
 #       only, refreshed at most every 25 minutes). Totals only.
 # Never prints or sends a code, key or token: the overnight report has none (its own rule), and only its counts and PROBLEM lines go.
@@ -34,7 +37,7 @@ set -u
 exec < /dev/null
 # 19 Nov: on the cloud J.A.R.V.I.S. machine (JARVIS_CLOUD=1) only alert works: its builds list and Waiting list are not the laptop's, and a push
 # from there would replace his. Everything else is refused (the laptop keeps them).
-if [ "${JARVIS_CLOUD:-}" = 1 ] && [ "${1:-}" != alert ]; then echo "jarvis-status.sh: only alert works on the cloud machine (builds, Waiting on you and beats are the laptop's)"; exit 3; fi
+if [ "${JARVIS_CLOUD:-}" = 1 ] && [ "${1:-}" != alert ] && [ "${1:-}" != needs ]; then echo "jarvis-status.sh: only alert works on the cloud machine (builds, Waiting on you and beats are the laptop's)"; exit 3; fi
 # 22 Nov (VM-MAIN-WORKSPACE.md): this also runs on the VM, for Matthew's own sessions in ~/main (not the watcher's: JARVIS_CLOUD=1 above).
 # There the builds list is the VM's own (marked src "vm" on the page): a push from the VM replaces only the VM's builds in the server's
 # status.json and keeps the laptop's; a push from the laptop keeps the VM's. Beats and the overnight report stay the laptop's.
@@ -173,6 +176,10 @@ case "${1:-}" in
   beat) [ "$SIDE" = vm ] && { echo "jarvis-status.sh beat is the laptop's heartbeat: not sent from the VM"; exit 3; }; beat ;;
   alert) shift; [ -n "${1:-}" ] || { echo 'usage: jarvis-status.sh alert "<text>"'; exit 1; }
     exec 0<&-; printf '%s' "$*" | bash "$REPO/assistant/jarvis/tools/jarvis-reply.sh" main answered ;;
+  needs) shift; [ -n "${1:-}" ] || { echo 'usage: jarvis-status.sh needs "<what you need from him, and why>"'; exit 1; }
+    # 23 Nov (Matthew: "If the virtual computer needs me message me here"): it needs HIM (a sign-in, a 2FA code, a yes, a REFUSED deploy):
+    # his main desk thread with status matthew, so the phone alert says "needs you" and it shows in his J.A.R.V.I.S. chat
+    exec 0<&-; printf '%s' "$*" | bash "$REPO/assistant/jarvis/tools/jarvis-reply.sh" main matthew ;;
   waiting)
     shift; op="${1:-}"
     case "$op" in
@@ -189,5 +196,5 @@ case "${1:-}" in
         shift; edit "$op" "$@" && push ;;
       *) echo "usage: jarvis-status.sh build start|step|pct|done|fail|drop|list <id> ..."; exit 1 ;;
     esac ;;
-  *) echo "usage: jarvis-status.sh push | beat | alert \"<text>\" | build ... | waiting ..."; exit 1 ;;
+  *) echo "usage: jarvis-status.sh push | beat | alert \"<text>\" | needs \"<text>\" | build ... | waiting ..."; exit 1 ;;
 esac

@@ -73,6 +73,13 @@ or not: anything on his Desktop and Windows tasks. In VM mode on Matthew's own d
 mode, and on staff tickets, these go too: Sixfold's own website and email (the `six` account), Surge, 365 Aeration, Drive letters,
 a full data build or a door-data push, and Surge drafts that need RESTRICTED.md.
 
+## When this machine needs Matthew (23 Nov: "If the virtual computer needs me message me here")
+
+Anything only he can do (a sign-in, a 2FA code, a Windows prompt, a yes, a deploy REFUSED here): tell him in his J.A.R.V.I.S. app. In a
+ticket of his, the final reply with status `matthew` does it. Outside a ticket (a timer, a sync, a builder):
+`bash assistant/jarvis/tools/jarvis-status.sh needs "<what you need and why>"`. Both alert his phone ("needs you") and show in his
+J.A.R.V.I.S. chat. Never email or text him for it.
+
 ## Never here
 
 - No `--first` deploys, no new sign-in codes (`PRACTICE_NEW_CODES`), no `github-sync.sh`, no `git push`. Full (data) builds only in

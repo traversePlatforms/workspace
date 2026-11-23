@@ -3039,7 +3039,23 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     setState('idle'); pollDesk(); return tk;
   }
   function jdPut(th) { S.jd = S.jd || { ok: true, threads: [] }; S.jd.threads = [th].concat((S.jd.threads || []).filter(function (x) { return x.id !== th.id; })); }
-  function loadDesk() { return aget('jvdesk').then(function (r) { if (r.ok) S.jd = r; }, function () {}); }
+  function loadDesk() { return aget('jvdesk').then(function (r) { if (r.ok) { S.jd = r; deskNeeds(); } }, function () {}); }
+  /* 23 Nov (Matthew: "If the virtual computer needs me message me here"): any desk reply that needs him (status matthew: a session on the
+     cloud machine or the laptop, or jarvis-status.sh needs) also shows here in the chat, once per device, with Open the thread. Threads
+     this page is already watching (S.pending) show their answers through pollDesk instead. */
+  function deskNeeds() {
+    var seen = store('jarvis.needsSeen'), first = !seen; seen = seen || {}; var cut = Date.now() / 1000 - (first ? 86400 : 3 * 86400), ch = false;
+    myDesk().forEach(function (th) {
+      if (S.pending[th.id]) return;
+      (th.msgs || []).forEach(function (m, i) {
+        var k = th.id + ':' + i; if (!m.needs || m.mine || seen[k] || (m.at || 0) < cut) return;
+        seen[k] = m.at || 1; ch = true;
+        var b = msgAi(m.text, 'J.A.R.V.I.S. desk · needs you'); b.classList.add('needs');
+        b.appendChild(btn('Open the thread', 'help', 'sec', function () { openDesk(th.id); }));
+      });
+    });
+    if (ch || first) { var keep = {}; Object.keys(seen).forEach(function (k) { if (seen[k] > Date.now() / 1000 - 7 * 86400) keep[k] = seen[k]; }); store('jarvis.needsSeen', keep); }
+  }
   function pollDesk() {
     clearTimeout(pollDesk.t);
     var ids = Object.keys(S.pending); if (!ids.length) return;

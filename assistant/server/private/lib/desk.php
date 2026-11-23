@@ -66,7 +66,7 @@ function jdAll(): array {
         if ($t0 === 'msg') { $t['msgs'][] = ['from' => (string) ($r['from'] ?? ''), 'text' => (string) ($r['text'] ?? ''), 'at' => (int) ($r['at'] ?? 0), 'mine' => true,
             'photos' => array_values(array_filter((array) ($r['photos'] ?? []), 'is_array')), 'audio' => array_values(array_filter((array) ($r['audio'] ?? []), 'is_array'))]; $t['status'] = 'new'; }
         elseif ($t0 === 'reply') { $t['msgs'][] = ['from' => (string) ($r['from'] ?? 'J.A.R.V.I.S.'), 'text' => (string) ($r['text'] ?? ''), 'at' => (int) ($r['at'] ?? 0), 'mine' => false,
-            'refresh' => !empty($r['refresh']), 'files' => array_values(array_filter((array) ($r['files'] ?? []), 'is_array'))]; $t['status'] = (string) ($r['status'] ?? 'answered'); }
+            'refresh' => !empty($r['refresh'])] + (($r['status'] ?? '') === 'matthew' ? ['needs' => true] : []) + ['files' => array_values(array_filter((array) ($r['files'] ?? []), 'is_array'))]; $t['status'] = (string) ($r['status'] ?? 'answered'); }
         elseif ($t0 === 'status') $t['status'] = (string) ($r['status'] ?? $t['status']);
         $t['updated'] = max((int) $t['updated'], (int) ($r['at'] ?? 0)); unset($t);
     }

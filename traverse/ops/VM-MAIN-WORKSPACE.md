@@ -48,6 +48,12 @@ section overrides the "never on the VM" lines further down; they're kept as the 
 - **Anywhere access:** VS Code tunnel (`code-cli`, installed in /usr/local/bin): any browser at vscode.dev, phone included. Once:
   `code-cli tunnel user login --provider github`, then `code-cli tunnel service install --accept-server-license-terms --name jarvis`.
 
+## When the VM needs Matthew (23 Nov)
+
+Matthew: "If the virtual computer needs me message me here". Any session or job on this machine that needs him runs
+`bash assistant/jarvis/tools/jarvis-status.sh needs "<what and why>"` (his main J.A.R.V.I.S. thread, status matthew: a "needs you" phone
+alert, and the message shows in his J.A.R.V.I.S. chat). Desk tickets use their own final reply with status `matthew`.
+
 ## Where it stands (22 Nov, night)
 
 | | |
