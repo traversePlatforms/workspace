@@ -75,6 +75,13 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
     Pushing Convert $24,465, Membership Create $16,942, Non-Member Reengagement $15,188, PPU Pipeline $10,605. Nobody on our side has turned
     anything back on. Ask Tyler: who switched them off and why (a choice, a cost, texting rules, Patch support?), and which he wants back on.
     If nobody knows, Patch support can read who disabled them and when from the account's history.
+    **Last Modification Time (Matthew, Patch list view, 23 Nov):** Google Review edited **23 Nov 6:17 am** (today); Birthday 20 Nov 4:26 pm;
+    Non-Member Pushing Convert 16 Nov 2:33 pm; PPU Pipeline 9 Nov 9:35 am; Membership Create 2 Nov 5:00 pm; PEAK QR Code 2 Nov 9:49 am;
+    three SMS drafts (test, 101 People copy, Intro Automation) 21 Sep 3:25-3:33 pm (the one text since Jul 2025 went out that day);
+    Target New Non-Members 19 Aug 2026; Non-Member Reengagement 3 Aug 2026; At-Risk/Lost Winback 15 Jun 2026; New Paid Membership Welcome
+    9 Jun 2026. So someone with Patch access has been reworking them as drafts for months and switching them off after their last runs
+    (during working hours), latest edit this morning. **The real ask:** who is editing the Patch automations, what's the plan, and how do we
+    coordinate so Matthew's drafts (patch-automations-2026-11-23.md) don't collide with theirs.
 27. **Two small fixes the pull turned up:** the welcome emails say $6 an hour and 30 days' notice, CourtReserve says $7 and 15 days (which is
     right?); and "How did you hear about us?" is blank on 95% of accounts: making it required at sign-up lets ads be measured.
 28. **Missed dues payments: what happens today, and a reminder.** 21 paid accounts are suspended and 27 November dues charges ($1,690) are
