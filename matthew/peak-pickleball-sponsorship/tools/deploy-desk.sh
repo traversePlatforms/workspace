@@ -18,7 +18,8 @@ if [ "${JARVIS_CLOUD:-}" = 1 ] && [ "$CHECK" = 0 ]; then
   [ -s "$W" ] && [ $(( $(date +%s) - $(stat -c %Y "$W") )) -lt 10800 ] || { echo "REFUSED (cloud): the laptop is on, so it does the deploys. Queue this for the laptop (laptop-job.sh)."; exit 1; }
 fi
 REPO="$(cd "$(dirname "$0")/../../.." && pwd)"; P="$REPO/matthew/peak-pickleball-sponsorship"; cd "$REPO" || exit 1
-SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"; SITE='$HOME/www/traverseplatforms.com'; PUB="public_html/peak-desk-28d38d"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}";   # 23 Nov: laptop or VM
+ SITE='$HOME/www/traverseplatforms.com'; PUB="public_html/peak-desk-28d38d"
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT; mkdir -p "$T/new" "$T/base/src" "$T/base/out" "$T/basejv"
 # the list: <file as built here> <its source in git (for the base)> <where on the server, under the site> <how: min|copy>
 node shared/tools/minify-public.cjs "$P/app" "$T/new" index.html sw.js > /dev/null && node shared/tools/minify-public.cjs shared/jv-chat "$T/new" jv-chat.js > /dev/null || { echo "deploy: FAILED (the minified build)"; exit 1; }
