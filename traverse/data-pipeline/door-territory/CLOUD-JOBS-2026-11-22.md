@@ -120,3 +120,14 @@ Nothing below has been run. On Matthew's go, from `traverse/data-pipeline/door-t
 Undo before step 5: restore the yard-v2 files from that backup and rebuild (steps 2-4).
 If the VM is cut off, only the towns in `yard-v4/pulled.txt` are merged; every other door keeps its live reading (same method on all lots
 of 1,200 sq ft or more, so the cards stay consistent; the untouched low ones are just not improved yet).
+
+## 23 Nov: tiers 2-4 restarted (Matthew: "restart lawn1122 on yardtest ... I just want everything running through this vm")
+
+The 22 Nov run had not stopped early: only t1's door lists (299 towns, 229,652 doors) were ever on yardtest, so t2-t4 "finished" with
+nothing in them, and all of t1 had come back (232,328 doors). 23 Nov ~17:35 UTC: t2-t4 lists (1,008 towns, 541,541 doors; 1,281 files,
+md5-checked) copied from the cloud computer to ~/run/lawn1122/lists/, the stale "t2/t3/t4 done" lines taken out of done.txt (copy
+done.txt.before-1123), lawn1122.vmdone moved aside, queue.sh started: 4 workers, t2 first. Towns already finished are skipped (fin/ markers);
+yard-v2-town-1122.mjs adds to an existing town file, so every copy-back carries all tiers so far.
+Copy-back now runs on the cloud computer (systemd user unit lawn1122-pull, the same pull-lawn1122.sh, key ~/.ssh/azure_yard), and
+lawn1122-alert sends Matthew a J.A.R.V.I.S. alert when it's finished: then Stop yardtest in the portal (only Matthew can; a shutdown from
+inside keeps it billing). Going live still waits for Matthew's check ("Going live" above).
