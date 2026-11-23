@@ -8,8 +8,9 @@
 # One try per run. A request that is still open after 3 tries, or that the session marks "cannot", is left for a person: the overnight
 # check shows it (needs-person.txt). Log: %LOCALAPPDATA%/ProjectBackup/post-requests/watch.log
 set -u
-REPO="/c/Users/Matthew sharpe/Desktop/claude test 2"; cd "$REPO" || exit 1
-B="${POSTREQ_DIR:-$(cygpath -u "$LOCALAPPDATA")/ProjectBackup/post-requests}"; mkdir -p "$B"   # POSTREQ_DIR: tests only
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; REPO="$(cd "$HERE/../../.." && pwd)"; cd "$REPO" || exit 1
+LOCALAPPDATA="${LOCALAPPDATA:-$HOME/jarvis/localappdata}"   # 23 Nov: laptop or VM
+B="${POSTREQ_DIR:-$(cygpath -u "$LOCALAPPDATA" 2>/dev/null || echo "$LOCALAPPDATA")/ProjectBackup/post-requests}"; mkdir -p "$B"   # POSTREQ_DIR: tests only
 LOG="$B/watch.log"; STATE="$B/state.txt"; NEED="$B/needs-person.txt"; touch "$STATE" "$NEED"
 say() { echo "$(date '+%F %T') $*" >> "$LOG"; }
 mkdir "$B/lock" 2>/dev/null || { [ -n "$(find "$B/lock" -maxdepth 0 -mmin +40 2>/dev/null)" ] && rmdir "$B/lock" && mkdir "$B/lock" || exit 0; }
@@ -31,9 +32,10 @@ if [ "$TRIES" -ge 3 ]; then echo "$RID gave-up" >> "$STATE"; echo "$(date '+%F %
 echo "$RID try" >> "$STATE"
 
 WORK="$B/$RID"; mkdir -p "$WORK"; RES="$WORK/result.txt"; rm -f "$RES"
-WW=$(cygpath -m "$WORK"); RW=$(cygpath -m "$RES")
+WW=$(cygpath -m "$WORK" 2>/dev/null || echo "$WORK"); RW=$(cygpath -m "$RES" 2>/dev/null || echo "$RES")   # 23 Nov: laptop or VM
 C=$(ls -d "/c/Users/Matthew sharpe/.vscode/extensions/"anthropic.claude-code-*-win32-* 2>/dev/null | sort -V | tail -1)/resources/native-binary/claude.exe
-[ -x "$C" ] || { say "no Claude CLI found under the VS Code extensions"; exit 0; }
+[ -x "$C" ] || C="$(command -v claude 2>/dev/null)"   # 23 Nov: on the VM the claude on PATH
+[ -n "$C" ] && [ -x "$C" ] || { say "no Claude CLI found under the VS Code extensions"; exit 0; }
 PROMPT="$(sed -e "s#\$WORK#$WW#g" -e "s#\$RESULT#$RW#g" traverse/post-calendar/tools/request-answer-prompt.md)
 
 WORK = $WW
@@ -44,7 +46,7 @@ $PICK"
 say "$PID request $RID: answering (try $((TRIES + 1)))"
 timeout 900 "$C" -p "$PROMPT" --model sonnet --permission-mode acceptEdits \
   --allowedTools "Read" "Glob" "Grep" "Write" "Bash(node traverse/post-calendar/tools/pc.mjs:*)" "Bash(python -I:*)" "Bash(ls:*)" "Bash(mkdir:*)" "Bash(curl -s -o:*)" \
-  --add-dir "I:/Shared drives/Sixfold/08 Photos and content" --add-dir "$WW" > "$WORK/session.txt" 2>&1 < /dev/null
+  $( [ -d "I:/Shared drives/Sixfold/08 Photos and content" ] && echo --add-dir "I:/Shared drives/Sixfold/08 Photos and content" ) --add-dir "$WW" > "$WORK/session.txt" 2>&1 < /dev/null
 R=$(cat "$RES" 2>/dev/null | head -1)
 case "$R" in
   cannot:*) echo "$RID cannot" >> "$STATE"; echo "$(date '+%F %T') $PID request $RID: $R" >> "$NEED"; say "$RID $R";;

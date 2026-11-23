@@ -6,8 +6,8 @@
 source "$(dirname "$0")/_common.sh"
 exec < /dev/null   # review 12 Nov: md5sum fails when a job is started with its input closed (push-edition.sh, 11 Nov)
 step build-year bash -c "cd assessor && node build-year.mjs"
-DATA="/c/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds"
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+DATA="$(cd "$Q/../../app/data/rounds" && pwd)"   # 23 Nov: laptop or VM
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}"   # 23 Nov: laptop or VM
 cd "$DATA" || exit 1
 FILES=$(node -e "const fs=require('fs');const i=JSON.parse(fs.readFileSync('index.json','utf8'));console.log((i.regions||[]).map(r=>'year-'+r.key+'.json').filter(f=>fs.existsSync(f)&&fs.statSync(f).size>60).join(' '))")
 [ -z "$FILES" ] && { echo "no year files to upload"; exit 1; }

@@ -32,7 +32,7 @@ const localDay = (utc) => new Date(utc).toLocaleDateString('en-CA', { timeZone: 
 const miles = (a, b, c, d) => { const r = Math.PI / 180, h = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2; return 7917.6 * Math.asin(Math.min(1, Math.sqrt(h))); };
 
 if (doFetch) {
-  mkdirSync(SE_CACHE, { recursive: true });
+  mkdirSync(SE_CACHE, { recursive: true }); mkdirSync(LSR_CACHE, { recursive: true });   // 23 Nov: wind/cache may not exist on a fresh copy (the VM)
   const list = await (await fetch(SE_DIR, { headers: UA })).text();
   const year = new Date().getFullYear();
   for (let y = FROM; y <= year; y++) {

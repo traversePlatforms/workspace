@@ -14,13 +14,14 @@
 #   bash traverse/ops/pull-server-backup.sh
 set -u
 # 21 Nov 2026: assistant-private/data/finance (the read-only bank link, SimpleFIN) never leaves the server: not in this backup
-OUT="/c/Users/Surge Inc/TraverseBackups"
+OUT="/c/Users/Surge Inc/TraverseBackups"; [ -d "/c/Users/Surge Inc" ] || OUT="$HOME/TraverseBackups"   # 23 Nov: laptop or VM
 mkdir -p "$OUT"
 STAMP=$(date +%Y-%m-%d)
 F="$OUT/traverse-server-$STAMP.tgz"
 LOG="$OUT/backup.log"
 TMP="$F.part"
-bash /c/Users/SURGEI~1/.ssh/sg.sh trav 'cd ~/www/traverseplatforms.com && { find *-private -type f -not -path "assistant-private/data/finance/*"; find *-data -type f \( -name "*.log" -o -path "*/leads/*" -o -path "*/customers/*" -o -path "*/digest/*" -o -path "*/backups/*" -o -path "*/photos/*" -o -path "*/avatars/*" -o -name "training.json" -o -name "goals*.json" -o -name "roof-settings.json" -o -name "company*.json" -o -name "push*.json" \) ! -name "*.lock"; } | tar czf - -T -' > "$TMP" 2>>"$LOG"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}"   # 23 Nov: laptop or VM
+$SG 'cd ~/www/traverseplatforms.com && { find *-private -type f -not -path "assistant-private/data/finance/*"; find *-data -type f \( -name "*.log" -o -path "*/leads/*" -o -path "*/customers/*" -o -path "*/digest/*" -o -path "*/backups/*" -o -path "*/photos/*" -o -path "*/avatars/*" -o -name "training.json" -o -name "goals*.json" -o -name "roof-settings.json" -o -name "company*.json" -o -name "push*.json" \) ! -name "*.lock"; } | tar czf - -T -' > "$TMP" 2>>"$LOG"
 # a good copy: a non-empty archive that lists cleanly
 if [ -s "$TMP" ] && tar tzf "$TMP" > /dev/null 2>&1; then
   mv -f "$TMP" "$F"

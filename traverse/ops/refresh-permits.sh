@@ -14,16 +14,18 @@
 # traverse/ops/logs/permit-refresh.log; the full output of the last run beside it.
 # Run by Windows Task Scheduler ("Traverse permit refresh", 1st of each month, 4:10 am; runs when the laptop next wakes if
 # it was off). By hand:  bash traverse/ops/refresh-permits.sh  [--no-upload]
+# 23 Nov: once the VM runs this job (runs-on-vm.txt), the laptop's Windows task stands down
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) grep -qx "refresh-permits" "$(dirname "${BASH_SOURCE[0]}")/runs-on-vm.txt" 2>/dev/null && { echo "$(date '+%F %T') refresh-permits: runs on the cloud computer now (runs-on-vm.txt); not run here" >> "$(dirname "${BASH_SOURCE[0]}")/logs/runs-on-vm.log"; exit 0; };; esac
 set -u
 exec < /dev/null   # review 12 Nov: md5sum fails when a job is started with its input closed (push-edition.sh, 11 Nov), and here that read as "no change"
-export PATH="/c/Users/Surge Inc/AppData/Local/nodejs:/usr/bin:/mingw64/bin:$PATH"
-REPO="/c/Users/Surge Inc/Desktop/claude test 2"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; REPO="$(cd "$HERE/../.." && pwd)"   # 23 Nov: the laptop or the VM (VM-MAIN-WORKSPACE.md)
+[ -d "/c/Users/Surge Inc/AppData/Local/nodejs" ] && export PATH="/c/Users/Surge Inc/AppData/Local/nodejs:/usr/bin:/mingw64/bin:$PATH"
 P="$REPO/traverse/data-pipeline/door-territory/permits"
 DATA="$REPO/traverse/app/data/rounds"
 ED="$REPO/traverse/editions"
 LOGD="$REPO/traverse/ops/logs"; mkdir -p "$LOGD"
 LOG="$LOGD/permit-refresh.log"; OUT="$LOGD/permit-refresh-last.out"
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}"
 UPLOAD=1; [ "${1:-}" = "--no-upload" ] && UPLOAD=0
 ONLYUP=0; [ "${1:-}" = "--upload-only" ] && ONLYUP=1   # send what the last run built (it must be less than a day old)
 STAMP=$(date +%Y-%m-%d)

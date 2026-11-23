@@ -1,0 +1,10 @@
+[Unit]
+Description=Traverse permit refresh (moved from the laptop 23 Nov 2026; runs-on-vm.txt)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/yard/main/traverse/ops
+Environment=PATH=/home/yard/jarvis/compat/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash /home/yard/main/traverse/ops/refresh-permits.sh
+TimeoutStartSec=12h
+Nice=10

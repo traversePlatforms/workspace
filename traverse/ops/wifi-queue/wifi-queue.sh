@@ -11,19 +11,18 @@
 #   - Three failures in a row and a job is parked (state/<id>.failed) for a person to look at.
 # Started by the Windows task "Traverse Wi-Fi queue" (at logon and every 30 minutes); a second copy exits at once.
 # Status: state/status.txt (the overnight check reads it). Logs: logs/.
-Q="/c/Users/Surge Inc/Desktop/claude test 2/traverse/ops/wifi-queue"
-DT="/c/Users/Surge Inc/Desktop/claude test 2/traverse/data-pipeline/door-territory"
+Q="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; DT="$(cd "$Q/../../data-pipeline/door-territory" && pwd)"   # 23 Nov: laptop or VM
 cd "$Q" || exit 1
 mkdir -p state logs
 if [ -f state/runner.pid ] && kill -0 "$(cat state/runner.pid)" 2>/dev/null; then exit 0; fi
 echo $$ > state/runner.pid
 trap 'rm -f state/runner.pid' EXIT
 log() { echo "$(date '+%m-%d %H:%M:%S') $*" >> logs/queue.log; }
-ssid() { netsh wlan show interfaces 2>/dev/null | tr -d '\r' | awk -F': ' '/^ *SSID/{print $2; exit}'; }
+ssid() { command -v netsh >/dev/null 2>&1 || return 0; netsh wlan show interfaces 2>/dev/null | tr -d '\r' | awk -F': ' '/^ *SSID/{print $2; exit}'; }
 online() { [ "$(curl -s -m 10 -o /dev/null -w '%{http_code}' https://www.google.com/generate_204)" = "204" ]; }
 # 17 Nov: on battery no pipeline job starts (16 Nov the laptop hibernated on a critical thermal event after three 8 GB rebuilds in an hour,
 # run in a closed backpack off the charger). Win32_Battery BatteryStatus 1 discharging, 4 low, 5 critical; 2 = on AC; no battery = AC.
-on_battery() { case "$(powershell.exe -NoProfile -Command '(Get-CimInstance Win32_Battery).BatteryStatus' < /dev/null 2>/dev/null | tr -d '\r ' | head -1)" in 1|4|5) return 0;; esac; return 1; }
+on_battery() { command -v powershell.exe >/dev/null 2>&1 || return 1; case "$(powershell.exe -NoProfile -Command '(Get-CimInstance Win32_Battery).BatteryStatus' < /dev/null 2>/dev/null | tr -d '\r ' | head -1)" in 1|4|5) return 0;; esac; return 1; }
 gis_ok() { [ "$(curl -s -m 20 -o /dev/null -w '%{http_code}' 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0?f=json')" = "200" ]; }
 status() { { echo "$(date '+%Y-%m-%d %H:%M') network: ${NET:-?} | parcel map: ${GIS:-?}"; echo "now: $*"; while IFS='|' read -r id kind title; do
   [ -z "$id" ] || [ "${id:0:1}" = "#" ] && continue

@@ -5,8 +5,11 @@
 # check calls it every 30 minutes and it runs only after 1 am when today's copy hasn't happened. Prints counts only.
 #   bash traverse/ops/pull-job-photos.sh [--now]
 set -u
-REPO="/c/Users/Surge Inc/Desktop/claude test 2"; DEST="$REPO/sixfold/brand/job-photos"
-STAMP="$LOCALAPPDATA/ProjectBackup/job-photos-last.txt"; SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; REPO="$(cd "$HERE/../.." && pwd)"   # 23 Nov: laptop or VM
+LOCALAPPDATA="${LOCALAPPDATA:-$HOME/jarvis/localappdata}"   # 23 Nov: laptop or VM
+DEST="$REPO/sixfold/brand/job-photos"
+STAMP="$LOCALAPPDATA/ProjectBackup/job-photos-last.txt"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}"   # 23 Nov: laptop or VM
 TODAY=$(date +%F)
 if [ "${1:-}" != "--now" ]; then
   [ "$(cat "$STAMP" 2>/dev/null)" = "$TODAY" ] && { echo "job photos: already copied today"; exit 0; }

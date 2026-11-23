@@ -53,15 +53,18 @@ vm_claude_md() { cat > "$T/CLAUDE.md" <<'EOF'
 
 The project rules are in ~/main/CLAUDE.md (they load too). What is different on this machine (traverse/ops/VM-MAIN-WORKSPACE.md):
 
-- `~/main` is Matthew's own working copy (VS Code Remote-SSH). `~/workspace` belongs to the cloud J.A.R.V.I.S. watcher: never edit it by hand.
-- **No Surge drafting on this machine.** Surge's restricted notes (`surge/brand/notes/`, RESTRICTED.md and the Tier 1 notes included) are
-  not here, on purpose, and must never be copied here. The project rules require reading RESTRICTED.md before any Surge draft, so any
-  Surge post, caption, bio, recruiting copy, website copy or other Surge wording is done in the laptop workspace by Matthew: say so and stop.
-  Traverse, Sixfold, Stringline, J.A.R.V.I.S. and personal work are fine here.
-- Before the flip (`git -C ~/main config jarvis.role` says standby) the laptop is still the main workspace: ~/main refuses commits and deploys.
-- The server: `bash ~/jarvis/bin/sg.sh trav '<command>'` (the Traverse account only). Sixfold's own site (`six`), Surge, 365 Aeration,
-  Desktop files, Drive letters, Windows tasks: the laptop's.
-- Never here: codes files, keys or tokens, the pay note (personal/pay/), the finance data.
+- `~/main` is Matthew's own working copy (VS Code Remote-SSH) and the main workspace. `~/workspace` belongs to the cloud J.A.R.V.I.S.
+  watcher: never edit it by hand.
+- **Everything lives here** (Matthew 23 Nov 2026: "I would rather everything be on the cloud computer"): the codes files and service keys
+  (~/.ssh, 0600), Surge's restricted notes (`surge/brand/notes/`, RESTRICTED.md and the Tier 1 notes), the pay note (personal/pay/) and
+  the finance data, once `traverse/ops/vm-move-private.sh` has been run on the laptop. They stay untracked: the pre-commit hooks refuse
+  Tier 1 and pay paths, so they never reach git or GitHub. Codes-file rules still apply: never print a code, whitelist output.
+- **Surge drafting:** allowed here only when `surge/brand/notes/RESTRICTED.md` is present; read it first, as the project rules say. If it
+  is missing, say so and stop.
+- The server: `bash ~/jarvis/bin/sg.sh trav '<command>'` (the Traverse account only). Still the laptop's: Sixfold's own site (`six`), the
+  Surge and 365 Aeration sites, Desktop files, Drive letters, Windows tasks, the mic (wake word, meeting recorder).
+- The backup's opening key (jarvis-backup-age.key) is never here, so a break-in cannot open the Azure backups.
+- Jobs moved off the laptop are listed in traverse/ops/runs-on-vm.txt (VM timers; the laptop's Windows task stands down for each).
 EOF
 }
 hooks_pack() {

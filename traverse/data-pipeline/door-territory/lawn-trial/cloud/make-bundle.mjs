@@ -7,7 +7,8 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync, copyFileSyn
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const HERE = fileURLToPath(new URL('../', import.meta.url));            /* lawn-trial/ */
-const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';
+import { fileURLToPath as __f2p } from 'node:url';   // 23 Nov: laptop or VM
+const DATA = __f2p(new URL('../../../../app/data/rounds', import.meta.url)).replace(/[\\/]$/, '');
 const OUT = fileURLToPath(new URL('./out/', import.meta.url)), B = OUT + 'bundle/';
 rmSync(OUT, { recursive: true, force: true });
 for (const d of ['lawn-trial/yard-v2', 'lawn-trial/data', 'tree-zones']) mkdirSync(B + d, { recursive: true });

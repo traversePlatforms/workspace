@@ -8,16 +8,18 @@
 # changed looks like that), or if a step fails; last week's files are put back. One line per run in traverse/ops/logs/weekly.log.
 # Run by Windows Task Scheduler ("Traverse weekly refresh", Mondays 4:40 am; runs when the laptop next wakes if it was off).
 # By hand:  bash traverse/ops/refresh-weekly.sh [--no-upload]
+# 23 Nov: once the VM runs this job (runs-on-vm.txt), the laptop's Windows task stands down
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) grep -qx "refresh-weekly" "$(dirname "${BASH_SOURCE[0]}")/runs-on-vm.txt" 2>/dev/null && { echo "$(date '+%F %T') refresh-weekly: runs on the cloud computer now (runs-on-vm.txt); not run here" >> "$(dirname "${BASH_SOURCE[0]}")/logs/runs-on-vm.log"; exit 0; };; esac
 set -u
 exec < /dev/null   # review 12 Nov: md5sum fails when a job is started with its input closed (push-edition.sh, 11 Nov), and here that read as "no change"
-export PATH="/c/Users/Surge Inc/AppData/Local/nodejs:/usr/bin:/mingw64/bin:$PATH"
-REPO="/c/Users/Surge Inc/Desktop/claude test 2"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; REPO="$(cd "$HERE/../.." && pwd)"   # 23 Nov: the laptop or the VM (VM-MAIN-WORKSPACE.md)
+[ -d "/c/Users/Surge Inc/AppData/Local/nodejs" ] && export PATH="/c/Users/Surge Inc/AppData/Local/nodejs:/usr/bin:/mingw64/bin:$PATH"
 DT="$REPO/traverse/data-pipeline/door-territory"
 DATA="$REPO/traverse/app/data/rounds"
 ED="$REPO/traverse/editions"
 LOGD="$REPO/traverse/ops/logs"; mkdir -p "$LOGD"
 LOG="$LOGD/weekly.log"; OUT="$LOGD/weekly-last.out"
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}"
 UPLOAD=1; [ "${1:-}" = "--no-upload" ] && UPLOAD=0
 STAMP=$(date +%Y-%m-%d)
 LOCK="$LOGD/weekly.lock"

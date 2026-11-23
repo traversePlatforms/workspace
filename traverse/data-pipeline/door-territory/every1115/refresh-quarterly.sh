@@ -14,7 +14,7 @@
 set -u
 cd "$(dirname "$0")/.." || exit 1
 RUN=${1:-$(cat every1115/refresh-run.txt 2>/dev/null)}; [ -n "$RUN" ] || { echo "no run named"; exit 0; }
-E="every1115/runs/$RUN"; mkdir -p "$E"; EM=$(cygpath -m "$(pwd)/$E")
+E="every1115/runs/$RUN"; mkdir -p "$E"; EM=$(cygpath -m "$(pwd)/$E" 2>/dev/null || echo "$(pwd)/$E")   # 23 Nov: no cygpath on the VM
 st() { echo "$(date '+%F %T') $RUN: $*" | tee -a logs-refresh-quarterly.log; }
 net() { case "$(netsh wlan show interfaces 2>/dev/null | tr -d '\r' | awk -F': ' '/^ *SSID/{print $2; exit}')" in *iPhone*|*iphone*) st "on the iPhone hotspot: waiting (exit 4)"; exit 4;; esac
         curl -s -m 20 -o /dev/null https://gis.colorado.gov/ || { st "no internet: waiting (exit 4)"; exit 4; }; }
@@ -24,7 +24,7 @@ if ! done_ pull; then net; st "reading the state parcel layer"
   [ "$(ls "$E"/state/*.done 2>/dev/null | wc -l)" -ge 43 ] || { st "pull incomplete: will resume"; exit 4; }; mark pull; fi
 if ! done_ lists; then st "recount and lists"
   node --max-old-space-size=8192 gap1108/export-door-points.mjs "$EM/door-points.tsv" > /dev/null || { st "FAILED: door export"; exit 1; }
-  node --max-old-space-size=14000 every1115/classify-vm.mjs "$EM/state" "$EM/door-points.tsv" "$EM/cls" --epc="$(cygpath -m "$(pwd)/assessor/raw/EPC Parcel Data.txt")" --g3=group3/targets.json > "$E/classify.log" 2>&1 || { st "FAILED: classify (see $E/classify.log)"; exit 1; }
+  node --max-old-space-size=14000 every1115/classify-vm.mjs "$EM/state" "$EM/door-points.tsv" "$EM/cls" --epc="$(cygpath -m "$(pwd)/assessor/raw/EPC Parcel Data.txt" 2>/dev/null || echo "$(pwd)/assessor/raw/EPC Parcel Data.txt")" --g3=group3/targets.json > "$E/classify.log" 2>&1 || { st "FAILED: classify (see $E/classify.log)"; exit 1; }
   rm -rf "$E/lists" && node --max-old-space-size=8192 every1115/make-lists-vm.mjs "$EM/cls" "$EM/lists" --g3=group3/targets.json > "$E/lists.log" 2>&1 || { st "FAILED: lists"; exit 1; }
   rm -f "$E/door-points.tsv"; st "$(tail -1 "$E/lists.log" | cut -c1-200)"; mark lists; fi
 if ! done_ ehb; then st "measuring"; bash every1115/ehb-laptop.sh "$E" >> "$E/ehb.log" 2>&1; rc=$?

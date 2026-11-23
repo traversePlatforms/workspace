@@ -1,0 +1,6 @@
+# Jobs the cloud computer (Jarvis) runs on its own timers since the move (Matthew 23 Nov 2026: "move everything over").
+# One name per line. On the laptop, a script named here logs one line and stops, so the job never runs twice.
+# To hand a job back to the laptop: delete its line here and stop its timer on the VM (systemctl --user disable --now <name>.timer).
+refresh-weekly
+refresh-permits
+refresh-new-homes

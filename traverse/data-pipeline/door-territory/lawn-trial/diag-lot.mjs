@@ -11,7 +11,8 @@ import proj4 from 'proj4';
 import { PNG } from 'pngjs';
 import { readFileSync, writeFileSync } from 'node:fs';
 const T = { ndvi: 0.36, short: 1, tall: 2, minpx: 150, rag: 10.5 };   /* as lawn-mask.mjs */
-const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';
+import { fileURLToPath as __f2p } from 'node:url';   // 23 Nov: laptop or VM
+const DATA = __f2p(new URL('../../../app/data/rounds', import.meta.url)).replace(/[\\/]$/, '');
 const PARCELS = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
 const CHM = 'https://dataforgood-fb-data.s3.amazonaws.com/forests/v1/alsgedi_global_v6_float/chm/';
 for (const z of [12, 13, 14]) proj4.defs('EPSG:269' + z, `+proj=utm +zone=${z} +datum=NAD83 +units=m +no_defs`);

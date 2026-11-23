@@ -6,7 +6,7 @@
 #   bash traverse/post-calendar/tools/token.sh push      writes post-calendar-data/private/meta-token.json (chmod 600), which then wins;
 #                                                        use it when the token is rotated, or to stop depending on sixfold-private
 set -euo pipefail
-SG=(bash /c/Users/SURGEI~1/.ssh/sg.sh trav)
+SG_DEF=(bash /c/Users/SURGEI~1/.ssh/sg.sh trav); [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF=(bash $HOME/jarvis/bin/sg.sh trav); SG=("${SG_DEF[@]}"); [ -n "${JARVIS_SG:-}" ] && SG=($JARVIS_SG)   # 23 Nov: laptop or VM
 TOK() { node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(require('os').homedir()+'/.ssh/meta-messenger-test.json','utf8')).system_token||'')"; }
 case "${1:-}" in
   compare) TOK | "${SG[@]}" 'php -r '\''$t=stream_get_contents(STDIN); $j=json_decode((string)@file_get_contents(getenv("HOME")."/www/traverseplatforms.com/sixfold-private/meta-social.json"),true); $s=(string)($j["system_token"]??""); echo ($t!=="" && hash_equals($s,$t)) ? "same token\n" : "different token (or none on the server)\n";'\''' ;;

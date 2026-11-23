@@ -1,0 +1,10 @@
+[Unit]
+Description=Traverse new homes refresh (moved from the laptop 23 Nov 2026; runs-on-vm.txt)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/yard/main/traverse/ops
+Environment=PATH=/home/yard/jarvis/compat/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/bash -c 'bash /home/yard/main/traverse/ops/refresh-new-homes.sh && cd /home/yard/main/traverse/ops/../data-pipeline/door-territory && bash every1115/refresh-quarterly.sh "$(cat every1115/refresh-run.txt)"'
+TimeoutStartSec=12h
+Nice=10

@@ -101,7 +101,8 @@ console.log(`doors inside Colorado Springs: ${cityDoors.length}`);
 let incidents = [];
 if (cityDoors.length) {
   const la = cityDoors.map((d) => d.lat), lo = cityDoors.map((d) => d.lon), pad = 0.02;
-  const box = [Math.max(...la) + pad, Math.min(...lo) - pad, Math.min(...la) - pad, Math.max(...lo) + pad];   /* N, W, S, E */
+  const mx = (a) => a.reduce((m, x) => (x > m ? x : m), -Infinity), mn = (a) => a.reduce((m, x) => (x < m ? x : m), Infinity);   // 23 Nov: a spread of 146k doors overflowed the stack (failed 16 + 23 Nov)
+  const box = [mx(la) + pad, mn(lo) - pad, mn(la) - pad, mx(lo) + pad];   /* N, W, S, E */
   const since = iso(daysAgo(366));
   incidents = await cached(`cspd-${iso(today)}.json`, async () => {
     const kinds = Object.keys(KIND).map((k) => `'${k.replace(/'/g, "''")}'`).join(',');

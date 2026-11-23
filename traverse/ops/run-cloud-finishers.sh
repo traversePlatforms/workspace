@@ -4,7 +4,9 @@
 # every 30 minutes; each finisher checks its own stage is done (and refuses otherwise), runs once in the background, and is marked done
 # only when it exits 0. At most 3 tries per stage, so a failing upload doesn't repeat all night. Prints one line.
 set -u
-DT="/c/Users/Surge Inc/Desktop/claude test 2/traverse/data-pipeline/door-territory"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; REPO="$(cd "$HERE/../.." && pwd)"   # 23 Nov: laptop or VM
+DT="$REPO/traverse/data-pipeline/door-territory"
+LOCALAPPDATA="${LOCALAPPDATA:-$HOME/jarvis/localappdata}"   # 23 Nov: laptop or VM
 ST="$LOCALAPPDATA/ProjectBackup/cloud-finish"; mkdir -p "$ST"
 [ -f "$ST/running.lock" ] && kill -0 "$(cat "$ST/running.lock" 2>/dev/null)" 2>/dev/null && { echo "cloud finish: $(cat "$ST/running.name" 2>/dev/null) still running"; exit 0; }
 rm -f "$ST/running.lock"
@@ -22,7 +24,7 @@ rm -f "$ST/running.lock"
 # A stage that failed 3 times is reported and skipped, so a later stage still runs (2026-10-28: g1fix and g2b push different towns).
 FAILED=""
 # never pull a stage back over the phone hotspot (2026-10-29: Group 3 copies back gigabytes; memory: SSID "iPhone" = no heavy downloads)
-if netsh wlan show interfaces 2>/dev/null | tr -d "" | grep -qE "^ +SSID +: iPhone$"; then echo "cloud finish: on the phone hotspot, waiting for Wi-Fi"; exit 0; fi
+if command -v netsh >/dev/null 2>&1 && netsh wlan show interfaces 2>/dev/null | tr -d "" | grep -qE "^ +SSID +: iPhone$"; then echo "cloud finish: on the phone hotspot, waiting for Wi-Fi"; exit 0; fi
 # g2mat, centlawn, commercial (2026-10-31 overnight queue, traverse/data-pipeline/door-territory/overnight/queue-1031-vm.sh on the VM as
 # ~/run/ovn1031/queue.sh): Larimer roof material to Roofing + Solar; Centennial's no-lot doors measured again with yard v2 (Sixfold +
 # editions); the internal commercial building list (never uploaded). Each is ready only when ~/run/ovn1031/<stage>.vmdone exists.

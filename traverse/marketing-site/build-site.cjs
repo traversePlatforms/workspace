@@ -71,5 +71,6 @@ for (const rel of ['index.html', 'editions/index.html', 'demo/index.html', 'term
   fs.writeFileSync(p, t.replace('</head>', SV_TAG + '</head>'));
 }
 /* bsdtar (Windows' own tar) writes forward-slash zips; Compress-Archive's backslash paths do not extract on the host */
-execFileSync('C:/Windows/System32/tar.exe', ['-a', '-c', '-f', path.join(here, 'site', 'extract-in-traverseplatforms-public_html.zip'), 'index.html', 'editions', '.htaccess', 'sv', ...EXTRA], { cwd: OUT });
+// 23 Nov: laptop or VM (bsdtar writes the same forward-slash zip)
+execFileSync(process.platform === 'win32' ? 'C:/Windows/System32/tar.exe' : 'bsdtar', ['-a', '-c', '-f', path.join(here, 'site', 'extract-in-traverseplatforms-public_html.zip'), 'index.html', 'editions', '.htaccess', 'sv', ...EXTRA], { cwd: OUT });
 console.log('wrote site/public_html and site/extract-in-traverseplatforms-public_html.zip');

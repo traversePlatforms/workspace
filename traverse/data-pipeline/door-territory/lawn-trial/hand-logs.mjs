@@ -8,7 +8,9 @@
    yard-retune-parcels.mjs's LOTS (address, town), run that for their lot lines, then the retune. */
 import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
-const SG = ['/c/Users/SURGEI~1/.ssh/sg.sh', 'trav', 'php -d memory_limit=1024M'];
+import { existsSync as __ex } from 'node:fs'; import { homedir as __home } from 'node:os';
+const SGP = __ex('/c/Users/SURGEI~1/.ssh/sg.sh') ? '/c/Users/SURGEI~1/.ssh/sg.sh' : __home() + '/jarvis/bin/sg.sh';   // 23 Nov: laptop or VM
+const SG = [SGP, 'trav', 'php -d memory_limit=1024M'];
 const PHP = String.raw`<?php
 $base = getenv('HOME') . '/www/traverseplatforms.com'; $out = [];
 foreach (glob($base . '/*-data/rounds', GLOB_ONLYDIR) as $R) {

@@ -8,8 +8,9 @@
    Reads the town files and lawn-cache.json; writes the ids file into state/. */
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-const Q = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/ops/wifi-queue', DT = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/data-pipeline/door-territory';
-const R = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';
+import { fileURLToPath } from 'node:url';
+const Q = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, ''), DT = join(Q, '../../data-pipeline/door-territory');   // 23 Nov: laptop or VM
+const R = join(Q, '../../app/data/rounds');
 const cache = JSON.parse(readFileSync(join(DT, 'lawn-cache.json'), 'utf8'));
 const V = existsSync(join(Q, 'state/visiting.json')) ? JSON.parse(readFileSync(join(Q, 'state/visiting.json'), 'utf8')) : { first: {}, areas: {}, knocked: {} };
 const idx = JSON.parse(readFileSync(join(R, 'index.json'), 'utf8'));

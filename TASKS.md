@@ -987,6 +987,12 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       hooks, sync timer, VM CLAUDE.md); new watcher live (WRITE=laptop as before; cloud tests 60/60); data upload = Wi-Fi queue job
       vmdata (10 GB, 71 checked chunks). **Next, Matthew:** `bash traverse/ops/vm-main.sh flip --matthew-said-go` (rollback: same with
       rollback), then VS Code Remote-SSH → jarvis-cloud → /home/yard/main. Gaps listed in the doc (door-data pushes + data jobs stay laptop).
+      **FLIPPED 23 Nov 7:23 am. 23 Nov: everything moves to the VM** (Matthew: codes/keys, Tier 1, pay + finance too; Azure backup).
+      Done on the VM: first full data build (4 min, 0 of 74 differ from live), 36 scripts made portable, refresh jobs on VM timers
+      (runs-on-vm.txt), workspace backup to Azure, EOD copy to the Desktop via the laptop sync, weekly crime bug fixed (failing since
+      16 Nov). **Next, Matthew, on the laptop:** `bash traverse/ops/vm-move-private.sh --dry`, then without --dry; then
+      `VMDATA_AGAIN=1 bash traverse/ops/wifi-queue/jobs/vmdata.sh`. Open: 14 GB classifier vs 8 GB VM before 15 Feb; the overnight check
+      and Drive backup still laptop jobs.
 
 - [ ] **X-14 — One big nightly overview of everything Matthew works on** (Matthew, 11 Nov 2026: "we need to have a big daily summary thing that has sixfold, jarvis, surge, peak, donny etc all the stuf i work on in so for a big overview of tonight but thats something we can discuss what needs to go in. So add that to my to-do list.")
       To DISCUSS with him first: what goes in per company (Sixfold leads/jobs/money, J.A.R.V.I.S. tickets and what it changed, Surge site/ADA/posts,

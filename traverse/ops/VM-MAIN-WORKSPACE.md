@@ -5,6 +5,36 @@ the laptop connects to it with Remote-SSH, Claude Code runs there, and work carr
 His answers: **door data and customer files may live on the cloud machine; Surge's restricted Tier 1 notes stay laptop-only; start now,
 data upload overnight.**
 
+## 23 Nov: everything moves to the VM
+
+Matthew, 23 Nov: "I would rather everything be on the cloud computer so theres not a need to swap betweeen the too and ill always have
+access to everything no matter what happens so we should just move everything over." Asked one by one, he said yes to the codes files
+and service keys, yes to Surge's restricted notes, yes to the pay note and the finance data, and Azure for the workspace backup. This
+section overrides the "never on the VM" lines further down; they're kept as the history of the 22 Nov design.
+
+- **Private files:** `bash traverse/ops/vm-move-private.sh` on the laptop, once (`--dry` first lists them). It sends `~/.ssh` (codes files
+  and service keys; not the laptop's SSH keys and **not `jarvis-backup-age.key`**, so a break-in on the VM can't open the Azure backups),
+  `surge/brand/notes/`, the restricted boards, `personal/pay/`, every untracked file with codes / secret / token / finance etc. in its
+  name (the editions' real `rounds-codes.php` included), and the two memory notes. They stay **untracked** on the VM: the pre-commit hooks
+  still refuse Tier 1 and pay paths, so they never reach git or GitHub. Surge drafting is allowed on the VM once RESTRICTED.md is there.
+- **The rest of the data:** `vmdata` now sends every ignored file in the whole repo except `editions/dist`, `node_modules`, `.exe` and
+  browser profiles (assessor downloads, LiDAR, raw, videos, PDFs, logs, `surge/` included). On the laptop: `VMDATA_AGAIN=1 bash
+  traverse/ops/wifi-queue/jobs/vmdata.sh` (the Wi-Fi queue then keeps going); only files not sent before go.
+- **Memory:** nothing is kept back any more (`jarvis-cloud-sync.sh` MEM_EXCL matches nothing).
+- **Jobs on VM timers** (`traverse/ops/runs-on-vm.txt`; the laptop's Windows task logs one line and stands down for each one listed):
+  `refresh-weekly` (Mon 4:40 am MT), `refresh-permits` (1st, 4:10 am), `refresh-new-homes` (quarterly 15th, 2 am; it then runs
+  `every1115/refresh-quarterly.sh` straight away, no Wi-Fi queue). Units: `~/.config/systemd/user/traverse-refresh-*.{service,timer}`.
+- **Workspace backup:** `traverse/ops/workspace-backup.sh` (installed as `~/backup/workspace-backup.sh`, cron 2:45 am MT): the git
+  bundle, every untracked file in `~/main` but `editions/dist` and `node_modules`, `~/.ssh`, memory and `~/jarvis` config, age-encrypted,
+  to Azure `server-backups/workspace/`. Full on Sundays, changes only on other nights, 5 weeks kept.
+- **EOD report:** made on the VM; the laptop's sync cycle (`vm_eod`) copies `changelog/*.pdf|html` to Desktop\End of Day Reports.
+- **Scripts:** 36 more made to run on either machine (paths from the script's own place, the `sg.sh` fallback, `netsh` /
+  `powershell.exe` / `tar.exe` guarded). Still Windows-only by nature: wake word, meeting recorder mic, OneDrive, Drive letters,
+  Task Scheduler setup, the hotspot watchdogs, finished one-off jobs with laptop scratch paths.
+- **Bug found on the way:** the weekly crime step had failed on the laptop since 16 Nov (a 146,804-door spread overflowed the stack in
+  `security/build-security.mjs` after the every-home push). Fixed 23 Nov.
+- ⚑ The quarterly new-homes classifier asks Node for 14 GB; Jarvis has 8 GB and no swap. Before 15 Feb: add swap or check its real need.
+
 ## Where it stands (22 Nov, night)
 
 | | |

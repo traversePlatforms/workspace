@@ -5,7 +5,8 @@
 # place) or added; every other entry, admin-only ones included, is left alone. Groups added to company.json; search-index.txt cleared.
 set -u
 LABEL="$1"; shift; NEW="$*"
-DT="/c/Users/Surge Inc/Desktop/claude test 2/traverse/data-pipeline/door-territory"; mkdir -p "$DT/logs-upload"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; REPO="$(cd "$HERE/../../.." && pwd)"; DT="$HERE"   # 23 Nov: laptop or VM
+mkdir -p "$DT/logs-upload"
 [ -f "$DT/logs-upload/$LABEL.done" ] && { echo "$LABEL already uploaded"; exit 0; }
 # overnight check 2026-11-10: the lock names its owner. An upload that was stopped from outside (the hotspot watchdog, a restart) never
 # removed its lock, and from then on EVERY upload said "another upload is running" and ended with exit 0, sending nothing. A lock whose
@@ -18,8 +19,8 @@ fi
 mkdir "$LK" 2>/dev/null || { echo "another upload is running"; exit 0; }
 echo $$ > "$LK/pid"
 trap 'rm -f "$LK/pid"; rmdir "$LK"' EXIT
-RD="/c/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds"
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+RD="$REPO/traverse/app/data/rounds"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}"   # 23 Nov: laptop or VM
 cd "$RD"
 FILES=""; for t in $NEW; do [ -s "$t.json" ] && FILES="$FILES $t.json"; [ -s "$t-lookup.json" ] && FILES="$FILES $t-lookup.json"; done
 echo "$(date +%T) $LABEL: files $(echo $FILES | wc -w)"

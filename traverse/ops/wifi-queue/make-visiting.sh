@@ -1,9 +1,8 @@
 #!/bin/bash
 # Fetch the "houses we are visiting" list from the live Sixfold data (read-only) into state/visiting.json (2026-10-20).
 # A throwaway copy of the app outside the website folder answers one command-line question (visiting-export.php), then is deleted.
-Q="/c/Users/Surge Inc/Desktop/claude test 2/traverse/ops/wifi-queue"
-A="/c/Users/Surge Inc/Desktop/claude test 2/traverse/app/api"
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+Q="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; A="$(cd "$Q/../../app/api" && pwd)"   # 23 Nov: laptop or VM
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}"   # 23 Nov: laptop or VM
 mkdir -p "$Q/state"
 TMP=$(mktemp -d)
 node -e "const fs=require('fs');const s=fs.readFileSync(process.argv[1],'utf8');const a='    out(squareSweep());\n';if(s.split(a).length!==2){console.error('anchor');process.exit(1)}fs.writeFileSync(process.argv[3],s.split(a).join(fs.readFileSync(process.argv[2],'utf8')))" "$A/rounds.php" "$Q/visiting-export.php" "$TMP/rounds.php" || exit 1

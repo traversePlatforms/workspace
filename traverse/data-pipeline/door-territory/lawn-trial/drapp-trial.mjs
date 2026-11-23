@@ -11,7 +11,8 @@ import { PNG } from 'pngjs';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 const [town, outDir, cnt] = process.argv.slice(2); const COUNT = +(cnt || 4);
-const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';
+import { fileURLToPath as __f2p } from 'node:url';   // 23 Nov: laptop or VM
+const DATA = __f2p(new URL('../../../app/data/rounds', import.meta.url)).replace(/[\\/]$/, '');
 const PARCELS = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
 const DRAPP = 'https://gisportal.jeffco.us/image/rest/services/DRAPP/DRAPP2022/ImageServer/exportImage';
 for (const z of [12, 13, 14]) proj4.defs('EPSG:269' + z, `+proj=utm +zone=${z} +datum=NAD83 +units=m +no_defs`);

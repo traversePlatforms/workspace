@@ -15,7 +15,8 @@ const args = process.argv.slice(2), outDir = args.find((a) => !a.startsWith('--'
 const opt = (k, d) => { const a = args.find((x) => x.startsWith('--' + k + '=')); return a ? +a.split('=')[1] : d; };
 const MINS = opt('mins', 40), PER = opt('per', 6), T0 = Date.now();
 if (!outDir) { console.log('usage: node drapp3-trial.mjs <outdir> [--mins=40] [--per=6]'); process.exit(1); }
-const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';
+import { fileURLToPath as __f2p } from 'node:url';   // 23 Nov: laptop or VM
+const DATA = __f2p(new URL('../../../app/data/rounds', import.meta.url)).replace(/[\\/]$/, '');
 const PARCELS = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
 const DRAPP = 'https://apps.douglas.co.us/gisis/rest/services/Drapp_2022/ImageServer/exportImage';
 const CELL = 0.0762;   /* 3 inches in metres */

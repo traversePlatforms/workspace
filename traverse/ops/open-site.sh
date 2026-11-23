@@ -4,7 +4,7 @@
 #   bash traverse/ops/open-site.sh undo     put back the backups taken by the last open (password and noindex back on)
 # The apps (summit, the five editions), api/, maps/, the hub, the prospect and Peak desks keep X-Robots-Tag noindex; robots.txt never names them.
 set -e
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}"   # 23 Nov: laptop or VM
 MODE="${1:-open}"
 if [ "$MODE" = "undo" ]; then
   $SG 'cd $HOME/www/traverseplatforms.com/public_html && B=$(ls -d $HOME/upload-backups/open-site-* 2>/dev/null | tail -1) && [ -n "$B" ] && tar xzf $B/before.tgz && rm -f robots.txt sitemap.xml && [ -f $B/had-robots ] && cp $B/robots.txt . ; chmod 600 index.html; find demo editions privacy terms terms-of-use cancellation shots $(ls -d start 2>/dev/null) -type f -exec chmod 600 {} \; ; site-tools-client domain-all update id=traverseplatforms.com flush_cache=1 | grep -o "msg=OK"; echo "undone from $B"'

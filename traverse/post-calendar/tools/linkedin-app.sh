@@ -4,7 +4,7 @@
 #   bash traverse/post-calendar/tools/linkedin-app.sh push      writes post-calendar-data/private/linkedin-app.json (chmod 600)
 #   bash traverse/post-calendar/tools/linkedin-app.sh compare   says whether the server holds the same keys (prints only same/different)
 set -euo pipefail
-SG=(bash /c/Users/SURGEI~1/.ssh/sg.sh trav)
+SG_DEF=(bash /c/Users/SURGEI~1/.ssh/sg.sh trav); [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF=(bash $HOME/jarvis/bin/sg.sh trav); SG=("${SG_DEF[@]}"); [ -n "${JARVIS_SG:-}" ] && SG=($JARVIS_SG)   # 23 Nov: laptop or VM
 KEYS() { node -e "const l=require('fs').readFileSync(require('os').homedir()+'/.ssh/surge-linkedin-app.txt','utf8').split(/\r?\n/).map(s=>s.trim()).filter(Boolean); if(l.length<2){process.stderr.write('the keys file needs 2 lines\n');process.exit(1)} process.stdout.write(JSON.stringify({client_id:l[0],client_secret:l[1]}))"; }
 case "${1:-}" in
   push) KEYS | "${SG[@]}" 'umask 077; d=$HOME/www/traverseplatforms.com/post-calendar-data/private; mkdir -p "$d" && chmod 700 "$d" && php -r '\''$j=json_decode(stream_get_contents(STDIN),true); if(!is_array($j)||($j["client_id"]??"")===""||($j["client_secret"]??"")===""){fwrite(STDERR,"empty\n");exit(1);} $f=$argv[1]; $old=json_decode((string)@file_get_contents($f),true); if(is_array($old)) foreach(["version","scopes_extra"] as $k) if(isset($old[$k])) $j[$k]=$old[$k]; $j["at"]=time(); file_put_contents($f.".tmp",json_encode($j)); chmod($f.".tmp",0600); rename($f.".tmp",$f); echo "written, chmod 600\n";'\'' "$d/linkedin-app.json"' ;;

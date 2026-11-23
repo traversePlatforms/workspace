@@ -10,7 +10,8 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith('--' + k + '=')); return a ? a.split('=')[1] : d; };
 const TOWN = arg('town'), MAX = +arg('max', 5000);
 if (!TOWN) { console.error('--town= needed'); process.exit(1); }
-const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';
+import { fileURLToPath as __f2p } from 'node:url';   // 23 Nov: laptop or VM
+const DATA = __f2p(new URL('../../../app/data/rounds', import.meta.url)).replace(/[\\/]$/, '');
 const OUTD = new URL('./drcog-turf/', import.meta.url); mkdirSync(OUTD, { recursive: true });
 const OUT = new URL(`turf-${TOWN}.json`, OUTD), PCACHE = new URL(`parcels-${TOWN}.json`, OUTD);
 const PARCELS = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';

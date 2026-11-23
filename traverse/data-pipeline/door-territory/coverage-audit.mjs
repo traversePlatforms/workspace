@@ -12,7 +12,8 @@ import { fileURLToPath } from 'node:url';
 
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith(`--${k}=`)); return a ? a.slice(k.length + 3) : d; };
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = arg('root', 'C:/Users/Surge Inc/Desktop/claude test 2/traverse');
+import { fileURLToPath as __f2p } from 'node:url';   // 23 Nov: laptop or VM
+const ROOT = arg('root', __f2p(new URL('../..', import.meta.url)).replace(/[\\/]$/, ''));
 const OUT = arg('out', HERE);
 const DATE = arg('date', new Date().toISOString().slice(0, 10));
 const DT = join(ROOT, 'data-pipeline', 'door-territory');

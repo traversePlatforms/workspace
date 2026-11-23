@@ -20,7 +20,7 @@ CS="${JARVIS_SYNC_STATE:-$PB/cloud-sync}"; HST="${JARVIS_HELP_ST:-$PB/help}"; mk
 LOGF="$CS/sync.log"
 VM="${JARVIS_VM:-$(cat "$CS/vm.txt" 2>/dev/null || echo yard@20.91.198.101)}"; VK="${JARVIS_VM_KEY:-/c/Users/SURGEI~1/.ssh/azure_yard}"
 KEEP_OFF=(surge/brand/notes/ surge/brand/photos/restricted-boards-DO-NOT-PUBLISH/)   # as github-sync.sh
-MEM_EXCL="matthew-pay-review.md story-tier1-restricted.md"   # kept off the VM: his pay, and the Tier 1 pointer
+MEM_EXCL="none-kept-back.never"   # 23 Nov: nothing kept off the VM now (Matthew: move everything); was his pay note and the Tier 1 pointer. A name that matches nothing: an empty list would break the patterns below
 export PATH="$PATH:$APPDATA/Python/Python313/Scripts:/c/Users/Surge Inc/AppData/Roaming/Python/Python313/Scripts"
 log() { echo "$(date '+%F %T') $*" >> "$LOGF"; [ -n "${VERBOSE:-}" ] && echo "$*"; return 0; }
 v() { if [ -n "${JARVIS_VM_STANDIN:-}" ]; then bash "$JARVIS_VM_STANDIN" "$@"; else ssh -o BatchMode=yes -o ConnectTimeout=20 -i "$VK" "$VM" "$@"; fi; }
@@ -205,6 +205,18 @@ vm_memsync() {
   fi
   rm -rf "$T"; return 0
 }
+vm_eod() {   # 23 Nov: end-of-day reports made on the VM (changelog/*.pdf + .html, which come down with the repo) -> Desktop\End of Day Reports
+  local D="${JARVIS_EOD_DIR:-$(dirname "$REPO")/End of Day Reports}" f n W
+  mkdir -p "$D" 2>/dev/null || { log "eod: cannot make $D"; return 0; }
+  W=$(cygpath -m "$REPO" 2>/dev/null || echo "$REPO")
+  for f in "$REPO"/changelog/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.pdf "$REPO"/changelog/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.html; do
+    [ -f "$f" ] || continue; n=$(basename "$f")
+    if [ "${n##*.}" = html ]; then   # the Desktop copy's fonts point at the repo
+      sed "s#url('\.\./traverse/#url('file:///${W#/}/traverse/#g" "$f" > "$D/$n.tmp" && { cmp -s "$D/$n.tmp" "$D/$n" && rm -f "$D/$n.tmp" || { mv "$D/$n.tmp" "$D/$n"; log "eod: $n to the Desktop"; }; }
+    else cmp -s "$f" "$D/$n" || { cp "$f" "$D/$n" && log "eod: $n to the Desktop"; }; fi
+  done
+  return 0
+}
 vm_jobs() {   # jobs the VM queued for this laptop (Windows-only work): to the watcher, as before
   local f id at; rm -rf "$IN"; mkdir -p "$IN"
   v 'mkdir -p ~/jarvis/outbox/jobs && tar -C ~/jarvis/outbox -czf - jobs' 2>>"$LOGF" | tar -xzf - -C "$IN" 2>>"$LOGF" || return 1
@@ -219,7 +231,7 @@ vm_jobs() {   # jobs the VM queued for this laptop (Windows-only work): to the w
 if [ -f "$CS/vm-main" ]; then
   case "${1:-status}" in
     push|pull) echo "the VM is the main workspace since the flip (VM-MAIN-WORKSPACE.md): the laptop no longer sends its repo; it only takes the VM's (cycle)"; exit 0;;
-    cycle) vm_pull_repo; vm_memsync; vm_jobs; exit 0;;
+    cycle) vm_pull_repo; vm_eod; vm_memsync; vm_jobs; exit 0;;
   esac
 fi
 case "${1:-status}" in

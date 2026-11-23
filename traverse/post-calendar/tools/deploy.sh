@@ -9,7 +9,7 @@
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/../../.." && pwd)"; PC="$REPO/traverse/post-calendar"
 PUBP="$(tr -d '[:space:]' < "$PC/.public-path")"; SITE='$HOME/www/traverseplatforms.com'
-SG=(bash /c/Users/SURGEI~1/.ssh/sg.sh trav)
+SG_DEF=(bash /c/Users/SURGEI~1/.ssh/sg.sh trav); [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF=(bash $HOME/jarvis/bin/sg.sh trav); SG=("${SG_DEF[@]}"); [ -n "${JARVIS_SG:-}" ] && SG=($JARVIS_SG)   # 23 Nov: laptop or VM
 MIN="$REPO/shared/tools/minify-public.cjs"; [ -d "$REPO/node_modules/terser" ] || MIN="$REPO/../../../shared/tools/minify-public.cjs"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 D="$PC/dist"; rm -rf "${D:?}"; mkdir -p "$D/public/api" "$D/public/media" "$D/tools"

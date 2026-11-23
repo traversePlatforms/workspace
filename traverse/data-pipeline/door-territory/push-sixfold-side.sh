@@ -9,10 +9,12 @@ set -u
 exec < /dev/null   # review 12 Nov: md5sum fails when a job is started with its input closed (push-edition.sh, 11 Nov), and here that read as "no change"
 PRE="${1:-}"; [ -z "$PRE" ] && { echo "usage: push-sixfold-side.sh <prefix>   e.g. moved-"; exit 1; }
 case "$PRE" in *[!a-z0-9-]*) echo "prefix: letters, digits and - only"; exit 1;; esac
-S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp"; mkdir -p "$S"   # short path: $S is used unquoted below
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+LOCALAPPDATA="${LOCALAPPDATA:-$HOME/jarvis/localappdata}"   # 23 Nov: laptop or VM
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; REPO="$(cd "$HERE/../../.." && pwd)"
+S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA" 2>/dev/null || echo "$LOCALAPPDATA")" 2>/dev/null || echo "$LOCALAPPDATA")/ProjectBackup/push-tmp"; mkdir -p "$S"   # short path: $S is used unquoted below
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}"   # 23 Nov: laptop or VM
 R="~/www/traverseplatforms.com/sixfold-data/rounds"
-cd "/c/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds" || exit 1
+cd "$REPO/traverse/app/data/rounds" || exit 1
 T="$S/p6-$PRE"
 ls "$PRE"*.json 2>/dev/null | sort > "$T.mine"
 [ -s "$T.mine" ] || { echo "no $PRE*.json here"; exit 1; }

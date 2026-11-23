@@ -22,7 +22,8 @@ const LOTS = [
   { addr: '9416 DESERT WILLOW TRL', town: 'highlands-ranch', hand: null, note: 'quoted 2026-10-21; no hand measure yet' },
 ];
 const T = { ndvi: 0.36, short: 1, minpx: 150, rag: 10.5 };
-const DATA = 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds', OUT = new URL('./tall-trial-2026-10-21/', import.meta.url);
+import { fileURLToPath as __f2p } from 'node:url';   // 23 Nov: laptop or VM
+const DATA = __f2p(new URL('../../../app/data/rounds', import.meta.url)).replace(/[\\/]$/, ''), OUT = new URL('./tall-trial-2026-10-21/', import.meta.url);
 mkdirSync(OUT, { recursive: true });
 const PARCELS = 'https://gis.colorado.gov/public/rest/services/Address_and_Parcel/Colorado_Public_Parcels/FeatureServer/0/query';
 const CHM = 'https://dataforgood-fb-data.s3.amazonaws.com/forests/v1/alsgedi_global_v6_float/chm/';

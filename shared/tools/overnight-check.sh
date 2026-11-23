@@ -5,10 +5,11 @@
 # it runs that upload, which Matthew asked for. Report: %LOCALAPPDATA%\ProjectBackup\overnight-checks.log (one block per run) and
 # overnight-latest.txt (the last run only). Never prints secrets; server checks go through sg.sh.
 set -u
+LOCALAPPDATA="${LOCALAPPDATA:-$HOME/jarvis/localappdata}"   # 23 Nov: laptop or VM
 LOGDIR="$LOCALAPPDATA/ProjectBackup"; mkdir -p "$LOGDIR"
 LOG="$LOGDIR/overnight-checks.log"; LATEST="$LOGDIR/overnight-latest.txt"
-REPO="/c/Users/Surge Inc/Desktop/claude test 2"; DT="$REPO/traverse/data-pipeline/door-territory"
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; REPO="$(cd "$HERE/../.." && pwd)"; DT="$REPO/traverse/data-pipeline/door-territory"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"; SG="${JARVIS_SG:-$SG_DEF}"   # 23 Nov: laptop or VM
 OUT=""; BAD=0
 say() { OUT="$OUT$1"$'\n'; }
 ok() { say "  ok    $1"; }
@@ -17,7 +18,7 @@ age_min() { echo $(( ( $(date +%s) - $(stat -c %Y "$1") ) / 60 )); }
 say "== $(date '+%Y-%m-%d %H:%M')"
 
 # 1. Town builds: running, finished, or stopped part-way
-SSID=$(netsh wlan show interfaces 2>/dev/null | tr -d '' | awk -F': ' '/^ *SSID/{print $2; exit}')
+SSID=$(command -v netsh >/dev/null 2>&1 && netsh wlan show interfaces 2>/dev/null | tr -d '' | awk -F': ' '/^ *SSID/{print $2; exit}')
 case "$SSID" in *iPhone*) say "  info  network: $SSID (phone hotspot: tree downloads stay paused)";; *) say "  info  network: ${SSID:-wired}";; esac
 if [ -f "$DT/logs-paused.flag" ]; then ok "tree work PAUSED since $(date -r "$DT/logs-paused.flag" "+%m-%d %H:%M") (hotspot); resume: bash traverse/data-pipeline/door-territory/resume-trees-2026-10-16.sh"; else
 NODES=$(tasklist //FI "IMAGENAME eq node.exe" 2>/dev/null | grep -c node.exe)
@@ -57,7 +58,7 @@ up towns-catchup-2026-10-16 "$DT/logs-batch5-fix/done.flag" $T40 $SIX
 # up towns-final-2026-10-16 ... retired 2026-10-20: the Wi-Fi queue uploads every town it rebuilds; an upload from here could land mid-rebuild
 
 # 2b. The Wi-Fi queue (2026-10-20): its status line, a parked job, or a runner that stopped updating
-QS="/c/Users/Surge Inc/Desktop/claude test 2/traverse/ops/wifi-queue/state/status.txt"
+QS="$REPO/traverse/ops/wifi-queue/state/status.txt"   # 23 Nov: laptop or VM
 if [ -f "$QS" ]; then
   say "  info  Wi-Fi queue: $(sed -n 2p "$QS" | cut -c1-160)"
   grep -q "PARKED" "$QS" && bad "Wi-Fi queue: a job is parked after 3 failures (traverse/ops/wifi-queue/state/status.txt)"
@@ -101,7 +102,7 @@ v() { echo "$SRV" | awk -v k="$1" '$1==k{print $2}'; }
 }
 
 # 4. Windows tasks on this computer (backups)
-TASKS=$(powershell.exe -NoProfile -Command "foreach(\$n in 'Backup claude test 2 to Google Drive','Traverse server backup','Traverse new homes refresh'){ \$i=Get-ScheduledTaskInfo -TaskName \$n -ErrorAction SilentlyContinue; if(\$i){ '{0}|{1:MM-dd HH:mm}|{2}' -f \$n,\$i.LastRunTime,\$i.LastTaskResult } }" 2>/dev/null | tr -d '\r')
+TASKS=""; command -v powershell.exe >/dev/null 2>&1 && TASKS=$(powershell.exe -NoProfile -Command "foreach(\$n in 'Backup claude test 2 to Google Drive','Traverse server backup','Traverse new homes refresh'){ \$i=Get-ScheduledTaskInfo -TaskName \$n -ErrorAction SilentlyContinue; if(\$i){ '{0}|{1:MM-dd HH:mm}|{2}' -f \$n,\$i.LastRunTime,\$i.LastTaskResult } }" 2>/dev/null | tr -d '\r')
 while IFS='|' read -r n t r; do [ -z "$n" ] && continue
   # 267009 (0x41301) is Task Scheduler for "running right now", not a failure: the check used to land mid-backup and call it a problem (10 Nov)
   if [ "$r" = 0 ]; then ok "$n: last run $t ok"; elif [ "$r" = 267009 ]; then ok "$n: running now (started $t)"; elif [ "$r" = 267011 ]; then ok "$n: not run yet"; else bad "$n: last run $t ended with code $r"; fi
@@ -112,7 +113,8 @@ GD=$(tail -1 "$LOGDIR/gdrive.log" 2>/dev/null); say "  info  Drive backup log: $
 # throwaway Chrome profiles from test and print scripts (cdp-*), more than a day old (2026-10-25: 10,717 had piled up, about 170 GB)
 SWEPT=$(find "$LOCALAPPDATA/Temp" -maxdepth 1 -type d -name 'cdp-*' -mtime +1 2>/dev/null | head -2000 | while IFS= read -r d; do rm -rf "$d" 2>/dev/null && echo x; done | wc -l)
 [ "$SWEPT" -gt 0 ] && say "  info  removed $SWEPT old test-browser folders from Temp"
-FREE=$(df -Pm /c | awk 'NR==2{print int($4/1024)}'); [ "$FREE" -lt 20 ] && bad "C: has only ${FREE} GB free" || ok "C: ${FREE} GB free"
+DFP=/c; [ -d /c ] || DFP="$REPO"   # 23 Nov: laptop or VM
+FREE=$(df -Pm "$DFP" | awk 'NR==2{print int($4/1024)}'); [ "$FREE" -lt 20 ] && bad "C: has only ${FREE} GB free" || ok "C: ${FREE} GB free"
 
 # 6. The crews' job photos, copied once a day by address (2026-10-26, Matthew: "go ahead and set up the nightly copy")
 JP=$(bash "$REPO/traverse/ops/pull-job-photos.sh" 2>&1 | tail -1)
@@ -145,7 +147,7 @@ case "$NH" in *FAILED*|*STOPPED*) bad "new homes refresh: $(printf '%s' "$NH" | 
 # 11. Jen's change requests on the Sixfold post calendar (2026-11-16, Matthew: "id rather you just do them for her"): the task "Post calendar
 # requests" answers them every 10 minutes (traverse/post-calendar/tools/request-watch.sh). Shown here: anything it could not do in the last
 # day, and how many requests are open right now.
-PQ="$(cygpath -u "$LOCALAPPDATA")/ProjectBackup/post-requests"
+PQ="$(cygpath -u "$LOCALAPPDATA" 2>/dev/null || echo "$LOCALAPPDATA")/ProjectBackup/post-requests"
 PN=$(awk -v d="$(date -d yesterday '+%F')" '$1 >= d' "$PQ/needs-person.txt" 2>/dev/null)
 while IFS= read -r l; do [ -n "$l" ] && bad "post calendar request needs a person: $(printf '%s' "$l" | cut -c1-170)"; done <<< "$PN"
 PO=$(timeout 60 node "$REPO/traverse/post-calendar/tools/pc.mjs" requests sixfold 2>/dev/null | node -e 'try{console.log(JSON.parse(require("fs").readFileSync(0,"utf8")).length)}catch(e){console.log("?")}')

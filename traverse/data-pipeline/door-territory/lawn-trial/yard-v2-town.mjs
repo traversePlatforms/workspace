@@ -17,7 +17,8 @@ const writeSafe = (f, s) => { const tmp = new URL(f.href + '.tmp'); writeFileSyn
 const arg = (k, d) => { const a = process.argv.find((x) => x.startsWith('--' + k + '=')); return a ? a.split('=')[1] : d; };
 const TOWN = arg('town'), MINS = +arg('mins', 45), CONC = +arg('conc', 6);
 if (!TOWN) { console.error('--town= needed'); process.exit(1); }
-const DATA = process.env.YV2_DATA || 'C:/Users/Surge Inc/Desktop/claude test 2/traverse/app/data/rounds';   /* YV2_DATA: the cloud run's slim door files (2026-10-24) */
+import { fileURLToPath as __f2p } from 'node:url';   // 23 Nov: laptop or VM
+const DATA = process.env.YV2_DATA || __f2p(new URL('../../../app/data/rounds', import.meta.url)).replace(/[\\/]$/, '');   /* YV2_DATA: the cloud run's slim door files (2026-10-24) */
 const OUTD = new URL((process.env.YV2_OUT || 'yard-v2') + '/', import.meta.url);   /* YV2_OUT (2026-11-11): the retuned re-measure writes yard-v3/ beside the live yard-v2/ */ mkdirSync(OUTD, { recursive: true });
 const OUT = new URL(`${TOWN}.json`, OUTD);
 const PCD = new URL('./drcog-turf/', import.meta.url); mkdirSync(PCD, { recursive: true });

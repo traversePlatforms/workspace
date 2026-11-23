@@ -6,11 +6,12 @@
 #   bash shared/tools/github-sync.sh          copy and push
 #   bash shared/tools/github-sync.sh --dry    copy and strip only, print what would go up
 set -eu
-REPO="/c/Users/Surge Inc/Desktop/claude test 2"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; REPO="$(cd "$HERE/../.." && pwd)"   # 23 Nov: laptop or VM
+LOCALAPPDATA="${LOCALAPPDATA:-$HOME/jarvis/localappdata}"
 MIRROR="$LOCALAPPDATA/ProjectBackup/github-mirror"
 REMOTE="https://github.com/traversePlatforms/workspace.git"
 KEEP_OFF=(surge/brand/notes/ surge/brand/photos/restricted-boards-DO-NOT-PUBLISH/)
-export PATH="$PATH:$APPDATA/Python/Python313/Scripts:/c/Users/Surge Inc/AppData/Roaming/Python/Python313/Scripts"
+export PATH="$PATH:$HOME/.local/bin"; [ -n "${APPDATA:-}" ] && export PATH="$PATH:$APPDATA/Python/Python313/Scripts:/c/Users/Surge Inc/AppData/Roaming/Python/Python313/Scripts"   # 23 Nov: laptop or VM
 
 rm -rf "$MIRROR"
 git clone -q --no-local --single-branch --branch main "$REPO" "$MIRROR"
