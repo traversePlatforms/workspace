@@ -14,7 +14,7 @@ and the cloud went into **shadow mode**. **Live needs Matthew's go** (below).
 | | |
 |---|---|
 | Mode | **shadow**: reads the live queues, logs what it would do, runs the read-only quick pass on his messages, answers nothing live. The practice copy it answers for real (as the trial did). |
-| Machine | `yardtest`, Standard_D4as_v5, Sweden Central, `yard@20.91.198.101`, key `~/.ssh/azure_yard` |
+| Machine | **`Jarvis`, Standard_D2as_v7 (2 vCPU, 8 GB, $66.28/mo), (US) Central US, 128 GB Standard SSD, `yard@40.78.175.13`**, key `~/.ssh/azure_yard`; live since 22 Nov 2026 ~5:30 pm MT (moved by jarvis-cloud-move.sh, the copy itself done VM-to-VM with a temporary key, since removed, after the laptop route dropped on hotel Wi-Fi). Old: `yardtest` D4as_v5 Sweden Central 20.91.198.101, watcher off; it ran the 22 Nov lawn1122 job after the switch |
 | Done by Matthew | SiteGround key `jarvis-cloud` imported; Claude Code on the VM signed in to his plan (claude.ai, Max) |
 | Not needed | the GitHub deploy key (the laptop sends the repo straight to the VM; see "Repo copy") |
 | Laptop | `help-watch.sh` unchanged in behaviour: it stands back only when the cloud says **live** |
