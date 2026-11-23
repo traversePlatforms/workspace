@@ -1,0 +1,10 @@
+# Peak website mock: private. Every request goes through index.php (sign-in code gate); nothing here is indexed.
+Options -Indexes
+DirectoryIndex index.php
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteRule ^(?!index\.php$) index.php [L]
+</IfModule>
+<IfModule mod_headers.c>
+Header always set X-Robots-Tag "noindex, nofollow, noarchive"
+</IfModule>
