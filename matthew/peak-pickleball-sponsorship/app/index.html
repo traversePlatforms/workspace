@@ -1364,7 +1364,12 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       [tx, sj, bd].forEach(function (i) { if (i) i.addEventListener('input', links); });
       who.onchange = fill;
       aT.addEventListener('click', function () { if (!aT.classList.contains('off')) logTpl(r, 'text', t, o()); });
-      aE.addEventListener('click', function () { if (!aE.classList.contains('off')) logTpl(r, 'email', t, o()); });
+      aE.addEventListener('click', function (ev) {
+        if (aE.classList.contains('off')) return;
+        var sec = document.querySelector('.detail .dmsec[data-dm="' + r.id + '"]');
+        if (DMC().on && !readOnly() && sec && sec._tpl) { ev.preventDefault(); sec._tpl(t.k, o().email, o().name); return; }   /* 23 Nov: sends from Peak Partnerships */
+        logTpl(r, 'email', t, o());
+      });
       cp.addEventListener('click', function () {
         var v = tx && o().phone ? tx.value : bd ? (sj.value + '\n\n' + bd.value) : tx ? tx.value : '';
         var done = function () { promptAfter(r, 'copy', o().name, t.k); };
@@ -1381,7 +1386,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   /* a template sent: logged as Texted or Emailed (from the template, by you), even while the phone opens its messages or mail */
   function logTpl(r, m, t, o) {
     var tp = document.querySelector('.detail .touchp'), fu = tp && tp._fuDay ? tp._fuDay('tpl') : '';
-    var body = { id: r.id, world: S.world, m: m, out: 'sent', tpl: t.k, fu: fu, note: 'From the template “' + t.name + '”' + (o.name ? ' to ' + o.name : '') + (m === 'email' && o.email ? ' (' + o.email + ')' : '') };
+    var body = { id: r.id, world: S.world, m: m, out: 'sent', tpl: t.k, fu: fu, note: (m === 'email' ? 'Opened in their own mail app (not confirmed sent; not from Peak Partnerships): the template “' : 'From the template “') + t.name + '”' + (o.name ? ' to ' + o.name : '') + (m === 'email' && o.email ? ' (' + o.email + ')' : '') };   /* 23 Nov: honest about the mail-app path */
     save('touch', body, null, true).then(function (j) {
       if (j && j.ok) toast('Logged: ' + (m === 'email' ? 'Emailed' : 'Texted') + ' from “' + t.name + '”' + (j.stage !== r.stage ? ' · now ' + STN(j.stage) : '') + (fu ? ' · follow up ' + fmtDay(fu) : ''), 'Undo', function () { save('touchdel', { id: r.id, k: j.k }, 'Undone'); });
     });
@@ -1416,6 +1421,12 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var RE = null;   /* the touch holding their email, while this is a reply */
     ob.addEventListener('click', function () { if (box.hidden) { paintBox(); box.hidden = false; ob.hidden = true; box.querySelector('.dmbody').focus(); } });
     s._open = function () { ob.click(); s.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+    /* 23 Nov 2026 (Matthew: a tour confirmation logged as emailed never reached the visitor): a template's Email button opens this box
+       with the template and the person filled in, so it goes from Peak Partnerships with a delivery record instead of their own mail app */
+    var PRE = null;
+    s._tpl = function (tk, email, name) { RE = null; PRE = { email: email || '', name: name || '' }; paintBox(); box.hidden = false; ob.hidden = true;
+      var tsel = box.querySelector('select.dmtpl'); if (tsel && tk) { tsel.value = tk; tsel.dispatchEvent(new Event('change')); }
+      s.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
     s._reply = function (t) { RE = t; paintBox(); box.hidden = false; ob.hidden = true; s.scrollIntoView({ behavior: 'smooth', block: 'start' }); box.querySelector('.dmbody').focus(); };
     function paintBox() {
       box.textContent = '';
@@ -1429,6 +1440,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var who = function () { var p = P[+to.value]; return to.value !== '' && p ? { name: p.name && p.name !== 'general inbox' ? p.name : '', email: p.email } : { name: tn.value.trim(), email: te.value.trim() }; };
       var showTyped = function () { two.hidden = to.value !== ''; };
       to.addEventListener('change', function () { showTyped(); links(); }); if (!P.length) to.value = '';
+      if (PRE) { var pj = -1; P.forEach(function (p, i) { if (pj < 0 && String(p.email).toLowerCase() === String(PRE.email).toLowerCase()) pj = i; });
+        if (pj >= 0) to.value = String(pj); else if (PRE.email) { to.value = ''; tn.value = PRE.name; te.value = PRE.email; } PRE = null; showTyped(); }
       if (RE) {   /* a reply: to whoever wrote, the same subject with RE: */
         var rm = RE.mail || {}, pi = -1; P.forEach(function (p, i) { if (pi < 0 && String(p.email).toLowerCase() === String(rm.from).toLowerCase()) pi = i; });
         if (pi >= 0) to.value = String(pi); else { to.value = ''; tn.value = rm.name || ''; te.value = rm.from || ''; }
