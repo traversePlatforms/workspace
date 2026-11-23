@@ -490,7 +490,14 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   /* who Peak's emails go out as (2026-11-19: Peak Partnerships, set in Outbox) */
   var FROMN = function () { var f = (S.data && S.data.sendFrom) || {}; return f.name || 'Peak Partnerships'; };
   var FROML = function () { var f = (S.data && S.data.sendFrom) || {}; return FROMN() + ' (' + (f.email || 'partnerships@peakpickleball.us') + ')'; };
-  var who = function (n) { return W().owners.indexOf(n) >= 0 ? first(n) : n; };   /* sellers by first name; "Peak email" and others in full */
+  /* 23 Nov 2026 (Matthew: "the numbers on the peak desk that reflect my emails aren't updating ... I need to make sure people aren't emailing
+     people that I have emailed already"): the Peak email lists are Matthew's, so what the sender logs as "Peak email" counts and reads as his */
+  var PE = 'Peak email', PE_OWNER = 'Matthew Sharpe';
+  var peName = function () { return me() === PE_OWNER ? 'Your Peak email' : 'Matthew’s Peak email'; };
+  var peFold = function (T) { var o = {}; Object.keys(T || {}).forEach(function (n) { o[n] = Object.assign({}, T[n]); });
+    if (o[PE]) { var a = o[PE_OWNER] || (o[PE_OWNER] = {}); Object.keys(o[PE]).forEach(function (k) { if (typeof o[PE][k] === 'number') a[k] = (a[k] || 0) + o[PE][k]; }); delete o[PE]; }
+    return o; };
+  var who = function (n) { return n === PE ? peName() : W().owners.indexOf(n) >= 0 ? first(n) : n; };   /* sellers by first name; "Peak email" and others in full */
   var lastLine = function (r) { var t = r.last; return t ? touchName(t) + ' · ' + relDay(t.when) + ' · ' + who(t.by) : 'Not contacted yet'; };
   /* can someone reach them: an email and a phone (2026-10-21) */
   var found = function (r, k) { return (r.scan && r.scan.ok && r.scan[k]) || []; };
@@ -794,6 +801,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   }
   /* each person's touches this week as one bar, a colour a kind (the mockup's "This week by person") */
   function weekBars(into, T) {
+    T = peFold(T);
     var names = Object.keys(T || {}).filter(function (n) { return n !== 'Claude Check' && n !== 'Peak email'; }), max = 1;
     var tot = function (a) { return (a.calls || 0) + (a.emails || 0) + (a.texts || 0) + (a.other || 0); };
     names.forEach(function (n) { max = Math.max(max, tot(T[n])); }); names.sort(function (a, b) { return tot(T[b]) - tot(T[a]); });
@@ -808,6 +816,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   }
   /* calls, emails, texts, tours, proposals (quotes), signed (booked) per person */
   function teamTable(T, week) {
+    T = peFold(T);
     var names = W().owners.slice(); Object.keys(T || {}).forEach(function (n) { if (names.indexOf(n) < 0 && n !== 'Claude Check') names.push(n); });
     var t = el('table', 'tb'), h = el('tr'), cols = ['Person', 'Calls', 'Emails', 'Texts', 'Other', 'Tours', isX() ? 'Quotes' : 'Proposals', isX() ? 'Booked' : 'Signed'];
     if (!week) cols.push('Last on'); cols.forEach(function (x, i) { h.appendChild(el('th', i ? 'n' : null, x)); }); t.appendChild(h);
@@ -974,6 +983,10 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     d.appendChild(el('div', 'sub', (X ? ['Priority ' + r.pri, r.cat, r.mine ? 'added on the desk by ' + r.by : ''] : [LISTNAME[r.list], r.kind, r.score != null ? 'score ' + r.score + (r.list === 'local' ? '' : '/9') : '', milesOf(r) != null ? milesOf(r) + ' mi from Peak' : '']).filter(Boolean).join(' · ')));
     if (r.why) { var w = el('div'); w.style.fontSize = '14px'; if (X) w.appendChild(el('b', null, 'Why Peak: ')); w.appendChild(document.createTextNode(r.why)); d.appendChild(w); }
     d.appendChild(strip(r));
+    var peT = (r.touches || []).filter(function (t) { return t.by === PE && t.m === 'email' && t.out === 'sent'; }).sort(function (a, b) { return b.when - a.when; })[0];
+    if (peT) { var pn = el('div', 'fuhint penote'); pn.setAttribute('data-pe', '1'); var sm = String(peT.note || '').match(/"([^"]+)"/);
+      pn.textContent = (me() === PE_OWNER ? 'You emailed them' : 'Matthew emailed them') + ' from the Peak email list on ' + when(peT.when) + (sm ? ', “' + sm[1] + '”' : '') + (peT.to ? ', to ' + peT.to : '') + '. Don’t email them again unless they reply; if you call, you can mention it.';
+      d.appendChild(pn); }   /* 23 Nov */
     if (X) d.appendChild(eventsSec(r));
     if (research()) {   /* the research account (2026-11-21): who to reach, the look-up, what she found and where; nothing that reaches anyone */
       d.appendChild(contactsSec(r));
