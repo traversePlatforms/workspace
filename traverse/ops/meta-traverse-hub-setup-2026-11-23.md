@@ -54,7 +54,7 @@ Sixfold's Page(s), Instagram and ad account with Full control. Then assign them 
 - **Leave the "Pipeline" system user and app in Sixfold's portfolio alone for now.** Sixfold's Facebook lead ads run through it. Claude
   moves the lead ads to the Traverse connection once Step 6 works, checks that a new lead still arrives, and only then is Pipeline retired.
 
-## Step 5. Move the Traverse Page into the Traverse portfolio
+## Step 5. Move the Traverse Page into the Traverse portfolio (DONE 23 Nov: claimed by Traverse, Page ID 1405686169302553; Traverse Claude has full control, checked through the API)
 1. In **Sixfold's** portfolio → **Settings → Accounts → Pages** → Traverse's Page → **Remove** it from the business (you stay its admin; the
    Page itself isn't deleted).
 2. In **Traverse's** portfolio → **Settings → Accounts → Pages → Add → Add a Page** → pick the Traverse Page → it's claimed.
