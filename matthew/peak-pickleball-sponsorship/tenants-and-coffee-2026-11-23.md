@@ -3,15 +3,15 @@
 DRAFT, 23 Nov 2026. Research only: nobody on these lists has been contacted, and nothing has been sent. **Nothing here is on offer until Tyler confirms it**, the same rule as the sponsor add-ons (sponsor-add-ons-for-brandon-2026-11-20.md). No rents or prices are set. Every business below was checked against its own website or a named outlet on 23 Nov 2026; the fact-check log at the end lists what was verified and what was left out.
 
 ## Check with Tyler before any approach
-1. **Can Peak sub-let space at all?** Peak is inside Chapel Hills Mall. Whether its lease lets it rent part of the space to another business is unknown, and so is whether the mall's consent is needed. Nobody should be pitched a built-out room until this is answered.
-2. **Coffee is already sponsored.** Peak's amenities page says: "free daily coffee at our self-serve station", sponsored by Ziggi's Coffee (peakpickleball.us/amenities). Ask whether that deal is current, whether it's exclusive, and when it ends. The coffee list below is for when the Ziggi's deal ends or isn't exclusive, or for adding something on top of it (an espresso bar on event days).
-3. **Existing sponsors with first-refusal claims.** Three of Peak's current sponsors are in the same categories as this list:
+1. **Sub-letting: settled.** Brandon is handling the mall space and the sub-letting with the mall; if he says it is possible, it is (Matthew, 23 Nov). Pitches can go ahead on his word.
+2. **Coffee: Ziggi's no longer provides it** (Matthew, 23 Nov: they used to, they don't now), so the station is open for a new partner. Peak's amenities page still names Ziggi's, which is free advertising for them: on the list for Tyler to have it changed (needs-from-tyler.md item 18).
+3. **Sponsor exclusivity: unknown.** Matthew doesn't know whether any current sponsor has category exclusivity; it's on the list for Tyler (needs-from-tyler.md item 17). Until he answers, hold the rows that compete with a current sponsor. Three current sponsors share categories with this list:
    - Rally Back Therapy (title sponsor).
    - Orthopedic Centers of Colorado (court sponsor).
    - StretchLab and Prime IV (court sponsors).
    Also, CCOE has been Peak's "preferred orthopedic partner" since 25 Mar 2025 (ccoe.us). Ask whether any of these deals carries category exclusivity before pitching a rival PT, stretch or IV business.
 4. **Which sauna operator Brandon is signing**, so it isn't duplicated here. Rows 1–9 are backups or add-ons to that deal, not rivals to it.
-5. **Peak's own numbers.** "About 630 members paying dues and about 67,000 sign-ups a year" are still held back until Tyler says yes (needs-from-tyler.md item 10). Until he does, use the placeholders in the email.
+5. **Peak's own numbers:** use what's already approved and in use (Jamie's email): about 630 members paying dues and about 67,000 sign-ups a year (Matthew, 23 Nov: "use what weve approved so far"). Nothing beyond those two.
 
 ## 1. In-club tenant prospects
 
@@ -109,11 +109,11 @@ Counts: 5 already connected + 21 new = 26.
 
 ## 2. Coffee vendor prospects
 
-The ask: coffee for members at no cost to Peak, in return for exposure (signs, "official coffee of Peak", member sampling, retail of their beans at the pro shop), or beans free or at cost. **Start with item 2: Ziggi's already sponsors the station.**
+The ask: coffee for members at no cost to Peak, in return for exposure (signs, "official coffee of Peak", member sampling, retail of their beans at the pro shop), or beans free or at cost. Ziggi's used to provide the free coffee and no longer does, so the station is open (Matthew, 23 Nov).
 
 | # | Business | Website | Where | Why they fit | Public wholesale / office / sponsor programme | Source |
 |---|---|---|---|---|---|---|
-| 0 | **Ziggi's Coffee (current station sponsor)** | ziggiscoffee.com | Founded in Longmont in 2004, 100+ locations. The first Colorado Springs store is on Chapel Hills Dr. | The incumbent, and a neighbour of the mall. Renewing it or making it bigger may be the easiest deal. | No wholesale page. Its community page says it gives gift cards and hosts fundraisers. Retail beans are sold through dillanos.com. | https://www.peakpickleball.us/amenities/ ; https://ziggiscoffee.com/franchise/ ; https://ziggiscoffee.com/about/our-community/ ; https://www.longmontleader.com/news-releases/colorado-springs-getting-first-ziggis-coffee-franchise-3470802 |
+| 0 | **Ziggi's Coffee (former station sponsor)** | ziggiscoffee.com | Longmont-founded chain; a Colorado Springs store on Chapel Hills Dr. | Used to provide Peak's free coffee and no longer does (Matthew, 23 Nov). Not a prospect unless Peak wants them back. | — | peakpickleball.us/amenities (still names them; to be changed) |
 | 1 | Mission Coffee Roasters | missioncoffeeroasters.com | Colorado Springs (11641 Ridgeline Dr, Northgate) | North-side roaster with a café. Its site says it helps "non-profits in our community". Peak has a nonprofit side. | "Wholesale coffee and office solutions": beans, a brewer, training or a full coffeehouse setup (own page). VisitCOS adds custom labels and bags. | https://missioncoffeeroasters.com/new-cover-page ; https://www.visitcos.com/directory/mission-coffee-roasters/ |
 | 2 | DAZBOG Coffee | dazbog.com | Denver (1090 Yuma St) | Delivers directly along I-25 **from Colorado Springs** to Cheyenne. Equipment can be bought **or loaned**, which suits a free-to-Peak deal. | Office coffee service across Colorado, with brewing support, training and service (own wholesale page). | https://dazbog.com/wholesale/ |
 | 3 | Renew Coffee | renewcoffeecart.com | Colorado Springs | Runs "coffee programs": a permanent espresso bar with equipment, menu, **signage** and staff or training. The best fit for a staffed bar on event days. | Event catering, an in-house barista, and permanent bar programmes (own site). | https://www.renewcoffeecart.com/ ; FOX21 via Yahoo, 9 Sep 2025: https://www.yahoo.com/news/articles/renew-coffee-brings-caf-mobile-195921104.html |
@@ -128,13 +128,13 @@ The ask: coffee for members at no cost to Peak, in return for exposure (signs, "
 | 12 | OZO Coffee | ozocoffee.com | Boulder | Private label and an office-coffee page. Its delivery area is the Denver–Boulder metro only, so for Peak it's a private-label "Peak blend" option. | Wholesale, office coffee, equipment and service, free training, catering for 10–300, private label nationwide (own page). | https://www.ozocoffee.com/pages/wholesale |
 | 13 | Golden Pine Coffee Roasters | no website (Instagram @gpr.coffee) | Black Forest (12470 Black Forest Rd) | New small local roastery that would value the exposure. The roastery runs, but the coffee bar wasn't open yet (Nov 2025). | None published. | https://springsmag.com/whats_next_cos/golden-pine-coffee-roasters-2/ (16 Nov 2025) |
 
-Counts: 1 incumbent + 13 prospects = 14.
+Counts: 13 prospects, plus Ziggi's as the former sponsor.
 
 ## How to approach them (coffee)
 
 **The order:**
-1. Tyler on the Ziggi's deal (item 2).
-2. If it's open or ending, approach the north-side local roasters first: Mission, then Loyal. Next, DAZBOG for loaned equipment and Springs delivery.
+1. Ziggi's is gone, so nothing to wait for on the coffee side (exclusivity only matters for the tenant list).
+2. Approach the north-side local roasters first: Mission, then Loyal. Next, DAZBOG for loaned equipment and Springs delivery.
 3. Renew Coffee or Good Gracious for event days (the expo, tournaments), where a staffed bar adds something the self-serve station doesn't.
 
 **What Peak can offer a coffee partner:**
@@ -162,7 +162,7 @@ Counts: 1 incumbent + 13 prospects = 14.
 >
 > Hi [FIRST NAME OR "THE [ROASTER NAME] TEAM"],
 >
-> I'm [SENDER NAME], working with Peak Pickleball, the 24-court indoor club inside Chapel Hills Mall. Peak gives members free coffee at a self-serve station every day, and we're looking for a [local / Colorado] roaster to be the club's official coffee.
+> I'm [SENDER NAME], working with Peak Pickleball, the 24-court indoor club inside Chapel Hills Mall. Peak has about 630 members paying dues and about 67,000 sign-ups a year, and we want to give members free coffee at a self-serve station every day. We're looking for a [local / Colorado] roaster to be the club's official coffee.
 >
 > What Peak would offer: your name on the station as "Official coffee of Peak Pickleball", your bags for sale in our pro shop, member sampling days, and a tracked QR code at the station so you can see how many players take up your offer. In return we'd ask for [beans at no cost / beans at cost], about [CUPS A WEEK OR "an amount we'd agree together"], and [a loaned brewer, if you offer one].
 >
@@ -180,6 +180,9 @@ Counts: 1 incumbent + 13 prospects = 14.
 - Paddle-brand tenant rows: cut, because they'd compete with Peak's own pro shop.
 
 ## Fact-check log
+
+- 23 Nov, Matthew: Ziggi's no longer provides Peak's coffee (the amenities page is out of date); sub-letting is Brandon's to handle; sponsor exclusivity unknown (Tyler item 17); member figures limited to the two already used (630 dues-paying members, 67,000 sign-ups a year).
+
 | Claim | Source | Status |
 |---|---|---|
 | Ziggi's sponsors Peak's free self-serve coffee | peakpickleball.us/amenities, read 23 Nov 2026 | Verified on Peak's site. Whether the deal is current or exclusive is unresolved (Tyler) |

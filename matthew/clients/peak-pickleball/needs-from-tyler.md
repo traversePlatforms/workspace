@@ -42,6 +42,14 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
 19. **Ads:** the monthly ad budget, who approves each ad, and access to the Meta ad account and Google Ads (or OK to create them).
 20. **TVs:** how many there are, where they are, what device feeds each one, and what they show. Also whether Peak is OK with sponsor slides on them. The sponsor TV reel (item 8a) needs this.
 
+## 5. Sponsors and partners (added 23 Nov 2026)
+17. **Sponsor exclusivity:** does any current sponsor deal give a sponsor exclusivity in its category? Matthew doesn't know. It matters
+    before approaching in-club tenants or new partners who compete with a sponsor (for example Stretch Zone vs StretchLab, a PT clinic vs
+    Rally Back Therapy or Orthopedic Centers of Colorado). Ask for the list of deals with any exclusivity terms.
+18. **Website: the Ziggi's coffee line is out of date.** peakpickleball.us/amenities still says Ziggi's provides the free self-serve
+    coffee. Matthew, 23 Nov: Ziggi's used to and no longer does. Ask Tyler to have it taken down (or changed to a new partner once there
+    is one): as it stands it's free advertising for Ziggi's. Who edits the site is item 16.
+
 ## Fact-check log
 - Shared mailbox, Send As and the extra app permission: Microsoft 365 needs an Exchange or Global admin for each. Matthew isn't one. The "Grant admin consent" button was greyed out for him on 17 Nov.
 - Tyler's OK for the read-only cancellation report: given 13 Nov (memory, peak-internal-systems-and-site).
