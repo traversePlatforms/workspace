@@ -54,7 +54,9 @@ export const V2 = { ...V2_1023, ndvi: 0.33, speck: 4, roofBuf: 1 };
 /* 2026-11-22 retune (CLOUD-JOBS-2026-11-22.md): V2 plus the low-green knob, picked on the 26 lots up to 11 Nov among V2 + low settings only
    (so only lots reading under 1,200 sq ft change); on Jen's 11 held-out lots of 13-20 Nov median miss 40% -> 29%, mean log miss 0.528 -> 0.320.
    Used by yard-v2-town.mjs when YV2_SETTINGS=1122 (the 22 Nov re-measure of the low-reading doors); V2 stays the default until it goes live. */
-export const V2_1122 = { ...V2, low: 0.18, lowMin: 1200, lowSpeck: 2 };
+/* lowMaxLot (23 Nov): the low line counted fields as lawn on 1-5 acre lots (a Parker lot 100 -> 63,900 sq ft); only under an acre.
+   The 4 hand lots it changes are all under 0.2 ac, so the scores above are the same. */
+export const V2_1122 = { ...V2, low: 0.18, lowMin: 1200, lowSpeck: 2, lowMaxLot: 43560 };
 
 /* batch speed-ups (2026-10-24, for the whole-territory run): the photo and land-cover searches, the opened photo files and the laser
    surveys' ept.json are kept for the run, so neighbouring lots share them instead of asking again for every lot. A Planetary Computer
@@ -206,6 +208,7 @@ export function yardClassify(S, opt = {}) {
   if (opt.low != null || (opt.low === undefined && V2.low != null)) {
     const lowV = opt.low ?? V2.low, R0 = yardClassify(S, { ...opt, low: null });
     if (R0.lawn >= (opt.lowMin ?? V2.lowMin ?? 300)) return R0;
+    if (R0.lot >= (opt.lowMaxLot ?? V2.lowMaxLot ?? Infinity)) return R0;
     const R1 = yardClassify(S, { ...opt, low: null, ndvi: lowV, speck: opt.lowSpeck ?? opt.speck ?? V2.speck });
     return R1.lawn > R0.lawn ? { ...R1, lowUsed: 1, settings: { ...V2, ...opt } } : R0;
   }

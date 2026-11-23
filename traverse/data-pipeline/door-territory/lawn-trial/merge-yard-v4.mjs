@@ -19,6 +19,7 @@ for (const f of readdirSync(join(HERE, 'yard-v4')).filter((f) => f.endsWith('.js
   let n = 0, c = 0;
   for (const [id, v] of Object.entries(nw.doors || {})) {
     if (!v || typeof v.l !== 'number' || !(id in old.doors)) continue;
+    if (v.lw && v.lot >= 43560) continue;   /* lowMaxLot (23 Nov): the low line only under an acre; acreage keeps its live reading */
     const w = { ...v }; delete w.shared; n++; if (!old.doors[id] || old.doors[id].l !== w.l) c++;
     old.doors[id] = w;
   }

@@ -25,6 +25,7 @@ for (const f of existsSync(join(HERE, 'yard-v4')) ? readdirSync(join(HERE, 'yard
   for (const [id, v] of Object.entries(nw)) {
     const o = old[id]; if (!o || !v || typeof v.l !== 'number') continue;
     const t = (tierOf[key] || {})[id]; if (!t) continue;
+    if (v.lw && v.lot >= 43560) { S.acreKept = (S.acreKept || 0) + 1; continue; }   /* lowMaxLot: acreage keeps its live reading (merge-yard-v4.mjs) */
     const v1 = { ...v }; delete v1.shared;   /* the subset run's own shared marks are redone at build time over the whole town */
     const Lo = yardLawn(o), Ln = yardLawn(o.shared ? { ...v1, shared: o.shared } : v1); if (!Lo) continue;
     S.doors++; P.doors++; if (v.lw) S.lowUsed++;
