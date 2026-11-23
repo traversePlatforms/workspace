@@ -33,7 +33,20 @@ section overrides the "never on the VM" lines further down; they're kept as the 
   Task Scheduler setup, the hotspot watchdogs, finished one-off jobs with laptop scratch paths.
 - **Bug found on the way:** the weekly crime step had failed on the laptop since 16 Nov (a 146,804-door spread overflowed the stack in
   `security/build-security.mjs` after the every-home push). Fixed 23 Nov.
-- ⚑ The quarterly new-homes classifier asks Node for 14 GB; Jarvis has 8 GB and no swap. Before 15 Feb: add swap or check its real need.
+- **Swap:** 12 GB `/swapfile` (in /etc/fstab, swappiness 10) so the quarterly new-homes classifier (asks Node for 14 GB) fits.
+- **Overnight check** on the VM timer `traverse-overnight-check` (:05 and :35); it reads the VM's own backups and timers, and the laptop's
+  copy stands down (`overnight-check` in runs-on-vm.txt). The Wi-Fi queue line says the queue is the laptop's.
+- **6 PM backup:** `shared/tools/drive-backup.sh` (timer `traverse-drive-backup`, written but OFF until Google is signed in): the weekly
+  locked archive to Traverse's Drive (deleted for good when old, so Drive's trash doesn't eat the storage), the nightly GitHub copy, the
+  weekly media mirror. Needs once: `rclone config create gtrav drive scope=drive` (Google sign-in, m.sharpe@traverseplatforms.com) and
+  `gh auth login`. Then: `systemctl --user enable --now traverse-drive-backup.timer` and `drive-backup` into runs-on-vm.txt (the laptop's
+  Backup-ToGoogleDrive.ps1 then stands down).
+- **Sites:** the cloud `sg.sh` reaches trav, six, surge and a365 (the laptop's keys, moved).
+- **J.A.R.V.I.S. desk switched over:** Matthew's own desk sessions get `~/main` as an extra folder (door data, real codes files, Surge
+  notes): full data builds and door-data pushes run in `~/main`, Surge drafts read RESTRICTED.md there. Staff tickets unchanged.
+  Only his Desktop, Windows tasks and the mic stay laptop jobs.
+- **Anywhere access:** VS Code tunnel (`code-cli`, installed in /usr/local/bin): any browser at vscode.dev, phone included. Once:
+  `code-cli tunnel user login --provider github`, then `code-cli tunnel service install --accept-server-license-terms --name jarvis`.
 
 ## Where it stands (22 Nov, night)
 
