@@ -222,6 +222,7 @@ const gsrv = http.createServer((req, res) => {
     if (req.method === 'PUT' && (m = /^drafts\/([^/]+)$/.exec(p))) return J({ id: m[1] });
     if (req.method === 'POST' && p === 'drafts') return J({ id: 'dnew' });
     if (req.method === 'POST' && (p === 'drafts/send' || p === 'messages/send')) { G.sends.push({ p, body }); return J({ id: 'sent' + G.sends.length }); }
+    if (req.method === 'POST' && (m = /^messages\/([^/]+)\/(trash|untrash)$/.exec(p))) return J({ id: m[1], labelIds: m[2] === 'trash' ? ['TRASH'] : ['INBOX'] });   /* 23 Nov: Delete */
     /* 19 Nov: Google Calendar (JARVIS_CAL_MOCK): the events read, and reminders added */
     if (req.method === 'GET' && p === 'calendars/primary/events') return J({ items: CALEV.map(e => ({ summary: e.title, location: e.where, start: e.allDay ? { date: e.start } : { dateTime: e.start }, end: e.allDay ? { date: e.end } : { dateTime: e.end } })) });
     if (req.method === 'POST' && p === 'calendars/primary/events') { G.events = (G.events || []).concat([JSON.parse(body)]); return J({ id: 'ev' + G.events.length }); }
@@ -411,6 +412,17 @@ try {
   ok(G.sends.length === 1 && G.sends[0].p === 'drafts/send' && /"id":"d1"/.test(G.sends[0].body), 'Yes: exactly one send, the saved draft, through Gmail');
   ok(await ev('!document.querySelector("[data-key=\\"m.sharpe@traverse.example.test:m1\\"]")'), 'the sent email leaves the list');
   ok(/reply sent/.test(fs.readFileSync(path.join(DATA, 'assistant.log'), 'utf8')), 'the send is in the Assistant\'s log');
+  { /* Delete (23 Nov): to Gmail's Trash and off the list, Undo brings it back */
+    const items = JSON.parse(fs.readFileSync(path.join(DATA, 'items.json'), 'utf8')); const tk = Object.keys(items).find((k) => (items[k].status || 'open') === 'open');
+    if (!tk) ok(false, 'Delete: an open email to try it on'); else {
+      const tid = items[tk].id, post = (a) => ev('fetch("../api.php?action=' + a + '",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:' + JSON.stringify(tk) + '})}).then(r=>r.json())');
+      const t1 = await post('trash'); const after = JSON.parse(fs.readFileSync(path.join(DATA, 'items.json'), 'utf8'))[tk];
+      ok(t1.ok && G.calls.includes('POST messages/' + tid + '/trash') && after.status === 'trashed', 'Delete: the email goes to its Gmail Trash and off the list');
+      const t2 = await post('untrash'); const back = JSON.parse(fs.readFileSync(path.join(DATA, 'items.json'), 'utf8'))[tk];
+      ok(t2.ok && G.calls.includes('POST messages/' + tid + '/untrash') && back.status === 'open', 'Undo: it comes back from the Trash and onto the list');
+      ok(/email moved to Trash/.test(fs.readFileSync(path.join(DATA, 'assistant.log'), 'utf8')), 'the delete is in the Assistant\'s log');
+    }
+  }
 
   /* ================================================================ 8. which brain answers, named on the bar */
   ok(/Answering: Assistant, instant/.test(await ev('document.getElementById("brainlabel").textContent')), 'the bar says: Assistant, instant');

@@ -217,4 +217,16 @@ if ($action === 'done') {
     jedit('items.json', function ($all) use ($key) { if (isset($all[$key])) $all[$key]['status'] = 'done'; return $all; });
     out(['ok' => true]);
 }
+/* Delete (2026-11-23, Matthew: "can we have a delete option built in where I can delete some of the emails straight from here?"): the email
+   goes to that inbox's Gmail Trash (Gmail empties it after 30 days; untrash = the Undo) and comes off this list. A Gmail draft reply to it is
+   left alone in Drafts. */
+if ($action === 'trash' || $action === 'untrash') {
+    $key = (string) ($body['key'] ?? ''); $it = jget('items.json')[$key] ?? null;
+    if (!$it || empty($it['acct']) || empty($it['id'])) out(['ok' => false, 'error' => 'That email is not on the list any more.']);
+    $r = gmail((string) $it['acct'], 'POST', 'messages/' . rawurlencode((string) $it['id']) . '/' . $action);
+    if ((int) ($r['_status'] ?? 0) !== 200) out(['ok' => false, 'error' => ($action === 'trash' ? 'Gmail did not move it to the Trash' : 'Gmail did not bring it back') . ' (' . (string) ($r['error']['message'] ?? $r['error'] ?? $r['_status'] ?? '?') . ').']);
+    jedit('items.json', function ($all) use ($key, $action) { if (isset($all[$key])) $all[$key]['status'] = $action === 'trash' ? 'trashed' : 'open'; return $all; });
+    alog($action === 'trash' ? 'email moved to Trash' : 'email back from Trash', ['acct' => (string) $it['acct'], 'id' => (string) $it['id']]);
+    out(['ok' => true]);
+}
 out(['ok' => false, 'error' => 'No such action.'], 404);

@@ -206,6 +206,11 @@
   var COLOR = { Personal: 'var(--c-personal)', Traverse: 'var(--c-traverse)', 'Sixfold / 365': 'var(--c-sixfold)', Sixfold: 'var(--c-sixfold)', Surge: 'var(--c-surge)' };
   function colorOf(a) { if (!a) return 'var(--c-other)'; return COLOR[a.label] || (/sixfold|365/i.test(a.email) ? 'var(--c-sixfold)' : /traverse/i.test(a.email) ? 'var(--c-traverse)' : /surge/i.test(a.email) ? 'var(--c-surge)' : /gmail/i.test(a.email) ? 'var(--c-personal)' : 'var(--c-other)'); }
   function el(t, cls, txt) { var e = document.createElement(t); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; }
+  function undoBar(t, undo) { var o = document.getElementById('undobar'); if (o) o.remove(); var e = el('div'); e.id = 'undobar'; e.setAttribute('role', 'status');
+    e.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:10px;z-index:99;font-size:15px';
+    e.appendChild(document.createTextNode(t + ' ')); var u = document.createElement('button'); u.type = 'button'; u.textContent = 'Undo';
+    u.style.cssText = 'margin-left:10px;background:none;border:0;color:#7db4ee;font:inherit;text-decoration:underline;cursor:pointer';
+    u.addEventListener('click', function () { e.remove(); undo(); }); e.appendChild(u); document.body.appendChild(e); setTimeout(function () { e.remove(); }, 9000); }   /* 23 Nov */
   function btn(label, icon, cls) { var b = el('button', cls || null); b.type = 'button'; if (icon) b.appendChild(ico(icon)); if (label) b.appendChild(document.createTextNode(label)); return b; }
   function api(action, body) {
     return fetch('api.php?action=' + action, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' } : { credentials: 'same-origin' })
@@ -359,7 +364,17 @@
     var op = el('a', 'btn'); op.appendChild(ico('open')); op.appendChild(document.createTextNode('Open')); op.href = gmailUrl(i.acct, 'all/' + encodeURIComponent(i.threadId)); op.target = '_blank'; op.rel = 'noopener'; acts.appendChild(op);
     var dn = btn('Done', 'check'); dn.title = 'Take it off this list (Gmail is not changed)';
     dn.addEventListener('click', function () { dn.disabled = true; api('done', { key: k }).then(function () { S.data.items = S.data.items.filter(function (x) { return x.acct + ':' + x.id !== k; }); draw(); }); });
-    acts.appendChild(dn); r.appendChild(acts);
+    acts.appendChild(dn);
+    /* Delete (23 Nov, Matthew: "can we have a delete option built in"): to that inbox's Gmail Trash, off this list; Undo for 9 s */
+    var dl = btn('Delete', null); dl.title = 'Move it to the Trash in its Gmail (Gmail empties the Trash after 30 days)';
+    dl.addEventListener('click', function () { dl.disabled = true; dl.textContent = 'Deleting…';
+      api('trash', { key: k }).then(function (j) {
+        if (!j || !j.ok) { dl.disabled = false; dl.textContent = 'Delete'; alert((j && j.error) || 'It did not move.'); return; }
+        S.data.items = S.data.items.filter(function (x) { return x.acct + ':' + x.id !== k; }); draw();
+        undoBar('Moved to the Trash.', function () { api('untrash', { key: k }).then(function (u) { if (u && u.ok) { S.data.items.unshift(i); draw(); } else alert((u && u.error) || 'It did not come back.'); }); });
+      }, function () { dl.disabled = false; dl.textContent = 'Delete'; });
+    });
+    acts.appendChild(dl); r.appendChild(acts);
     return r;
   }
   /* the email in full, with a reply box: Claude can write it, it can be saved as a Gmail draft, and Send (after a yes) sends it from

@@ -1076,6 +1076,10 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     clearTimeout(setState.t); if (s === 'answer') setState.t = setTimeout(function () { if (S.state === 'answer') setState('idle'); }, 8000);
   }
   function toast(t) { var o = document.querySelector('.toast'); if (o) o.remove(); var e = el('div', 'toast', t); e.setAttribute('role', 'status'); document.body.appendChild(e); setTimeout(function () { e.remove(); }, 4200); }
+  /* a toast with an Undo button (23 Nov: Delete in the inbox); it stays 9 s */
+  function toastUndo(t, undo) { var o = document.querySelector('.toast'); if (o) o.remove(); var e = el('div', 'toast', t + ' '); e.setAttribute('role', 'status');
+    var u = el('button', 'lnk', 'Undo'); u.type = 'button'; u.id = 'toastundo'; u.style.cssText = 'margin-left:8px;color:inherit;text-decoration:underline;background:none;border:0;font:inherit;cursor:pointer';
+    u.addEventListener('click', function () { e.remove(); undo(); }); e.appendChild(u); document.body.appendChild(e); setTimeout(function () { e.remove(); }, 9000); }
 
   /* ------------------------------------------------------------ the core: the mockup's wireframe globe, drawn by one function */
   var coreN = 0;
@@ -3136,9 +3140,22 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       var nr = el('div', 'note'), note = el('input'); note.placeholder = 'Tell it what to say (optional)'; note.setAttribute('aria-label', 'What the reply should say');
       var wr = btn(m.draft ? 'Rewrite it' : 'Write it for me', 'pen', 'btn sec'); wr.title = 'The Assistant writes it (an API call)'; add(nr, note, wr); sh.body.appendChild(nr);
       var row = el('div', 'racts'), said = el('div', 'said', m.draft ? 'This is the draft in ' + (a ? a.label : 'that inbox') + '’s Gmail. Nothing is sent until you press Send and say yes.' : 'Nothing is sent until you press Send and say yes.');
-      var sv = btn('Save draft', null, 'btn sec'), sd = btn('Send', 'send', 'btn pri'), dn = btn('Done, take it off', 'check', 'btn gh'); sv.id = 'savedraft'; sd.id = 'send';
-      add(row, said, dn, sv, sd); sh.body.appendChild(row);
-      var busy = function (on) { [wr, sv, sd, dn].forEach(function (b) { b.disabled = on; }); };
+      var sv = btn('Save draft', null, 'btn sec'), sd = btn('Send', 'send', 'btn pri'), dn = btn('Done, take it off', 'check', 'btn gh'), dl = btn('Delete', null, 'btn gh'); sv.id = 'savedraft'; sd.id = 'send'; dl.id = 'trashmail';
+      dl.title = 'Move it to the Trash in ' + (a ? a.label : 'that inbox') + '’s Gmail (Gmail empties the Trash after 30 days)';
+      add(row, said, dl, dn, sv, sd); sh.body.appendChild(row);
+      var busy = function (on) { [wr, sv, sd, dn, dl].forEach(function (b) { b.disabled = on; }); };
+      /* Delete (23 Nov, Matthew): to that inbox's Gmail Trash, off the list; Undo in the toast brings it back */
+      dl.addEventListener('click', function () {
+        busy(true); said.textContent = 'Moving it to the Trash…';
+        apost('trash', { key: k }).then(function (r) {
+          busy(false); if (!r || !r.ok) { said.textContent = (r && r.error) || 'It did not move.'; return; }
+          var keep = S.home.items.filter(function (y) { return y.acct + ':' + y.id === k; })[0];
+          dirty = false; sh.force(); S.home.items = S.home.items.filter(function (y) { return y.acct + ':' + y.id !== k; }); draw();
+          toastUndo('Moved to the Trash in ' + (a ? a.label : 'that inbox') + '.', function () {
+            apost('untrash', { key: k }).then(function (u) { if (u && u.ok) { if (keep) { S.home.items.unshift(keep); draw(); } toast('It’s back in the inbox.'); } else toast((u && u.error) || 'It did not come back.'); }, function () { toast('No connection: still in the Trash.'); });
+          });
+        }, function () { busy(false); said.textContent = 'No connection: not deleted.'; });
+      });
       wr.addEventListener('click', function () { busy(true); said.textContent = 'Writing…'; setState('think');
         apost('write', { key: k, note: note.value }).then(function (r) { busy(false); setState('idle'); if (!r.ok) { said.textContent = r.error; return; } ta.value = r.text; dirty = true; said.textContent = 'Written. Read it over, change what you like, then save or send.'; ta.focus(); }, function () { busy(false); setState('idle'); said.textContent = 'No connection.'; }); });
       sv.addEventListener('click', function () { busy(true); said.textContent = 'Saving…';
