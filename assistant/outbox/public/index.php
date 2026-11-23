@@ -1,6 +1,8 @@
 <?php
 /* Outbox: every email Matthew's tools send by themselves, one section per business (served through PHP so the host's front server never
-   keeps an old copy). Peak has its full controls (the Peak sender's own page, framed); Sixfold and Traverse are read only. */
+   keeps an old copy). Peak has its full controls (the Peak sender's own page, framed); Sixfold and Traverse are read only.
+   Since 2026-11-23 each section is a list of automatic email streams, laid out like Patch Retention's Automations screens (Matthew finds
+   them "a lot easier to understand and navigate"): filters, search, sortable columns, a column chooser and a detail drawer. */
 header('Content-Type: text/html; charset=utf-8'); header('Cache-Control: no-store'); header('X-Robots-Tag: noindex'); header('Referrer-Policy: no-referrer'); header('X-Frame-Options: SAMEORIGIN');
 ?><!doctype html>
 <html lang="en">
@@ -17,7 +19,7 @@ header('Content-Type: text/html; charset=utf-8'); header('Cache-Control: no-stor
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
 header{background:#2b3a4f;color:#fff;padding:11px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 header h1{font-size:18px;margin:0;flex:1;letter-spacing:.2px}header button{background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
-main{max-width:1180px;margin:0 auto;padding:16px;display:grid;gap:14px}
+main{max-width:1440px;margin:0 auto;padding:16px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}main>*{min-width:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .card h2{font-size:16px;margin:0 0 10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 button{font:600 14px system-ui,sans-serif;border-radius:9px;border:1px solid var(--line);background:var(--card);color:var(--ink);padding:8px 13px;cursor:pointer;min-height:40px}
@@ -27,7 +29,7 @@ label{display:block;font-size:13px;color:var(--soft);margin:8px 0 3px}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}@media(max-width:760px){.tiles{grid-template-columns:repeat(2,1fr)}}
 .tile{background:var(--bg);border-radius:10px;padding:10px 12px}.tile b{display:block;font-size:26px;line-height:1.1}.tile span{font-size:13px;color:var(--soft)}.tile small{display:block;font-size:12px;color:var(--soft);margin-top:3px}
 .tile.bad b{color:var(--bad)}
-.att{margin:12px 0 0;padding:0;list-style:none;font-size:14px}.att li{padding:6px 10px;border-radius:8px;margin:4px 0}.att li.bad{background:var(--badbg);color:var(--bad)}.att li.info{background:var(--offbg);color:var(--soft)}
+.att{margin:12px 0 0;padding:0;list-style:none;font-size:14px}.att li{padding:6px 10px;border-radius:8px;margin:4px 0}.att li.bad{background:var(--badbg);color:var(--bad)}.att li.info{background:var(--offbg);color:var(--soft)}.att li.more{padding:0 2px}
 .tabs{display:flex;gap:6px;flex-wrap:wrap}.tabs button[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:var(--card)}
 .tabs .n{font-size:12px;opacity:.8;margin-left:4px}
 .note{font-size:13px;color:var(--soft)}.tiny{font-size:12px}
@@ -53,6 +55,62 @@ table.t{border-collapse:collapse;width:100%;font-size:13px;margin:4px 0}table.t 
 .ln .err{color:var(--bad);font-size:13px;margin-top:3px}.ln .chg{border-color:var(--warn)}.chips{font-size:12px;color:var(--soft);margin-top:3px}.chips code{font-size:12px}
 .edgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:900px){.edgrid{grid-template-columns:1fr}}
 iframe.pv{min-height:520px;background:#fff}
+/* ---- the list view (2026-11-23) */
+:root{--sel:#2b3a4f;--swoff:#c3cad4;--bar:#4f6b8f;--bar2:#dfe5ec;--run:#1f6b3a;--runbg:#e5f4ea;--sch:#2a4f86;--schbg:#e6eefb;--drf:#8a4b00;--drfbg:#fdf0dc}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--sel:#9fb3cf;--swoff:#3a4452;--bar:#8fa8c8;--bar2:#2a323e;--run:#7fd29b;--runbg:#16281d;--sch:#9cbcf0;--schbg:#1a2436;--drf:#f0b35a;--drfbg:#2c2414}}
+:root[data-theme="dark"]{--sel:#9fb3cf;--swoff:#3a4452;--bar:#8fa8c8;--bar2:#2a323e;--run:#7fd29b;--runbg:#16281d;--sch:#9cbcf0;--schbg:#1a2436;--drf:#f0b35a;--drfbg:#2c2414}
+.soft{color:var(--soft)}.cnt{font-size:13px;font-weight:400}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}@media(max-width:900px){.strip{grid-template-columns:repeat(4,1fr)}}@media(max-width:520px){.strip{grid-template-columns:repeat(2,1fr)}}
+.sc{background:var(--bg);border-radius:10px;padding:8px 10px;min-width:0}.sc span{display:block;font-size:12px;color:var(--soft)}.sc b{display:block;font-size:22px;line-height:1.2}.sc small{display:block;font-size:11px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list{padding:0}.bar{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:flex-end;padding:12px 14px;border-bottom:1px solid var(--line)}
+.f{display:flex;flex-direction:column;gap:2px;margin:0;font-size:12px;color:var(--soft)}.f.grow{flex:1;min-width:160px}
+select{font:14px system-ui,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 8px;min-height:40px}
+.colw{position:relative}.colp{position:absolute;right:0;top:46px;z-index:20;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 10px;box-shadow:0 8px 24px rgba(0,0,0,.18);display:grid;gap:2px;min-width:190px}
+.colp label{display:flex;gap:8px;align-items:center;margin:0;color:var(--ink);font-size:14px;padding:3px 0}.colp input{width:auto}
+button.tiny{min-height:30px;padding:3px 10px;font-size:12px}
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.lt{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
+.lt th,.lt td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle;white-space:nowrap;background:var(--card)}
+.lt thead th{position:sticky;top:0;z-index:2;font-size:12px;color:var(--soft);font-weight:600;background:var(--card)}
+.lt th.num,.lt td.num{text-align:right}.lt td small{display:block;font-size:11px;color:var(--soft)}
+.lt td[data-c="next"]{white-space:normal;min-width:150px;max-width:200px;font-size:13px}.lt td[data-c="last"]{font-size:13px}
+.rol{font-size:11px;color:var(--soft);margin-left:5px;vertical-align:middle}
+:root{color-scheme:light}:root[data-theme="dark"]{color-scheme:dark}@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark}}
+.lt .nm{position:sticky;left:0;z-index:1;min-width:230px;max-width:290px;white-space:normal;box-shadow:1px 0 0 var(--line)}.lt thead .nm{z-index:3}
+.lt tbody tr:hover td{background:var(--bg)}
+.lnk{background:none;border:0;padding:0;min-height:0;color:var(--ink);font-weight:650;text-align:left;font-size:14px;cursor:pointer}.lnk:hover{text-decoration:underline}
+.sb{background:none;border:0;padding:0;min-height:0;font:inherit;color:inherit;cursor:pointer;display:inline-flex;gap:4px;align-items:center}.sb i{font-style:normal;font-size:10px;opacity:.55}.sb[aria-sort="ascending"] i,.sb[aria-sort="descending"] i{opacity:1;color:var(--ink)}
+.lt .act{width:44px;text-align:center}.eye{min-height:34px;padding:4px 8px;color:var(--soft)}.eye:hover{color:var(--ink)}
+.ch{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--brand2);color:var(--sel);display:inline-block}
+.ty{font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid var(--line);color:var(--soft);display:inline-block}
+.st{font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;display:inline-block;background:var(--offbg);color:var(--off)}
+.st-running{background:var(--runbg);color:var(--run)}.st-scheduled{background:var(--schbg);color:var(--sch)}.st-draft{background:var(--drfbg);color:var(--drf)}.st-done{background:var(--brand2);color:var(--sel)}
+.dash{color:var(--soft)}.badn{color:var(--bad)}.empty{text-align:center!important;color:var(--soft);padding:26px!important;white-space:normal!important}
+.sw{position:relative;display:inline-block;width:40px;height:22px;min-height:0;padding:0;border-radius:99px;border:0;background:var(--swoff);vertical-align:middle;flex:none}
+.sw span{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.sw.on{background:var(--run)}.sw.on span{left:21px}button.sw{cursor:pointer}button.sw:focus-visible{outline:2px solid var(--sel);outline-offset:2px}
+.sw.ro{opacity:.55;cursor:not-allowed}.sw.ro.on{background:var(--off)}
+#drbg{position:fixed;inset:0;background:rgba(10,14,20,.45);z-index:40}
+#dr{position:fixed;top:0;right:0;bottom:0;width:min(620px,100vw);background:var(--card);border-left:1px solid var(--line);z-index:41;overflow:auto;padding:16px 18px 40px;box-shadow:-10px 0 30px rgba(0,0,0,.2)}
+body.drawer{overflow:hidden}
+.dh{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.dh h2{margin:0 0 6px;font-size:19px}.x{min-height:36px;padding:4px 11px}
+#dr h3{font-size:15px;margin:16px 0 6px}.ctl{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
+ol.how{list-style:none;margin:0;padding:0;display:grid;gap:8px;counter-reset:s}ol.how li{display:grid;grid-template-columns:62px 1fr;gap:10px;font-size:14px;align-items:start}
+.k{font-size:11px;font-weight:800;letter-spacing:.4px;padding:3px 7px;border-radius:6px;background:var(--brand2);color:var(--sel);text-align:center}
+.k-when{background:var(--schbg);color:var(--sch)}.k-then{background:var(--drfbg);color:var(--drf)}.k-send{background:var(--runbg);color:var(--run)}
+.dtabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:18px 0 10px}.dtabs button{border:0;border-bottom:3px solid transparent;border-radius:0;background:none;color:var(--soft)}
+.dtabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--sel)}
+.msg{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}.ml{font-weight:700;font-size:14px;margin-bottom:4px}
+.msg dl{grid-template-columns:70px 1fr}.msg dd{word-break:break-word}
+pre.pv{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font:13px/1.45 ui-monospace,Consolas,monospace;margin:6px 0;max-height:360px;overflow:auto}
+.flow{display:grid;gap:4px}.fn{border:1px solid var(--line);border-radius:10px;padding:8px 12px}.fn p{margin:4px 0 0;font-size:14px}.fa{text-align:center;color:var(--soft);font-size:18px;line-height:1}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.sgrid{grid-template-columns:1fr}}
+.sbx{background:var(--bg);border-radius:10px;padding:10px 12px}.sbx h4{margin:0 0 6px;font-size:13px}
+.br{display:grid;grid-template-columns:62px 1fr 76px;gap:8px;align-items:center;font-size:13px;margin:4px 0}.br b{text-align:right;font-weight:650}.br small{color:var(--soft);font-weight:400}
+.bt{height:8px;background:var(--bar2);border-radius:99px;overflow:hidden}.bt i{display:block;height:100%;background:var(--bar);border-radius:99px}
+dl.kv{grid-template-columns:70px 1fr}
+.okm{color:var(--ok)}.flash.ok{background:var(--okbg);color:var(--ok)}
+@media(max-width:700px){main{padding:10px}.card{padding:12px}.list{padding:0}header{padding:9px 12px;gap:8px}header button{min-height:34px;padding:5px 10px}#asof{font-size:11px}.tiles .tile b{font-size:22px}.lt th,.lt td{padding:8px 8px}.lt .nm{min-width:44vw;max-width:48vw}.lt .nm small{font-size:11px}.lnk{font-size:14px}.strip .sc b{font-size:19px}}
 </style>
 </head>
 <body>
@@ -66,8 +124,10 @@ iframe.pv{min-height:520px;background:#fff}
   <div id="flash"></div>
   <section class="card"><h2>Today</h2><div class="tiles" id="tiles"></div><ul class="att" id="att"></ul></section>
   <div class="tabs" role="tablist" id="tabs"></div>
-  <section id="sec"></section>
+  <section id="sec"><div id="secTop"></div><div id="secList" style="margin-top:14px"></div><div id="secPeak"></div></section>
 </main>
+<div id="drbg" class="hide"></div>
+<aside id="dr" class="hide" role="dialog" aria-modal="true" aria-labelledby="drt"></aside>
 <div id="ed" class="hide" role="dialog" aria-modal="true" aria-label="Change the words"></div>
 <script>
 'use strict';
@@ -83,11 +143,11 @@ async function api(action,body){
   if(!j.ok){const er=new Error(j.error||'Something went wrong.');er.errors=j.errors||null;throw er} return j;
 }
 function show(on){$('#signin').classList.toggle('hide',on);$('#app').classList.toggle('hide',!on);$('#out').classList.toggle('hide',!on);$('#reload').classList.toggle('hide',!on)}
-function flash(t){$('#flash').innerHTML=t?'<div class="flash">'+t+'</div>':''}
+function flash(t,cls){$('#flash').innerHTML=t?'<div class="flash'+(cls?' '+cls:'')+'">'+t+'</div>':''}
 async function load(){try{V=await api('state');show(true);flash('');draw()}catch(e){if(e.message!=='signin')flash(esc(e.message))}}
 $('#go').onclick=async()=>{$('#sinote').textContent='';try{await api('signin',{code:$('#code').value});$('#code').value='';load()}catch(e){$('#sinote').textContent=e.message}};
 $('#code').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
-$('#out').onclick=async()=>{try{await api('signout',{})}catch(e){}peakFrame=null;show(false)};
+$('#out').onclick=async()=>{try{await api('signout',{})}catch(e){}peakFrame=null;$('#secPeak').innerHTML='';if(drId)drClose();show(false)};
 $('#reload').onclick=()=>{load();if(peakFrame&&tab==='peak')try{peakFrame.contentWindow.location.reload()}catch(e){}};
 window.addEventListener('message',e=>{if(e.origin===location.origin&&e.data&&e.data.outbox==='signin')show(false)});
 
@@ -98,23 +158,12 @@ function drawTop(){
   $('#tiles').innerHTML=[['Sent today',sum(s.sent),split(s.sent),''],['Waiting to send',sum(s.waiting),split(s.waiting)+(s.waitingPaused?' (+'+s.waitingPaused+' on paused Peak lists)':''),''],
     ['Failed today',sum(s.failed),split(s.failed),sum(s.failed)?'bad':''],['Needs attention',bad,s.attention.length-bad+' more to know',bad?'bad':'']]
     .map(t=>'<div class="tile '+t[3]+'"><b>'+t[1]+'</b><span>'+t[0]+'</span><small>'+esc(t[2])+'</small></div>').join('');
-  $('#att').innerHTML=s.attention.map(a=>'<li class="'+a.level+'">'+esc(a.text)+'</li>').join('')||'<li class="info">Nothing needs you right now.</li>';
+  /* the first four, then the rest folded (2026-11-23: the list below is the main thing on the page) */
+  const li=a=>'<li class="'+a.level+'">'+esc(a.text)+'</li>', A=s.attention, F4=matchMedia('(max-width:700px)').matches?2:4;
+  $('#att').innerHTML=A.length?A.slice(0,F4).map(li).join('')+(A.length>F4?'<li class="more"><details><summary>'+(A.length-F4)+' more to know</summary><ul class="att">'+A.slice(F4).map(li).join('')+'</ul></details></li>':''):'<li class="info">Nothing needs you right now.</li>';
   const cnt={peak:V.peak.today||0,sixfold:V.sixfold.items.reduce((a,i)=>a+i.today,0),traverse:V.traverse.items.reduce((a,i)=>a+i.today,0)};
   $('#tabs').innerHTML=TABS.map(t=>'<button role="tab" data-tab="'+t[0]+'" aria-selected="'+(t[0]===tab)+'">'+t[1]+(cnt[t[0]]?'<span class="n">'+cnt[t[0]]+' today</span>':'')+'</button>').join('');
   document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{tab=b.dataset.tab;try{localStorage.setItem('outbox.tab',tab)}catch(e){}draw()});
-}
-function pill(it){const c=it.on===true?'on':it.on===false?'off':'mid';return '<span class="pill '+c+'">'+(it.on===true?'On':it.on===false?'Off':'Check')+'</span>'}
-function card(it){
-  let h='<section class="card"><h2>'+esc(it.name)+' '+pill(it)+'</h2><div class="note">'+esc(it.state)+'</div>';
-  h+='<div class="nums">'+[['today',it.today],['last 7 days',it.d7],['last 30 days',it.d30],['waiting',it.waiting]].map(x=>'<div><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>';
-  h+='<dl><dt>What</dt><dd>'+esc(it.what)+'</dd><dt>Who gets it</dt><dd>'+esc(it.who)+'</dd><dt>Sent when</dt><dd>'+esc(it.trigger)+'</dd><dt>Last sent</dt><dd>'+when(it.last)+'</dd><dt>Opens</dt><dd>'+esc(it.opens)+'</dd><dt>Clicks</dt><dd>'+esc(it.clicks)+'</dd></dl>';
-  if(it.note)h+='<div class="note">'+esc(it.note)+'</div>';
-  if(it.skipped30)h+='<div class="note">'+it.skipped30+' not sent in 30 days (no email on file or unsubscribed).</div>';
-  if(it.fails.length)h+='<div class="fails"><b>Failed: '+it.failToday+' today, '+it.fail7+' in 7 days, '+it.fail30+' in 30 days</b><br>'+it.fails.map(f=>esc(when(f.at)+': '+f.why)).join('<br>')+'</div>';
-  if(it.track)h+=trackHtml(it);
-  if(it.editable)h+='<div class="row" style="margin-top:8px"><button data-ed="'+esc(it.id)+'">Change the words</button><span class="note">Opens the wording, a preview and the saved versions.</span></div>';
-  h+='<details><summary>Where it is turned on or off</summary><p class="note">'+esc(it.switch)+'</p></details>';
-  return h+'</section>';
 }
 const pc=x=>x===null||x===undefined?'-':x+'%', yn=b=>b?'<span class="yes">yes</span>':'<span class="no">no</span>';
 function trackHtml(it){
@@ -129,44 +178,195 @@ function trackHtml(it){
     +t.recent.map(r=>'<tr><td>'+esc(when(r.at))+'</td><td>'+esc(r.v)+'</td><td>'+yn(r.opened)+'</td>'+ck(yn(r.clicked))+'</tr>').join('')+'</table><p class="note tiny">'+esc(t.rowNote||'No names here on purpose: each row is one email to one customer.')+'</p></details>';
   return h+'</div>';
 }
-function drawPeak(){
-  const P=V.peak, R=P.redirect||{};
-  let h='<div class="lead">Peak Pickleball: every Peak email goes out as '+esc((P.from&&P.from.name)||'Peak Partnerships')+' &lt;'+esc((P.from&&P.from.email)||'partnerships@peakpickleball.us')+'&gt;, and replies are read from there onto the Peak desk. Everything here works as it did on its own page: lists, the email, preview, Start and Pause, settings, Connect Microsoft and the numbers.</div>';
-  if(P.ready){
-    h+='<div class="nums" style="margin:12px 0">'+[['sent today',P.today],['last 7 days',P.d7],['last 30 days',P.d30],['clicks, 30 days',P.clicks30]].map(x=>'<div><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')+'</div>';
-    h+=(P.lists||[]).map(l=>{const r=l.rates||{};return '<p class="note"><b>'+esc(l.name)+'</b> ('+esc(l.status)+'): '+l.people+' people at '+l.orgs+' organisations, '+l.queued+' waiting, '+l.sent+' sent'
-      +(l.sent?'. Opened '+r.open+'%, clicked '+r.click+'%, replied '+r.reply+'%, booked '+r.booked+'%, bounced '+r.bounce+'%':'')+'.'
-      +(l.skips&&l.skips.length?' Skipped: '+l.skips.map(x=>esc(x[0])+', '+x[1]).join(' · ')+'.':'')+'</p>'}).join('');
-    const TC=P.tours||{open:[]};
-    h+='<p class="note" data-tours><b>Tour confirmations</b> (from the Peak desk; '+(TC.on?'on':'off until you approve the wording in the desk, More, Settings')+'): '+TC.today+' today, '+TC.d7+' in 7 days, '+TC.d30+' in 30 days'+(TC.tests?' (plus '+TC.tests+' test'+(TC.tests===1?'':'s')+')':'')+'. '+(TC.sentAll?'Opened (rough, the desk\'s 1x1 image): '+TC.opened30+' of '+TC.sent30+' in 30 days'+(TC.sent30?' ('+pc(TC.openRate30)+')':'')+', '+TC.openedAll+' of '+TC.sentAll+' since 20 Nov. ':'Opens counted from the next one sent'+(TC.pixel?'':' once the desk\'s "Count opens with a 1x1 image" setting is on')+'. ')+'No links in them to count.'
-      +(TC.open.length?' <b>Not sent: '+TC.open.length+'</b>. '+TC.open.map(x=>esc((x.method==='CANCEL'?'Cancellation, ':'')+x.company+' ('+x.to+'), '+when(x.at)+': '+x.why)).join(' · ')+'. <a href="'+esc(TC.desk)+'" target="_blank" rel="noopener">Retry on the Peak desk</a>.':'')+'</p>';
-    const DM=P.deskmails||{open:[]};
-    h+='<p class="note" data-deskmails><b>Desk emails</b> (written on a card in the Peak desk, one person at a time; '+(DM.on?'on':'off until you turn them on in the desk, More, Settings')+'; booking links '+(DM.book?'on':'off')+'): '+DM.today+' today, '+DM.d7+' in 7 days, '+DM.d30+' in 30 days. No tracked links but the booking link; no open image unless that setting is on.'
-      +(DM.open.length?' <b>Not sent: '+DM.open.length+'</b>. '+DM.open.map(x=>esc(x.company+' ('+x.to+', by '+x.by+'), '+when(x.at)+': '+x.why)).join(' · ')+'. Retry is on the card in the Peak desk.':'')+'</p>';
-    h+='<p class="note">Opens are counted with a 1x1 image and are rough: Apple Mail loads it as the email arrives (high), Outlook often blocks it (low). Every link is tracked. Last hourly run: '+esc(P.lastRun||'none yet')+'.</p>';
-  }
-  h+='<iframe id="pf" title="Peak email" src="peak/?embed=1'+(Q.get('ms')?'&ms='+encodeURIComponent(Q.get('ms')):'')+'"></iframe>';
-  h+='<section class="card" style="margin-top:14px"><h2>Where Microsoft comes back to</h2><p class="note">After Connect Microsoft, Microsoft returns to <code>'+esc(R.now)+'</code>, which forwards here. To have it come straight back to Outbox, add <code>'+esc(R.new)+'</code> as a redirect URI in Entra (App registrations, Matthew outreach, Authentication), then switch below. The old one keeps working either way.</p>'
-   +'<div class="row"><button data-ret="old"'+(R.choice==='old'?' class="main"':'')+'>The old address (registered)</button><button data-ret="outbox"'+(R.choice==='outbox'?' class="main"':'')+'>Outbox directly (add it in Entra first)</button></div></section>';
-  $('#sec').innerHTML=h;
-  peakFrame=$('#pf'); const fit=()=>{try{const d=peakFrame.contentDocument;if(d&&d.documentElement)peakFrame.style.height=Math.max(600,(d.body?d.body.scrollHeight:d.documentElement.scrollHeight)+8)+'px'}catch(e){}};
-  peakFrame.addEventListener('load',()=>{fit();try{new ResizeObserver(fit).observe(peakFrame.contentDocument.body)}catch(e){setInterval(fit,1500)}});
-  document.querySelectorAll('[data-ret]').forEach(b=>b.onclick=async()=>{const to=b.dataset.ret;if(to==='outbox'&&!confirm('Only switch once '+R.new+' is added in Entra. If it is not, Microsoft will refuse the sign-in. Switch?'))return;try{await api('peakreturn',{to});load()}catch(e){flash(esc(e.message))}});
+/* ================= the list view (2026-11-23). Matthew finds Patch Retention's Automations screens "a lot easier to understand and
+   navigate": one list per section, a row per automatic email stream, filters, search, sortable columns, a column chooser (kept in this
+   browser only) and a detail drawer. Only Peak's lists have a working switch: the Peak sender's own Start and Pause (peak/api.php, with
+   all of its checks). Every other switch is shown read only. The server sends plain data; every value is escaped here. */
+const nf=x=>x===null||x===undefined?'<span class="dash" title="Not counted">–</span>':String(x);
+const rate=(a,b)=>b?Math.round(1000*a/b)/10+'%':'';
+const COLS=[
+  {k:'channels',l:'Channels',v:r=>r.channels.join(' '),h:r=>r.channels.map(c=>'<span class="ch">'+esc(c)+'</span>').join(' ')},
+  {k:'enabled',l:'Enabled',v:r=>r.enabled===true?1:r.enabled===false?0:-1,h:r=>sw(r)},
+  {k:'status',l:'Status',v:r=>r.status,h:r=>'<span class="st st-'+esc(r.status.toLowerCase())+'" title="'+esc(r.statusWhy)+'">'+esc(r.status)+'</span>'},
+  {k:'type',l:'Type',v:r=>r.type,h:r=>'<span class="ty">'+esc(r.type)+'</span>'},
+  {k:'last',l:'Last run',v:r=>r.last||0,h:r=>r.last?esc(when(r.last)):'<span class="dash">never</span>'},
+  {k:'next',l:'Next run',v:r=>r.next||9e12,h:r=>r.next?esc(when(r.next)):'<span class="soft">'+esc(r.nextText||'–')+'</span>'},
+  {k:'sent',l:'Sent',n:1,v:r=>r.n.d30.sent,h:r=>nf(r.n.d30.sent)+(r.n.today?'<small>'+r.n.today+' today</small>':'')},
+  {k:'delivered',l:'Delivered',n:1,v:r=>r.n.d30.delivered??-1,h:r=>nf(r.n.d30.delivered)},
+  {k:'opened',l:'Opened',n:1,v:r=>r.n.d30.opened??-1,h:r=>nf(r.n.d30.opened)+(r.n.d30.opened!==null&&r.n.tracked30?'<small>'+rate(r.n.d30.opened,r.n.tracked30)+'</small>':'')},
+  {k:'clicked',l:'Clicked',n:1,v:r=>r.n.d30.clicked??-1,h:r=>nf(r.n.d30.clicked)+(r.n.d30.clicked!==null&&r.n.tracked30?'<small>'+rate(r.n.d30.clicked,r.n.tracked30)+'</small>':'')},
+  {k:'replies',l:'Replies',n:1,v:r=>r.n.d30.replies??-1,h:r=>nf(r.n.d30.replies)},
+  {k:'conv',l:'Booked',n:1,v:r=>r.n.d30.conv??-1,h:r=>nf(r.n.d30.conv),t:'Conversions: bookings from the email'},
+  {k:'optouts',l:'Opt-outs',n:1,v:r=>r.n.d30.optouts??-1,h:r=>nf(r.n.d30.optouts),t:'Unsubscribes and STOP replies'},
+  {k:'bounces',l:'Bounces',n:1,v:r=>r.n.d30.bounces??-1,h:r=>nf(r.n.d30.bounces)},
+  {k:'failed',l:'Failed',n:1,v:r=>r.n.d30.failed??-1,h:r=>r.n.d30.failed?'<b class="badn">'+r.n.d30.failed+'</b>':nf(r.n.d30.failed),t:'Could not send'}];
+const PHONE_HIDE=['channels','type','last','next','delivered','replies','conv','optouts','bounces','failed'];
+let hidden=(()=>{try{const h=JSON.parse(localStorage.getItem('outbox.cols')||'null');if(Array.isArray(h))return h}catch(e){}return matchMedia('(max-width:700px)').matches?PHONE_HIDE.slice():[]})();
+const F={ch:'',st:'',ty:'',q:''}; let SORT={k:'',dir:1}, drId=null, drTab='messages';
+function sw(r){
+  const on=r.enabled===true, lbl=on?'On':r.enabled===false?'Off':'?';
+  if(r.control&&r.control.kind==='peaklist')return '<button type="button" class="sw'+(on?' on':'')+'" role="switch" aria-checked="'+on+'" data-peaksw="'+esc(r.control.list)+'" aria-label="'+esc((on?'Pause ':'Start ')+r.name)+'" title="'+esc(on?'Sending: press to pause':'Paused: press to start (the Peak sender checks first)')+'"><span></span></button>';
+  return '<span class="sw ro'+(on?' on':'')+'" role="img" aria-disabled="true" aria-label="'+esc(lbl+', read only')+'" title="'+esc('Read only here ('+lbl+'). '+r.switchText)+'"><span></span></span><span class="rol" aria-hidden="true">'+lbl.toLowerCase()+'</span>';
 }
-function drawBiz(B,lead){
-  let h='<div class="lead">'+lead+'</div>';
-  if(B.bounceScan)h+='<p class="note">Bounce check, last run: '+esc(B.bounceScan)+'</p>';
-  h+='<div class="grid" style="margin-top:14px">'+B.items.map(card).join('')+'</div>';
-  $('#sec').innerHTML=h;
-  document.querySelectorAll('[data-ed]').forEach(b=>b.onclick=()=>edOpen(b.dataset.ed));
+const rows=()=>(V.streams&&V.streams[tab])||[];
+function shown(){
+  const q=F.q.trim().toLowerCase();
+  let R=rows().filter(r=>(!F.ch||r.channels.includes(F.ch))&&(!F.st||r.status===F.st)&&(!F.ty||r.type===F.ty)&&(!q||(r.name+' '+r.desc+' '+r.who).toLowerCase().includes(q)));
+  if(SORT.k){const c=COLS.find(x=>x.k===SORT.k)||{v:r=>r.name.toLowerCase()};const g=SORT.k==='name'?(r=>r.name.toLowerCase()):c.v;R=R.slice().sort((a,b)=>{const x=g(a),y=g(b);return (x<y?-1:x>y?1:0)*SORT.dir})}
+  return R;
+}
+function strip(R){
+  let t=0,d7=0,d30=0,op=0,opd=0,cl=0,cld=0,rp=0,bo=0,rpOn=false,boOn=false;
+  for(const r of R){const a=r.n.d30;t+=r.n.today;d7+=r.n.d7.sent;d30+=a.sent;if(a.opened!==null&&r.n.tracked30){op+=a.opened;opd+=r.n.tracked30}if(a.clicked!==null&&r.n.tracked30){cl+=a.clicked;cld+=r.n.tracked30}if(a.replies!==null){rp+=a.replies;rpOn=true}if(a.bounces!==null){bo+=a.bounces;boOn=true}}
+  return [['Sent today',t],['Sent, 7 days',d7],['Sent, 30 days',d30],['Open rate',opd?rate(op,opd):'–',opd?op+' of '+opd+' counted':'not counted'],['Click rate',cld?rate(cl,cld):'–',cld?cl+' of '+cld+' counted':'not counted'],['Replies',rpOn?rp:'–',rpOn?'30 days':'not counted here'],['Bounces',boOn?bo:'–',boOn?'30 days':'not checked here']]
+    .map(x=>'<div class="sc"><span>'+x[0]+'</span><b>'+x[1]+'</b>'+(x[2]?'<small>'+esc(x[2])+'</small>':'')+'</div>').join('');
+}
+const LEADS={
+  peak:()=>'Peak Pickleball: every Peak email goes out as '+esc((V.peak.from&&V.peak.from.name)||'Peak Partnerships')+' &lt;'+esc((V.peak.from&&V.peak.from.email)||'partnerships@peakpickleball.us')+'&gt;; replies are read from there onto the Peak desk. The list blasts switch here or in the Peak controls below; tour confirmations and desk emails switch in the Peak desk.',
+  sixfold:()=>'Sixfold 365 (Brandon\'s company, run by Jen). These come from the Sixfold app; nothing here turns one on or off or changes who gets it. <b>One thing you can change here:</b> the words of the four customer emails (Change the words, in each one\'s drawer), which go to Jen\'s customers.',
+  traverse:()=>'Traverse (yours): the Prospect Desk, the website, sign-ups and the client apps. <b>Read only</b> here.',
+  texts:()=>esc(V.texts.note)};
+const TITLES={peak:'Peak',sixfold:'Sixfold',traverse:'Traverse',texts:'Texts'};
+function drawSecTop(){
+  const R=rows(); let h='<section class="card"><h2>'+TITLES[tab]+' automations <span class="soft cnt">'+R.length+' '+(R.length===1?'stream':'streams')+'</span></h2><div class="lead">'+LEADS[tab]()+'</div>';
+  h+='<div class="strip" id="strip">'+strip(R)+'</div>';
+  if(tab==='peak'&&V.peak.ready){const C=V.peak.conn||{};h+='<div class="row" style="margin-top:10px"><span class="note">Microsoft: '+(C.connected?'connected ('+esc(C.email)+')':C.status==='reconnect'?'<b class="badn">needs reconnecting</b>':'<b class="badn">not connected</b>')+'. Window: '+esc(V.peak.window)+', '+V.peak.rate+' an hour. Last hourly run: '+esc(V.peak.lastRun||'none yet')+'.</span><button id="gopc">Peak controls</button><button id="gort">Where Microsoft comes back to</button></div>'}
+  if(tab!=='peak'&&V[tab]&&V[tab].bounceScan)h+='<p class="note">Bounce check, last run: '+esc(V[tab].bounceScan)+'</p>';
+  $('#secTop').innerHTML=h+'</section>';
+  if($('#gopc'))$('#gopc').onclick=()=>{const f=$('#pf');if(f)f.scrollIntoView({behavior:'smooth'})};
+  if($('#gort'))$('#gort').onclick=()=>{const f=$('#ret');if(f)f.scrollIntoView({behavior:'smooth'})};
+}
+function opts(id,label,vals,cur){return '<label class="f"><span>'+label+'</span><select id="'+id+'"><option value="">All</option>'+vals.map(v=>'<option'+(v===cur?' selected':'')+'>'+esc(v)+'</option>').join('')+'</select></label>'}
+function drawList(){
+  const R=shown(), all=rows(), vis=COLS.filter(c=>!hidden.includes(c.k));
+  const uniq=(f,base)=>[...new Set(base.concat(all.map(f)))];
+  let h='<section class="card list"><div class="bar">'+opts('fch','Channel',['Email','SMS'],F.ch)+opts('fst','Status',uniq(r=>r.status,['Running','Paused','Draft','Scheduled','Done']),F.st)+opts('fty','Type',uniq(r=>r.type,['Triggered','Recurring','One time']),F.ty)
+    +'<label class="f grow"><span>Search</span><input id="fq" type="search" placeholder="Search by name" value="'+esc(F.q)+'"></label>'
+    +'<div class="colw"><button id="colb" aria-expanded="false" aria-controls="colp">Columns</button><div id="colp" class="colp hide" role="group" aria-label="Show or hide columns">'
+    +COLS.map(c=>'<label><input type="checkbox" data-col="'+c.k+'"'+(hidden.includes(c.k)?'':' checked')+'> '+esc(c.l)+'</label>').join('')+'<button id="colr" class="tiny">Reset</button></div></div></div>';
+  h+='<div class="tw"><table class="lt"><thead><tr><th class="nm">'+sortb('name','Name')+'</th>'+vis.map(c=>'<th'+(c.n?' class="num"':'')+(c.t?' title="'+esc(c.t)+'"':'')+'>'+sortb(c.k,c.l)+'</th>').join('')+'<th class="act"><span class="sr">View</span></th></tr></thead><tbody>';
+  h+=R.map(r=>'<tr data-row="'+esc(r.id)+'"><td class="nm"><button class="lnk" data-view="'+esc(r.id)+'">'+esc(r.name)+'</button><small>'+esc(r.who)+'</small></td>'+vis.map(c=>'<td data-c="'+c.k+'"'+(c.n?' class="num"':'')+'>'+c.h(r)+'</td>').join('')
+    +'<td class="act"><button class="eye" data-view="'+esc(r.id)+'" aria-label="View '+esc(r.name)+'" title="View"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 5C6.5 5 2.7 9.2 1.5 12c1.2 2.8 5 7 10.5 7s9.3-4.2 10.5-7C21.3 9.2 17.5 5 12 5zm0 11.5A4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 0 1 0 9zm0-2.3a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4z" fill="currentColor"/></svg></button></td></tr>').join('');
+  if(!R.length)h+='<tr><td colspan="'+(vis.length+2)+'" class="empty">'+(all.length?'Nothing matches these filters.':tab==='texts'?'No text messages are sent automatically yet.':'Nothing here yet.')+'</td></tr>';
+  h+='</tbody></table></div><p class="note tiny">'+R.length+' of '+all.length+' shown. Numbers are the emails sent in the last 30 days and what happened to them (open and click rates are out of the ones counted). <span class="dash">–</span> means not counted for that email. Opens are rough: Apple Mail opens every image (high), Outlook often blocks them (low).</p></section>';
+  $('#secList').innerHTML=h;
+  $('#fch').onchange=e=>{F.ch=e.target.value;drawList()};$('#fst').onchange=e=>{F.st=e.target.value;drawList()};$('#fty').onchange=e=>{F.ty=e.target.value;drawList()};
+  $('#fq').oninput=e=>{F.q=e.target.value;const p=e.target.selectionStart;drawList();const n=$('#fq');n.focus();try{n.setSelectionRange(p,p)}catch(x){}};
+  $('#colb').onclick=e=>{e.stopPropagation();const p=$('#colp'),o=p.classList.toggle('hide');$('#colb').setAttribute('aria-expanded',String(!o))};
+  document.querySelectorAll('[data-col]').forEach(b=>b.onchange=()=>{const k=b.dataset.col;hidden=b.checked?hidden.filter(x=>x!==k):hidden.concat(k);try{localStorage.setItem('outbox.cols',JSON.stringify(hidden))}catch(e){}drawList();$('#colp').classList.remove('hide');$('#colb').setAttribute('aria-expanded','true')});
+  $('#colr').onclick=()=>{hidden=[];try{localStorage.removeItem('outbox.cols')}catch(e){}drawList()};
+  document.querySelectorAll('[data-sort]').forEach(b=>b.onclick=()=>{const k=b.dataset.sort;SORT=SORT.k===k?(SORT.dir===1?{k,dir:-1}:{k:'',dir:1}):{k,dir:1};drawList()});
+  document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>drOpen(b.dataset.view));
+  document.querySelectorAll('[data-peaksw]').forEach(b=>b.onclick=()=>peakSwitch(b.dataset.peaksw));
+}
+function sortb(k,l){const on=SORT.k===k;return '<button class="sb" data-sort="'+k+'" aria-sort="'+(on?(SORT.dir===1?'ascending':'descending'):'none')+'">'+esc(l)+'<i aria-hidden="true">'+(on?(SORT.dir===1?'▲':'▼'):'↕')+'</i></button>'}
+document.addEventListener('click',e=>{const p=$('#colp');if(p&&!p.classList.contains('hide')&&!e.target.closest('.colw')){p.classList.add('hide');$('#colb').setAttribute('aria-expanded','false')}});
+
+/* ---- Peak's list switch: the Peak sender's own Start and Pause, with its own checks (it refuses Start while the email is a DRAFT, the
+   postal address is missing or Microsoft is not connected), the same question first as on its own page */
+async function peakApi(action,body,get){
+  const o=body===undefined?{credentials:'same-origin'}:{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-PM':'1'},body:JSON.stringify(body)};
+  const r=await fetch('peak/api.php?action='+action+(get||''),o); let j={}; try{j=await r.json()}catch(e){j={ok:false,error:'The Peak sender did not answer properly.'}}
+  if(j.signin){show(false);throw new Error('signin')}
+  if(!j.ok)throw new Error(j.error||'Something went wrong.'); return j;
+}
+async function peakSwitch(k){
+  const L=(V.peak.lists||[]).find(x=>x.id===k); if(!L)return; const F0=V.peak.from||{};
+  let msg='',cls='ok';
+  try{
+    if(L.status==='running'){await peakApi('pause',{list:k});msg=esc(L.name)+' paused. Nothing more goes out from this list until you press Start.'}
+    else{
+      if(!confirm('Start sending "'+L.name+'" as '+(F0.email||'Peak Partnerships')+'?\n\n'+L.queued+' people, '+V.peak.rate+' an hour, '+V.peak.window+'.\n\nSubject: '+((L.template&&L.template.subject)||'')))return;
+      await peakApi('start',{list:k});msg=esc(L.name)+' started. The next hourly run sends the first ones.'}
+  }catch(e){if(e.message==='signin')return;msg=esc(e.message);cls=''}
+  await load(); flash(msg,cls); if(peakFrame)try{peakFrame.contentWindow.location.reload()}catch(e){}
+}
+
+/* ---- the drawer */
+const byId=id=>rows().find(r=>r.id===id)||Object.values(V.streams||{}).flat().find(r=>r.id===id);
+function drOpen(id){drId=id;drTab='messages';$('#drbg').classList.remove('hide');$('#dr').classList.remove('hide');document.body.classList.add('drawer');drDraw();setTimeout(()=>{const x=$('#drx');if(x)x.focus()},30)}
+function drClose(){const id=drId;drId=null;$('#dr').classList.add('hide');$('#drbg').classList.add('hide');$('#dr').innerHTML='';document.body.classList.remove('drawer');const b=document.querySelector('.eye[data-view="'+CSS.escape(id||'')+'"]');if(b)b.focus()}
+function itemOf(r){if(r.id.startsWith('sx-'))return V.sixfold.items.find(i=>i.id===r.ref);if(r.id.startsWith('tv-'))return V.traverse.items.find(i=>i.id===r.ref);return null}
+function drDraw(){
+  const r=byId(drId); if(!r){drClose();return}
+  let h='<div class="dh"><div><h2 id="drt">'+esc(r.name)+'</h2><div class="row"><span class="st st-'+esc(r.status.toLowerCase())+'">'+esc(r.status)+'</span><span class="ty">'+esc(r.type)+'</span>'+r.channels.map(c=>'<span class="ch">'+esc(c)+'</span>').join('')+'<span class="soft tiny">'+(r.updated?'Updated '+esc(when(r.updated)):'Last change not recorded')+'</span></div></div><button id="drx" class="x" aria-label="Close">✕</button></div>';
+  h+='<p class="note">'+esc(r.desc)+'</p><p class="note"><b>Now:</b> '+esc(r.statusWhy||r.status)+'. <b>Last run:</b> '+(r.last?esc(when(r.last)):'never')+'. <b>Next:</b> '+(r.next?esc(when(r.next))+(r.nextText?' ('+esc(r.nextText)+')':''):esc(r.nextText||'not described yet'))+'.</p>';
+  /* the controls that belong to it */
+  h+='<div class="ctl">';
+  if(r.control&&r.control.kind==='peaklist'){const L=V.peak.lists.find(x=>x.id===r.ref)||{blocks:[]};
+    h+='<div class="row">'+sw(r)+'<b>'+(r.enabled?'Sending':'Paused')+'</b><span class="note">The Peak sender\'s own Start and Pause.</span></div>'
+      +(L.status!=='running'&&L.blocks&&L.blocks.length?'<div class="fails"><b>Start is blocked:</b><br>'+L.blocks.map(esc).join('<br>')+'</div>':'')
+      +'<div class="row" style="margin-top:8px"><button id="drprev" data-list="'+esc(r.ref)+'">Preview the next 3</button><button id="drpc">Edit the email, settings, who is on it</button></div><div id="drpv"></div>'}
+  else h+='<div class="row">'+sw(r)+'<span class="note"><b>Read only here.</b> '+esc(r.switchText)+'</span></div>';
+  if(r.editable)h+='<div class="row" style="margin-top:8px"><button data-ed="'+esc(r.ref)+'">Change the words</button><span class="note">The wording, a preview and the saved versions.</span></div>';
+  if(r.id==='peak-tours'&&V.peak.tours)h+='<p class="note"><a href="'+esc(V.peak.tours.desk)+'" target="_blank" rel="noopener">Open the Peak desk\'s Tours</a> (Retry for one not sent).</p>';
+  h+='</div>';
+  h+='<h3>How it works</h3><ol class="how">'+r.how.map(s=>'<li><span class="k k-'+esc(s[0].toLowerCase())+'">'+esc(s[0])+'</span><span>'+esc(s[1])+'</span></li>').join('')+'</ol>';
+  const T=[['messages','Messages'],['flow','Flow'],['stats','Stats']];
+  h+='<div class="dtabs" role="tablist" aria-label="Details">'+T.map(t=>'<button role="tab" id="dt-'+t[0]+'" data-dt="'+t[0]+'" aria-selected="'+(drTab===t[0])+'" aria-controls="dp">'+t[1]+'</button>').join('')+'</div><div id="dp" role="tabpanel" aria-labelledby="dt-'+drTab+'">'+drPanel(r)+'</div>';
+  $('#dr').innerHTML=h;
+  $('#drx').onclick=drClose;
+  document.querySelectorAll('#dr [data-dt]').forEach(b=>b.onclick=()=>{drTab=b.dataset.dt;drDraw()});
+  document.querySelectorAll('#dr [data-peaksw]').forEach(b=>b.onclick=()=>peakSwitch(b.dataset.peaksw));
+  document.querySelectorAll('#dr [data-ed]').forEach(b=>b.onclick=()=>edOpen(b.dataset.ed));
+  if($('#drpc'))$('#drpc').onclick=()=>{drClose();const f=$('#pf');if(f)f.scrollIntoView({behavior:'smooth'})};
+  if($('#drprev'))$('#drprev').onclick=async()=>{const el=$('#drpv');if(el.innerHTML){el.innerHTML='';return}
+    try{const j=await peakApi('preview',undefined,'&list='+encodeURIComponent($('#drprev').dataset.list));el.innerHTML=(j.draft?'<div class="warn">This is still the DRAFT placeholder: it cannot be sent.</div>':'')+(j.messages.length?j.messages.map(m=>'<div class="note">To <b>'+esc(m.name?m.name+' <'+m.to+'>':m.to)+'</b> at '+esc(m.company)+'</div><pre class="pv">'+esc(m.subject)+'\n\n'+esc(m.body)+'</pre>').join(''):'<p class="note">Nobody is waiting on this list.</p>')}catch(e){if(e.message!=='signin')el.innerHTML='<div class="fails">'+esc(e.message)+'</div>'}};
+  if(drTab==='messages'&&r.words)drWords(r);
+}
+function drPanel(r){
+  if(drTab==='messages')return r.messages.map(m=>'<div class="msg"><div class="ml">'+esc(m.label)+'</div><dl><dt>From</dt><dd>'+esc(m.from)+'</dd><dt>Subject</dt><dd data-subj>'+esc(m.subject)+'</dd></dl>'
+    +(m.preview?'<pre class="pv">'+esc(m.preview)+'</pre>':r.words?'':'<p class="note tiny">Text preview: not described yet.</p>')+(m.note?'<p class="note tiny">'+esc(m.note)+'</p>':'')+'</div>').join('')+(r.words?'<div id="drw" class="note">Loading the words in use…</div>':'');
+  if(drTab==='flow'){const it=itemOf(r), t=it&&it.track, pk=r.control&&r.control.kind==='peaklist';
+    const tr=pk?['opens','clicks','replies','bookings','opt-outs','bounces']:r.id==='tv-desk'?['clicks','bounces','opt-outs']:r.id==='peak-tours'?['opens']:t?(t.opensOnly?['opens']:['opens','clicks']):[];
+    return '<div class="flow">'+r.how.map((s,i)=>'<div class="fn fn-'+esc(s[0].toLowerCase())+'"><span class="k k-'+esc(s[0].toLowerCase())+'">'+(i+1)+'. '+esc(s[0])+'</span><p>'+esc(s[1])+'</p></div>').join('<div class="fa" aria-hidden="true">↓</div>')
+      +'<div class="fa" aria-hidden="true">↓</div><div class="fn"><span class="k">COUNTED</span><p>Each send'+(tr.length?', and its '+esc(tr.join(', ')):'')+(r.n.d30.failed!==null?'; failures are listed':'')+'.</p></div></div>'}
+  /* stats: 7 and 30 days, with small bars against the emails sent; then everything the old card showed */
+  const B=(w,lab)=>{const a=r.n[w],tk=w==='d30'?r.n.tracked30:r.n.tracked7,mx=Math.max(1,a.sent);
+    const L=[['Sent',a.sent,a.sent],['Opened',a.opened,tk],['Clicked',a.clicked,tk],['Replies',a.replies,a.sent],['Bounces',a.bounces,a.sent],['Failed',a.failed,a.sent]];
+    return '<div class="sbx"><h4>'+lab+'</h4>'+L.map(x=>'<div class="br"><span>'+x[0]+'</span><div class="bt"><i style="width:'+(x[1]===null||x[1]===undefined?0:Math.min(100,Math.round(100*x[1]/mx)))+'%"></i></div><b>'+nf(x[1])+(x[1]&&x[0]!=='Sent'&&x[2]?' <small>'+rate(x[1],x[2])+'</small>':'')+'</b></div>').join('')+'</div>'};
+  let h='<div class="sgrid">'+B('d7','Last 7 days')+B('d30','Last 30 days')+'</div>';
+  const it=itemOf(r);
+  if(it){h+='<dl class="kv"><dt>Opens</dt><dd>'+esc(it.opens)+'</dd><dt>Clicks</dt><dd>'+esc(it.clicks)+'</dd></dl>';if(it.note)h+='<p class="note">'+esc(it.note)+'</p>';if(it.skipped30)h+='<p class="note">'+it.skipped30+' not sent in 30 days (no email on file or unsubscribed).</p>';
+    if(it.fails.length)h+='<div class="fails"><b>Failed: '+it.failToday+' today, '+it.fail7+' in 7 days, '+it.fail30+' in 30 days</b><br>'+it.fails.map(f=>esc(when(f.at)+': '+f.why)).join('<br>')+'</div>';
+    if(it.track)h+=trackHtml(it);}
+  else if(r.control&&r.control.kind==='peaklist'){const L=V.peak.lists.find(x=>x.id===r.ref);if(L){const R=L.rates||{};
+    h+='<p class="note">All time: <b>'+L.sent+'</b> sent, '+L.queued+' waiting. Of those sent: '+R.open+'% opened, '+R.click+'% clicked, '+R.reply+'% replied, '+R.booked+'% booked, '+R.bounce+'% bounced. '+L.people+' people at '+L.orgs+' organisations on the list.'+(L.skips&&L.skips.length?' Skipped on the desk: '+L.skips.map(x=>esc(x[0])+', '+x[1]).join(' · ')+'.':'')+'</p>'}}
+  else if(r.id==='peak-tours'){const TC=V.peak.tours;h+='<p class="note">'+TC.today+' today, '+TC.d7+' in 7 days, '+TC.d30+' in 30 days'+(TC.tests?' (plus '+TC.tests+' test'+(TC.tests===1?'':'s')+')':'')+'. '+(TC.sentAll?'Opened (rough): '+TC.opened30+' of '+TC.sent30+' in 30 days'+(TC.sent30?' ('+pc(TC.openRate30)+')':'')+'.':'Opens are counted from the next one sent'+(TC.pixel?'':' once the desk\'s "Count opens with a 1x1 image" setting is on')+'.')+'</p>'
+    +(TC.open.length?'<div class="fails"><b>Not sent: '+TC.open.length+'</b><br>'+TC.open.map(x=>esc((x.method==='CANCEL'?'Cancellation, ':'')+x.company+' ('+x.to+'), '+when(x.at)+': '+x.why)).join('<br>')+'</div>':'')}
+  else if(r.id==='peak-deskmails'){const DM=V.peak.deskmails;h+='<p class="note">'+DM.today+' today, '+DM.d7+' in 7 days, '+DM.d30+' in 30 days.</p>'+(DM.open.length?'<div class="fails"><b>Not sent: '+DM.open.length+'</b> (Retry is on the card)<br>'+DM.open.map(x=>esc(x.company+' ('+x.to+', by '+x.by+'), '+when(x.at)+': '+x.why)).join('<br>')+'</div>':'')}
+  return h;
+}
+/* the words a Sixfold customer email uses now, from the app (text only; the designed preview is in Change the words) */
+async function drWords(r){
+  const box=$('#drw'); if(!box)return; let W0;
+  try{W0=await api('sxwords')}catch(e){if(e.message==='signin')return;box.textContent='The words in use could not be loaded ('+e.message.replace(/\.$/,'')+'). The built-in subject is shown above; the text is not described here until the app answers.';return}
+  if(drId!==r.id||drTab!=='messages')return;
+  const K=W0.kinds&&W0.kinds[r.words]; if(!K){box.textContent='The words in use are not described yet.';return}
+  const lines=Object.entries(K.lines).map(([k,L])=>[L,(K.now&&K.now[k]!==undefined)?K.now[k]:L.def]);
+  const sj=lines.find(x=>x[0].where==='subject'); const d=document.querySelector('#dp [data-subj]'); if(sj&&d)d.textContent=sj[1];
+  box.innerHTML='<p class="note tiny"><b>'+(K.active&&K.active!=='v0'?'Version '+esc(K.active.slice(1))+' is in use.':'The built-in words are in use.')+'</b> Fields in {curly brackets} are filled in for each customer.</p><pre class="pv">'+lines.filter(x=>x[0].where!=='subject').map(x=>esc(x[1])).join('\n\n')+'</pre>';
+}
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(edK){edClose();return}if(drId)drClose()});
+/* the Peak sender's own page, framed under the Peak list (every control it has, as before), and the Microsoft redirect switch */
+function drawPeakFrame(){
+  const R=V.peak.redirect||{};
+  let h='<section class="card" style="margin-top:14px"><h2>Peak controls <span class="soft cnt">the Peak sender\'s own page: lists, the email, preview, Start and Pause, settings, do-not-email, Connect Microsoft</span></h2>';
+  h+='<iframe id="pf" title="Peak email" src="peak/?embed=1'+(Q.get('ms')?'&ms='+encodeURIComponent(Q.get('ms')):'')+'"></iframe></section>';
+  h+='<section class="card" id="ret" style="margin-top:14px"><h2>Where Microsoft comes back to</h2><p class="note">After Connect Microsoft, Microsoft returns to <code>'+esc(R.now)+'</code>, which forwards here. To have it come straight back to Outbox, add <code>'+esc(R.new)+'</code> as a redirect URI in Entra (App registrations, Matthew outreach, Authentication), then switch below. The old one keeps working either way.</p>'
+   +'<div class="row"><button data-ret="old"'+(R.choice==='old'?' class="main"':'')+'>The old address (registered)</button><button data-ret="outbox"'+(R.choice==='outbox'?' class="main"':'')+'>Outbox directly (add it in Entra first)</button></div></section>';
+  $('#secPeak').innerHTML=h;
+  peakFrame=$('#pf'); const fit=()=>{try{const d=peakFrame.contentDocument;if(d&&d.documentElement)peakFrame.style.height=Math.max(600,(d.body?d.body.scrollHeight:d.documentElement.scrollHeight)+8)+'px'}catch(e){}};
+  /* a change made in the Peak controls shows in the list too: Outbox's state is read again whenever the framed page has answered */
+  peakFrame.addEventListener('load',()=>{fit();try{new ResizeObserver(fit).observe(peakFrame.contentDocument.body)}catch(e){setInterval(fit,1500)}});
+  document.querySelectorAll('[data-ret]').forEach(b=>b.onclick=async()=>{const to=b.dataset.ret;if(to==='outbox'&&!confirm('Only switch once '+R.new+' is added in Entra. If it is not, Microsoft will refuse the sign-in. Switch?'))return;try{await api('peakreturn',{to});await load();const n=$('#ret');if(n){n.remove();peakFrame=null;drawPeakFrame()}}catch(e){flash(esc(e.message))}});
 }
 function draw(){
   drawTop();
-  if(tab==='peak'){if(!peakFrame||!document.body.contains(peakFrame))drawPeak();else drawPeakTop()}
-  else{peakFrame=null;
-    if(tab==='sixfold')drawBiz(V.sixfold,'Sixfold 365 (Brandon\'s company, run by Jen). These come from the Sixfold app, and nothing here turns one on or off or changes who gets it. <b>One thing you can change here:</b> the words of the four customer emails (Change the words), which go to Jen\'s customers. Opens and clicks of the customer emails are counted from 18 Nov 2026.');
-    else if(tab==='traverse')drawBiz(V.traverse,'Traverse (yours): the Prospect Desk, the website, sign-ups and the client apps. <b>Read only</b> in this version.');
-    else $('#sec').innerHTML='<section class="card"><h2>Texts</h2><p class="note">'+esc(V.texts.note)+'</p></section>';}
+  drawSecTop(); drawList();
+  if(tab==='peak'){if(!peakFrame||!document.body.contains(peakFrame))drawPeakFrame()}
+  else{peakFrame=null;$('#secPeak').innerHTML=''}
+  if(drId){if(byId(drId))drDraw();else drClose()}
 }
 /* the words of Sixfold's customer emails (2026-11-18): the lines, a preview with a made-up customer, Save, the versions and Put this back.
    The Sixfold app checks and keeps them; this only shows and sends them. */
@@ -239,8 +439,6 @@ async function edReload(msg){
   const k=edK; W=await api('sxwords'); try{V=await api('state');draw()}catch(e){}
   edK=k; edLines=Object.assign({},W.kinds[k].now); edDraw(); await edPreview(); $('#edmsg').textContent=msg;
 }
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&edK)edClose()});
-function drawPeakTop(){const n=$('#sec .nums');if(n&&V.peak.ready)n.innerHTML=[['sent today',V.peak.today],['last 7 days',V.peak.d7],['last 30 days',V.peak.d30],['clicks, 30 days',V.peak.clicks30]].map(x=>'<div><b>'+x[1]+'</b><span>'+x[0]+'</span></div>').join('')}
 load(); setInterval(()=>{if(!document.hidden&&V)load()},5*60*1000);
 </script>
 </body>

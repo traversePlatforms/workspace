@@ -164,14 +164,14 @@ function obSxTrack(): array {
         return 'Version ' . substr($v, 1);
     };
     $n = obNow(); $out = [];
-    foreach (OB_SX_TRACKED as $k) $out[$k] = ['since' => 0, 'sent7' => 0, 'sent30' => 0, 'opened30' => 0, 'clicked30' => 0, 'scans30' => 0, 'sentAll' => 0, 'openedAll' => 0, 'clickedAll' => 0,
+    foreach (OB_SX_TRACKED as $k) $out[$k] = ['since' => 0, 'sent7' => 0, 'opened7' => 0, 'clicked7' => 0, 'sent30' => 0, 'opened30' => 0, 'clicked30' => 0, 'scans30' => 0, 'sentAll' => 0, 'openedAll' => 0, 'clickedAll' => 0,
         'active' => $k === 'newsletter' ? '' : (string) ($words[$k]['active'] ?? 'v0'), 'byVersion' => [], 'links30' => [], 'recent' => []];
     uasort($sends, fn($a, $b) => $a['at'] <=> $b['at']);
     foreach ($sends as $id => $s) {
         $o = &$out[$s['k']]; $e = $ev[$id] ?? ['open' => 0, 'click' => 0, 'scan' => 0, 'links' => []]; $op = $e['open'] > 0; $cl = $e['click'] > 0; $in30 = $s['at'] >= $n - 30 * OB_DAY;
         if (!$o['since']) $o['since'] = $s['at'];
         $o['sentAll']++; $o['openedAll'] += (int) $op; $o['clickedAll'] += (int) $cl;
-        if ($s['at'] >= $n - 7 * OB_DAY) $o['sent7']++;
+        if ($s['at'] >= $n - 7 * OB_DAY) { $o['sent7']++; $o['opened7'] += (int) $op; $o['clicked7'] += (int) $cl; }
         if ($in30) { $o['sent30']++; $o['opened30'] += (int) $op; $o['clicked30'] += (int) $cl; $o['scans30'] += $e['scan'];
             foreach ($e['links'] as $ln => $c) { $w = obLinkWhat((string) ($s['links'][$ln] ?? '')); $o['links30'][$w] = ($o['links30'][$w] ?? 0) + $c; } }
         $o['byVersion'][$s['v']] ??= ['v' => $s['v'], 'label' => $label($s['k'], $s['v']), 'sent' => 0, 'opened' => 0, 'clicked' => 0, 'first' => $s['at'], 'last' => 0];
@@ -228,14 +228,14 @@ function obMtRead(string $rel, ?callable $keep = null): array {
     the row of the breakdown ($by is that column's heading). $opensOnly: no link in these emails is counted, so there are no click columns. */
 function obMtSum(array $sends, array $ev, callable $label, string $by, bool $opensOnly, string $rowNote): array {
     $n = obNow();
-    $o = ['since' => 0, 'sent7' => 0, 'sent30' => 0, 'opened30' => 0, 'clicked30' => 0, 'scans30' => 0, 'sentAll' => 0, 'openedAll' => 0, 'clickedAll' => 0,
+    $o = ['since' => 0, 'sent7' => 0, 'opened7' => 0, 'clicked7' => 0, 'sent30' => 0, 'opened30' => 0, 'clicked30' => 0, 'scans30' => 0, 'sentAll' => 0, 'openedAll' => 0, 'clickedAll' => 0,
         'active' => '', 'byVersion' => [], 'links30' => [], 'recent' => [], 'by' => $by, 'opensOnly' => $opensOnly, 'rowNote' => $rowNote];
     uasort($sends, fn($a, $b) => $a['at'] <=> $b['at']);
     foreach ($sends as $id => $s) {
         $e = $ev[$id] ?? ['open' => 0, 'click' => 0, 'scan' => 0, 'links' => []]; $op = $e['open'] > 0; $cl = $e['click'] > 0; $lb = (string) $label($s);
         if (!$o['since']) $o['since'] = $s['at'];
         $o['sentAll']++; $o['openedAll'] += (int) $op; $o['clickedAll'] += (int) $cl;
-        if ($s['at'] >= $n - 7 * OB_DAY) $o['sent7']++;
+        if ($s['at'] >= $n - 7 * OB_DAY) { $o['sent7']++; $o['opened7'] += (int) $op; $o['clicked7'] += (int) $cl; }
         if ($s['at'] >= $n - 30 * OB_DAY) { $o['sent30']++; $o['opened30'] += (int) $op; $o['clicked30'] += (int) $cl; $o['scans30'] += $e['scan'];
             foreach ($e['links'] as $ln => $c) { $w = obLinkWhat((string) ($s['links'][$ln] ?? '')); $o['links30'][$w] = ($o['links30'][$w] ?? 0) + $c; } }
         $o['byVersion'][$lb] ??= ['v' => $lb, 'label' => $lb, 'sent' => 0, 'opened' => 0, 'clicked' => 0, 'first' => $s['at'], 'last' => 0, 'active' => false];
@@ -396,19 +396,19 @@ function obDesk(): array {
     $sent = []; $fail = []; $bounce = []; $click = []; $unsub = []; $skip = []; $addr = ''; $cap = 40;
     /* clicks by style (2026-11-18): since then every link in every desk email is tracked (traverseplatforms.com/go/), and the sent and
        click rows carry the style; rows from before have none, and their clicks came only from the picture emails' links */
-    $by = []; $d30 = obNow() - 30 * OB_DAY; $scan30 = 0;
+    $by = []; $d30 = obNow() - 30 * OB_DAY; $scan30 = 0; $subj = ''; $setAt = 0;
     foreach (obLines(OB_DESK . '/events.log', '"t":"') as $r) {
         $t = (string) ($r['t'] ?? ''); $at = (int) ($r['at'] ?? 0);
         if (($t === 'sent' || $t === 'click') && $at >= $d30) { $k = (string) ($t === 'sent' ? ($r['style'] ?? '') : ($r['s'] ?? '')); $by[$k] ??= ['sent' => 0, 'clicks' => 0, 'people' => []]; if ($t === 'sent') $by[$k]['sent']++; else { $by[$k]['clicks']++; $by[$k]['people'][(string) ($r['id'] ?? '')] = 1; } }
         if ($t === 'scan' && $at >= $d30) $scan30++;
         switch ($t) {
-            case 'sent': $sent[] = $at; break;
+            case 'sent': $sent[] = $at; $subj = (string) ($r['subject'] ?? $subj); break;
             case 'sendfail': $fail[] = ['at' => $at, 'why' => obStageWords((string) ($r['stage'] ?? '')) . (!empty($r['error']) ? ' (' . mb_substr((string) $r['error'], 0, 80) . ')' : '')]; break;
             case 'bounce': case 'mailbad': $bounce[] = $at; break;
             case 'click': $click[] = $at; break;
             case 'unsub': $unsub[] = $at; break;
             case 'skipped': $skip[] = $at; break;
-            case 'settings': $s = (array) ($r['s'] ?? []); if (array_key_exists('address', $s)) $addr = trim((string) $s['address']); if (isset($s['cap'])) $cap = (int) $s['cap']; break;
+            case 'settings': $setAt = max($setAt, $at); $s = (array) ($r['s'] ?? []); if (array_key_exists('address', $s)) $addr = trim((string) $s['address']); if (isset($s['cap'])) $cap = (int) $s['cap']; break;
         }
     }
     $q = obRead(OB_DESK . '/queue.json', []); $q = is_array($q) ? $q : []; $due = 0; foreach ($q as $m) if ((int) ($m['after'] ?? 0) <= obNow()) $due++;
@@ -423,6 +423,9 @@ function obDesk(): array {
         'note' => 'Last 30 days: ' . $b['d30'] . ' bounced, ' . $u['d30'] . ' unsubscribed, ' . obCount($skip)['d30'] . ' skipped by the desk\'s rules. Replies are not counted here (they are in your Traverse inbox). Last runs: ' . implode(' / ', obTail(OB_DESK . '/send.log', 2)) . '.']
         + $c + obFailCounts($fail) + ['fails' => obFails($fail)]);
     $it['bounce30'] = $b['d30']; $it['unsub30'] = $u['d30']; $it['click30'] = $k['d30']; $it['scan30'] = $scan30;
+    /* for the list view (2026-11-23): 7-day clicks and bounces, the last subject sent, when the desk's settings or hold last changed, the queue */
+    $it['click7'] = $k['d7']; $it['bounce7'] = $b['d7']; $it['unsub7'] = $u['d7']; $it['lastSubject'] = mb_substr($subj, 0, 160); $it['cap'] = max(1, min(360, $cap));
+    $it['updated'] = max($setAt, obMtime(OB_DESK . '/send-after.txt')); $it['held'] = $held ? (int) $ha : 0; $it['due'] = $due; $it['hasAddress'] = $addr !== '';
     $it['clicksByStyle'] = array_map(fn($k, $g) => ['style' => $k === '' ? 'earlier' : $k, 'sent30' => $g['sent'], 'clicks30' => $g['clicks'], 'people30' => count($g['people'])], array_keys($by), array_values($by));
     if ($c['d30'] >= 20 && $b['d30'] / $c['d30'] > OB_BOUNCE_WARN) $it['attention'][] = ['bad', 'Prospect Desk bounces: ' . $b['d30'] . ' of ' . $c['d30'] . ' sent in 30 days (' . round(100 * $b['d30'] / $c['d30'], 1) . '%, over 5%).'];
     if ($it['fail7']) $it['attention'][] = ['bad', 'Prospect Desk: ' . $it['fail7'] . ' could not send in the last 7 days.'];
@@ -446,7 +449,8 @@ function obInstalls(): array {
 function obTraverse(): array {
     $items = [obDesk()];
     $cfg = @include obRoot() . '/traverse-site-private/site-config.php';   /* only "is a mailbox password set" is read from it */
-    $mailOk = is_array($cfg) && !empty($cfg['smtp']['pass']); unset($cfg);
+    $mailOk = is_array($cfg) && !empty($cfg['smtp']['pass']);
+    $mailFrom = is_array($cfg) ? trim((string) ($cfg['smtp']['from_name'] ?? '') . ' <' . (string) ($cfg['smtp']['user'] ?? '') . '>') : ''; if ($mailFrom === '<>') $mailFrom = ''; unset($cfg);
 
     /* website demo bookings */
     $bk = ['notify' => [[], []], 'confirm' => [[], []]];
@@ -539,7 +543,7 @@ function obTraverse(): array {
     if (!$mailOk) $att[] = ['bad', 'Traverse\'s mailbox password is missing: website, sign-up and alert emails cannot send.'];
     foreach ($items as &$it) if ($it['id'] !== 'desk' && $it['fail7']) $it['attention'][] = ['bad', 'Traverse ' . $it['name'] . ': ' . $it['fail7'] . ' failed in the last 7 days.'];
     unset($it);
-    return ['items' => $items, 'attention' => $att, 'bounceScan' => obTail(OB_DESK . '/bounce-scan.log', 1)[0] ?? ''];
+    return ['items' => $items, 'attention' => $att, 'bounceScan' => obTail(OB_DESK . '/bounce-scan.log', 1)[0] ?? '', 'mailFrom' => $mailFrom, 'mailOk' => $mailOk];
 }
 
 /* ================================================================ Peak (the full controls are the Peak page inside Outbox) */
@@ -547,9 +551,11 @@ function obPeak(): array {
     require_once __DIR__ . '/peak/lib.php';
     if (!pmReady()) return ['ready' => false, 'attention' => [['bad', 'Peak email: the data folder is missing on the server.']], 'items' => []];
     $S = pmState(); $c = pmConn(); $st = pmStats($S); $sent = []; $fail = []; $bounce = []; $click = []; $unsub = []; $reply = [];
+    $per = []; foreach (PM_LISTS as $k => $_) $per[$k] = ['updated' => 0, 'last' => 0, 'fail' => [], 'today' => 0];   /* per list, for the list view (2026-11-23) */
     foreach (pmRows() as $r) {
-        $at = (int) ($r['at'] ?? 0);
-        switch ((string) ($r['t'] ?? '')) {
+        $at = (int) ($r['at'] ?? 0); $l = (string) ($r['l'] ?? ''); $t = (string) ($r['t'] ?? '');
+        if (isset($per[$l])) { if (in_array($t, ['template', 'start', 'pause', 'done'], true)) $per[$l]['updated'] = max($per[$l]['updated'], $at); if ($t === 'sent') { $per[$l]['last'] = max($per[$l]['last'], $at); if ($at >= obToday()) $per[$l]['today']++; } if ($t === 'fail') $per[$l]['fail'][] = $at; }
+        switch ($t) {
             case 'sent': $sent[] = $at; break; case 'fail': $fail[] = ['at' => $at, 'why' => (string) ($r['why'] ?? 'could not send')]; break;
             case 'bounce': $bounce[] = $at; break; case 'click': $click[] = $at; break; case 'unsub': $unsub[] = $at; break; case 'reply': $reply[] = $at; break;
         }
@@ -569,7 +575,12 @@ function obPeak(): array {
         $items[] = ['id' => $k, 'name' => $nm, 'status' => $L['status'], 'draft' => $draft, 'queued' => (int) $L['queued'], 'sent' => (int) $L['sent'], 'replied' => (int) $L['replied'], 'bounced' => (int) $L['bounced'],
             'unsubscribed' => (int) $L['unsubscribed'], 'clicked' => (int) $L['clicked'], 'failed' => (int) $L['failed'], 'pausedWhy' => $why,
             /* 2026-11-18: list size, opens, bookings, rates, and who the Peak desk link leaves out */
-            'people' => (int) $L['people'], 'orgs' => (int) ($L['orgs'] ?? 0), 'opened' => (int) ($L['opened'] ?? 0), 'booked' => (int) ($L['booked'] ?? 0), 'rates' => (array) ($L['rates'] ?? []), 'skips' => (array) ($L['skips'] ?? [])];
+            'people' => (int) $L['people'], 'orgs' => (int) ($L['orgs'] ?? 0), 'opened' => (int) ($L['opened'] ?? 0), 'booked' => (int) ($L['booked'] ?? 0), 'rates' => (array) ($L['rates'] ?? []), 'skips' => (array) ($L['skips'] ?? []),
+            /* the list view (2026-11-23): what Start would refuse on, the email as saved, when the list last changed, its last send, the next
+               hourly run inside the window, and the numbers of the emails sent in the last 7 and 30 days (each person counted once) */
+            'blocks' => pmStartBlocks($S, $k), 'template' => ['subject' => (string) $S['templates'][$k]['subject'], 'body' => mb_substr((string) $S['templates'][$k]['body'], 0, 4000)],
+            'updated' => $per[$k]['updated'], 'last' => $per[$k]['last'], 'sentToday' => $per[$k]['today'], 'next' => $L['status'] === 'running' ? obPeakNext($S['settings']) : 0,
+            'w7' => obPeakWin($S, $k, 7, $per[$k]['fail']), 'w30' => obPeakWin($S, $k, 30, $per[$k]['fail'])];
         if (!empty($L['deskError'])) $att[] = ['bad', $pn . ': ' . $L['deskError']];
     }
     /* who the emails go out as (2026-11-19): a Send As refusal or a shared mailbox that will not open is said plainly here */
@@ -584,6 +595,10 @@ function obPeak(): array {
     $tc = function_exists('pmTourStats') ? pmTourStats() : ['sent' => [], 'open' => [], 'tests' => 0];
     $ds = json_decode((string) @file_get_contents(obRoot() . '/peak-desk-data/desk-settings.json'), true);
     $tours = obCount($tc['sent']) + ['on' => !empty($ds['tourmail']['on']), 'open' => $tc['open'], 'tests' => (int) $tc['tests'], 'desk' => OB_ORIGIN . '/peak-desk-28d38d/#sponsor/deals/tours'];
+    /* the wording as the desk saved it (empty = the desk's built-in words), and when the switch or the words last changed (2026-11-23, list view) */
+    $tw = is_array($ds['tourmail']['words'] ?? null) ? $ds['tourmail']['words'] : [];
+    $tours['words'] = ['subject' => mb_substr((string) ($tw['subject'] ?? ''), 0, 200), 'body' => mb_substr((string) ($tw['body'] ?? ''), 0, 3000)];
+    $tours['updated'] = max((int) ($ds['tourmail']['at'] ?? 0), (int) ($ds['tourmail']['wat'] ?? 0));
     /* their opens (2026-11-20): the desk's own open image (book.php ?px=), on real sends while the desk's "Count opens with a 1x1 image" setting
        is on. peak-desk-data/book-events.log has a 'pxsent' row for each tour email that went with the image and an 'open' row per fetch, by the
        email's ref (tc-...). No link in them to count. */
@@ -599,10 +614,212 @@ function obPeak(): array {
     $dms = obCount($dc['sent']) + ['on' => !empty($ds['deskmail']['on']), 'open' => $dc['open'], 'book' => !empty($ds['book']['on'])];
     if ($dc['open']) $att[] = ['bad', 'Peak desk: ' . count($dc['open']) . ' desk email' . (count($dc['open']) === 1 ? '' : 's') . ' not sent. Retry is on the company\'s card in the Peak desk.'];
     return ['ready' => true, 'conn' => ['connected' => (bool) $c['connected'], 'email' => (string) ($c['email'] ?? ''), 'status' => (string) ($c['status'] ?? '')], 'lists' => $items,
-        'window' => pmWindowText($S['settings']), 'rate' => (int) $S['settings']['rate'], 'waiting' => $waiting, 'waitingPaused' => $waitingPaused,
+        'window' => pmWindowText($S['settings']), 'rate' => (int) $S['settings']['rate'], 'ramp' => !empty($S['settings']['ramp']), 'perOrg' => (int) $S['settings']['perOrg'], 'deskSkip' => !empty($S['settings']['deskSkip']), 'waiting' => $waiting, 'waitingPaused' => $waitingPaused,
         'clicks30' => obCount($click)['d30'], 'bounces30' => obCount($bounce)['d30'], 'unsubs30' => obCount($unsub)['d30'], 'replies30' => obCount($reply)['d30'],
         'fails' => obFails($fail), 'attention' => $att, 'lastRun' => (string) (array_slice(@file(pmData() . '/run.log', FILE_IGNORE_NEW_LINES) ?: [], -1)[0] ?? ''),
         'redirect' => ['now' => obPeakRedirect(), 'old' => OB_REDIRECT_OLD, 'new' => OB_REDIRECT_NEW, 'choice' => obSettings()['peakReturn']], 'tours' => $tours, 'deskmails' => $dms, 'from' => ['email' => (string) $from['email'], 'name' => (string) $from['name'], 'shared' => (bool) $from['shared'], 'warn' => (string) $from['warn']]] + obCount($sent) + $f;
+}
+
+/** the next hour, from the coming one, inside Peak's sending window (the hourly run sends only then); 0 if none in two weeks */
+function obPeakNext(array $set): int {
+    $t = (int) (floor(obNow() / 3600) + 1) * 3600;
+    for ($i = 0; $i < 24 * 14; $i++, $t += 3600) if (pmInWindow($set, $t)) return $t;
+    return 0;
+}
+/** one Peak list's emails sent in the last $days days and what those people did since (opened, clicked, replied ...), each person once */
+function obPeakWin(array $S, string $k, int $days, array $fails): array {
+    $since = obNow() - $days * OB_DAY; $o = ['sent' => 0, 'opened' => 0, 'clicked' => 0, 'replies' => 0, 'booked' => 0, 'optouts' => 0, 'bounces' => 0, 'failed' => 0];
+    foreach ($S['people'] as $x) {
+        if ($x['list'] !== $k || (int) $x['sent'] < $since) continue;
+        $o['sent']++; $o['opened'] += (int) ($x['opens'] > 0); $o['clicked'] += (int) ($x['clicks'] > 0); $o['replies'] += (int) ($x['reply'] && !$x['stop']);
+        $o['booked'] += (int) !empty($x['booked']); $o['optouts'] += (int) ($x['unsub'] || $x['stop']); $o['bounces'] += (int) ($x['bounce'] > 0);
+    }
+    foreach ($fails as $at) if ($at >= $since) $o['failed']++;
+    return $o;
+}
+
+/* ================================================================ the list view (2026-11-23)
+   Matthew finds Patch Retention's Automations screens "a lot easier to understand and navigate", so each section is shown as one list of
+   automatic email streams, one row each, with a detail drawer. This only SHAPES what the sections above already read (and a few more read-only
+   facts: the senders' From names, switch-file times, the last subject in a log). Nothing here sends, switches or writes. Only Peak's lists
+   have a working switch on the page, and it is the Peak sender's own Start and Pause (peak/api.php), with its own checks.
+   n.d30 / n.d7: the emails sent in that window; opened, clicked, replies ... are what happened to those emails. null = not counted. */
+const OB_DASH = 'not described yet';
+function obStream(array $a): array {
+    $z = ['sent' => 0, 'delivered' => null, 'opened' => null, 'clicked' => null, 'replies' => null, 'conv' => null, 'optouts' => null, 'bounces' => null, 'failed' => 0];
+    $a['n'] = ($a['n'] ?? []) + ['today' => 0, 'tracked30' => 0, 'tracked7' => 0];
+    $a['n']['d30'] = ($a['n']['d30'] ?? []) + $z; $a['n']['d7'] = ($a['n']['d7'] ?? []) + $z;
+    foreach (['d30', 'd7'] as $w) if ($a['n'][$w]['delivered'] === null && $a['n'][$w]['bounces'] !== null) $a['n'][$w]['delivered'] = max(0, $a['n'][$w]['sent'] - $a['n'][$w]['bounces']);
+    return $a + ['channels' => ['Email'], 'enabled' => null, 'control' => null, 'status' => 'Paused', 'statusWhy' => '', 'type' => 'Triggered', 'last' => 0, 'next' => 0,
+        'nextText' => '', 'updated' => 0, 'how' => [], 'messages' => [], 'words' => '', 'editable' => false, 'switchText' => '', 'desc' => '', 'who' => ''];
+}
+/** a card from the sections above -> the row's numbers: its own counts, and its opens and clicks when they are counted */
+function obStreamNums(array $it): array {
+    $t = $it['track'] ?? null; $oo = is_array($t) && !empty($t['opensOnly']);
+    $n = ['last' => max((int) $it['last'], (int) ($it['track']['recent'][0]['at'] ?? 0)), 'today' => (int) $it['today'], 'd30' => ['sent' => (int) $it['d30'], 'failed' => (int) $it['fail30']], 'd7' => ['sent' => (int) $it['d7'], 'failed' => (int) $it['fail7']]];
+    if (is_array($t)) {
+        $n['tracked30'] = (int) $t['sent30']; $n['tracked7'] = (int) $t['sent7'];
+        $n['d30']['sent'] = max($n['d30']['sent'], $n['tracked30']); $n['d7']['sent'] = max($n['d7']['sent'], $n['tracked7']);
+        /* nothing counted in the window yet (counting starts with the next one sent): not counted, rather than a misleading 0 */
+        if ($n['tracked30']) { $n['d30']['opened'] = (int) $t['opened30']; if (!$oo) $n['d30']['clicked'] = (int) $t['clicked30']; }
+        if ($n['tracked7']) { $n['d7']['opened'] = (int) ($t['opened7'] ?? 0); if (!$oo) $n['d7']['clicked'] = (int) ($t['clicked7'] ?? 0); }
+    }
+    return $n;
+}
+/** the next time a once-a-day email is due: today at $hour if not yet, the next hourly run if it is due and has not gone, else tomorrow */
+function obNextDaily(int $hour, string $marker, ?int $weekday = null): int {
+    $n = obNow(); $t0 = obToday(); $at = $t0 + $hour * 3600; $sentToday = $marker === date('Y-m-d', $n);
+    if ($weekday !== null) {   /* 6 = Saturday */
+        $dow = (int) date('N', $n); $d = ($weekday - $dow + 7) % 7;
+        if ($d === 0 && ($sentToday || $n >= $at + 4 * 3600)) $d = 7;
+        if ($d > 0) return (int) strtotime(date('Y-m-d', $t0 + $d * OB_DAY + 7200) . ' ' . $hour . ':00');
+    }
+    if ($n < $at) return $at;
+    if (!$sentToday) return (int) (floor($n / 3600) + 1) * 3600;
+    return (int) strtotime(date('Y-m-d', $t0 + OB_DAY + 7200) . ' ' . $hour . ':00');
+}
+function obStatusOf(?bool $on): string { return $on === true ? 'Running' : 'Paused'; }
+/** "The customer" -> "the customer" inside a sentence; a name (Brandon, Contact@...) stays as it is */
+function obLc(string $s): string { return preg_match('/^(The|You|Every|Whoever|New|Prospect)\b/', $s) ? lcfirst($s) : $s; }
+/** the SEND step: what, to whom, from whom (left out when not known) */
+function obSendStep(string $what, string $who, string $from): string { return rtrim($what, '.') . ', to ' . obLc($who) . ($from !== '' && $from !== OB_DASH ? ', from ' . $from : '') . '.'; }
+function obStreams(array $P, array $X, array $T): array {
+    $out = ['peak' => [], 'sixfold' => [], 'traverse' => [], 'texts' => []];
+
+    /* ---------------- Peak */
+    if (!empty($P['ready'])) {
+        $from = trim(($P['from']['name'] ?? '') . ' <' . ($P['from']['email'] ?? '') . '>');
+        $win = (string) $P['window']; $rate = (int) $P['rate'];
+        foreach ($P['lists'] as $L) {
+            $st = $L['status'] === 'running' ? 'Running' : ($L['status'] === 'done' ? 'Done' : ($L['draft'] ? 'Draft' : 'Paused'));
+            $w = fn(array $x) => ['sent' => $x['sent'], 'opened' => $x['opened'], 'clicked' => $x['clicked'], 'replies' => $x['replies'], 'conv' => $x['booked'], 'optouts' => $x['optouts'], 'bounces' => $x['bounces'], 'failed' => $x['failed']];
+            $out['peak'][] = obStream(['id' => 'peak-' . $L['id'], 'ref' => $L['id'], 'name' => $L['name'] . ' list blast', 'desc' => 'One email to each person on the ' . $L['name'] . ' list from the Peak desk, in hourly batches until the list is used up.',
+                'who' => $L['people'] . ' people at ' . $L['orgs'] . ' organisations (' . $L['queued'] . ' waiting)', 'enabled' => $L['status'] === 'running', 'control' => ['kind' => 'peaklist', 'list' => $L['id'], 'blocks' => $L['blocks']],
+                'status' => $st, 'statusWhy' => $L['status'] === 'paused' ? ($L['pausedWhy'] !== '' ? 'paused: ' . $L['pausedWhy'] : 'paused' . ($L['draft'] ? ': the email is still a DRAFT' : '')) : ($L['status'] === 'done' ? 'done: everyone on it has been emailed' : 'sending'),
+                'type' => 'One time', 'last' => $L['last'], 'next' => $L['next'], 'nextText' => $L['status'] === 'running' ? ($L['next'] ? 'the hourly run, inside the window' : 'no sending hour in the next two weeks') : 'not while paused',
+                'updated' => $L['updated'], 'switchText' => 'Start and Pause: here, or in the Peak controls below (the Peak sender\'s own switch). The email, settings and who is on it: Peak controls.',
+                'n' => ['today' => (int) $L['sentToday'], 'tracked30' => $L['w30']['sent'], 'tracked7' => $L['w7']['sent'], 'd30' => $w($L['w30']), 'd7' => $w($L['w7'])],
+                'how' => [['WHEN', 'You press Start (the switch here, or Start sending in the Peak controls). Then every hourly run sends inside the window: ' . $win . '.'],
+                    ['THEN', 'Start is refused while the email is a DRAFT, Peak\'s postal address is missing or Microsoft is not connected. Never emails anyone unsubscribed, bounced, who replied STOP, on the do-not-email list or already emailed' . ($P['deskSkip'] ? ', or a company someone owns on the Peak desk or touched in the last 14 days (checked again just before each email)' : '') . '. Editing the email pauses the list; it pauses itself if bounces pass 8% after 20 sends.'],
+                    ['SEND', 'Up to ' . $rate . ' an hour for both lists together' . ($P['ramp'] ? ' (at most 10 an hour on the first sending day)' : '') . ', ' . $P['perOrg'] . ' ' . ($P['perOrg'] === 1 ? 'person' : 'people') . ' per organisation, as ' . $from . '. Every link is tracked; replies, STOP, bounces and bookings go onto the company\'s card on the Peak desk.']],
+                'messages' => [['label' => 'The email' . ($L['draft'] ? ' (still a DRAFT: it cannot be sent)' : ''), 'from' => $from, 'subject' => $L['template']['subject'], 'preview' => $L['template']['body'],
+                    'note' => 'Merge fields {first}, {company}, {town} and {book} are filled in for each person. Matthew\'s signature, Peak\'s postal address and the unsubscribe line are added under it.']]]);
+        }
+        $TC = $P['tours']; $tw = $TC['words'];
+        $out['peak'][] = obStream(['id' => 'peak-tours', 'ref' => 'tours', 'name' => 'Tour confirmations', 'desc' => 'The confirmation, change or cancellation of a tour booked on the Peak desk, with a calendar invite.', 'who' => 'The visitor whose tour it is',
+            'enabled' => (bool) $TC['on'], 'status' => $TC['on'] ? 'Running' : 'Paused', 'statusWhy' => $TC['on'] ? 'on' : 'off until the wording is approved in the Peak desk (More, Settings)', 'last' => 0, 'updated' => $TC['updated'], 'nextText' => 'when a tour is booked, moved or cancelled',
+            'switchText' => 'The Peak desk: More, Settings (the switch and the wording). Retry for one not sent: the tour, in the desk\'s Tours.',
+            'n' => ['today' => (int) $TC['today'], 'tracked30' => (int) $TC['sent30'], 'd30' => ['sent' => (int) $TC['d30'], 'opened' => (int) $TC['opened30'], 'failed' => count($TC['open'])], 'd7' => ['sent' => (int) $TC['d7']]],
+            'how' => [['WHEN', 'Someone on the Peak desk books, moves or cancels a tour with the contact\'s email and the box ticked.'],
+                ['THEN', 'Only while tour confirmations are on in the desk. Each version goes once; it is outside the lists, the hourly rate and the sending window. A failed one waits for Retry on the tour.'],
+                ['SEND', 'The confirmation (or the cancellation) and a calendar invite, as Peak Partnerships, to the visitor. No tracked links; opens are counted with the desk\'s 1x1 image when that setting is on.']],
+            'messages' => [['label' => 'Confirmation', 'from' => $from, 'subject' => $tw['subject'] !== '' ? $tw['subject'] : 'Confirmed: your visit to Peak Pickleball, {date} at {time}', 'preview' => $tw['body'] !== '' ? $tw['body'] : '',
+                'note' => $tw['subject'] !== '' ? 'The wording as saved in the Peak desk.' : 'The desk\'s built-in wording (the full text is in the desk, More, Settings). A move says "Updated:"; a cancellation has its own words.']]]);
+        $DM = $P['deskmails'];
+        $out['peak'][] = obStream(['id' => 'peak-deskmails', 'ref' => 'deskmails', 'name' => 'Desk emails', 'desc' => 'An email a seller writes on a company\'s card in the Peak desk, one person at a time.', 'who' => 'The one person the seller writes to',
+            'enabled' => (bool) $DM['on'], 'status' => $DM['on'] ? 'Running' : 'Paused', 'statusWhy' => $DM['on'] ? 'on' . ($DM['book'] ? ', booking links on' : ', booking links off') : 'off until turned on in the Peak desk (More, Settings)', 'nextText' => 'when a seller sends one',
+            'switchText' => 'The Peak desk: More, Settings. Retry for one not sent: the company\'s card.',
+            'n' => ['today' => (int) $DM['today'], 'd30' => ['sent' => (int) $DM['d30'], 'failed' => count($DM['open'])], 'd7' => ['sent' => (int) $DM['d7']]],
+            'how' => [['WHEN', 'A seller writes an email on a company\'s card in the Peak desk and sends it.'],
+                ['THEN', 'Only while desk emails are on in the desk. Never to the do-not-email list. Each one goes once; Reply-To is the seller\'s own address if they set one.'],
+                ['SEND', 'That one email, as Peak Partnerships, to that person. Only the booking link is tracked (when booking links are on); no open image unless that desk setting is on.']],
+            'messages' => [['label' => 'Each email', 'from' => $from, 'subject' => 'Written by the seller on the card', 'preview' => '', 'note' => 'Every desk email has its own words; they are on the company\'s card in the Peak desk.']]]);
+    }
+
+    /* ---------------- Sixfold (read only, but for the words of four customer emails) */
+    $I = []; foreach ($X['items'] as $it) $I[$it['id']] = $it;
+    $a365 = obRead('sixfold-private/a365-mail.json', null);   /* only the sender's name and address are read here, never the password */
+    $sxFrom = is_array($a365) ? trim((string) ($a365['from_name'] ?? '') . ' <' . (filter_var((string) ($a365['from'] ?? ''), FILTER_VALIDATE_EMAIL) ? (string) $a365['from'] : (string) ($a365['user'] ?? '')) . '>') : 'the 365 mailbox (not set up)';
+    $siteFrom = 'The Sixfold website\'s mailbox (set in public_html/api/config.php)';
+    $mt = fn(string $f) => obMtime(OB_SX . '/' . $f);
+    $lastSubj = function (string $rel, callable $keep): string { $s = ''; foreach (obLines($rel) as $r) if ($keep($r)) $s = (string) ($r['subject'] ?? $s); return mb_substr($s, 0, 160); };
+    $marker = fn(string $f) => trim((string) @file_get_contents(obRoot() . '/' . OB_SXD . '/' . $f));
+    $nl = obRead(OB_SX . '/newsletter.json', []); $nlIs = null; $nlNext = 0;
+    foreach ((array) ($nl['issues'] ?? []) as $is) { $sd = $is['sent'] ?? null; $ap = $is['approved'] ?? null;
+        if (is_array($ap) && !empty($ap['for']) && !(is_array($sd) && (!empty($sd['done']) || !empty($sd['start'])))) { if (!$nlNext || (int) $ap['for'] < $nlNext) { $nlNext = (int) $ap['for']; $nlIs = $is; } } }
+    if (!$nlIs) foreach ((array) ($nl['issues'] ?? []) as $is) if (is_array($is['sent'] ?? null)) $nlIs = $is;
+    $unsub30 = 0; foreach ((array) obRead(OB_SX . '/newsletter-unsub.json', []) as $u) if (is_array($u) && (int) ($u['at'] ?? 0) >= obNow() - 30 * OB_DAY) $unsub30++;
+    $SX = [
+        'aftercare' => ['type' => 'Triggered', 'nextText' => 'when a job is marked Done', 'upd' => ['emails2.json', 'a365-words.json'], 'words' => 'aftercare', 'subject' => 'Your lawn after today: a few tips from {company}',
+            'then' => 'No switch of its own: it goes whenever the 365 mailbox is set up. A customer with no email on file, or unsubscribed, is skipped. The pay link at Done and the logo header follow emails2.json.'],
+        'followup' => ['type' => 'Triggered', 'nextText' => 'checked every 5 minutes, 9 am to 6 pm', 'upd' => ['followup.json', 'a365-words.json'], 'words' => 'followup', 'subject' => 'How\'s the lawn, {first_name}?',
+            'then' => 'Only while the follow-up switch is on (Field app, Admin, Follow-up email) and the 365 mailbox is set up. A job set to Don\'t send is skipped.'],
+        'deposit' => ['type' => 'Triggered', 'nextText' => 'checked every 5 minutes, 8 am to 6 pm', 'upd' => ['deprem.json', 'a365-words.json'], 'words' => 'deposit', 'subject' => 'Your lawn service is tomorrow: your deposit is still open',
+            'then' => 'Only while deposit reminders are on (Field app, Admin). Only for forms sent 5 or more days before the job, and only if the Square deposit link is still unpaid (Square is checked again first). Customers set to no reminder are skipped.'],
+        'signed' => ['type' => 'Triggered', 'nextText' => 'when a customer signs the 365 form', 'upd' => ['a365-words.json'], 'words' => 'signed', 'subject' => 'Your signed agreement with {company}',
+            'then' => 'No switch: it goes whenever the 365 mailbox is set up.'],
+        'newsletter' => ['type' => 'Recurring', 'upd' => ['newsletter.json'], 'then' => 'Only an issue approved in the Newsletter screen of the field app goes, each issue on its own approval. Unsubscribes are skipped.'],
+        'weblead' => ['type' => 'Triggered', 'nextText' => 'within 5 minutes of a website form', 'from' => $siteFrom, 'subject' => 'Website lead: <their name> · <what they want>', 'preview' => 'The details of the form, as the customer typed them.',
+            'then' => 'The form queues it; the 5-minute push run sends it, and tries again every 5 minutes if it fails. Always on while the website\'s mail settings are on the server.'],
+        'morning' => ['type' => 'Recurring', 'from' => $siteFrom, 'then' => 'Once a day (the marker sixfold-data/digest/last-sent.txt). A failed one is tried again every hour until it goes.',
+            'subject' => '[<app> app] ' . ($lastSubj(OB_SXD . '/digest.log', fn($r) => !empty($r['ok'])) ?: 'Morning, <day>: ...'), 'subjectNote' => 'The last one sent.', 'next' => obNextDaily(6, $marker('last-sent.txt'))],
+        'eod' => ['type' => 'Recurring', 'from' => $siteFrom, 'then' => 'Once a day (the marker sixfold-data/digest/eod-last-sent.txt). One copy per person; test copies are left out of the counts.',
+            'subject' => '[Sixfold 365] ' . ($lastSubj(OB_SXD . '/eod.log', fn($r) => !empty($r['ok']) && str_starts_with((string) ($r['subject'] ?? ''), 'End of day')) ?: 'End of day, <day>: ...'), 'subjectNote' => 'The last one sent.', 'next' => obNextDaily(20, $marker('eod-last-sent.txt'))],
+        'week' => ['type' => 'Recurring', 'from' => $siteFrom, 'then' => 'Started by the Saturday end-of-day run (eod-report.php --week). One copy per person.',
+            'subject' => '[Sixfold 365] ' . ($lastSubj(OB_SXD . '/eod.log', fn($r) => !empty($r['ok']) && str_starts_with((string) ($r['subject'] ?? ''), 'The week')) ?: 'The week, <dates>: ...'), 'subjectNote' => 'The last one sent.', 'next' => obNextDaily(20, $marker('eod-week-last-sent.txt'), 6)],
+        'profit' => ['type' => 'Recurring', 'from' => OB_DASH, 'then' => 'It runs from the laptop, not the server: there is no send log on the server, so a failure shows only in the laptop\'s overnight log.',
+            'next' => (int) strtotime('first day of next month 00:00', obNow()), 'nextText' => 'after the month ends, by the laptop\'s overnight check'],
+    ];
+    foreach ($I as $id => $it) {
+        $c = $SX[$id] ?? ['type' => 'Triggered', 'then' => OB_DASH];
+        $n = obStreamNums($it);
+        if ($id === 'newsletter') $n['d30']['optouts'] = $unsub30;
+        $upd = 0; foreach ((array) ($c['upd'] ?? []) as $f) $upd = max($upd, $mt($f));
+        $status = obStatusOf($it['on']);
+        if ($id === 'newsletter') $status = $it['waiting'] ? 'Running' : ($nlNext && $it['on'] ? 'Scheduled' : 'Paused');
+        $msg = ['label' => $it['name'], 'from' => (string) ($c['from'] ?? $sxFrom), 'subject' => (string) ($c['subject'] ?? OB_DASH), 'preview' => (string) ($c['preview'] ?? ''), 'note' => (string) ($c['subjectNote'] ?? '')];
+        if (isset($c['words'])) $msg['note'] = 'The built-in subject; the words in use (and any saved version) load below.';
+        if ($id === 'newsletter') $msg = ['label' => $nlIs ? ($nlNext ? 'The next issue (approved)' : 'The last issue') : 'No issue yet', 'from' => $sxFrom, 'subject' => $nlIs ? (string) ($nlIs['subject'] ?? '') : OB_DASH,
+            'preview' => $nlIs ? mb_substr(trim(strip_tags((string) ($nlIs['pre'] ?? '') . "\n\n" . (string) ($nlIs['body'] ?? ''))), 0, 1200) : '', 'note' => 'Each issue is written and approved in the field app\'s Newsletter screen.'];
+        if ($id === 'profit') $msg = ['label' => $it['name'], 'from' => OB_DASH, 'subject' => OB_DASH, 'preview' => '', 'note' => 'Sent from the laptop; its wording is ' . OB_DASH . ' here.'];
+        $out['sixfold'][] = obStream(['id' => 'sx-' . $id, 'ref' => $id, 'name' => $it['name'], 'desc' => $it['what'], 'who' => $it['who'], 'enabled' => $it['on'], 'status' => $status, 'statusWhy' => $it['state'],
+            'type' => $c['type'], 'last' => $n['last'], 'next' => $id === 'newsletter' ? $nlNext : (int) ($c['next'] ?? 0), 'nextText' => (string) ($c['nextText'] ?? ($id === 'newsletter' ? ($nlNext ? 'the approved issue' : 'when an issue is approved') : '')),
+            'updated' => $upd, 'switchText' => $it['switch'], 'n' => $n, 'words' => (string) ($c['words'] ?? ''), 'editable' => !empty($it['editable']),
+            'how' => [['WHEN', $it['trigger']], ['THEN', $c['then']], ['SEND', obSendStep($it['what'], $it['who'], $msg['from'])]], 'messages' => [$msg]]);
+    }
+
+    /* ---------------- Traverse (read only) */
+    $J = []; foreach ($T['items'] as $it) $J[$it['id']] = $it;
+    $tf = $T['mailFrom'] !== '' ? $T['mailFrom'] : 'Traverse\'s website mailbox (traverse-site-private/site-config.php)';
+    $TR = [
+        'desk' => ['type' => 'One time', 'from' => 'Matthew Sharpe <m.sharpe@traverseplatforms.com> (the desk\'s default mailbox)', 'subject' => ($J['desk']['lastSubject'] ?? '') !== '' ? $J['desk']['lastSubject'] : OB_DASH,
+            'subjectNote' => 'Written on the desk for each company; this is the last one sent.', 'when' => 'You Queue companies on the Prospects desk.',
+            'then' => 'The hourly run sends 15 an hour, at most ' . (int) ($J['desk']['cap'] ?? 40) . ' a day, 2 minutes apart. Nothing sends while a hold is set (send-after.txt) or while there is no postal address in the desk\'s Settings.',
+            'send' => 'A one-to-one email to each prospect company you queued, from Matthew Sharpe <m.sharpe@traverseplatforms.com> (the desk\'s default mailbox). Every link is tracked since 18 Nov; there is no open image.'],
+        'demo-confirm' => ['type' => 'Triggered', 'from' => $tf, 'subject' => 'Your Traverse demo · <day> at <time>', 'nextText' => 'when a demo is booked',
+            'preview' => "Hi <name>,\n\nYour Traverse demo is booked for <day> at <time>.\n\nWe'll call you at <phone> (or: We'll email you a video call link before the demo).\n\nWe'll show you a full day in your trade's edition: at the door, on the phone and in the office. ...\n\nNeed a different time? Cancel here and book again: <their cancel link>",
+            'then' => 'Only while Traverse\'s mailbox password is on the server. A calendar invite is attached; replies go to you.'],
+        'demo-notify' => ['type' => 'Triggered', 'from' => $tf, 'subject' => 'Demo booked: <company> · <day> at <time>  (also: Demo cancelled: ..., and the app-link request)', 'nextText' => 'each booking, cancel or app-link request',
+            'preview' => "New demo booked.\n\nWhen: <day> at <time>\nHow: <phone or video>\n\nName, company, trade, team size, towns, email, phone and their notes.\n\nReply to this email to write to them. The invite is attached for your calendar.",
+            'then' => 'Only while Traverse\'s mailbox password is on the server. Reply-To is the person who booked.'],
+        'signup' => ['type' => 'Triggered', 'from' => $tf, 'subject' => 'Finish setting up your Traverse · Your Traverse is ready · ... is waiting for you · Your Traverse sign-in link', 'nextText' => 'at checkout, setup, Find my app; reminders daily at 4 am',
+            'then' => 'Only while sign-up is open (traverse-shared/clients/billing-config.php) and the mailbox password is set. Up to 3 "is waiting for you" reminders.'],
+        'notes' => ['type' => 'Triggered', 'from' => $tf, 'subject' => 'Traverse: new paid company · new client live · is over its seats · is locked · sign-up cancelled ...', 'nextText' => 'when it happens; the trial sweep daily at 4 am',
+            'then' => 'No switch; sent while the mailbox password is set.'],
+        'client-eod' => ['type' => 'Recurring', 'from' => 'Each client company\'s app', 'subject' => OB_DASH, 'nextText' => 'hourly check, at the hour each client chose',
+            'then' => 'Only in the client apps where the company turned it on (Setup, End-of-day email). The client company decides.'],
+        'client-care' => ['type' => 'Triggered', 'from' => 'Each client company\'s own mailbox', 'subject' => OB_DASH, 'nextText' => 'the hourly care run',
+            'then' => 'Only the follow-up and aftercare emails a client company turned on in its care settings. The client company decides.'],
+        'posts' => ['type' => 'Triggered', 'from' => $tf, 'subject' => OB_DASH, 'nextText' => 'when a scheduled post fails', 'then' => 'No switch; only when a post could not go out.'],
+    ];
+    foreach ($J as $id => $it) {
+        $c = $TR[$id] ?? ['type' => 'Triggered', 'then' => OB_DASH, 'from' => OB_DASH, 'subject' => OB_DASH];
+        $n = obStreamNums($it); $next = 0; $nt = (string) ($c['nextText'] ?? ''); $status = obStatusOf($it['on']); $upd = 0;
+        if ($id === 'desk') {
+            $n['d30']['bounces'] = (int) $it['bounce30']; $n['d7']['bounces'] = (int) $it['bounce7']; $n['d30']['optouts'] = (int) $it['unsub30']; $n['d7']['optouts'] = (int) $it['unsub7'];
+            $n['d30']['clicked'] = (int) $it['click30']; $n['d7']['clicked'] = (int) $it['click7']; $n['d30']['opened'] = null; $n['tracked30'] = $n['d30']['sent']; $n['tracked7'] = $n['d7']['sent'];
+            $upd = (int) $it['updated'];
+            if ($it['held']) { $status = 'Paused'; $next = $it['held'] >= OB_HOLD_FOREVER ? 0 : $it['held']; $nt = $next ? 'when the hold ends' : 'held until you lift it'; }
+            elseif (!$it['hasAddress']) { $status = 'Paused'; $nt = 'no postal address in Settings'; }
+            elseif ($it['waiting']) { $status = 'Running'; $next = (int) (floor(obNow() / 3600) + 1) * 3600; $nt = 'the hourly run'; }
+            else { $status = 'Running'; $nt = 'when you queue more'; }
+        }
+        $msg = ['label' => $it['name'], 'from' => (string) $c['from'], 'subject' => (string) $c['subject'], 'preview' => (string) ($c['preview'] ?? ''), 'note' => (string) ($c['subjectNote'] ?? '')];
+        $out['traverse'][] = obStream(['id' => 'tv-' . $id, 'ref' => $id, 'name' => $it['name'], 'desc' => $it['what'], 'who' => $it['who'], 'enabled' => $id === 'desk' ? $status === 'Running' : $it['on'], 'status' => $status, 'statusWhy' => $it['state'],
+            'type' => $c['type'], 'last' => $n['last'], 'next' => $next, 'nextText' => $nt, 'updated' => $upd, 'switchText' => $it['switch'], 'n' => $n,
+            'how' => [['WHEN', (string) ($c['when'] ?? $it['trigger'])], ['THEN', (string) $c['then']], ['SEND', (string) ($c['send'] ?? obSendStep($it['what'], $it['who'], (string) $c['from']))]], 'messages' => [$msg]]);
+    }
+    return $out;
 }
 
 /* ================================================================ the whole page */
@@ -615,6 +832,6 @@ function obView(): array {
     $failed = ['peak' => (int) ($P['failToday'] ?? 0), 'sixfold' => $sum($X['items'], 'failToday'), 'traverse' => $sum($T['items'], 'failToday')];
     $wait = ['peak' => (int) ($P['waiting'] ?? 0), 'sixfold' => $sum($X['items'], 'waiting'), 'traverse' => $sum($T['items'], 'waiting')];
     return ['ok' => true, 'now' => obNow(), 'summary' => ['sent' => $today, 'waiting' => $wait, 'waitingPaused' => (int) ($P['waitingPaused'] ?? 0), 'failed' => $failed,
-        'attention' => array_map(fn($a) => ['level' => $a[0], 'text' => $a[1]], $att)], 'peak' => $P, 'sixfold' => $X, 'traverse' => $T,
+        'attention' => array_map(fn($a) => ['level' => $a[0], 'text' => $a[1]], $att)], 'peak' => $P, 'sixfold' => $X, 'traverse' => $T, 'streams' => obStreams($P, $X, $T),
         'texts' => ['note' => 'No text messages are sent automatically yet. Texting is off in the Sixfold app, and where it exists it is one text at a time, typed by a person. When a tool starts texting on its own it gets a section here.']];
 }

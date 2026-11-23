@@ -27,7 +27,8 @@ ok(as.status === 0, 'assemble ran: ' + as.stderr);
 fs.mkdirSync(path.join(PUB, 'api'), { recursive: true }); fs.writeFileSync(path.join(PUB, 'api', 'config.php'), '<?php return [];');   // the Sixfold website's mail settings exist
 /* the Peak desk's record code, where it is on the server: the sender reads the desk and writes to it through it (2026-11-18) */
 fs.mkdirSync(path.join(PUB, 'peak-desk-28d38d', 'api'), { recursive: true });
-fs.copyFileSync(path.join(REPO, 'matthew', 'peak-pickleball-sponsorship', 'app', 'api', 'desk-store.php'), path.join(PUB, 'peak-desk-28d38d', 'api', 'desk-store.php'));
+/* desk-store.php loads desk-inbox.php (X-17, 20 Nov), which loads webpush.php when an alert is due: all three, as on the server */
+for (const f of ['desk-store.php', 'desk-inbox.php', 'webpush.php']) fs.copyFileSync(path.join(REPO, 'matthew', 'peak-pickleball-sponsorship', 'app', 'api', f), path.join(PUB, 'peak-desk-28d38d', 'api', f));
 
 /* ---- Outbox's data: a sign-in code ---- */
 const CODE = 'OUTBOXTEST12';
@@ -79,7 +80,8 @@ mk('sixfold-data/digest/profit-monthly.txt', '2026-10');
 
 /* ---- Traverse: the desk, the website, sign-ups ---- */
 const desk = [{ t: 'settings', s: { address: '1 Test St, Englewood, CO 80110', cap: 360 }, by: 'M', at: NOW - 30 * DAY }];
-for (let i = 0; i < 30; i++) desk.push({ t: 'sent', id: 'p' + i, to: 'p' + i + '@x.test', subject: 'Hi', by: 'queue', at: NOW - (i < 5 ? 3600 : 10 * DAY), ...(i < 4 ? { style: 'plain', links: 3 } : {}) });   /* 18 Nov: the first four carry the style, as rows written since then do */
+const XSS = '<img src=x onerror="window.__xss=1">Hi';   /* the list view shows the desk's last subject: it must stay text (2026-11-23) */
+for (let i = 0; i < 30; i++) desk.push({ t: 'sent', id: 'p' + i, to: 'p' + i + '@x.test', subject: i === 29 ? XSS : 'Hi', by: 'queue', at: NOW - (i < 5 ? 3600 : 10 * DAY), ...(i < 4 ? { style: 'plain', links: 3 } : {}) });   /* 18 Nov: the first four carry the style, as rows written since then do */
 desk.push({ t: 'bounce', id: 'p1', to: 'p1@x.test', by: 'Bounce log', at: NOW - 9 * DAY }, { t: 'bounce', id: 'p2', to: 'p2@x.test', by: 'Bounce log', at: NOW - 9 * DAY });
 desk.push({ t: 'click', id: 'p3', to: 'home', by: 'the company', at: NOW - 2 * DAY }, { t: 'scan', id: 'p3', to: 'home', by: 'the company', at: NOW - 2 * DAY });
 desk.push({ t: 'click', id: 'p0', to: 'demo', u: 'https://traverseplatforms.com/demo', c: 'abcdefghi', s: 'plain', by: 'the company', at: NOW - 3000 }, { t: 'click', id: 'p0', to: 'home', u: 'https://traverseplatforms.com/', c: 'bcdefghij', s: 'plain', by: 'the company', at: NOW - 2900 }, { t: 'scan', id: 'p1', to: 'home', u: 'https://traverseplatforms.com/', c: 'cdefghijk', s: 'plain', by: 'the company', at: NOW - 3500 });   /* plain tracked links (18 Nov) */
@@ -112,13 +114,32 @@ mk('c-acme-data/rounds/mail-sends.log', jl([{ t: 'send', id: id('6'), k: 'follow
 mk('c-acme-data/rounds/mail-events.log', jl([{ t: 'open', id: id('6'), k: 'followup', at: NOW - DAY }, { t: 'click', id: id('6'), k: 'followup', n: 0, at: NOW - DAY }, { t: 'scan', id: id('7'), k: 'aftercare', n: 0, at: NOW - DAY }, { t: 'open', id: id('9'), k: 'eod', at: NOW - DAY }]));
 mk('peak-desk-data/book-events.log', jl([{ t: 'pxsent', ref: 'tc-a1-0-r', at: NOW - 600 }, { t: 'open', ref: 'tc-a1-0-r', proxy: 0, at: NOW - 500 }, { t: 'open', ref: 'tc-zz-0-r', proxy: 0, at: NOW - 500 }, { t: 'view', ref: '', at: NOW - 400 }]));
 
+/* a stand-in for the Sixfold app's words actions (rounds.php a365words*), which Outbox calls server to server with the key (2026-11-23: the
+   page's Change the words is tested in the browser below). It records what it is asked and changes nothing. */
+const APPKEY = 'k'.repeat(40); mk('sixfold-private/outbox-key.txt', APPKEY);
+const APP = { calls: [] }, APPPORT = 18000 + Math.floor(Math.random() * 700);
+const KIND = { name: 'Aftercare email', active: 'v0', versions: [], samples: { a: 'Alex Sample' },
+  lines: { subject: { label: 'Subject', where: 'subject', def: 'Your lawn after today: a few tips from {company}', fields: ['company'], need: [], link: false, when: '' },
+           intro: { label: 'First line', where: 'email', def: 'Thanks for having us out today, {first_name}.', fields: ['first_name'], need: [], link: false, when: '' } },
+  now: { subject: 'Words in use: tips from {company}', intro: 'Thanks for having us out today, {first_name}.' } };
+const appSrv = http.createServer((q, s) => { let b = ''; q.on('data', d => b += d); q.on('end', () => {
+  const a = new URL(q.url, 'http://x').searchParams.get('action'); APP.calls.push({ a, key: q.headers['x-outbox-key'] === APPKEY, body: b ? JSON.parse(b) : null });
+  const j = o => { s.writeHead(200, { 'Content-Type': 'application/json' }); s.end(JSON.stringify(o)); };
+  if (q.headers['x-outbox-key'] !== APPKEY) return j({ ok: false, error: 'bad key' });
+  if (a === 'a365words') return j({ ok: true, kinds: { aftercare: KIND }, fields: { company: 'The company', first_name: 'First name' }, log: [] });
+  if (a === 'a365wordspreview') return j({ ok: true, subject: 'Preview subject', html: '<p>preview</p>', text: 'preview', errors: {} });
+  if (a === 'a365wordssave') return j({ ok: true, active: 'v1' });
+  j({ ok: false, error: 'unknown' });
+}); });
+await new Promise(r => appSrv.listen(APPPORT, '127.0.0.1', r));
+
 /* every file the read-only sections read: their bytes must not change */
 const watched = ['sixfold-data', 'sixfold-private', 'traverse-prospects-data', 'traverse-site-private', 'traverse-shared', 'traverse-yards-data', 'post-calendar-data', 'peak-desk-data', 'c-acme-data'];
 const snap = () => { const h = crypto.createHash('sha256'); for (const w of watched) for (const f of fs.readdirSync(path.join(R, w), { recursive: true }).sort()) { const p = path.join(R, w, f); if (fs.statSync(p).isFile()) h.update(f + fs.readFileSync(p)); } return h.digest('hex'); };
 const before = snap();
 
 /* ---- the test server: public_html as the web root ---- */
-const env = { ...process.env, OUTBOX_NOW: String(NOW) }; for (const k of Object.keys(env)) if (k.startsWith('PEAK_MAIL_') || k.startsWith('PEAK_DESK_')) delete env[k];
+const env = { ...process.env, OUTBOX_NOW: String(NOW), OUTBOX_APP_API: 'http://127.0.0.1:' + APPPORT + '/api/rounds.php' }; for (const k of Object.keys(env)) if (k.startsWith('PEAK_MAIL_') || k.startsWith('PEAK_DESK_')) delete env[k];
 const srv = spawn('php', ['-S', '127.0.0.1:' + PORT, '-t', PUB], { env, stdio: 'ignore' });
 await new Promise(r => setTimeout(r, 900));
 function req(method, p, body, headers = {}) {
@@ -147,7 +168,7 @@ try {
 
   /* 2. the whole view */
   r = await api('state'); const V = r.json; ok(r.status === 200 && V.ok, 'state after sign-in');
-  ok(!r.text.includes('NOT-A-REAL-PASSWORD') && !r.text.includes('mock-secret-not-real') && !r.text.includes(CODE), 'no password, secret or code in the answer');
+  ok(!r.text.includes('NOT-A-REAL-PASSWORD') && !r.text.includes('mock-secret-not-real') && !r.text.includes(CODE) && !r.text.includes(APPKEY), 'no password, secret, key or code in the answer');
   const S = id => V.sixfold.items.find(i => i.id === id), X = id => V.traverse.items.find(i => i.id === id);
   const ac = S('aftercare'); ok(ac.today === 1 && ac.d7 === 2 && ac.d30 === 3 && ac.last === NOW - 2 * 3600, 'aftercare: 1 today, 2 in 7 days, 3 in 30, last time');
   ok(ac.skipped30 === 1 && ac.fail30 === 0, 'aftercare: "no email on file" is a skip, not a failure');
@@ -318,13 +339,158 @@ try {
     } finally { mock.close(); }
   }
 
+  /* 9c. the page in headless Chrome (2026-11-23: the list view laid out like Patch Retention's Automations screens). Filters, search, sort,
+     the column chooser, the drawer and its tabs; read-only sections have no working switch and clicking theirs sends nothing; Peak's list
+     switches go through the Peak sender's own Start and Pause (which still refuses a DRAFT); Change the words still opens and saves through
+     the Sixfold app; server text stays text. Optional screenshots: OUTBOX_SHOTS=<folder>. */
+  {
+    const CHROME = process.env.CHROME || (process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : 'google-chrome');
+    const SHOTS = process.env.OUTBOX_SHOTS || '';
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const CPORT = 9400 + Math.floor(Math.random() * 400), prof = fs.mkdtempSync(path.join(os.tmpdir(), 'obchrome-'));
+    const ch = spawn(CHROME, ['--headless=new', '--remote-debugging-port=' + CPORT, '--user-data-dir=' + prof, '--no-first-run', '--disable-gpu', ...(process.platform === 'win32' ? [] : ['--no-sandbox']), 'about:blank'], { stdio: 'ignore' });
+    let ws;
+    try {
+      let ver = null; for (let i = 0; i < 60 && !ver; i++) { await sleep(250); try { ver = await (await fetch('http://127.0.0.1:' + CPORT + '/json/list')).json(); } catch {} }
+      ok(!!ver, 'headless Chrome started (' + CHROME + ')'); if (!ver) throw new Error('no Chrome');
+      const pg = ver.find(t => t.type === 'page'); ws = new WebSocket(pg.webSocketDebuggerUrl); await new Promise(r => ws.onopen = r);
+      let n = 0; const wait = {}, errs = [], reqs = [];
+      ws.onmessage = m => { const d = JSON.parse(m.data); if (d.id && wait[d.id]) { wait[d.id](d); delete wait[d.id]; }
+        if (d.method === 'Runtime.exceptionThrown') errs.push(d.params.exceptionDetails.text + ' ' + (d.params.exceptionDetails.exception?.description || ''));
+        if (d.method === 'Network.requestWillBeSent') reqs.push({ m: d.params.request.method, u: d.params.request.url }); };
+      const cdp = (method, params = {}) => new Promise(r => { const k = ++n; wait[k] = r; ws.send(JSON.stringify({ id: k, method, params })); });
+      const ev = async e => { const r = await cdp('Runtime.evaluate', { expression: e, returnByValue: true, awaitPromise: true }); if (r.result?.exceptionDetails) errs.push('eval: ' + e.slice(0, 80) + ' ' + JSON.stringify(r.result.exceptionDetails).slice(0, 200)); return r.result?.result?.value; };
+      const until = async (e, ms = 4000) => { for (let t = 0; t < ms; t += 100) { if (await ev(e)) return true; await sleep(100); } return false; };
+      const shot = async name => { if (!SHOTS) return; fs.mkdirSync(SHOTS, { recursive: true }); const r = await cdp('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(path.join(SHOTS, name + '.png'), Buffer.from(r.result.data, 'base64')); };
+      await cdp('Page.enable'); await cdp('Runtime.enable'); await cdp('Network.enable');
+      await cdp('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__confirm=true;window.confirm=function(m){window.__asked=(window.__asked||0)+1;return window.__confirm};' });
+      await cdp('Network.setCookie', { name: 'outbox', value: COOKIE.split('=')[1], domain: '127.0.0.1', path: '/outbox-092b0f/' });
+      const BASE = 'http://127.0.0.1:' + PORT + '/outbox-092b0f/';
+      const open = async (tab, w = 1400, h = 950, mobile = false) => { await cdp('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile });
+        await cdp('Page.navigate', { url: BASE + '?tab=' + tab }); return until('document.querySelectorAll("#secList tbody tr[data-row]").length>0 || /No text messages/.test((document.querySelector("#secList")||{}).textContent||"")', 8000); };
+      const rowsOf = 'JSON.stringify([...document.querySelectorAll("#secList tbody tr[data-row]")].map(t=>t.dataset.row))';
+
+      /* the sections as lists */
+      ok(await open('sixfold'), 'Outbox opens signed in, Sixfold as a list');
+      ok(JSON.parse(await ev(rowsOf)).length === 10, 'Sixfold: one row per automatic email (10)');
+      const heads = await ev('[...document.querySelectorAll("#secList thead th")].map(t=>t.textContent.replace(/[▲▼↕]/g,"").trim()).join("|")');
+      ok(heads === 'Name|Channels|Enabled|Status|Type|Last run|Next run|Sent|Delivered|Opened|Clicked|Replies|Booked|Opt-outs|Bounces|Failed|View', 'the columns, as Patch has them: ' + heads);
+      ok(await ev('document.querySelectorAll("#strip .sc").length') === 7 && /Sent today/.test(await ev('document.querySelector("#strip").textContent')) && /Open rate/.test(await ev('document.querySelector("#strip").textContent')), 'a summary strip over the list: today, 7 and 30 days, open and click rates, replies, bounces');
+      ok(await ev('document.querySelector("[data-row=sx-newsletter] [data-c=status]").textContent') === 'Scheduled' && await ev('document.querySelector("[data-row=sx-deposit] [data-c=status]").textContent') === 'Paused' && await ev('document.querySelector("[data-row=sx-morning] [data-c=type]").textContent') === 'Recurring', 'status and type pills: newsletter Scheduled, deposit reminder Paused, morning email Recurring');
+
+      /* filters, search, sort */
+      await ev('(()=>{const s=document.querySelector("#fst");s.value="Paused";s.dispatchEvent(new Event("change"))})()');
+      ok(await ev(rowsOf) === '["sx-deposit"]', 'filter by status: Paused leaves the deposit reminder');
+      await ev('(()=>{const s=document.querySelector("#fst");s.value="";s.dispatchEvent(new Event("change"));const t=document.querySelector("#fty");t.value="Recurring";t.dispatchEvent(new Event("change"))})()');
+      ok(JSON.parse(await ev(rowsOf)).join() === 'sx-newsletter,sx-morning,sx-eod,sx-week,sx-profit', 'filter by type: Recurring (' + await ev(rowsOf) + ')');
+      await ev('(()=>{const t=document.querySelector("#fty");t.value="";t.dispatchEvent(new Event("change"));const c=document.querySelector("#fch");c.value="SMS";c.dispatchEvent(new Event("change"))})()');
+      ok(await ev(rowsOf) === '[]' && /Nothing matches these filters/.test(await ev('document.querySelector("#secList").textContent')), 'filter by channel: no SMS automations, said so');
+      await ev('(()=>{const c=document.querySelector("#fch");c.value="";c.dispatchEvent(new Event("change"));const q=document.querySelector("#fq");q.value="deposit";q.dispatchEvent(new Event("input"))})()');
+      ok(await ev(rowsOf) === '["sx-deposit"]' && await ev('document.activeElement && document.activeElement.id') === 'fq', 'search by name, focus stays in the box');
+      await ev('(()=>{const q=document.querySelector("#fq");q.value="";q.dispatchEvent(new Event("input"))})()');
+      await ev('document.querySelector("[data-sort=sent]").click()');
+      const asc = JSON.parse(await ev('JSON.stringify([...document.querySelectorAll("#secList tbody td[data-c=sent]")].map(t=>parseInt(t.firstChild.textContent)))'));
+      await ev('document.querySelector("[data-sort=sent]").click()');
+      const desc = JSON.parse(await ev('JSON.stringify([...document.querySelectorAll("#secList tbody td[data-c=sent]")].map(t=>parseInt(t.firstChild.textContent)))'));
+      ok(asc.every((x, i) => !i || asc[i - 1] <= x) && desc.every((x, i) => !i || desc[i - 1] >= x) && desc[0] === 3 && await ev('document.querySelector("[data-sort=sent]").getAttribute("aria-sort")') === 'descending', 'sort by a column header, both ways, with aria-sort (' + desc + ')');
+      await ev('document.querySelector("[data-sort=name]").click()');
+      const names = JSON.parse(await ev('JSON.stringify([...document.querySelectorAll("#secList tbody .lnk")].map(t=>t.textContent.toLowerCase()))'));
+      ok(names.every((x, i) => !i || names[i - 1] <= x), 'sort by name');
+
+      /* the column chooser, remembered in this browser only */
+      await ev('document.querySelector("#colb").click()');
+      ok(await ev('!document.querySelector("#colp").classList.contains("hide")'), 'Columns opens the chooser');
+      await ev('(()=>{const c=document.querySelector("[data-col=delivered]");c.checked=false;c.dispatchEvent(new Event("change"))})()');
+      ok(!(await ev('[...document.querySelectorAll("#secList thead th")].some(t=>/Delivered/.test(t.textContent))')) && await ev('localStorage.getItem("outbox.cols")') === '["delivered"]', 'hiding a column takes it off and keeps the choice in localStorage');
+      await open('traverse');
+      ok(!(await ev('[...document.querySelectorAll("#secList thead th")].some(t=>/Delivered/.test(t.textContent))')), 'the choice holds after a reload and in another section');
+      await ev('document.querySelector("#colb").click()'); await ev('document.querySelector("#colr").click()');
+      ok(await ev('[...document.querySelectorAll("#secList thead th")].some(t=>/Delivered/.test(t.textContent))') && await ev('localStorage.getItem("outbox.cols")') === null, 'Reset shows every column again');
+      ok(JSON.parse(await ev(rowsOf)).length === 8 && await ev('document.querySelector("[data-row=tv-desk] [data-c=bounces]").textContent') === '2', 'Traverse: 8 rows; the desk shows its bounces');
+
+      /* read only: Sixfold and Traverse have no working switch, and clicking theirs asks the server nothing */
+      for (const t of ['traverse', 'sixfold']) {
+        if (t === 'sixfold') await open('sixfold');
+        const sws = JSON.parse(await ev('JSON.stringify({btn:document.querySelectorAll("#secList button.sw,#secList [role=switch]").length,ro:document.querySelectorAll("#secList span.sw.ro[aria-disabled=true]").length,rows:document.querySelectorAll("#secList tbody tr[data-row]").length})'));
+        ok(sws.btn === 0 && sws.ro === sws.rows, t + ': every Enabled switch is a read-only indicator (' + JSON.stringify(sws) + ')');
+        const before = reqs.length; await ev('document.querySelectorAll("#secList span.sw.ro").forEach(s=>s.click())'); await sleep(400);
+        ok(reqs.slice(before).length === 0, t + ': clicking the read-only switches sends no request');
+      }
+
+      /* the drawer: title, status, Updated, How it works, and its tabs */
+      await ev('document.querySelector(".eye[data-view=sx-aftercare]").click()');
+      ok(await until('!document.querySelector("#dr").classList.contains("hide")'), 'the eye opens the side drawer');
+      const D = JSON.parse(await ev('JSON.stringify({t:document.querySelector("#drt").textContent,st:document.querySelector("#dr .dh .st").textContent,up:/Updated|Last change not recorded/.test(document.querySelector("#dr .dh").textContent),how:[...document.querySelectorAll("#dr ol.how .k")].map(k=>k.textContent),tabs:[...document.querySelectorAll("#dr [role=tab]")].map(b=>b.textContent),sel:document.querySelector("#dr [role=tab][aria-selected=true]").textContent,ro:!!document.querySelector("#dr span.sw.ro"),ed:!!document.querySelector("#dr [data-ed=aftercare]")})'));
+      ok(D.t === 'Aftercare email' && D.st === 'Running' && D.up && D.how.join() === 'WHEN,THEN,SEND' && D.tabs.join() === 'Messages,Flow,Stats' && D.sel === 'Messages' && D.ro && D.ed, 'drawer: title, status, Updated, How it works as WHEN / THEN / SEND, tabs, read-only switch, Change the words (' + JSON.stringify(D) + ')');
+      ok(await until('/Words in use: tips from/.test(document.querySelector("#dp").textContent)'), 'Messages: From, Subject and the words in use, read from the Sixfold app');
+      ok(await ev('/From/.test(document.querySelector("#dp dl").textContent) && !!document.querySelector("#dp pre.pv")'), 'Messages: a text preview');
+      await ev('document.querySelector("#dr [data-dt=flow]").click()');
+      ok(await ev('document.querySelectorAll("#dp .fn").length') === 4 && await ev('document.querySelector("#dr [role=tab][aria-selected=true]").textContent') === 'Flow', 'Flow: the steps as a vertical flow, ending in what is counted');
+      await ev('document.querySelector("#dr [data-dt=stats]").click()');
+      ok(await ev('document.querySelectorAll("#dp .sbx").length') === 2 && await ev('document.querySelectorAll("#dp .sbx .bt").length') === 12 && /Last 7 days/.test(await ev('document.querySelector("#dp").textContent')), 'Stats: 7 and 30 days with small bars');
+      /* Change the words, from the drawer: the same editor, the same server-to-server calls */
+      const nApp = APP.calls.length;
+      await ev('document.querySelector("#dr [data-ed=aftercare]").click()');
+      ok(await until('!document.querySelector("#ed").classList.contains("hide") && /Aftercare email: the words/.test(document.querySelector("#ed").textContent)'), 'Change the words opens the editor over the drawer');
+      ok(await until('/Preview subject/.test(document.querySelector("#edsubj").textContent)') && APP.calls.slice(nApp).some(c => c.a === 'a365wordspreview' && c.key && c.body.kind === 'aftercare'), 'the preview is asked of the Sixfold app, with the key');
+      await ev('document.querySelector("#edsave").click()');
+      ok(await until('/Version 1 is in use/.test(document.querySelector("#edmsg").textContent)') && APP.calls.some(c => c.a === 'a365wordssave' && c.body.by === 'Matthew (Outbox)' && c.body.kind === 'aftercare'), 'Save goes to the Sixfold app as "Matthew (Outbox)", after the question');
+      await ev('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape"}))');
+      ok(await ev('document.querySelector("#ed").classList.contains("hide") && !document.querySelector("#dr").classList.contains("hide")'), 'Escape closes the editor first');
+      await ev('document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape"}))');
+      ok(await ev('document.querySelector("#dr").classList.contains("hide")'), 'then the drawer');
+
+      /* text from the server stays text: the desk's last subject is an HTML tag */
+      await open('traverse'); await ev('document.querySelector(".eye[data-view=tv-desk]").click()');
+      ok(await until('document.querySelector("#dp") && document.querySelector("#dp").textContent.includes(\'<img src=x onerror="window.__xss=1">Hi\')') && await ev('!document.querySelector("#dr img") && !window.__xss'), 'an HTML subject is shown as text, never run');
+      await ev('document.querySelector("#drx").click()');
+
+      /* Peak: only the two list blasts have a working switch; they are the Peak sender's own Start and Pause */
+      await open('peak');
+      const PS = JSON.parse(await ev('JSON.stringify({sw:[...document.querySelectorAll("#secList button[role=switch][data-peaksw]")].map(b=>b.dataset.peaksw),ro:[...document.querySelectorAll("#secList span.sw.ro")].map(s=>s.closest("tr").dataset.row),frame:!!document.querySelector("#pf"),ret:!!document.querySelector("#ret [data-ret=old]")})'));
+      ok(PS.sw.join() === 'sponsors,expo' && PS.ro.join() === 'peak-tours,peak-deskmails' && PS.frame && PS.ret, 'Peak: switches for the two lists only; tour confirmations and desk emails read only; the Peak controls and the redirect switch are still there (' + JSON.stringify(PS) + ')');
+      const peakLog = () => fs.readFileSync(path.join(R, 'peak-mail-data', 'events.log'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(e => e.t === 'start' || e.t === 'pause');
+      let n0 = peakLog().length, q0 = reqs.length;
+      await ev('window.__confirm=false;document.querySelector("[data-peaksw=sponsors]").click()'); await sleep(700);
+      ok(peakLog().length === n0 && !reqs.slice(q0).some(x => x.m === 'POST'), 'Start asks first; No sends nothing');
+      q0 = reqs.length; await ev('window.__confirm=true;document.querySelector("[data-peaksw=expo]").click()');
+      ok(await until('/Not started/.test(document.querySelector("#flash").textContent)') && reqs.slice(q0).some(x => x.m === 'POST' && /\/outbox-092b0f\/peak\/api\.php\?action=start$/.test(x.u)) && peakLog().length === n0
+        && await ev('document.querySelector("[data-peaksw=expo]").getAttribute("aria-checked")') === 'false', 'the expo list (still a DRAFT) is refused by the Peak sender\'s own Start: "' + (await ev('document.querySelector("#flash").textContent')).slice(0, 90) + '"');
+      q0 = reqs.length; await ev('document.querySelector("[data-peaksw=sponsors]").click()');
+      ok(await until('document.querySelector("[data-peaksw=sponsors]") && document.querySelector("[data-peaksw=sponsors]").getAttribute("aria-checked")==="true"') && peakLog().slice(-1)[0].t === 'start' && peakLog().slice(-1)[0].by === 'Matthew Sharpe'
+        && reqs.slice(q0).some(x => x.m === 'POST' && /peak\/api\.php\?action=start$/.test(x.u)) && await ev('document.querySelector("[data-row=peak-sponsors] [data-c=status]").textContent') === 'Running', 'the sponsors switch starts the list through peak/api.php (logged as Matthew Sharpe), and the row says Running');
+      await ev('document.querySelector(".eye[data-view=peak-sponsors]").click()');
+      ok(await until('document.querySelector("#dr [data-peaksw=sponsors]")') && await ev('!!document.querySelector("#drprev") && !!document.querySelector("#drpc")'), 'the Peak drawer has the switch, Preview the next 3 and the way to the Peak controls');
+      await ev('document.querySelector("#drprev").click()');
+      ok(await until('document.querySelectorAll("#drpv pre.pv").length===3'), 'Preview the next 3, from the Peak sender, as text');
+      ok(/Outbox test for/.test(await ev('document.querySelector("#dp").textContent')) && /Peak Partnerships/.test(await ev('document.querySelector("#dp dl").textContent')), 'Messages: the list\'s email as saved, from Peak Partnerships');
+      q0 = reqs.length; await ev('document.querySelector("#dr [data-peaksw=sponsors]").click()');
+      ok(await until('document.querySelector("[data-peaksw=sponsors]") && document.querySelector("[data-peaksw=sponsors]").getAttribute("aria-checked")==="false"') && peakLog().slice(-1)[0].t === 'pause' && reqs.slice(q0).some(x => x.m === 'POST' && /peak\/api\.php\?action=pause$/.test(x.u)), 'and pauses it again the same way');
+      await ev('document.querySelector("#drx").click()');
+      await ev('document.querySelector("[data-tab=texts]").click()');
+      ok(/No text messages are sent automatically yet/.test(await ev('document.querySelector("#secList").textContent')), 'Texts: an empty list that says so');
+      await shot('desktop-light');
+
+      /* phone and dark */
+      await ev('localStorage.setItem("sixfold.theme","dark")'); ok(await open('sixfold', 390, 844, true), 'opens on a phone-sized screen');
+      const PH = JSON.parse(await ev('JSON.stringify({page:document.documentElement.scrollWidth,win:innerWidth,tw:(t=>t.scrollWidth>=t.clientWidth)(document.querySelector(".tw")),theme:document.documentElement.dataset.theme,bg:getComputedStyle(document.body).backgroundColor,cols:document.querySelectorAll("#secList thead th").length})'));
+      ok(PH.page <= PH.win + 1 && PH.tw && PH.cols < 17, 'phone: the page does not scroll sideways; the list scrolls inside its box, with fewer columns (' + JSON.stringify(PH) + ')');
+      ok(PH.theme === 'dark' && PH.bg === 'rgb(16, 20, 26)', 'dark when the hub says so (sixfold.theme)');
+      await ev('document.querySelector(".eye[data-view=sx-followup]").click()'); await sleep(300);
+      ok(await ev('Math.round(document.querySelector("#dr").getBoundingClientRect().width)') === 390, 'phone: the drawer takes the whole width');
+      await shot('phone-dark-drawer'); await ev('localStorage.setItem("sixfold.theme","light")');
+      ok(errs.length === 0, 'no script errors: ' + errs.join(' | '));
+    } catch (e) { ok(false, 'browser section: ' + e.message); }
+    finally { try { ws && ws.close(); } catch {} ch.kill(); await sleep(300); try { fs.rmSync(prof, { recursive: true, force: true }); } catch {} }
+  }
+
   /* 10. the command line, and signing out */
   const sm = spawnSync('php', [path.join(PUB, 'outbox-092b0f', 'cli.php'), 'summary'], { env }); const smo = sm.stdout.toString();
   ok(sm.status === 0 && /^Outbox: sent today 11 \(Peak 3, Sixfold 3, Traverse 5\)/.test(smo) && /1 tour confirmation not sent/.test(smo) && /1 desk email not sent/.test(smo) && !smo.includes('NOT-A-REAL'), 'cli summary line');
   r = await api('signout', {}); ok(r.status === 200, 'sign out');
   r = await api('state'); ok(r.status === 401, 'signed out: refused again');
 } finally {
-  srv.kill();
+  srv.kill(); appSrv.close();
 }
 console.log('\n' + pass + ' passed, ' + failN + ' failed  (throwaway data: ' + R + ')');
 process.exit(failN ? 1 : 0);

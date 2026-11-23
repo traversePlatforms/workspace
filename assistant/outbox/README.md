@@ -12,6 +12,12 @@ One private page for every email Matthew's tools send by themselves. Matthew ask
     - **Change the words (18 Nov 2026).** The four customer emails (not the newsletter, which has its own screen in the app, and not the internal reports): each line, a preview with a made-up customer, Save, the versions with their numbers, and Put this back. These go to Jen's customers. Outbox asks the Sixfold app server to server (`rounds.php` actions `a365words*`, key in `sixfold-private/outbox-key.txt`); the app checks the merge fields, keeps the versions in `a365-words.json` and logs each change in `a365-words.log` as "Matthew (Outbox)".
   - **Traverse:** read only. Shows the Prospect Desk, demo booking emails, sign-up and setup emails, notes to Matthew, the client apps' end-of-day and care emails, and the post calendar alert.
   - **Texts:** nothing is automated yet.
+- **The list view (23 Nov 2026):** Matthew finds Patch Retention's Automations screens "a lot easier to understand and navigate", so each section is now one list of automatic email streams laid out like them (Outbox's own name and colours):
+  - Columns: Name, Channels, Enabled, Status (Running / Paused / Draft / Scheduled / Done), Type (Triggered / Recurring / One time), Last run, Next run, Sent, Delivered, Opened, Clicked, Replies, Booked, Opt-outs, Bounces, Failed. The numbers cover the emails sent in the last 30 days and what happened to them; a dash means that email is not counted.
+  - Filters (Channel, Status, Type), search and sortable headers. A column chooser is kept in the browser only (localStorage `outbox.cols`). Each section has a summary strip above its list.
+  - The eye opens a side drawer: status, Updated, How it works (WHEN / THEN / SEND, written from what each sender does), then the tabs Messages (From, Subject and a text preview), Flow and Stats (7 and 30 days, with everything the old cards showed).
+  - Only Peak's two list blasts have a working Enabled switch: the Peak sender's own Start and Pause (`peak/api.php`), with the same question and its own checks. Every other switch is a read-only indicator. Change the words is in the drawer of each of the four Sixfold customer emails. The Peak controls (the framed Peak page) and the Microsoft redirect switch are under the Peak list.
+  - The data is `streams` in the state answer (`obStreams()` in `lib.php`): it only shapes what the sections already read, plus a few read-only facts (From names, switch-file times, the last subject in a log).
 - **How the read-only sections work:** they read each sender's own log and switch files on the server (`lib.php` names every file). Nothing in Outbox can change what Traverse sends, or whether and to whom Sixfold sends; the only Sixfold change is the words of its four customer emails, made through the app.
 - **The old address** `/peak-mail-31dc56/` keeps working:
   - `index.php` forwards to Outbox and `api.php` answers 410.
@@ -24,7 +30,7 @@ One private page for every email Matthew's tools send by themselves. Matthew ask
   2. Upload each folder with `~/bin/safe-extract.sh`, after a backup in `~/upload-backups/`.
 - **Command line (server):** `php outbox-092b0f/cli.php summary | check | setcode`. `setcode` reads the code from a pipe.
 - **Tests:**
-  - `node assistant/outbox/tests/outbox-test.mjs` runs on throwaway copies of every log. It sends nothing and calls no Microsoft address.
+  - `node assistant/outbox/tests/outbox-test.mjs` runs on throwaway copies of every log. It sends nothing and calls no Microsoft address. Since 23 Nov it also drives the page in headless Chrome (`CHROME=` the browser; `google-chrome` off Windows; `OUTBOX_SHOTS=<folder>` saves screenshots).
   - `node assistant/outbox/tests/hub-tabs-test.mjs` checks that every hub tab opens in headless Chrome. Add `HUB_URL=...` to check the live hub's tab list.
   - The Peak sender's own test is `matthew/peak-pickleball-sponsorship/mail/tests/mail-test.mjs`.
   - Sixfold's opens, clicks and words, end to end (the app, the tracker and Outbox on a throwaway copy with a dry-run mailbox, plus the page in headless Chrome): `node traverse/app/review-mailstats-1118/tests/mailstats-test.mjs`. That the built-in words are the old emails to the byte: `words-same-test.mjs` beside it.
