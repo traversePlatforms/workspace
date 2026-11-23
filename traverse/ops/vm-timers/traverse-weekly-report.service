@@ -1,0 +1,12 @@
+[Unit]
+Description=Weekly business numbers report (shared/tools/eod/weekly.mjs; Matthew 23 Nov 2026)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/yard/main
+Environment=TZ=America/Denver
+Environment=PATH=/home/yard/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=LOCALAPPDATA=/home/yard/jarvis/localappdata
+ExecStart=/usr/bin/node shared/tools/eod/weekly.mjs
+ExecStartPost=/bin/bash -c 'cd /home/yard/main && git add changelog/weekly-*.html changelog/weekly-*.pdf && git commit -q -m "Weekly business numbers report" || true'
+TimeoutStartSec=30min

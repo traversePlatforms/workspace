@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly business numbers report, Sundays 8:30 pm Colorado time
+
+[Timer]
+OnCalendar=Sun *-*-* 20:30:00 America/Denver
+Persistent=true
+
+[Install]
+WantedBy=timers.target
