@@ -421,6 +421,7 @@ function state(): array { return ['leads' => recs('sponsor')]; }
 
 /* ---- counts per person: calls (and voicemails), emails, texts, other touches, tours, proposals, signed ---- */
 function weekStart(): int { return (int) strtotime('monday this week 00:00'); }
+function monthStart(): int { return (int) strtotime('first day of this month 00:00'); }   /* 23 Nov 2026: the Week / Month switch */
 function counts(string $w, int $since): array {
     sync($w);
     $q = db()->prepare('SELECT who, kind, COUNT(*) n, COUNT(DISTINCT id) d FROM act WHERE world = ? AND at >= ? GROUP BY who, kind'); $q->execute([$w, $since]);

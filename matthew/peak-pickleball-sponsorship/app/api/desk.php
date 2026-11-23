@@ -474,7 +474,7 @@ function worldOut(string $w): array {
     foreach ($all as $R) { if (!empty($R['off'])) $removed[] = ['id' => $R['id'], 'name' => $R['name'], 'list' => $R['list'] ?? '', 'cat' => $R['cat'] ?? '', 'stage' => $R['stage'], 'at' => $R['off']['at'], 'by' => $R['off']['by']]; else $live[] = shape($w, $R); }
     $C = W($w); $st = []; foreach ($C['stages'] as $k => $v) $st[] = [$k, $v];
     return ['stages' => $st, 'path' => $C['path'], 'reach' => $C['reach'], 'recs' => $live, 'removed' => $removed, 'tours' => array_map(fn($t) => $t + ['tms' => tmState($t)], toursOf($w)), 'tmFailed' => tmFailed($w), 'owners' => owners($w),
-        'week' => counts($w, weekStart()), 'weekFrom' => date('Y-m-d', weekStart()), 'team' => counts($w, 0), 'templates' => templatesOf($w), 'starters' => starterTemplates($w)];
+        'week' => counts($w, weekStart()), 'weekFrom' => date('Y-m-d', weekStart()), 'month' => counts($w, monthStart()), 'monthFrom' => date('Y-m-d', monthStart()), 'team' => counts($w, 0), 'templates' => templatesOf($w), 'starters' => starterTemplates($w)];
 }
 function dataOut(string $ME, string $ROLE): array {
     $base = ['ok' => true, 'build' => BUILD, 'me' => ['name' => $ME, 'role' => $ROLE], 'methods' => METHODS, 'outs' => OUTS, 'mouts' => MOUTS, 'today' => date('Y-m-d'),

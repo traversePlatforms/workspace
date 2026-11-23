@@ -368,6 +368,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 @media print{@page{size:letter;margin:.5in} html,body{background:#fff!important;color:#111} .bar,.printbar,.toast,.ubar,.tabs{display:none!important} main{padding:0;max-width:none} .paper{box-shadow:none;padding:0;max-width:none}}
 /* finger-sized targets on touch screens (device QA D2/D3, 2026-10-27): at least 40 px tall; desktop density unchanged */
 @media (pointer:coarse),(max-width:640px){.chips button,.world button,.seg button,.btn,.btn.small,.qb button{min-height:40px}.fu button{min-height:34px}.who .lnk,#signout{min-height:40px;padding:0 6px}.tabs button{min-height:48px}}
+.perrow{display:flex;justify-content:flex-end;margin:-4px 0 8px}.perseg{display:inline-flex;gap:0;vertical-align:middle;margin-left:8px}.perseg button{font:inherit;font-size:13px;padding:4px 12px;border:1px solid var(--line,#ccd);background:transparent;color:inherit;cursor:pointer}.perseg button:first-child{border-radius:8px 0 0 8px}.perseg button:last-child{border-radius:0 8px 8px 0;border-left:0}.perseg button.on{background:#1f5fad;color:#fff;border-color:transparent}
 </style>
 </head>
 <body>
@@ -497,7 +498,15 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   var peFold = function (T) { var o = {}; Object.keys(T || {}).forEach(function (n) { o[n] = Object.assign({}, T[n]); });
     if (o[PE]) { var a = o[PE_OWNER] || (o[PE_OWNER] = {}); Object.keys(o[PE]).forEach(function (k) { if (typeof o[PE][k] === 'number') a[k] = (a[k] || 0) + o[PE][k]; }); delete o[PE]; }
     return o; };
-  var who = function (n) { return n === PE ? peName() : W().owners.indexOf(n) >= 0 ? first(n) : n; };   /* sellers by first name; "Peak email" and others in full */
+  var who = function (n) { return n === PE ? peName() : W().owners.indexOf(n) >= 0 ? first(n) : n; };
+  /* 23 Nov 2026 (Matthew: "where it says this week maybe change it to this month. Or have the option to change between month and week"):
+     one switch for the Today tile, "by person" and the report; remembered on this device */
+  var perGet = function () { try { return localStorage.getItem('peakdesk.per') === 'month' ? 'month' : 'week'; } catch (e) { return 'week'; } };
+  var PER = function () { var m = perGet() === 'month' && W().month; return { k: m ? 'month' : 'week', T: (m ? W().month : W().week) || {}, from: m ? W().monthFrom : W().weekFrom, label: m ? 'This month' : 'This week' }; };
+  var perSwitch = function () { var g = el('span', 'seg perseg'); g.setAttribute('role', 'group'); g.setAttribute('aria-label', 'Week or month');
+    [['week', 'Week'], ['month', 'Month']].forEach(function (x) { var b = el('button', perGet() === x[0] ? 'on' : null, x[1]); b.type = 'button'; b.setAttribute('data-per', x[0]); b.setAttribute('aria-pressed', perGet() === x[0] ? 'true' : 'false');
+      b.addEventListener('click', function (e) { e.stopPropagation(); try { localStorage.setItem('peakdesk.per', x[0]); } catch (er) {} draw(); }); g.appendChild(b); });
+    return g; };   /* sellers by first name; "Peak email" and others in full */
   var lastLine = function (r) { var t = r.last; return t ? touchName(t) + ' · ' + relDay(t.when) + ' · ' + who(t.by) : 'Not contacted yet'; };
   /* can someone reach them: an email and a phone (2026-10-21) */
   var found = function (r, k) { return (r.scan && r.scan.ok && r.scan[k]) || []; };
@@ -757,14 +766,14 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var wait = R.filter(function (r) { return r.stage === WAIT(); }).sort(function (a, b) { return a.stageAt - b.stageAt; });
       var ids = {}; R.forEach(function (r) { ids[r.id] = 1; });
       var tours = upTours().filter(function (t) { return ids[t.lead]; });
-      var wk = W().week || {}, wkN = 0; Object.keys(wk).forEach(function (n) { if (n !== 'Claude Check') { var a = wk[n]; wkN += (a.calls || 0) + (a.emails || 0) + (a.texts || 0) + (a.other || 0); } });
+      var wk = PER().T, wkN = 0; Object.keys(wk).forEach(function (n) { if (n !== 'Claude Check') { var a = wk[n]; wkN += (a.calls || 0) + (a.emails || 0) + (a.texts || 0) + (a.other || 0); } });
       var wv = wait.reduce(function (n, r) { return n + valueOf(r); }, 0), nt = tours[0];
       var k = el('div', 'kpis');
       [[due.length, 'Follow-ups due', late ? late + ' late · ' + (due.length - late) + ' today' : 'due today', 'red', 'due', 'clock'],
         [fresh.length, 'To contact', 'nobody reached yet', isX() ? 'orange' : 'cyan', 'fresh', 'target'],
         [wait.length, isX() ? 'Quotes out' : 'Proposals out', wv ? money(wv) + (isX() ? ' waiting' : ' a year waiting') : isX() ? 'quotes waiting on an answer' : 'proposals waiting on an answer', 'pink', 'wait', 'doc'],
         [tours.length, 'Tours coming up', nt ? 'next ' + fmtDay(nt.date) + ', ' + fmtTime(nt.time) : 'tours coming up', 'amber', 'tours', 'cal'],
-        [wkN, 'This week', 'touches logged', 'green', 'week', 'chart']].forEach(function (x) {
+        [wkN, PER().label, 'touches logged', 'green', 'week', 'chart']].forEach(function (x) {
         var c = el('button', 'kpi h-' + x[3] + (x[4] === 'due' && late ? ' hot' : '')); c.type = 'button'; c.setAttribute('data-k', x[4]);
         var kl = el('span', 'kl'); kl.appendChild(ic(x[5])); kl.appendChild(document.createTextNode(x[1])); c.appendChild(kl);
         c.appendChild(el('b', null, String(x[0]))); c.appendChild(el('span', null, x[2]));
@@ -793,8 +802,9 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       blk(colA, 'wait', 'pink', 'doc', isX() ? 'Quotes waiting on an answer' : 'Proposals waiting on an answer', wait.length || null, wait.length ? 'longest wait first' : '', wait.map(function (r) {
         var v = valueOf(r); return rowFor(r, { extra: 'Sent ' + relDay(r.stageAt) + (v ? ' · ' + money(v) + (isX() ? '' : ' a year') : '') + ' · ' + lastLine(r) });
       }), isX() ? 'No quotes out.' : 'No proposals out.');
-      var wb = blk(colB, 'week', 'green', 'chart', 'This week by person', wkN || null, 'from ' + fmtDay(W().weekFrom) + ', touches by kind', [], '');
-      wb.querySelector('.empty').remove(); weekBars(wb, W().week); var tw = el('div', 'tw'); tw.appendChild(teamTable(W().week, true)); wb.appendChild(tw);
+      var P = PER(), wb = blk(colB, 'week', 'green', 'chart', P.label + ' by person', wkN || null, 'from ' + fmtDay(P.from) + ', touches by kind', [], '');
+      wb.querySelector('.empty').remove(); var ps = el('div', 'perrow'); ps.appendChild(perSwitch()); wb.appendChild(ps);
+      weekBars(wb, P.T); var tw = el('div', 'tw'); tw.appendChild(teamTable(P.T, true)); wb.appendChild(tw);
       var tb = blk(colB, 'tours', 'amber', 'cal', 'Tours coming up', tours.length || null, '', [], 'No tours booked. Book one from a company’s card.');
       if (tours.length) { tb.querySelector('.empty').remove(); tours.slice(0, 8).forEach(function (t) { var r = rec(t.lead); if (r) tb.appendChild(rowFor(r, { extra: fmtDay(t.date) + ', ' + fmtTime(t.time) + (t.who ? ' · ' + t.who : '') })); }); }
     });
@@ -2471,7 +2481,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var t = el('table'), h = el('tr'); h.appendChild(el('th', null, 'Stage')); cols.forEach(function (x) { h.appendChild(el('th', 'n', x[1])); }); h.appendChild(el('th', 'n', 'All')); t.appendChild(h);
     W().stages.forEach(function (s) { var r = el('tr'); r.appendChild(el('td', null, s[1])); cols.forEach(function (x) { r.appendChild(el('td', 'n', String(R.filter(function (l) { return colOf(l) === x[0] && l.stage === s[0]; }).length))); }); r.appendChild(el('td', 'n', String(R.filter(function (l) { return l.stage === s[0]; }).length))); t.appendChild(r); });
     var tw = el('div', 'tw'); tw.appendChild(t); d.appendChild(tw);
-    d.appendChild(el('h2', null, 'This week by person (from ' + fmtDay(W().weekFrom) + ')')); var tw2 = el('div', 'tw'); tw2.appendChild(teamTable(W().week, true)); d.appendChild(tw2);
+    var P2 = PER(), h2p = el('h2', null, P2.label + ' by person (from ' + fmtDay(P2.from) + ') '); h2p.appendChild(perSwitch()); d.appendChild(h2p); var tw2 = el('div', 'tw'); tw2.appendChild(teamTable(P2.T, true)); d.appendChild(tw2);
     var sec = function (title, rows, cols) { d.appendChild(el('h2', null, title)); if (!rows.length) { d.appendChild(el('p', 'soft', 'None.')); return; } var tb = el('table'), hh = el('tr'); cols.forEach(function (c) { hh.appendChild(el('th', c[1] ? 'n' : null, c[0])); }); tb.appendChild(hh); rows.forEach(function (r) { var tr = el('tr'); r.forEach(function (v, i) { tr.appendChild(el('td', cols[i][1] ? 'n' : null, v)); }); tb.appendChild(tr); }); d.appendChild(tb); };
     sec('Tours coming up', upTours().map(function (x) { return [fmtDay(x.date) + ', ' + fmtTime(x.time), (rec(x.lead) || {}).name || '', x.who || '']; }), [['When'], [X ? 'Organisation' : 'Company'], ['Who']]);
     sec(X ? 'Quotes out' : 'Proposals out', R.filter(function (r) { return r.stage === WAIT(); }).map(function (r) { return [r.name, relDay(r.stageAt), r.owner || 'Open', money(valueOf(r))]; }), [[X ? 'Organisation' : 'Company'], ['Sent'], ['Owner'], ['Value', 1]]);
