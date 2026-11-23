@@ -204,7 +204,8 @@ over SSH (`scp -r`; check the hotspot first: SSID "iPhone" = no heavy downloads)
 
 ## Target design (Matthew, 19 Nov ~10:15 pm; not built yet)
 
-1. **The VM as the main home.** He does not want to be online around the clock. Next step: VS Code Remote-SSH into the VM, one main repo
+1. **The VM as the main home.** (22 Nov: prepped; the flip is one command, Matthew's: **traverse/ops/VM-MAIN-WORKSPACE.md**, which
+   supersedes the sketch below.) He does not want to be online around the clock. Next step: VS Code Remote-SSH into the VM, one main repo
    there, the laptop a client. This design gets there without rework: the VM already holds the history (filtered), a bare repo and a
    working copy with hooks; the switch is (a) the VM's repo becomes `origin` and the laptop clones it, (b) the write turn becomes "the
    VM always" (VS Code sessions run on the VM, in the same `~/workspace` or a sibling worktree), (c) memory lives on the VM (Claude Code

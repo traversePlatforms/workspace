@@ -54,6 +54,8 @@ Read the applicable voice spec **before** writing a first line, not after:
 
 **Also read [surge/brand/notes/RESTRICTED.md](surge/brand/notes/RESTRICTED.md) before any draft.** Master list of what cannot be published, in four tiers, consolidated 2026-08-06. It overrides the restriction headers on individual notes files. The standing test for anything not listed: *would this read as confirmation to someone who already suspects the worst?* If yes, restricted — ask, don't infer.
 
+**If `surge/brand/notes/RESTRICTED.md` is missing — as on the cloud machine (`~/main` on the VM), where Surge's restricted notes are deliberately never kept — do not draft any Surge copy.** Say it has to be done in the laptop workspace or by Matthew, and stop. See [traverse/ops/VM-MAIN-WORKSPACE.md](traverse/ops/VM-MAIN-WORKSPACE.md).
+
 For company posts, check the Constraints and Escalation sections and flag anything that trips them before handing over the draft.
 
 ### Voice quick reference

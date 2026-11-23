@@ -982,6 +982,11 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **Next:** shadow report after ~24 h (`jarvis-cloud.sh shadow-report`) → Matthew's go → `jarvis-cloud.sh mode live --matthew-said-go`.
       Before the cloud can deploy: commit the laptop's dirty data files. **Matthew by ~22 Nov:** upgrade to pay-as-you-go + create the
       B2s (numbered clicks in JARVIS-CLOUD.md), then jarvis-cloud-move.sh. Decide: copy hailfill/out (~0.85 GB) + prospects/places.db.
+      **22 Nov night: the VM as the main workspace, PREPPED, NOT FLIPPED** (Matthew ~6:15 pm: go; door data + customer files OK on the
+      VM, Tier 1 laptop-only, data overnight). traverse/ops/VM-MAIN-WORKSPACE.md. ~/main on Jarvis = standby copy (memory, settings,
+      hooks, sync timer, VM CLAUDE.md); new watcher live (WRITE=laptop as before; cloud tests 60/60); data upload = Wi-Fi queue job
+      vmdata (10 GB, 71 checked chunks). **Next, Matthew:** `bash traverse/ops/vm-main.sh flip --matthew-said-go` (rollback: same with
+      rollback), then VS Code Remote-SSH → jarvis-cloud → /home/yard/main. Gaps listed in the doc (door-data pushes + data jobs stay laptop).
 
 - [ ] **X-14 — One big nightly overview of everything Matthew works on** (Matthew, 11 Nov 2026: "we need to have a big daily summary thing that has sixfold, jarvis, surge, peak, donny etc all the stuf i work on in so for a big overview of tonight but thats something we can discuss what needs to go in. So add that to my to-do list.")
       To DISCUSS with him first: what goes in per company (Sixfold leads/jobs/money, J.A.R.V.I.S. tickets and what it changed, Surge site/ADA/posts,

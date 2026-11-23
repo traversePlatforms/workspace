@@ -109,8 +109,7 @@ vm_payload() {   # the VM: the server's status.json with only the VM's builds (a
     const fs = require("fs"), [cf, bf, af, wf, role] = process.argv.slice(1), now = Math.floor(Date.now() / 1000);
     let cur = {}; try { cur = JSON.parse(fs.readFileSync(cf, "utf8")) || {}; } catch (e) {}
     let mine = []; try { mine = JSON.parse(fs.readFileSync(bf, "utf8")); } catch (e) {}
-    try { for (const row of fs.readFileSync(af, "utf8").split("
-").filter(Boolean)) { const [name] = row.split("	");
+    try { for (const row of fs.readFileSync(af, "utf8").split("\n").filter(Boolean)) { const [name] = row.split("\t");
       if (!mine.some(b => b.id === "job-" + name)) mine.push({ id: "job-" + name, name: "Data job (cloud): " + name.replace(/^finish-/, ""), steps: 0, step: 0, pct: null, note: "running", state: "running", at: now, auto: true }); } } catch (e) {}
     const others = (Array.isArray(cur.builds) ? cur.builds : []).filter(b => b && b.src !== "vm");
     cur.builds = others.concat(mine.map(b => Object.assign({}, b, { src: "vm" })));
@@ -124,10 +123,12 @@ push() {
   $SG "cat $DEST/status.json 2>/dev/null; true" < /dev/null > "$DIR/server-status.json" 2>/dev/null || : > "$DIR/server-status.json"
   if [ "$SIDE" = vm ]; then
     [ -s "$DIR/server-status.json" ] || { echo "jarvis status NOT pushed (could not read the server's copy first)"; return 1; }
-    vm_payload | $SG "umask 077; mkdir -p $DEST && cat > $DEST/status.json.tmp && mv -f $DEST/status.json.tmp $DEST/status.json && echo pushed" 2>/dev/null | grep -q pushed       && echo "jarvis status pushed (the VM's builds)" || { echo "jarvis status NOT pushed (server out of reach)"; return 1; }
+    vm_payload > "$DIR/vm-payload.json"; node -e "const j=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')); if(!Array.isArray(j.builds)) process.exit(1)" "$DIR/vm-payload.json" 2>/dev/null || { echo "jarvis status NOT pushed (the VM payload was not whole: nothing sent)"; return 1; }
+    $SG "umask 077; mkdir -p $DEST && cat > $DEST/status.json.tmp && mv -f $DEST/status.json.tmp $DEST/status.json && echo pushed" < "$DIR/vm-payload.json" 2>/dev/null | grep -q pushed && echo "jarvis status pushed (the VM's builds)" || { echo "jarvis status NOT pushed (server out of reach)"; return 1; }
     return 0
   fi
-  payload | $SG "umask 077; mkdir -p $DEST && cat > $DEST/status.json.tmp && mv -f $DEST/status.json.tmp $DEST/status.json && echo pushed" 2>/dev/null | grep -q pushed \
+  payload > "$DIR/payload.json"; [ -s "$DIR/payload.json" ] || { echo "jarvis status NOT pushed (empty payload: nothing sent)"; return 1; }
+  $SG "umask 077; mkdir -p $DEST && cat > $DEST/status.json.tmp && mv -f $DEST/status.json.tmp $DEST/status.json && echo pushed" < "$DIR/payload.json" 2>/dev/null | grep -q pushed \
     && echo "jarvis status pushed" || { echo "jarvis status NOT pushed (server out of reach; the next overnight check sends it)"; return 1; }
 }
 edit() {   # edit <op> <id> [args...]: the builds list, by node
