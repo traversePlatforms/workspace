@@ -38,7 +38,7 @@ case "${1:-status}" in
           echo "init: OK"';;
   deploy) up "$OPS/help-watch-cloud.sh" "$VM:jarvis/ops/help-watch-cloud.sh.new" &&
           v 'chmod 700 ~/jarvis/ops/help-watch-cloud.sh.new; bash -n ~/jarvis/ops/help-watch-cloud.sh.new && bash ~/jarvis/ops/help-watch-cloud.sh.new --guard-test | tail -1 | grep -q "all PASS" || { echo "guard test FAILED: the old watcher was left in place and running"; rm -f ~/jarvis/ops/help-watch-cloud.sh.new; exit 1; }; mv ~/jarvis/ops/help-watch-cloud.sh.new ~/jarvis/ops/help-watch-cloud.sh; mkdir -p ~/jarvis/bin ~/jarvis/ops/tests' &&
-          up "$OPS/help-practice-prompt.md" "$OPS/jarvis-cloud-prompt.md" "$VM:jarvis/ops/" &&
+          up "$OPS/help-practice-prompt.md" "$OPS/jarvis-cloud-prompt.md" "$OPS/vm-main-sync.sh" "$VM:jarvis/ops/" &&
           up "$OPS/tests/cloud-test.sh" "$VM:jarvis/ops/tests/" &&
           up "$OPS/cloud-bin/sg.sh" "$OPS/cloud-bin/laptop-job.sh" "$VM:jarvis/bin/" &&
           up "$OPS/jarvis-cloud.service" "$VM:.config/systemd/user/jarvis-cloud.service" &&

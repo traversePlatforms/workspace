@@ -35,7 +35,13 @@ J="${JARVIS_HOME:-$HOME/jarvis}"; OPS="$J/ops"; ST="$J/state"; SEC="$J/secrets";
 mkdir -p "$ST" "$ST/shadow" "$OUTBOX/changes" "$OUTBOX/jobs" "$OUTBOX/merged"
 LOG="$ST/help-watch.log"; PCWD="$J/practice-cwd"
 WS="${JARVIS_WS:-$HOME/workspace}"                                   # the repo copy (filtered like GitHub's: no Surge Tier 1 notes)
-MEM="${JARVIS_MEM:-$HOME/.claude/projects/-home-yard-workspace/memory}"   # Claude Code's own memory folder for $WS (loads by itself)
+# 22 Nov (VM-MAIN-WORKSPACE.md): WRITE=laptop (the default: the laptop's history is the truth, the write turn waits for the laptop to be
+# away, the cloud's commits go back as patches) or WRITE=vm (after vm-main.sh flip: the VM's ~/jarvis/repo.git is the truth, this machine
+# always holds the write turn, each session's commits are rebased and pushed straight into it, memory is ~/main's, shared directly).
+write_now() { local w; w=$(sed -n 's/^WRITE=\([a-z]*\)[[:space:]]*$/\1/p' "$J/config" 2>/dev/null | tail -1); [ "$w" = vm ] && echo vm || echo laptop; }
+WRITE="${JARVIS_WRITE:-$(write_now)}"
+if [ "$WRITE" = vm ]; then MEM="${JARVIS_MEM:-$HOME/.claude/projects/-home-yard-main/memory}"   # the one memory folder (~/main's; the
+else MEM="${JARVIS_MEM:-$HOME/.claude/projects/-home-yard-workspace/memory}"; fi                 # flip links ~/workspace's to it)
 MEMBASE="$J/memory-base"; INC="$J/incoming"
 CLAUDE="${JARVIS_CLAUDE:-$HOME/.local/bin/claude}"
 WHISPER_DIR="$J/tools/whisper.cpp"; WC="$WHISPER_DIR/build/bin/whisper-cli"
@@ -200,6 +206,8 @@ git diff --cached --name-only | grep -qE '^surge/brand/(notes|photos/restricted-
 exit 0
 HOOK
   chmod 755 "$H/commit-msg" "$H/pre-commit"
+  # VM mode rebases this copy's commits onto the main history: the learned notes merge line by line there (both sides' lines kept)
+  mkdir -p "$WS/.git/info"; printf '%s\n' 'traverse/ops/jarvis-learned*.md merge=union' > "$WS/.git/info/attributes"
 }
 laptop_state() {   # prints "<age seconds> <laptop HEAD> <its filtered twin or ->", or nothing when the laptop has never sent one
   local L t h f; L=$(srv "$LAPCMD" < /dev/null 2>/dev/null | head -1)
@@ -210,7 +218,8 @@ laptop_state() {   # prints "<age seconds> <laptop HEAD> <its filtered twin or -
 WHY=""
 write_turn() {   # 0 (and ~/jarvis/state/write-ok) when this machine may change, build, deploy and commit now; WHY says why not
   rm -f "$ST/write-ok"; WHY=""
-  [ -f "$ST/stuck" ] && { WHY="cloud commits are stuck (they would not go on the laptop's newest copy): Matthew to look"; return 1; }
+  [ -f "$ST/stuck" ] && { WHY="cloud commits are stuck (they would not go on the newest history; branch stuck-* in ~/workspace): Matthew to look"; return 1; }
+  if [ "$WRITE" = vm ]; then echo "${1:-?} $(date +%s)" > "$ST/write-ok"; WHY="this machine is the main workspace (VM mode)"; return 0; fi
   local S A H F; S=$(laptop_state) || { WHY="the laptop has not sent its beat (help-watch.sh too old, or never)"; return 1; }
   read -r A H F <<< "$S"
   [ "$A" -ge "${JARVIS_LAPTOP_AWAY:-900}" ] || { WHY="the laptop is on (seen $(( A / 60 )) min ago)"; return 1; }
@@ -257,6 +266,8 @@ sync_workspace() {   # before every session: the newest copy the laptop sent, no
   hooks
   local o; for o in $OVERRIDES; do [ -f "$OPS/override/$o" ] && cp "$OPS/override/$o" "$WS/$o"; done
   overlay repo "$WS"
+  # VM mode: memory is the one folder ~/main uses, written directly; nothing comes from the laptop and nothing is captured for it
+  [ "$WRITE" = vm ] && return 0
   # memory: a new copy from the laptop replaces ours (our own unmerged notes go back over it), then it is the base for the next capture
   if [ -s "$INC/memory.tgz" ]; then
     local N; N=$(mktemp -d "$J/mem.XXXX")
@@ -268,8 +279,37 @@ sync_workspace() {   # before every session: the newest copy the laptop sent, no
   [ -d "$MEM" ] && { rm -rf "$MEMBASE"; cp -a "$MEM" "$MEMBASE"; }
   return 0
 }
+vm_notes() {   # VM mode, after each session: the notes and TASKS.md it wrote but did not commit, committed for it
+  ws_ok || return 0
+  local ID="$1" p; local -a NP=()
+  while IFS= read -r p; do { [[ "$p" =~ $NOTES_RE ]] || [ "$p" = TASKS.md ]; } && [ -f "$WS/$p" ] && NP+=("$p"); done \
+    < <(cd "$WS" && { git diff --name-only HEAD 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } | sort -u)
+  [ "${#NP[@]}" -gt 0 ] || return 0
+  echo "publish $(date +%s)" > "$ST/write-ok"   # the hook wants the write turn: held for this one commit
+  git -C "$WS" add -- "${NP[@]}" 2>>"$LOG" && git -C "$WS" commit -q -m "J.A.R.V.I.S. cloud: notes from $ID" -- "${NP[@]}" >> "$LOG" 2>&1 \
+    && log "$ID: committed ${NP[*]}" || log "$ID: could not commit ${NP[*]} (kept for review)"
+  rm -f "$ST/write-ok"; return 0
+}
+vm_push() {   # VM mode: this copy's commits rebased onto the main history (~/jarvis/repo.git main) and pushed; no laptop to merge them
+  ws_ok || return 0
+  local ID="$1" i n; n=$(git -C "$WS" rev-list --count origin/main..HEAD 2>/dev/null || echo 0); [ "$n" -gt 0 ] || return 0
+  for i in 1 2 3; do
+    git -C "$WS" fetch -q origin 2>>"$LOG" || { log "$ID: fetch failed: $n commit(s) wait on branch cloud for the next session"; return 1; }
+    if ! git -C "$WS" rebase -q origin/main >> "$LOG" 2>&1; then
+      git -C "$WS" rebase --abort > /dev/null 2>&1; git -C "$WS" branch -f "stuck-$(date +%Y%m%d-%H%M%S)" HEAD; touch "$ST/stuck"
+      log "$ID: the session's commits do not go onto the main history (a file changed both sides): kept as branch stuck-*, writes stopped until Matthew looks"
+      ( session_env; cd "$WS" && bash assistant/jarvis/tools/jarvis-status.sh alert "The cloud J.A.R.V.I.S. made a change ($ID) that clashes with a newer change in the main copy. Nothing was lost: it is kept as a stuck-* branch in ~/workspace on the cloud machine, and the cloud makes no more repo changes until a session sorts it out (traverse/ops/VM-MAIN-WORKSPACE.md, Stuck)." ) > /dev/null 2>&1
+      return 1
+    fi
+    git -C "$WS" push -q origin HEAD:main >> "$LOG" 2>&1 && { log "$ID: $n commit(s) pushed to the main history"; return 0; }
+    sleep $(( i * 2 ))   # ~/main pushed in between: fetch and rebase again
+  done
+  log "$ID: push to the main history failed 3 times: the commits stay on branch cloud and go after the next session"; return 1
+}
 capture() {   # capture <ticket id>: what a session wrote in the repo copy or memory, kept as a bundle for the laptop. Prints the bundle path.
   local ID="$1" B p n=0 st k o skip; B="$OUTBOX/changes/$(date +%Y%m%d-%H%M%S)-$ID"
+  # VM mode: commits and notes go straight into the main history; only code left uncommitted is kept (for review, with an alert)
+  if [ "$WRITE" = vm ]; then vm_notes "$ID"; B="$OUTBOX/review/$(date +%Y%m%d-%H%M%S)-$ID"; fi
   local -a ROWS=()
   if ws_ok; then
     while IFS= read -r p; do
@@ -285,14 +325,14 @@ capture() {   # capture <ticket id>: what a session wrote in the repo copy or me
     done < <(cd "$WS" && { git diff --name-only HEAD 2>/dev/null; git ls-files --others --exclude-standard 2>/dev/null; } | sort -u)
     # the session's commits (write turn): one patch each, in order, for the laptop to apply (git am -3); each Cloud-Id once
     local c cid i=0
-    while read -r c; do
+    [ "$WRITE" = vm ] || while read -r c; do
       cid=$(cloud_id_of "$c"); [ -n "$cid" ] || continue; grep -qx "$cid" "$ST/captured-ids" 2>/dev/null && continue
       i=$((i+1)); mkdir -p "$B/patches"; git -C "$WS" format-patch -1 --stdout "$c" > "$B/patches/$(printf '%04d' "$i")-$cid.patch"
       echo "$cid" >> "$ST/captured-ids"
       ROWS+=("$(jq -cn --arg p "$cid" --arg s "$(git -C "$WS" log -1 --format=%s "$c" | cut -c1-200)" '{area:"commit",path:$p,state:"commit",kind:"commit",subject:$s}')"); n=$((n+1))
     done < <(git -C "$WS" rev-list --reverse origin/main..HEAD 2>/dev/null)
   fi
-  if [ -d "$MEM" ] && [ -d "$MEMBASE" ]; then
+  if [ "$WRITE" != vm ] && [ -d "$MEM" ] && [ -d "$MEMBASE" ]; then
     while IFS= read -r p; do
       [ -n "$p" ] || continue
       [[ "$p" =~ ^[A-Za-z0-9._-]+$ ]] || continue
@@ -302,6 +342,15 @@ capture() {   # capture <ticket id>: what a session wrote in the repo copy or me
       ROWS+=("$(jq -cn --arg p "$p" --arg s "$st" '{area:"memory",path:$p,state:$s,kind:"memory"}')"); n=$((n+1))
     done < <( { cd "$MEM" && find . -maxdepth 1 -type f -printf '%f\n'; cd "$MEMBASE" && find . -maxdepth 1 -type f -printf '%f\n'; } 2>/dev/null | sort -u |
               while IFS= read -r f; do cmp -s "$MEM/$f" "$MEMBASE/$f" || echo "$f"; done )
+  fi
+  if [ "$WRITE" = vm ]; then   # leftovers kept (above), the copy put back to its commits, then the commits into the main history
+    if [ "$n" -gt 0 ]; then
+      printf '%s\n' "${ROWS[@]}" | jq -s --arg id "$ID" --arg at "$(date +%s)" '{id:$id,at:($at|tonumber),files:.}' > "$B/meta.json"
+      log "$ID: $n file(s) the session left uncommitted kept for review ($(basename "$B")); not in the history"
+      ( session_env; cd "$WS" && bash assistant/jarvis/tools/jarvis-status.sh alert "The cloud J.A.R.V.I.S. left changes it did not commit ($ID). They are not in the main copy; kept for review on the cloud machine in ~/jarvis/outbox/review/$(basename "$B")." ) > /dev/null 2>&1
+      ( cd "$WS" && git reset -q --hard HEAD && git clean -fdq ) 2>>"$LOG"
+    fi
+    vm_push "$ID"; [ "$n" -gt 0 ] && echo "$B"; return 0
   fi
   [ "$n" = 0 ] && return 0
   printf '%s\n' "${ROWS[@]}" | jq -s --arg id "$ID" --arg at "$(date +%s)" --arg base "$(git -C "$WS" rev-parse HEAD 2>/dev/null)" \
@@ -818,6 +867,8 @@ guard_test() {
 }
 check() {
   echo "mode: $MODE$( [ -f "$ST/pause" ] && echo ' (PAUSED: rm ~/jarvis/state/pause)')"
+  [ "$WRITE" = vm ] && echo "write: vm (this machine is the main workspace; commits go straight into ~/jarvis/repo.git main)" || echo "write: laptop (the laptop's history is the truth; write turn only while it is away)"
+  [ -f "$ST/stuck" ] && echo "STUCK: cloud commits kept as stuck-* branches in ~/workspace; no repo changes until a session sorts it out (rm ~/jarvis/state/stuck after)"
   echo "poll key: $([ -n "$KEY" ] && echo present || echo MISSING)"
   local N; N=$(curl -s -m 8 -A "jarvis-watch/1.0" "$CHECK&p=1" 2>/dev/null); echo "HTTPS practice count: ${N:0:40}"
   if srv "${TOOLS}help-next.php --peek --practice" < /dev/null > /dev/null 2>"$ST/check.err"; then echo "SSH to the server: OK"; else echo "SSH to the server: NOT YET ($(tr -d '\r\n' < "$ST/check.err" | cut -c1-100))"; fi

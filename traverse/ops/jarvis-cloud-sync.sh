@@ -26,11 +26,11 @@ log() { echo "$(date '+%F %T') $*" >> "$LOGF"; [ -n "${VERBOSE:-}" ] && echo "$*
 v() { if [ -n "${JARVIS_VM_STANDIN:-}" ]; then bash "$JARVIS_VM_STANDIN" "$@"; else ssh -o BatchMode=yes -o ConnectTimeout=20 -i "$VK" "$VM" "$@"; fi; }
 alert() { [ -n "${JARVIS_NO_ALERT:-}" ] && { log "alert (not sent): $1"; return 0; }; bash "$REPO/assistant/jarvis/tools/jarvis-status.sh" alert "$1" > /dev/null 2>&1 || log "alert failed: $1"; }
 [ -f "$CS/off" ] && [ "${1:-}" != status ] && { echo "cloud sync is off ($CS/off)"; exit 0; }
-# one at a time (no flock in Git Bash): a lock folder, taken over when it is over 30 minutes old (a run that died)
+# one at a time (no flock in Git Bash): a lock folder, taken over when it is over 3 hours old (a run that died; the first repo send is ~15-20 min on hotel Wi-Fi)
 LK="$CS/lock.d"
 if [ "${1:-}" != status ]; then
   if ! mkdir "$LK" 2>/dev/null; then
-    [ $(( $(date +%s) - $(stat -c %Y "$LK" 2>/dev/null || date +%s) )) -gt 1800 ] && rmdir "$LK" 2>/dev/null && mkdir "$LK" 2>/dev/null || { echo "another sync is running"; exit 0; }
+    [ $(( $(date +%s) - $(stat -c %Y "$LK" 2>/dev/null || date +%s) )) -gt 10800 ] && rmdir "$LK" 2>/dev/null && mkdir "$LK" 2>/dev/null || { echo "another sync is running"; exit 0; }
   fi
   trap 'rmdir "$LK" 2>/dev/null' EXIT
 fi
@@ -68,7 +68,9 @@ push_memory() {
   [ "$SIG" = "$(cat "$CS/pushed-memory" 2>/dev/null)" ] && [ -z "${FORCE:-}" ] && return 0
   L=$(cd "$MEMDIR" && ls *.md | grep -vxF -f <(printf "%s
 " $MEM_EXCL))
-  tar -C "$MEMDIR" -czf "$CS/memory.tgz" $L || { log "push: memory tar failed"; return 1; }
+  # 22 Nov: MEMORY.md goes without the index lines of the two kept-back notes (those lines summarise them)
+  local MT; MT=$(mktemp -d); (cd "$MEMDIR" && cp $L "$MT/") && strip_local "$MEMDIR/MEMORY.md" > "$MT/MEMORY.md" || { rm -rf "$MT"; log "push: memory copy failed"; return 1; }
+  tar -C "$MT" -czf "$CS/memory.tgz" $L || { rm -rf "$MT"; log "push: memory tar failed"; return 1; }; rm -rf "$MT"
   v 'mkdir -p ~/jarvis/incoming && cat > ~/jarvis/incoming/memory.tgz.tmp && mv ~/jarvis/incoming/memory.tgz.tmp ~/jarvis/incoming/memory.tgz' < "$CS/memory.tgz" || { log "push: memory upload failed"; return 1; }
   echo "$SIG" > "$CS/pushed-memory"; log "push: memory sent ($(cd "$MEMDIR" && ls *.md | wc -l) notes, $(echo $MEM_EXCL | wc -w) kept back)"
 }
@@ -155,6 +157,71 @@ pull() {
 }
 mark_merged() { [ -n "$MARK" ] || return 0; local b c=""; for b in $MARK; do [[ "$b" =~ ^[0-9]{8}-[0-9]{6}-[A-Za-z0-9-]+$ ]] && c="$c mv ~/jarvis/outbox/changes/$b ~/jarvis/outbox/merged/ 2>/dev/null;"; done; [ -n "$c" ] && v "mkdir -p ~/jarvis/outbox/merged; $c true"; }
 
+# ---- after the flip (vm-main.sh flip; VM-MAIN-WORKSPACE.md): the VM's history is the only one; this laptop is a client ----------------
+# $CS/vm-main exists = flipped. Then: push refuses (it would put the laptop's old history over the VM's), and cycle = bring the VM's main
+# into this repo (fast-forward only; git refuses if a file it changes is mid-edit here: it waits, one alert), the memory both ways
+# (the VM's copy is the truth; a note changed here goes up first, merged line by line on the VM), and jobs the VM queued for this laptop.
+VMMEM='~/.claude/projects/-home-yard-main/memory'
+strip_local() { grep -vE "\(($(echo $MEM_EXCL | sed 's/ /|/g; s/\./\./g'))\)" "$1"; return 0; }   # MEMORY.md without the laptop-only notes' lines
+vm_pull_repo() {
+  [ -d "$REPO/.git/rebase-apply" ] || [ -d "$REPO/.git/rebase-merge" ] || [ -f "$REPO/.git/MERGE_HEAD" ] && { log "vm: a git operation is in progress here: waiting"; return 0; }
+  git -C "$REPO" fetch -q vm 2>>"$LOGF" || { log "vm: fetch failed (the VM did not answer)"; return 1; }
+  local H O; H=$(git -C "$REPO" rev-parse HEAD); O=$(git -C "$REPO" rev-parse vm/main) || return 1
+  [ "$H" = "$O" ] && { rm -f "$CS/vm-alerted-dirty"; return 0; }
+  if git -C "$REPO" merge-base --is-ancestor HEAD vm/main; then
+    if git -C "$REPO" merge -q --ff-only vm/main >> "$LOGF" 2>&1; then rm -f "$CS/vm-alerted-dirty"; log "vm: brought in $(git -C "$REPO" rev-list --count "$H"..HEAD) commit(s) from the VM"
+    else log "vm: the VM's new commits touch files changed here (uncommitted): waiting"
+      [ -f "$CS/vm-alerted-dirty" ] || { touch "$CS/vm-alerted-dirty"; alert "The laptop's copy of the repo has uncommitted changes to files the VM has since changed, so it cannot catch up with the VM. The VM's copy is the real one now: move any change you want to keep to the VM (~/main), then on the laptop run: git status, and git checkout -- <file> for each. See traverse/ops/VM-MAIN-WORKSPACE.md."; }
+    fi
+  else
+    log "vm: STOPPED: this laptop has commits the VM does not (the laptop should not commit after the flip)"
+    [ -f "$CS/vm-alerted-ahead" ] || { touch "$CS/vm-alerted-ahead"; alert "The laptop's repo has commits the VM does not have (after the flip only the VM commits). Nothing was lost; a session should look: git log vm/main..main on the laptop, then redo those changes on the VM. See traverse/ops/VM-MAIN-WORKSPACE.md."; }
+  fi
+}
+vm_memsync() {
+  local B="$CS/mem-base" T f sig up=() L; mkdir -p "$B"; T=$(mktemp -d)
+  # 1. notes changed here since the last sync go up first, merged line by line on the VM (the VM's own lines kept)
+  for f in "$MEMDIR"/*.md; do
+    L=$(basename "$f"); [[ " $MEM_EXCL " == *" $L "* ]] && continue
+    if [ "$L" = MEMORY.md ]; then strip_local "$f" > "$T/$L.here"; else cp "$f" "$T/$L.here"; fi
+    cmp -s "$T/$L.here" "$B/$L" 2>/dev/null || { [ -f "$B/$L" ] && cp "$B/$L" "$T/$L.base" || : > "$T/$L.base"; up+=("$L"); }
+  done
+  if [ "${#up[@]}" -gt 0 ]; then
+    ( cd "$T" && for L in "${up[@]}"; do printf '%s\n%s\n' "$L.here" "$L.base"; done | tar -czf "$T/up.tgz" -T - ) || { rm -rf "$T"; return 1; }
+    v "set -e; D=\$(mktemp -d); tar -xzf - -C \$D; M=$VMMEM; mkdir -p \$M; for f in \$D/*.here; do n=\$(basename \$f .here); [[ \$n =~ ^[A-Za-z0-9._-]+\$ ]] || continue; [ -f \$M/\$n ] || : > \$M/\$n; git merge-file --union -q \$M/\$n \$D/\$n.base \$f || true; done; rm -rf \$D" < "$T/up.tgz" \
+      && log "vm: memory: ${#up[@]} note(s) changed on the laptop merged into the VM's (${up[*]:0:5})" || { log "vm: memory upload failed"; rm -rf "$T"; return 1; }
+  fi
+  # 2. the VM's copy comes down when it changed (a signature first: no 600 KB download every 2 minutes)
+  sig=$(v "cd $VMMEM 2>/dev/null && find . -maxdepth 1 -type f -name '*.md' -printf '%f %s %T@\n' | sort | md5sum | cut -c1-32" 2>/dev/null) || { rm -rf "$T"; return 1; }
+  if [ "$sig" != "$(cat "$CS/vm-mem-sig" 2>/dev/null)" ] || [ "${#up[@]}" -gt 0 ]; then
+    mkdir -p "$T/m"; v "tar -C $VMMEM -czf - --exclude='*.tmp' ." 2>/dev/null | tar -xzf - -C "$T/m" 2>>"$LOGF" && [ -f "$T/m/MEMORY.md" ] || { log "vm: memory download failed"; rm -rf "$T"; return 1; }
+    for f in "$T/m"/*.md; do
+      L=$(basename "$f"); [[ " $MEM_EXCL " == *" $L "* ]] && continue   # the laptop's own two never come from the VM
+      cp "$f" "$B/$L"
+      if [ "$L" = MEMORY.md ]; then { cat "$f"; grep -E "\(($(echo $MEM_EXCL | sed 's/ /|/g; s/\./\./g'))\)" "$MEMDIR/MEMORY.md" 2>/dev/null | grep -vxF -f "$f"; } > "$T/MEMORY.new" && mv "$T/MEMORY.new" "$MEMDIR/MEMORY.md"
+      else cmp -s "$f" "$MEMDIR/$L" || cp "$f" "$MEMDIR/$L"; fi
+    done
+    echo "$sig" > "$CS/vm-mem-sig"; log "vm: memory: the VM's copy is here ($(ls "$T/m" | wc -l) notes)"
+  fi
+  rm -rf "$T"; return 0
+}
+vm_jobs() {   # jobs the VM queued for this laptop (Windows-only work): to the watcher, as before
+  local f id at; rm -rf "$IN"; mkdir -p "$IN"
+  v 'mkdir -p ~/jarvis/outbox/jobs && tar -C ~/jarvis/outbox -czf - jobs' 2>>"$LOGF" | tar -xzf - -C "$IN" 2>>"$LOGF" || return 1
+  for f in "$IN"/jobs/h*.json; do
+    [ -f "$f" ] || continue
+    id=$(basename "$f" .json); at=$(js "$f" 'console.log(j.at||0)')
+    grep -qx "$id $at" "$HST/cloud-jobs/done.txt" 2>/dev/null && continue
+    cp "$f" "$HST/cloud-jobs/$id.json"
+  done
+}
+
+if [ -f "$CS/vm-main" ]; then
+  case "${1:-status}" in
+    push|pull) echo "the VM is the main workspace since the flip (VM-MAIN-WORKSPACE.md): the laptop no longer sends its repo; it only takes the VM's (cycle)"; exit 0;;
+    cycle) vm_pull_repo; vm_memsync; vm_jobs; exit 0;;
+  esac
+fi
 case "${1:-status}" in
   push) FORCE=1 push_repo; FORCE=1 push_memory;;
   pull) pull; [ "$MERGED_ANY" = 1 ] && { push_repo; push_memory; }; mark_merged;;
@@ -163,6 +230,7 @@ case "${1:-status}" in
         echo "$ID $AT" >> "$HST/cloud-jobs/done.txt"; rm -f "$HST/cloud-jobs/$ID.json"
         v "f=~/jarvis/outbox/jobs/$ID.json; [ -f \$f ] && grep -q '\"at\": *$AT[,}]' \$f && mv \$f ~/jarvis/outbox/merged/job-$ID-$AT.json; true";;
   status)
+    [ -f "$CS/vm-main" ] && echo "FLIPPED: the VM is the main workspace; this laptop pulls from it (vm/main $(git -C "$REPO" rev-parse --short vm/main 2>/dev/null), here $(git -C "$REPO" rev-parse --short HEAD))"
     echo "laptop HEAD $(git -C "$REPO" log -1 --format='%h %cd' --date=format:'%d %b %H:%M'); last sent $(cut -c1-10 "$CS/pushed-head" 2>/dev/null || echo never)"
     echo "on the VM: $(v 'echo "$(ls ~/jarvis/outbox/changes 2>/dev/null | wc -l) bundle(s), $(ls ~/jarvis/outbox/jobs 2>/dev/null | wc -l) job(s) waiting; repo $(git -C ~/jarvis/repo.git log -1 --format=%h main 2>/dev/null || echo none)"' 2>/dev/null || echo 'not reachable')"
     echo "jobs here waiting for the watcher: $(ls "$HST/cloud-jobs"/h*.json 2>/dev/null | wc -l)"

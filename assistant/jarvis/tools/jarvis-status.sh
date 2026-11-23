@@ -35,13 +35,20 @@ exec < /dev/null
 # 19 Nov: on the cloud J.A.R.V.I.S. machine (JARVIS_CLOUD=1) only alert works: its builds list and Waiting list are not the laptop's, and a push
 # from there would replace his. Everything else is refused (the laptop keeps them).
 if [ "${JARVIS_CLOUD:-}" = 1 ] && [ "${1:-}" != alert ]; then echo "jarvis-status.sh: only alert works on the cloud machine (builds, Waiting on you and beats are the laptop's)"; exit 3; fi
-DIR="$(cygpath -u "$LOCALAPPDATA" 2>/dev/null || echo "$LOCALAPPDATA")/ProjectBackup/jarvis"; mkdir -p "$DIR"
-BUILDS="$DIR/builds.json"; LATEST="$(cygpath -u "$LOCALAPPDATA" 2>/dev/null || echo "$LOCALAPPDATA")/ProjectBackup/overnight-latest.txt"
-SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"
+# 22 Nov (VM-MAIN-WORKSPACE.md): this also runs on the VM, for Matthew's own sessions in ~/main (not the watcher's: JARVIS_CLOUD=1 above).
+# There the builds list is the VM's own (marked src "vm" on the page): a push from the VM replaces only the VM's builds in the server's
+# status.json and keeps the laptop's; a push from the laptop keeps the VM's. Beats and the overnight report stay the laptop's.
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) SIDE=laptop;; *) SIDE=vm;; esac
+PBR="$(cygpath -u "$LOCALAPPDATA" 2>/dev/null || echo "${LOCALAPPDATA:-$HOME/jarvis/localappdata}")"
+DIR="$PBR/ProjectBackup/jarvis"; mkdir -p "$DIR"
+BUILDS="$DIR/builds.json"; LATEST="$PBR/ProjectBackup/overnight-latest.txt"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"   # off the laptop: the VM's own wrapper
+SG="${JARVIS_SG:-$SG_DEF}"
 DEST='~/www/traverseplatforms.com/assistant-private/data/jarvis'
 [ -s "$BUILDS" ] || echo '[]' > "$BUILDS"
 
-REPO="${JARVIS_REPO:-/c/Users/Matthew sharpe/Desktop/claude test 2}"
+R0="/c/Users/Matthew sharpe/Desktop/claude test 2"; [ -d "$R0" ] || R0="$(cd "$(dirname "$0")/../../.." && pwd)"
+REPO="${JARVIS_REPO:-$R0}"
 running_jobs() {   # 18 Nov: data finishers (finish-*.sh) running on this laptop, found by themselves: name <TAB> their log, if one is found
   local n b log
   for n in $(ps -ef 2>/dev/null | grep -oE 'finish-[A-Za-z0-9_-]+\.sh' | sort -u); do
@@ -76,7 +83,11 @@ payload() {   # the one file the server keeps
     let waiting = []; try { waiting = JSON.parse(fs.readFileSync(wf, "utf8")); } catch (e) {}
     const rd = f => { try { return JSON.parse(fs.readFileSync(dir + "/" + f, "utf8")); } catch (e) { return null; } };
     const money = { ledger: rd("money-ledger.json"), stripe: rd("stripe.json") };
-    process.stdout.write(JSON.stringify({ pushedAt: Math.floor(Date.now() / 1000), overnight: over, builds, waiting, money }));
+    // 22 Nov: builds the VM pushed (src "vm") already on the server stay (VM-MAIN-WORKSPACE.md)
+    let srv = {}; try { srv = JSON.parse(fs.readFileSync(dir + "/server-status.json", "utf8")) || {}; } catch (e) {}
+    const vmb = (Array.isArray(srv.builds) ? srv.builds : []).filter(b => b && b.src === "vm");
+    const extra = srv.vmPushedAt ? { vmPushedAt: srv.vmPushedAt } : {};
+    process.stdout.write(JSON.stringify(Object.assign({ pushedAt: Math.floor(Date.now() / 1000), overnight: over, builds: builds.concat(vmb), waiting, money }, extra)));
   ' "$BUILDS" "$LATEST" "$DIR/auto-jobs.tsv" "$WAITING" "$DIR"
 }
 prune() {   # 21 Nov: items he has decided on his page (the tap reached the desk) come off the laptop's list too, so a push never brings them back
@@ -92,8 +103,30 @@ prune() {   # 21 Nov: items he has decided on his page (the tap reached the desk
     console.log("off the waiting list (decided on his page): " + gone.map(w => w.id).join(", "));
   ' "$WAITING"
 }
+vm_payload() {   # the VM: the server's status.json with only the VM's builds (and, once ~/main is the main copy, Waiting on you) replaced
+  running_jobs > "$DIR/auto-jobs.tsv"
+  node -e '
+    const fs = require("fs"), [cf, bf, af, wf, role] = process.argv.slice(1), now = Math.floor(Date.now() / 1000);
+    let cur = {}; try { cur = JSON.parse(fs.readFileSync(cf, "utf8")) || {}; } catch (e) {}
+    let mine = []; try { mine = JSON.parse(fs.readFileSync(bf, "utf8")); } catch (e) {}
+    try { for (const row of fs.readFileSync(af, "utf8").split("
+").filter(Boolean)) { const [name] = row.split("	");
+      if (!mine.some(b => b.id === "job-" + name)) mine.push({ id: "job-" + name, name: "Data job (cloud): " + name.replace(/^finish-/, ""), steps: 0, step: 0, pct: null, note: "running", state: "running", at: now, auto: true }); } } catch (e) {}
+    const others = (Array.isArray(cur.builds) ? cur.builds : []).filter(b => b && b.src !== "vm");
+    cur.builds = others.concat(mine.map(b => Object.assign({}, b, { src: "vm" })));
+    if (role === "main") { try { cur.waiting = JSON.parse(fs.readFileSync(wf, "utf8")); } catch (e) {} }
+    cur.vmPushedAt = now; process.stdout.write(JSON.stringify(cur));
+  ' "$DIR/server-status.json" "$BUILDS" "$DIR/auto-jobs.tsv" "$WAITING" "$(git -C "$REPO" config --get jarvis.role 2>/dev/null)"
+}
 push() {
   prune
+  # what the server holds now (the other side's builds are kept); out of reach = an empty file: the laptop still pushes, the VM does not
+  $SG "cat $DEST/status.json 2>/dev/null; true" < /dev/null > "$DIR/server-status.json" 2>/dev/null || : > "$DIR/server-status.json"
+  if [ "$SIDE" = vm ]; then
+    [ -s "$DIR/server-status.json" ] || { echo "jarvis status NOT pushed (could not read the server's copy first)"; return 1; }
+    vm_payload | $SG "umask 077; mkdir -p $DEST && cat > $DEST/status.json.tmp && mv -f $DEST/status.json.tmp $DEST/status.json && echo pushed" 2>/dev/null | grep -q pushed       && echo "jarvis status pushed (the VM's builds)" || { echo "jarvis status NOT pushed (server out of reach)"; return 1; }
+    return 0
+  fi
   payload | $SG "umask 077; mkdir -p $DEST && cat > $DEST/status.json.tmp && mv -f $DEST/status.json.tmp $DEST/status.json && echo pushed" 2>/dev/null | grep -q pushed \
     && echo "jarvis status pushed" || { echo "jarvis status NOT pushed (server out of reach; the next overnight check sends it)"; return 1; }
 }
@@ -136,14 +169,15 @@ wedit() {   # waiting add|drop: assistant/jarvis/waiting.json, by node
 }
 case "${1:-}" in
   push) push ;;
-  beat) beat ;;
+  beat) [ "$SIDE" = vm ] && { echo "jarvis-status.sh beat is the laptop's heartbeat: not sent from the VM"; exit 3; }; beat ;;
   alert) shift; [ -n "${1:-}" ] || { echo 'usage: jarvis-status.sh alert "<text>"'; exit 1; }
     exec 0<&-; printf '%s' "$*" | bash "$REPO/assistant/jarvis/tools/jarvis-reply.sh" main answered ;;
   waiting)
     shift; op="${1:-}"
     case "$op" in
       list) cat "$WAITING"; echo ;;
-      add|drop) wedit "$@" && push ;;
+      add|drop) [ "$SIDE" = vm ] && [ "$(git -C "$REPO" config --get jarvis.role 2>/dev/null)" != main ] && { echo "Waiting on you is the laptop's list until the flip (vm-main.sh flip): add it from the laptop"; exit 3; }
+        wedit "$@" && push ;;
       *) echo "usage: jarvis-status.sh waiting add <id> <company> \"<question>\" \"<what Approve and Decline do>\" [\"<from>\"] | drop <id> | list"; exit 1 ;;
     esac ;;
   build)

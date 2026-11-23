@@ -12,7 +12,8 @@ Q="${1:?queue: peak, posts or c-<slug>}"; ID="${2:?ticket id}"; ST="${3:-answere
 case "$Q" in peak|posts) ;; c-*) [[ "$Q" =~ ^c-[a-z0-9-]{1,40}$ ]] || { echo "bad install id"; exit 2; };; *) echo "queue: peak, posts or c-<slug>"; exit 2;; esac
 case "$ST" in answered|matthew|working) ;; *) echo "status: answered, matthew or working"; exit 2;; esac
 [[ "$ID" =~ ^h[0-9]{14}[0-9a-f]{4}$ ]] || { echo "bad ticket id"; exit 2; }
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"   # off the laptop: the VM's own wrapper (VM-MAIN-WORKSPACE.md)
+SG="$SG_DEF"
 [ -n "${JARVIS_SG:-}" ] && SG="$JARVIS_SG"   # the cloud J.A.R.V.I.S. machine: its own key
 JV='php $HOME/www/traverseplatforms.com/jv-tools/jv.php'; TOOLS='php $HOME/www/traverseplatforms.com/sixfold-tools'
 RF=""; FILES=""; TXT=$(cat)

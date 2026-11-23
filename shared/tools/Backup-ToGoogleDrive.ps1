@@ -96,7 +96,9 @@ try {
 
     # 1b. the locked archive
     $dt = Join-Path $Project "traverse\data-pipeline\door-territory"
-    $items = @($bundle, $Memory, $ServerBk, $dt, (Join-Path $Project "surge\clients")) | Where-Object { Test-Path -LiteralPath $_ }
+    # 2026-11-22 (traverse/ops/VM-MAIN-WORKSPACE.md): Surge's restricted notes as files too. After the flip to the VM they are untracked
+    # here (laptop-only, never in the VM's history), so the git bundle no longer holds them; this archive does.
+    $items = @($bundle, $Memory, $ServerBk, $dt, (Join-Path $Project "surge\clients"), (Join-Path $Project "surge\brand\notes")) | Where-Object { Test-Path -LiteralPath $_ }
     $excl = @('-xr!lidar-cache', '-xr!buildings', '-xr!material\cache', '-xr!raw', '-xr!node_modules', '-xr!se-cache',
               '-xr!days', '-xr!days-dfw', '-xr!cache', '-xr!logs-*', '-xr!*.pdf', '-xr!elpaso-imagery', '-xr!pictures')
     $tmp7z = Join-Path $stage "core-$day.7z"

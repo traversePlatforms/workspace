@@ -15,7 +15,7 @@
 # Log: laptop %LOCALAPPDATA%/ProjectBackup/meetings/meeting-worker.log; cloud ~/jarvis/state/meetings/meeting-worker.log.
 # Test overrides: MEET_WHO MEET_SG MEET_JM MEET_ST MEET_REPO MEET_WHISPER MEET_MODEL MEET_VAD MEET_THREADS MEET_FFMPEG MEET_FFPROBE MEET_NO_HTTPS
 set -u
-ONWIN=0; command -v cygpath > /dev/null 2>&1 && ONWIN=1
+ONWIN=0; case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) ONWIN=1;; esac   # 22 Nov: by the system, not by cygpath (the VM has a cygpath stand-in for the laptop scripts)
 WHO="${MEET_WHO:-$([ "$ONWIN" = 1 ] && echo laptop || echo cloud)}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 if [ "$WHO" = laptop ]; then

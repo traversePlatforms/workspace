@@ -16,7 +16,8 @@ case "$ST" in answered|matthew|working) ;; *) echo "status: answered, matthew or
 # in the Sixfold app itself (it sets HELP_REPLY_SIXFOLD=1 for those sessions). Staff tickets are never on the list.
 MV="$(cd "$(dirname "$0")/../.." && pwd)/assistant/jarvis/tools/desk-moved.txt"
 if [ "${HELP_REPLY_SIXFOLD:-0}" != 1 ] && [ -f "$MV" ] && grep -qx "$ID" "$MV"; then exec bash "$(dirname "$MV")/jarvis-reply.sh" "$ID" "$ST" "$@"; fi
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"   # off the laptop: the VM's own wrapper (VM-MAIN-WORKSPACE.md)
+SG="$SG_DEF"
 [ -n "${JARVIS_SG:-}" ] && SG="$JARVIS_SG"   # the cloud J.A.R.V.I.S. machine (19 Nov): its own key, ~/jarvis/bin/sg.sh
 RF=""; FILES=""
 while [ $# -gt 0 ]; do

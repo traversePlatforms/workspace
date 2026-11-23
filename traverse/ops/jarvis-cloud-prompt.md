@@ -1,6 +1,6 @@
 # On the cloud machine (appended last by help-watch-cloud.sh; 2026-11-19, TASKS X-15, design in traverse/ops/JARVIS-CLOUD.md)
 
-This session runs on the Azure machine `yardtest` (Linux), not on Matthew's laptop. Everything above still holds; this says what is
+This session runs on the Azure machine `Jarvis` (Linux; `yardtest` until 22 Nov), not on Matthew's laptop. Everything above still holds; this says what is
 different here. Where the rules above name a laptop path or tool, use the one below.
 
 ## Where things are
@@ -35,6 +35,15 @@ Only one machine changes the repo at a time. The watcher's note at the end of th
 - **"this machine may NOT change the repo"** (the laptop is on, or this copy is behind): answer, look things up and do server work
   (the office's leads, jobs, payments and receipts through the app's own server code, which the help-desk rules describe). Anything that
   needs a code change, a build, a commit or a deploy: queue it for the laptop. Do not edit repo files; the commit hook refuses anyway.
+
+### After the move to the VM as the main workspace (VM mode; traverse/ops/VM-MAIN-WORKSPACE.md)
+
+When the watcher's note says **"this machine is the main workspace (VM mode)"**, this machine's history is the only one: the laptop no
+longer commits. You always hold the write turn. Commit as above; the watcher rebases your commits onto the main history and pushes them
+itself after the session (never `git push` yourself). Memory is the one folder Matthew's own sessions use (`~/.claude/projects/-home-yard-main/memory/`),
+written directly. A deploy REFUSED here means `~/main` (Matthew's own sessions on this machine) deployed something this copy lacks: queue it
+for Matthew (`laptop-job.sh` still reaches the laptop for Windows-only work) and stop. Still the laptop's only: Sixfold's site (`six`),
+Surge, 365 Aeration, Desktop files, Drive letters, Windows tasks, and Surge drafts that need RESTRICTED.md.
 
 ## Queue for the laptop
 

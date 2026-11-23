@@ -57,7 +57,8 @@ AQ=$(printf '%s' "$P" | grep -o 'jv-reply.sh [a-z0-9-]* ' | head -1 | cut -d' ' 
 printf '%s' "$P" | grep -q "holds the write turn" && echo "WRITE=yes" >> "$STUBLOG" || echo "WRITE=no" >> "$STUBLOG"
 case "${STUB:-reply}" in
   reply) printf 'Done, ma%sam.' "'" | $RPL "$ID" answered >> "$STUBLOG" 2>&1;;
-  edit) echo "- $(date +%F) stub learned line" >> traverse/ops/jarvis-learned-office.md; echo "cloud memory note" > "$JARVIS_MEM/new-note.md"
+  edit) [ -n "${STUB_DURING:-}" ] && bash -c "$STUB_DURING" > /dev/null 2>&1   # something else pushes while the session works
+        echo "- $(date +%F) stub learned line" >> traverse/ops/jarvis-learned-office.md; echo "cloud memory note" > "$JARVIS_MEM/new-note.md"
         echo "// stub code change" >> traverse/ops/cloud-guard.sh
         git add traverse/ops/cloud-guard.sh && git commit -q -m "stub: a code fix" >> "$STUBLOG" 2>&1; echo "commit rc=$?" >> "$STUBLOG"
         printf 'Fixed.' | $RPL "$ID" answered >> "$STUBLOG" 2>&1;;
@@ -178,5 +179,62 @@ rm -f "$W/srv/posts.json"
 echo "--- 11. beat"
 echo 1 > "$W/jarvis/state/ready"; ( JARVIS_MODE=shadow bash -c ". <(sed -n '1,/^# ---- test modes/p' '$H'); beat_loop \$\$" & BP=$!; sleep 3; kill $BP 2>/dev/null ) > /dev/null 2>&1
 ok 'grep -qE "^[0-9]{10} shadow 1$" "$W/srv/beat.txt"' "beat written as '<time> <mode> <ready>'"
+
+echo "--- 12. VM mode (22 Nov, VM-MAIN-WORKSPACE.md): the VM's history is the only one; the write turn is always here"
+export JARVIS_SG="bash $W/stub-srv.sh trav" JARVIS_DESK_KEYFILE="$W/no-key"   # any alert from here goes to the stand-in, never the live server
+rm -f "$W/jarvis/state/stuck"; rm -rf "$W/jarvis/outbox/changes/"* "$W/jarvis/outbox/review"; bash "$H" --sync-workspace > /dev/null 2>&1
+staff; laptop_on; : > "$STUBLOG"; B0=$(git -C "$W/bare.git" rev-parse main)
+JARVIS_WRITE=vm STUB=edit run live "L=1"
+ok 'grep -q "WRITE=yes" "$STUBLOG"' "VM mode: write turn held although the laptop is on"
+ok 'git -C "$W/bare.git" log --format=%s "$B0..main" | grep -q "stub: a code fix"' "VM mode: the session's commit is in the one history (pushed by the watcher)"
+ok 'git -C "$W/bare.git" log --format=%s "$B0..main" | grep -q "notes from $STAFF"' "VM mode: the learned note it left was committed for it"
+ok 'git -C "$W/bare.git" show main:traverse/ops/jarvis-learned-office.md | grep -q "stub learned line"' "VM mode: the note is in the history"
+ok '[ -z "$(ls "$W/jarvis/outbox/changes" 2>/dev/null)" ]' "VM mode: no bundle for a laptop"
+ok '[ -f "$W/mem/new-note.md" ] && [ ! -d "$W/jarvis/outbox/review" ]' "VM mode: memory written in place; nothing left for review"
+ok '[ "$(git -C "$W/ws" rev-parse HEAD)" = "$(git -C "$W/bare.git" rev-parse main)" ]' "VM mode: the copy is level with the one history"
+# ~/main pushed first (another file): the session's commit is rebased on top, both kept
+T3=$(mktemp -d); git clone -q "$W/bare.git" "$T3/m"; git -C "$T3/m" config user.name M; git -C "$T3/m" config user.email m@m
+echo "main side" >> "$T3/m/README.md"; git -C "$T3/m" commit -qam "main: readme"; git -C "$T3/m" push -q origin HEAD:main
+staff; : > "$STUBLOG"; JARVIS_WRITE=vm STUB=edit run live "L=1"
+ok '[ "$(git -C "$W/bare.git" log -3 --format=%s main | grep -c "main: readme\|stub: a code fix")" = 2 ]' "VM mode: a newer ~/main commit and the session's commit both in the history (rebased, pushed)"
+# code left uncommitted: kept for review, not in the history, the copy put back clean
+staff; ( cd "$W/ws" && : ); cat > "$W/stub-claude2.sh" <<'EOF'
+#!/bin/bash
+cat > /dev/null; case " $* " in *" --tools Read,Grep,Glob "*) printf 'HANDOFF\nOn it.\n'; exit 0;; esac
+echo "// left uncommitted" >> traverse/ops/deploy-app.sh; printf 'Done.' | bash traverse/ops/help-reply.sh "$(ls "$JARVIS_TICKET_DIR" | head -1 | sed 's/.json//')" answered > /dev/null 2>&1
+EOF
+chmod +x "$W/stub-claude2.sh"; rm -f "$W/jarvis/state/cur/"*.json
+JARVIS_CLAUDE="$W/stub-claude2.sh" JARVIS_WRITE=vm run live "L=1"
+ok 'ls "$W/jarvis/outbox/review/"*"-$STAFF/repo/traverse/ops/deploy-app.sh.cloud" > /dev/null 2>&1' "VM mode: uncommitted code kept for review"
+ok '[ -z "$(git -C "$W/ws" status --porcelain -uno)" ] && ! git -C "$W/bare.git" show main:traverse/ops/deploy-app.sh | grep -q "left uncommitted"' "VM mode: not in the history; the copy is clean"
+# a clash with ~/main: kept as stuck-*, writes stop
+staff; : > "$STUBLOG"; JARVIS_WRITE=vm STUB=edit STUB_DURING="git -C '$T3/m' pull -q; echo '# rewritten on ~/main' > '$T3/m/traverse/ops/cloud-guard.sh'; git -C '$T3/m' commit -qam 'main: clash'; git -C '$T3/m' push -q origin HEAD:main" run live "L=1"
+ok '[ -f "$W/jarvis/state/stuck" ] && git -C "$W/ws" branch --list "stuck-*" | grep -q stuck' "VM mode: a clash is kept as a stuck-* branch and writes stop"
+ok 'git -C "$W/bare.git" log -1 --format=%s main | grep -q "main: clash"' "VM mode: the history keeps ~/main's change (nothing forced)"
+staff; : > "$STUBLOG"; JARVIS_WRITE=vm STUB=reply run live "L=1"
+ok 'grep -q "WRITE=no" "$STUBLOG"' "VM mode: no write turn while stuck"
+rm -f "$W/jarvis/state/stuck"
+# vm-main-sync.sh: ~/main brought level (fast-forward), its own commit pushed, a clean two-sided merge, a clash left alone
+SYNC="$(dirname "$SRC")/vm-main-sync.sh"
+if [ -f "$SYNC" ]; then
+  git -C "$T3/m" config jarvis.role main; git -C "$T3/m" checkout -q -B main origin/main 2>/dev/null; git -C "$T3/m" branch -q --set-upstream-to=origin/main main
+  T4=$(mktemp -d); git clone -q "$W/bare.git" "$T4/w"; git -C "$T4/w" config user.name W; git -C "$T4/w" config user.email w@w
+  echo "watcher side" >> "$T4/w/TASKS.md"; git -C "$T4/w" commit -qam "watcher: tasks"; git -C "$T4/w" push -q origin HEAD:main
+  JARVIS_MAIN="$T3/m" bash "$SYNC" > /dev/null 2>&1
+  ok '[ "$(git -C "$T3/m" rev-parse HEAD)" = "$(git -C "$W/bare.git" rev-parse main)" ]' "main-sync: ~/main fast-forwarded to the history"
+  echo "x" >> "$T3/m/CHANGELOG.md"; git -C "$T3/m" -c core.hooksPath=/dev/null commit -qam "main: own"; JARVIS_MAIN="$T3/m" bash "$SYNC" > /dev/null 2>&1
+  ok 'git -C "$W/bare.git" log -1 --format=%s main | grep -q "main: own"' "main-sync: ~/main's own commit pushed"
+  git -C "$T4/w" pull -q; echo "w2" >> "$T4/w/TASKS.md"; git -C "$T4/w" commit -qam "watcher: two"; git -C "$T4/w" push -q origin HEAD:main
+  echo "y" >> "$T3/m/CHANGELOG.md"; echo "dirty" >> "$T3/m/README.md"; git -C "$T3/m" -c core.hooksPath=/dev/null commit -qm "main: three" CHANGELOG.md; JARVIS_MAIN="$T3/m" bash "$SYNC" > /dev/null 2>&1
+  ok 'git -C "$W/bare.git" log -1 --format=%s main | grep -q "Merge the cloud" && git -C "$T3/m" diff --name-only | grep -qx README.md' "main-sync: both sides merged cleanly and pushed; the uncommitted edit untouched"
+  git -C "$T3/m" checkout -q -- README.md
+  git -C "$T4/w" pull -q; echo "w3" >> "$T4/w/CHANGELOG.md"; git -C "$T4/w" commit -qam "watcher: clash"; git -C "$T4/w" push -q origin HEAD:main
+  echo "m3" >> "$T3/m/CHANGELOG.md"; git -C "$T3/m" -c core.hooksPath=/dev/null commit -qam "main: clash"; HM=$(git -C "$T3/m" rev-parse HEAD); JARVIS_MAIN="$T3/m" bash "$SYNC" > /dev/null 2>&1
+  ok '[ "$(git -C "$T3/m" rev-parse HEAD)" = "$HM" ] && grep -q "STOPPED: ~/main and the watcher changed the same lines" "$W/jarvis/state/main-sync.log"' "main-sync: a clash is left alone (nothing merged, nothing lost)"
+  git -C "$T3/m" config jarvis.role standby; HS=$(git -C "$T3/m" rev-parse HEAD); JARVIS_MAIN="$T3/m" bash "$SYNC" > /dev/null 2>&1
+  ok '[ "$(git -C "$T3/m" rev-parse HEAD)" = "$HS" ]' "main-sync: does nothing on the standby copy"
+  rm -rf "$T4"
+else echo "(vm-main-sync.sh not beside the watcher: its tests skipped)"; fi
+rm -rf "$T3"
 
 echo "$pass passed, $fail failed"; [ "$fail" = 0 ]

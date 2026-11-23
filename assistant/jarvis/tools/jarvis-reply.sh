@@ -18,7 +18,8 @@ ID="${1:?thread id or main}"; ST="${2:-answered}"; shift 2 || shift $#
 [ "$ID" = main ] && ID="$MAIN"
 case "$ST" in answered|matthew|working) ;; *) echo "status: answered, matthew or working"; exit 2;; esac
 [[ "$ID" =~ ^h[0-9]{14}[0-9a-f]{4}$ ]] || { echo "bad thread id"; exit 2; }
-SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"   # off the laptop: the VM's own wrapper (VM-MAIN-WORKSPACE.md)
+SG="${JARVIS_SG:-$SG_DEF}"
 TOOL='$HOME/www/traverseplatforms.com/assistant-private/jvdesk.php'
 URL="${JARVIS_DESK_URL:-https://traverseplatforms.com/a-e018bb82/api.php}"
 KEYF="${JARVIS_DESK_KEYFILE:-/c/Users/SURGEI~1/.ssh/jarvis-desk-key.txt}"

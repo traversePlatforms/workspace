@@ -8,8 +8,10 @@
 # --first (once): also its data and private folders beside public_html: settings, the made-up customers, the sign-in codes (never over an
 # existing codes or accounts file), and the towns copied from sixfold-data on the server (traverse/ops/practice-towns.php, read-only there).
 set -u
-R="${JARVIS_REPO:-/c/Users/Surge Inc/Desktop/claude test 2}/traverse"; D="$R/editions/dist/practice"; F=practice-5dbe8f
-SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"; SITE='~/www/traverseplatforms.com'
+R0="/c/Users/Surge Inc/Desktop/claude test 2"; [ -d "$R0" ] || R0="$(cd "$(dirname "$0")/../.." && pwd)"   # off the laptop (the VM): the repo this script is in
+R="${JARVIS_REPO:-$R0}/traverse"; D="$R/editions/dist/practice"; F=practice-5dbe8f
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"   # off the laptop: the VM's own wrapper (VM-MAIN-WORKSPACE.md)
+SG="${JARVIS_SG:-$SG_DEF}"; SITE='~/www/traverseplatforms.com'
 ST="$(mktemp -d)"; trap 'rm -rf "$ST"' EXIT
 STAMP=$(date +%Y%m%d-%H%M%S)
 . "$R/ops/cloud-guard.sh"; cloud_guard_before practice || exit 1   # two places can deploy since 19 Nov (the cloud J.A.R.V.I.S.): never older code over newer

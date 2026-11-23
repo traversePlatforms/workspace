@@ -14,11 +14,13 @@
 # "clients.php regen" remakes every client install's page and API from the new templates.
 set -u
 LABEL="${1:?usage: deploy-app.sh <label>}"
-R="${JARVIS_REPO:-/c/Users/Surge Inc/Desktop/claude test 2}/traverse"; D="$R/editions/dist/public_html"
-SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"
+R0="/c/Users/Surge Inc/Desktop/claude test 2"; [ -d "$R0" ] || R0="$(cd "$(dirname "$0")/../.." && pwd)"   # off the laptop (the VM): the repo this script is in
+R="${JARVIS_REPO:-$R0}/traverse"; D="$R/editions/dist/public_html"
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"   # off the laptop: the VM's own wrapper (VM-MAIN-WORKSPACE.md)
+SG="${JARVIS_SG:-$SG_DEF}"
 ST="$(mktemp -d)"; trap 'rm -rf "$ST"' EXIT
 STAMP=$(date +%Y%m%d-%H%M%S)
-. "$R/ops/cloud-guard.sh"; cloud_guard_before "$LABEL" || exit 1   # two places can deploy since 19 Nov (the cloud J.A.R.V.I.S.): never older code over newer
+[ "${2:-}" = "--check" ] && CG_CHECK=1; . "$R/ops/cloud-guard.sh"; cloud_guard_before "$LABEL" || exit 1   # two places can deploy since 19 Nov (the cloud J.A.R.V.I.S.): never older code over newer
 cp_if() { [ -f "$1" ] && { mkdir -p "$ST/$2"; cp "$1" "$ST/$2/"; }; return 0; }
 # the Spanish dictionary lives beside each page since 2026-10-27: without it a Spanish phone shows English, so it must be there
 for p in summit tr-cb2e8587 ty-25604fff ts-016064fc tq-9cf8d9de tg-3b0b89e7; do

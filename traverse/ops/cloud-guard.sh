@@ -28,6 +28,7 @@ cloud_guard_before() {
     [ -n "$DJ" ] || { echo "REFUSED (cloud): no record of the laptop's last deploy yet (the laptop writes it on its next deploy)"; return 1; }
     L=$(printf '%s' "$DJ" | cg_js 'console.log(j.head || "")'); [[ "$L" =~ ^[0-9a-f]{40}$ ]] || { echo "REFUSED (cloud): the laptop's deploy record is unreadable"; return 1; }
     F=$(awk -v l="$L" '$1==l {print $2}' "${JARVIS_HOME:-$HOME/jarvis}/incoming/commit-map" 2>/dev/null | tail -1)
+    [ -z "$F" ] && git -C "$RP" cat-file -e "$L^{commit}" 2>/dev/null && F="$L"   # VM mode (22 Nov): ~/main deploys with the one history's own ids
     [ -n "$F" ] && git -C "$RP" merge-base --is-ancestor "$F" HEAD 2>/dev/null || { echo "REFUSED (cloud): the laptop deployed commit ${L:0:10}, which this copy does not have yet. Queue it for the laptop."; return 1; }
     while IFS=$'\t' read -r p b; do
       [ -n "$p" ] || continue
@@ -38,9 +39,11 @@ cloud_guard_before() {
     echo "  cloud guard: OK (write turn held; holds the laptop's deploy of $(printf '%s' "$DJ" | cg_js 'console.log(new Date(j.at * 1000).toISOString())'))"
   else
     local ON MISS
+    # 22 Nov (VM-MAIN-WORKSPACE.md): the VM's ~/main before the flip is a standby copy; it may look (deploy-app.sh --check), not deploy
+    [ "$(git -C "$RP" config --get jarvis.role 2>/dev/null)" = standby ] && [ "${CG_CHECK:-}" != 1 ] && { echo "REFUSED: this is the VM's standby copy (~/main): the laptop is still the main workspace until bash traverse/ops/vm-main.sh flip. Deploy from the laptop."; return 1; }
     ON=$($SG "cat $CG_DIR/deploy-cloud.txt 2>/dev/null; true" < /dev/null 2>/dev/null) || { echo "  cloud guard: server not answering, not checked"; return 0; }
     MISS=$(comm -23 <(printf '%s\n' "$ON" | grep -E '^c[0-9]{14}-[0-9a-f]{4}$' | sort -u) <(cg_ids "$RP"))
-    [ -z "$MISS" ] || { echo "REFUSED: the cloud J.A.R.V.I.S. deployed $(printf '%s\n' "$MISS" | wc -l) change(s) this laptop has not merged. Run: bash traverse/ops/jarvis-cloud-sync.sh pull   then build and deploy again."; return 1; }
+    [ -z "$MISS" ] || { echo "REFUSED: the cloud J.A.R.V.I.S. deployed $(printf '%s\n' "$MISS" | wc -l) change(s) this laptop has not merged. Run: bash traverse/ops/jarvis-cloud-sync.sh pull (laptop) or bash traverse/ops/vm-main-sync.sh (the VM's ~/main), then build and deploy again."; return 1; }
     echo "  cloud guard: OK"
   fi
   return 0

@@ -16,11 +16,13 @@ set -u
 exec < /dev/null
 ID="${1:?usage: deploy-client.sh c-<slug> [--first | --data [regex]]}"; MODE="${2:-}"; ONLY="${3:-}"
 case "$ID" in c-[a-z0-9]*) ;; *) echo "the install id is c-<slug>, as build-editions.cjs names it"; exit 1;; esac
-R="${JARVIS_REPO:-/c/Users/Surge Inc/Desktop/claude test 2}/traverse"; D="$R/editions/dist"; SLUG="${ID#c-}"
+R0="/c/Users/Surge Inc/Desktop/claude test 2"; [ -d "$R0" ] || R0="$(cd "$(dirname "$0")/../.." && pwd)"   # off the laptop (the VM): the repo this script is in
+R="${JARVIS_REPO:-$R0}/traverse"; D="$R/editions/dist"; SLUG="${ID#c-}"
 CF="$R/editions/clients/$SLUG.json"; [ -s "$CF" ] || { echo "no client file editions/clients/$SLUG.json"; exit 1; }
 F=$(node -e "console.log(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).folder||'')" "$CF")
 [[ "$F" =~ ^[a-z]{1,3}-[0-9a-f]{6}$ ]] || { echo "the client file has no folder yet: build it first"; exit 1; }
-SG="${JARVIS_SG:-bash /c/Users/SURGEI~1/.ssh/sg.sh trav}"; SITE='~/www/traverseplatforms.com'
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"   # off the laptop: the VM's own wrapper (VM-MAIN-WORKSPACE.md)
+SG="${JARVIS_SG:-$SG_DEF}"; SITE='~/www/traverseplatforms.com'
 ST="$(mktemp -d)"; trap 'rm -rf "$ST"' EXIT
 STAMP=$(date +%Y%m%d-%H%M%S)
 . "$R/ops/cloud-guard.sh"; cloud_guard_before "$ID" || exit 1   # two places can deploy since 19 Nov (the cloud J.A.R.V.I.S.): never older code over newer

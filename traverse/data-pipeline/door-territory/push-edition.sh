@@ -6,9 +6,11 @@
 # (e.g. 'g1-' for the Group 1 towns and their side files); DRY=1 lists what would go, by name, and sends nothing.
 set -u
 exec < /dev/null   # 11 Nov: with a closed stdin (a scheduled job: the Wi-Fi queue's rented finisher) md5sum failed and every push sent 0 files without an error
-d="$1"; ONLY="${2:-}"; S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp"; mkdir -p "$S"   # short path: $S is used unquoted below
-SG="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"
-cd "/c/Users/Surge Inc/Desktop/claude test 2/traverse/editions/dist/$d/rounds" || exit 1
+d="$1"; ONLY="${2:-}"; if command -v cygpath > /dev/null 2>&1 && [ -n "${LOCALAPPDATA:-}" ]; then S="$(cygpath -u "$(cygpath -d "$LOCALAPPDATA")")/ProjectBackup/push-tmp"; else S="${LOCALAPPDATA:-$HOME/jarvis/localappdata}/ProjectBackup/push-tmp"; fi; mkdir -p "$S"   # short path: $S is used unquoted below
+SG_DEF="bash /c/Users/SURGEI~1/.ssh/sg.sh trav"; [ -f /c/Users/SURGEI~1/.ssh/sg.sh ] || SG_DEF="bash $HOME/jarvis/bin/sg.sh trav"   # off the laptop: the VM's own wrapper (VM-MAIN-WORKSPACE.md)
+SG="${JARVIS_SG:-$SG_DEF}"
+R0="/c/Users/Surge Inc/Desktop/claude test 2"; [ -d "$R0" ] || R0="$(cd "$(dirname "$0")/../../.." && pwd)"   # off the laptop (the VM): the repo this script is in
+cd "${JARVIS_REPO:-$R0}/traverse/editions/dist/$d/rounds" || exit 1
 find . -maxdepth 1 -type f -name '*.json' ! -name index.json ! -name company.json ! -name hail-storms.json -printf '%f\n' | sort > $S/p-$d.all
 md5sum $(cat $S/p-$d.all) | sed 's/ \*/  /' | sort -k2 > $S/p-$d.local
 [ "$(wc -l < $S/p-$d.local)" -eq "$(wc -l < $S/p-$d.all)" ] || { echo "$d: local md5 list incomplete ($(wc -l < $S/p-$d.local) of $(wc -l < $S/p-$d.all)): nothing sent"; exit 1; }   # 11 Nov
