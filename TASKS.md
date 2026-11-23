@@ -1091,6 +1091,21 @@ possible, and right now nobody could list those accounts from memory. That's X-1
       **Peak booking heads-ups: FIXED and LIVE 2026-11-21** (commit a7abde0a): confirmed live that the web PHP has an empty PHP_BINARY, so every booking-page heads-up was lost; deskPhp() now uses /usr/local/bin/php from the web (booking heads-ups, email alerts, end of day). Desk tests 636/636; one real test heads-up sent to Matthew only.
 - [ ] **X-13 — Peak Pickleball: internal systems + website redesign (Matthew's call with Peak, 2 Nov). NOT STARTED: "dont start it now".** Peak pays ~$500/mo for CourtReserve plus a retention/email service he thinks is "Hatch retention" (confirm the real name from their invoice). Build them their own systems to replace those, and redesign peakpickleball.us. Matthew's own work, not Surge's. Approach, open questions and order: memory peak-internal-systems-and-site.md. Audit to start from: matthew/clients/peak-pickleball/audit-2026-10-22/ (the one-pager has 4 lines to fix, found 2 Nov).
 
+## Peak Pickleball
+
+Matthew's own work for Peak (matthew/clients/peak-pickleball/, matthew/peak-pickleball-sponsorship/). Not Surge. Section added 23 Nov 2026.
+
+- [ ] **PK-1 — Nightly data pull (Patch Retention + CourtReserve), read-only.** Matthew 23 Nov: "Lets do a full pull as we need. Maybe a daily,
+      nightly pull to keep numbers accurate." Building 23 Nov (tools/nightly-pull.sh); then a VM timer.
+- [ ] **PK-2 — Patch automations: what's automated, what's missing, the missing ones written out.** DRAFT only: nothing created in Patch
+      and nothing sent until Matthew/Tyler OK (Tyler's 4 Nov consent is view-only). patch-automations-2026-11-23.md.
+- [ ] **PK-3 — Impact measurement (proof of concept).** Baseline = 4 Nov baseline + the 12 months before Tyler's GO (11 Nov). impact-measurement-2026-11-23.md, tools/impact.mjs.
+- [ ] **PK-4 — Meta ad plan for new members.** No budget yet (Peak decides); three budget scenarios; check the free-class conversion claim in the data. meta-ad-plan-2026-11-23.md. Must-fix first: privacy policy (GA4 + Pixel on the site).
+- [ ] **PK-5 — In-club tenants (rent a built-out space, perks for members), like Brandon's sauna.** Prospect list + approach + DRAFT first email. tenants-and-coffee-2026-11-23.md.
+- [ ] **PK-6 — Coffee partner** (free coffee for members, beans/grounds to Peak, in exchange for exposure). List + approach + DRAFT email. Same file.
+- [ ] **PK-7 — Peak site metrics.** Needs GA4 (or Search Console) read access from Peak: ask Tyler.
+- [x] **PK-8 — Peak desk Inbox: links in emails clickable** (the Snooze email). Deployed 23 Nov (inbox-links-1123).
+
 ## Traverse
 
 Matthew's own field-sales app ([traverse/](traverse/)), its five editions and the data behind them. Added 2026-10-07.
