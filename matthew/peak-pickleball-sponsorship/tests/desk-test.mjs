@@ -1111,7 +1111,7 @@ try {
   /* ---- the screens ---- */
   console.log('The screens');
   const CPORT = 9300 + Math.floor(Math.random() * 300);
-  chrome = spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', ['--headless=new', '--disable-gpu', `--remote-debugging-port=${CPORT}`, `--user-data-dir=${cdpDir()}`, 'about:blank'], { stdio: 'ignore' });
+  chrome = spawn(process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : 'google-chrome', ['--headless=new', '--disable-gpu', `--remote-debugging-port=${CPORT}`, `--user-data-dir=${cdpDir()}`, 'about:blank'], { stdio: 'ignore' });
   let k = 0; const pend = new Map(), errors = [];
   const send = (m, p = {}) => new Promise((res, rej) => { const i = ++k; pend.set(i, { res, rej }); ws.send(JSON.stringify({ id: i, method: m, params: p })); });
   const js = async (e) => (await send('Runtime.evaluate', { expression: e, awaitPromise: true, returnByValue: true })).result?.value;

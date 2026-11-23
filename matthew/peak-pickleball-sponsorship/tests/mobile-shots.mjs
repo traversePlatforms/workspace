@@ -6,7 +6,7 @@ process.on('exit', () => { for (const d of cdpDirs) try { rmSync(d, { recursive:
 const LD = 'C:/Users/Surge Inc/Desktop/claude test 2/matthew/peak-pickleball-sponsorship/desk-data-local';
 const CODE = readFileSync(LD + '/test-seller-code.txt', 'utf8').match(/(\d{6})/)[1];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const PORT = 9399;
-const chrome = spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', ['--headless=new', '--disable-gpu', '--remote-debugging-port=' + PORT, '--user-data-dir=' + cdpDir(), 'about:blank'], { stdio: 'ignore' });
+const chrome = spawn(process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : 'google-chrome', ['--headless=new', '--disable-gpu', '--remote-debugging-port=' + PORT, '--user-data-dir=' + cdpDir(), 'about:blank'], { stdio: 'ignore' });
 let tg; for (let i = 0; i < 60 && !tg; i++) { try { tg = (await (await fetch('http://127.0.0.1:' + PORT + '/json/list')).json()).find((y) => y.type === 'page'); } catch {} if (!tg) await sleep(200); }
 const ws = new WebSocket(tg.webSocketDebuggerUrl); await new Promise((r) => (ws.onopen = r)); let k = 0; const pend = new Map();
 ws.onmessage = (e) => { const m = JSON.parse(e.data); if (m.id && pend.has(m.id)) { pend.get(m.id)(m.result); pend.delete(m.id); } };

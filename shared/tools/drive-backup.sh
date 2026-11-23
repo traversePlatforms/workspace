@@ -23,7 +23,8 @@ RC=(rclone --config "$HOME/.config/rclone/rclone.conf" --drive-use-trash=false -
 fail=0
 
 # 1. the weekly locked archive
-newest=$("${RC[@]}" lsf "$DEST" --include 'core-*.7z' 2>/dev/null | sort | tail -1)
+cores() { "${RC[@]}" lsf "$DEST" --files-only --include 'core-*.7z' 2>/dev/null | grep -E '^core-[0-9]{4}-[0-9]{2}-[0-9]{2}\.7z$' | sort -u; }   # 23 Nov: files only (the media/ folder sorted in and the keep count lost the 21 Nov archive)
+newest=$(cores | tail -1)
 nd=$(echo "$newest" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}'); age=999
 [ -n "$nd" ] && age=$(( ( $(date +%s) - $(date -d "$nd" +%s) ) / 86400 ))
 if [ $NOW = 1 ] || [ "$age" -ge $EVERY ]; then
@@ -47,7 +48,7 @@ if [ $NOW = 1 ] || [ "$age" -ge $EVERY ]; then
       || { say "archive FAILED: $(tail -c 200 "$ST/err" | tr '\n' ' ')"; fail=1; }
     unset PASS
     if [ $fail = 0 ]; then
-      "${RC[@]}" lsf "$DEST" --include 'core-*.7z' | sort -r | tail -n +$((KEEP + 1)) | while read -r o; do "${RC[@]}" deletefile "$DEST/$o" && say "removed old $o"; done
+      n=$(cores | wc -l); [ "$n" -gt "$KEEP" ] && cores | head -n $((n - KEEP)) | while read -r o; do [ "$o" = "core-$day.7z" ] && continue; "${RC[@]}" deletefile "$DEST/$o" < /dev/null && say "removed old $o"; done
     fi
     rm -rf "$ST"; trap - EXIT
   fi

@@ -1154,7 +1154,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   /* ---- who to reach: every contact with where it came from and how sure it is ---- */
   var CAREFUL = /correction|stale|unconfirmed|unverified|not verified|do not use|don'?t use|check (it |this |them )?before|before pitching|before sending|outdated|no longer|caution|expect a slow/i;
   var linkify = function (text, into) {
-    var re = /(https?:\/\/[^\s;,)]+)|([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|(\(?\b\d{3}\)?[ .-]?\d{3}-\d{4}\b)/g, s = String(text || ''), at = 0, m;
+    var re = /(https?:\/\/[^\s;,)<>"]+)|([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})|(\(?\b\d{3}\)?[ .-]?\d{3}-\d{4}\b)/g, s = String(text || ''), at = 0, m;
     while ((m = re.exec(s))) {
       if (m.index > at) into.appendChild(document.createTextNode(s.slice(at, m.index)));
       var raw = m[0], tail = ''; if (m[1]) { var t = raw.match(/[.]+$/); if (t) { tail = t[0]; raw = raw.slice(0, -tail.length); } }
@@ -2063,7 +2063,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       if (!j.ok) { body.appendChild(el('div', 'warnline', j.error || 'It did not open.')); return; }
       var it = j.item; row.classList.remove('unread');
       body.appendChild(el('div', 'inmeta', 'From ' + (it.name ? it.name + ' <' + it.from + '>' : it.from) + ' · ' + when(it.at)));
-      body.appendChild(el('div', 'mt intext', it.text || '(no words: it may be a picture or a file only; it is in the mailbox)'));
+      body.appendChild(it.text ? linkify(it.text, el('div', 'mt intext')) : el('div', 'mt intext', '(no words: it may be a picture or a file only; it is in the mailbox)'));   /* 23 Nov: links in an email open (Matthew: the Snooze email's link wasn't clickable) */
       if (it.files.length) {
         var fl = el('div', 'infiles'); fl.appendChild(el('b', null, 'Attached: '));
         it.files.forEach(function (f, i) {
