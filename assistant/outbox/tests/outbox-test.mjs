@@ -471,6 +471,16 @@ try {
       ok(/No text messages are sent automatically yet/.test(await ev('document.querySelector("#secList").textContent')), 'Texts: an empty list that says so');
       await shot('desktop-light');
 
+      /* optional full screenshot set (only with OUTBOX_SHOTS): both sizes, both themes, every section, the drawer's tabs */
+      if (SHOTS) for (const [dev, w, h, mob] of [['desktop', 1400, 950, false], ['phone', 390, 844, true]]) for (const theme of ['light', 'dark']) {
+        await ev('localStorage.setItem("sixfold.theme","' + theme + '")');
+        for (const tb of ['sixfold', 'peak', 'traverse', 'texts']) { await open(tb, w, h, mob); await sleep(500); await shot(dev + '-' + theme + '-' + tb); }
+        await open('sixfold', w, h, mob); await ev('document.querySelector(".eye[data-view=sx-aftercare]").click()'); await sleep(900); await shot(dev + '-' + theme + '-drawer-messages');
+        for (const d of ['flow', 'stats']) { await ev('document.querySelector("#dr [data-dt=' + d + ']").click()'); await sleep(300); await shot(dev + '-' + theme + '-drawer-' + d); }
+        await open('peak', w, h, mob); await ev('document.querySelector(".eye[data-view=peak-sponsors]").click()'); await sleep(700); await shot(dev + '-' + theme + '-drawer-peak');
+      }
+      await ev('localStorage.setItem("sixfold.theme","light")');
+
       /* phone and dark */
       await ev('localStorage.setItem("sixfold.theme","dark")'); ok(await open('sixfold', 390, 844, true), 'opens on a phone-sized screen');
       const PH = JSON.parse(await ev('JSON.stringify({page:document.documentElement.scrollWidth,win:innerWidth,tw:(t=>t.scrollWidth>=t.clientWidth)(document.querySelector(".tw")),theme:document.documentElement.dataset.theme,bg:getComputedStyle(document.body).backgroundColor,cols:document.querySelectorAll("#secList thead th").length})'));
