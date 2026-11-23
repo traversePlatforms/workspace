@@ -162,16 +162,106 @@ Flat. That's expected, since nothing has changed. The 4 Nov packet's "42%" came 
 
 The after "all" rate is two small newsletters: 892 people on 3 Nov and 873 on 17 Nov, both at about 65% open. Those went to an engaged segment, so this is **not** an improvement to credit. The 5,001-person Thanksgiving blast of 23 Nov falls in the next readout.
 
+### 2.9 to 2.13: the day-one measures (added 23 Nov 2026)
+
+These are in `impact.json` (`dayOneMeasures`: baseline B, the 12 months before it, and monthly cohorts) and in the weekly scorecard.
+
+- **Lagging rows read an earlier cohort.** In the weekly scorecard, a lagging row shows the cohort whose follow-up closed by that
+  Sunday, and the note names its dates.
+- **Normals count closed cohorts only.** A normal pools only the baseline cohorts whose follow-up had closed by the data day, so it
+  fills out until about February 2027.
+
+**2.9 New-member retention (lagging 35 / 65 / 95 days)**
+
+- **New member:** a first-ever dues payment or prepaid annual, trusted from Nov 2024 (§2.2).
+- **Still paying N days later:** covered by dues on day N+5 after the first payment. A monthly payment covers 35 days and an annual 365.
+  The first payment alone runs out on day 35, so a renewal is needed; the +5 lets it be a few days late.
+- **Weekly scorecard:** reads the new members of 5, 10 and 14 weeks earlier.
+- **Starter to a higher plan:**
+  - Starter = the first day of dues totalled exactly $35, the Starter price.
+  - Upgraded = a later day within 90 days paid $39 or more (Play $39, Flex, Unlimited, Platinum). Senior Play ($29) doesn't count.
+  - It's read from the amount paid, never the plan name. The weekly row reads Starters of 13 weeks earlier.
+
+| | B (12-month normal) | 12 months before B |
+|---|---|---|
+| Still paying 30 / 60 / 90 days later | **78.0% / 74.0% / 62.3%** | 71.8% / 67.9% / 60.8% |
+| Starter upgraded within 90 days | **3.5%** (15 of 431) | 3.8% (3 of 78) |
+
+**2.10 Non-member regulars to members (count now; join rate lagging 30 / 60 days)**
+
+- **Regular on day S:** 3+ check-in rows in the 60 days to S, with guest rows left out.
+- **Not a member:** not covered by dues on S, and not on a staff, comp or family-of-a-member plan in today's member list.
+- **Joined:** any dues payment in the 30 or 60 days after S.
+- **The count is a Sunday stock.** The join rate is pooled over the Sundays, so someone who stays a regular counts on each Sunday.
+
+| | Value |
+|---|---|
+| Regulars on Sun 22 Nov 2026 | **414** (the audit's 426 used today's member list; see the scorecard's fact-check log) |
+| Average Sunday, B / a year before | 486 / 510 |
+| Paid dues within 30 / 60 days, B | **3.9% / 6.4%** |
+| The same, 12 months before B | 4.4% / 6.7% |
+
+**2.11 Win-back (lagging 90 days)**
+
+- **Lapse:** a dues cover ran out (day "out") with nothing paid before it and nothing in the 30 days after. It's the same rule as the
+  weekly lapsed count.
+- **Came back:** paid dues again within 90 days of "out".
+
+| | Value |
+|---|---|
+| Back within 90 days, B | **8.0%** (67 of 842) |
+| 12 months before B | 6.9% (84 of 1,226) |
+
+**2.12 Birthday month (monthly)**
+
+- **Members:** people paying dues in month M whose birth month (anonymous member list, month only) is M.
+- **Spend:** every sales row on their account paid that month, net of refunds. Sponsorships are left out, and annuals are spread 1/12 a
+  month.
+- **Index:** spend in the birthday month ÷ their average over the months they paid dues in the 11 before. 100% means no difference.
+- **Control:** the same index for members not born in M, read for that same month. It carries season and tenure.
+- **Lift:** index ÷ control.
+- **Gear:** POS items in the Apparel/Pro Shop, Paddles/Gear and Shoes groups. Peak's birthday email offers 50% off gear. Gear is counted
+  before refunds, because POS refunds carry no item.
+
+| B, 12 months pooled | Birthday month | Control | Lift |
+|---|---|---|---|
+| All spend | 99.6% | 96.9% | **102.8%** |
+| Gear | 117% | 57.4% | **about 2x (203.8%)** |
+| Bought gear that month | 5.1% | 3.1% | |
+
+The birthday email ran through B, so this is the "with the email" level. In the 12 months before, the lift was 96.7% for all spend and
+89.7% for gear, from thinner history. Single months are noisy.
+
+**2.13 Missed payments (monthly; weekly rows lag 2 weeks)**
+
+This uses the transactions store, which holds every Membership Fee charge, paid or not.
+
+- **Due:** the charge's period start. CourtReserve raises the charge up to about 5 days before.
+- **Late:** paid more than 24 hours after due. Days late = whole days.
+- **Still unpaid:** an open balance more than 24 hours past due.
+- **Suspension point:** still unpaid 10 days after due. Paid plans suspend at 10 days past due and auto-cancel at 11 (plan settings).
+- **Recovered before cancel:** paid by day 11.
+
+| | B per month | 12 months before |
+|---|---|---|
+| Charges paid late | **57.8** (7.4% of charges), median 1 day late | 24.4 (2.8%) |
+| Unpaid at 10 days | **3.3** (40 in B: 9 paid by day 11, 21 paid later, 10 never) | 2.3 |
+| Day one (23 Nov) | 21 suspended on the member list; 16 open charges ($795) past due; November's 27 open ($1,690) are mostly not due yet (2, $194, past due) | |
+
+CourtReserve doesn't keep every failed charge, so the dues data undercounts suspensions. The member list's Suspended count is the true
+figure from 23 Nov on.
+
 ## 3. What each of the six places to grow will be judged on
 
 | Change (from the packet) | Primary metric | Secondary | Earliest fair read |
 |---|---|---|---|
 | Free-class follow-up series (Patch A) | Free class → member within 60 days (§2.3), against 43.7% | 7-day join rate; Starter count | 60 days after go-live, plus enough cohorts (~2 months of classes) |
-| Welcome series + Starter upgrade (Patch B, L) | Churn in months 1 to 3 for new members; Starter → Play/Flex/Unlimited moves | Dues per member | 3 months |
+| Welcome series + Starter upgrade (Patch B, L) | New members still paying at 30/60/90 days (§2.9, 78/74/62%); Starter upgrades within 90 days (3.5%) | Dues per member | 3 months |
 | Open Play schedule rebalance | Fill of 7 am / 3 pm sessions; Mon/Fri waitlist size | Court utilisation in those hours (§2.6) | 4 to 6 weeks |
 | Late-cancel reminders (Patch G) | Share of Open Play cancels in the last 24 h (B0: 60%) | Overall cancellation rate (§2.7) | 4 weeks |
 | Ads for quiet times / new members (Meta plan) | First-time free-class bookings a week; new members a week (§2.2) | "How did you hear about us" = Facebook/Instagram | 4-week test, then 60 days for joins |
-| Win-back, drop-in → member, failed payment (Patch C, J, D) | Members coming back after a lapse; drop-in regulars joining; unpaid dues recovered | Churn (§2.4) | 2 to 3 months |
+| Win-back, drop-in → member, failed payment (Patch C, J, D) | Back within 90 days of a lapse (§2.11, 8.0%); regulars paying dues within 60 days (§2.10, 6.4%); charges paid by day 11 and unpaid at 10 days (§2.13) | Churn (§2.4) | 2 to 3 months |
+| Birthday email (back on) | Birthday-month lift, all spend and gear (§2.12) | Gear buyers in the birthday month | 3 months of birthdays |
 
 ## 4. How to rerun it
 
@@ -189,7 +279,13 @@ The after "all" rate is two small newsletters: 892 people on 3 Nov and 873 on 17
   - court use 41% here against 42% on the 4 Nov report screen
   - free class 43.7% here against the 45% used since 4 Nov (a slightly different window and rule)
 
+- **§2.9 to 2.13 (23 Nov 2026)** were computed by `tools/impact.mjs` on the store of the 23 Nov pull, which is byte-identical to the
+  frozen `data/baseline-day-one-2026-11-23/store`. The counts behind each figure are in the scorecard's fact-check log. Adding them
+  changed none of the existing impact.json fields.
+
 **Corrected**
+- **Unpaid dues on day one:** the "27 November charges unpaid ($1,690)" included 24 charges ($1,461) raised ahead of their due day.
+  2 ($194) were past due.
 - **Churn:** a one-month rule gave 15% a month. The two-month rule gives 11.4%, because one-month gaps are mostly billing timing.
 - **Oct 2026 dues:** $45.2k with annuals spread, not the packet's $39.3k without them.
 
@@ -199,4 +295,10 @@ The after "all" rate is two small newsletters: 892 people on 3 Nov and 873 on 17
   - The Membership Report (401: not granted) and leagues (401). Leagues are read from event registrations instead.
   - Cancellation reasons (CourtReserve's cancel report, UI only).
 - **Patch's own "converted" figure** is not used.
+- **Day-one measures:**
+  - Suspensions read low in the dues data: CourtReserve doesn't keep every failed charge.
+  - Starter upgrades billed only as a small proration are missed.
+  - The weekly lagging cohorts are small.
+  - Normals fill out as cohorts close (until about Feb 2027).
+  - The regulars' plan exclusions use today's member list.
 - **Family members and the 807 count:** whether family members on a paying parent's plan should count as members is Tyler's call. Today they're in the 807 and out of the dues counts.

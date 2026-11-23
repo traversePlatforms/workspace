@@ -207,7 +207,8 @@ function build(raw, prev) {
       let last = m.last, lastNa = '';
       // the member list only exists from the nightly pulls: last week's value comes from last Sunday's report
       if (last == null && m.key.startsWith('list')) { const pm = pSc && pSc.metrics.find((x) => x.key === m.key); last = pm ? pm.this : null; lastNa = last == null ? 'the member list is only kept from 23 Nov 2026' : ''; }
-      S.peakClub.push({ label: m.label, src: m.note, last, this: m.this, lastYear: m.lastYear, normal: m.normal, unit: m.unit === 'n' ? undefined : m.unit, better: m.better, lastNa, lastYearNa: m.lastYear == null ? 'no member list a year ago' : '' });
+      const lastYearNa = m.lastYear == null ? (m.key.startsWith('list') ? 'no member list a year ago' : 'nobody in that cohort a year ago') : '';
+      S.peakClub.push({ label: m.label, src: m.note, last, this: m.this, lastYear: m.lastYear, normal: m.normal, unit: m.unit === 'n' ? undefined : m.unit, better: m.better, lastNa, lastYearNa, lagging: !!m.lagging, monthly: !!m.monthly, normalIs: m.normalIs || '' });
     }
     const aw = (xs) => (xs && xs.length ? xs.map((a) => `${a.subject} (${a.sent})`).join('; ') : 'none');
     S.peakClub.push({ label: 'Patch automations that sent anything', src: `last week: ${aw(sc.automationsLastWeek)}. Same week last year: ${aw(sc.automationsSameWeekLastYear)}`, text: aw(sc.automationsThisWeek) });
@@ -248,8 +249,10 @@ ${list.map(rowHtml).join('\n')}
 }
 // the club scorecard: one more column, the same week last year; the 12-month normal is named under each metric
 function clubRow(m) {
-  const norm = m.normal != null ? `<i class="norm">12-month normal: ${esc(num(m.normal, m.unit))}${m.unit === '%' ? '' : ' a week'}</i>` : '';
-  const lab = `<div class="m">${esc(m.label)}<i>${esc(m.src)}</i>${norm}</div>`;
+  const norm = m.normal != null ? `<i class="norm">12-month normal: ${esc(num(m.normal, m.unit))}${m.normalIs ? ' (' + esc(m.normalIs) + ')' : m.unit === '%' ? '' : ' a week'}</i>` : '';
+  // lagging rows read an earlier cohort (named in the source line); monthly rows read the last full month
+  const tag = m.lagging ? ' <span class="lag">lagging</span>' : m.monthly ? ' <span class="lag">monthly</span>' : '';
+  const lab = `<div class="m">${esc(m.label)}${tag}<i>${esc(m.src)}</i>${norm}</div>`;
   if (m.na) return `<div class="mrow c5">${lab}<div class="na">${esc(m.na)}</div></div>`;
   if (m.text != null) return `<div class="mrow c5">${lab}<div class="txt">${esc(m.text)}</div></div>`;
   const cell = (v, why) => (v == null ? `<span class="dash" title="${esc(why || '')}">${why ? 'n/a' : '–'}</span>` : esc(num(v, m.unit)));
@@ -262,9 +265,11 @@ function clubSection(list, sc) {
   if (sc && sc.sameWeekLastYear) notes.push(`Same week last year: ${shortDay(sc.sameWeekLastYear.from)} to ${shortDay(sc.sameWeekLastYear.to)} ${sc.sameWeekLastYear.from.slice(0, 4)}${sc.sameWeekLastYearSeasonal ? ' (' + sc.sameWeekLastYearSeasonal + ' week)' : ''}.`);
   if (sc && sc.dataDay) notes.push(`From the nightly CourtReserve and Patch pull of ${shortDay(sc.dataDay)}${sc.complete ? '' : ': THIS WEEK IS NOT COMPLETE in the data yet'}.`);
   if (sc && !sc.final30d) notes.push('Lapsed members settle 30 days after the Sunday and the 7-day join rate after 7 days.');
+  if (list.some((m) => m.lagging)) notes.push('Rows marked lagging read an earlier cohort whose follow-up is over (the weeks are named under each), so this week\'s work shows there weeks later; monthly rows read the last full month.');
   notes.push('Starting point: matthew/clients/peak-pickleball/peak-scorecard-start-2026-11-23.md. These numbers are for this report only.');
   return `<div class="sec">
 <h2>Peak Pickleball: club scorecard <span class="n">${list.length}</span>${wk ? ` <small style="font:600 13px 'DM Sans',sans-serif;color:var(--orange)">${esc(wk)}${sc.seasonal ? ' · seasonal' : ''}</small>` : ''}</h2>
+<style>.mrow .m .lag{display:inline-block;margin-left:6px;padding:0 6px;border-radius:8px;background:#eef1f6;color:var(--soft);font:600 10.5px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;vertical-align:1px}</style>
 <div class="card">
 <div class="mrow c5 th"><div>Metric and source</div><div class="n">Last week</div><div class="n">This week</div><div class="n">Change</div><div class="n">Same week last year</div></div>
 ${list.map(clubRow).join('\n')}
