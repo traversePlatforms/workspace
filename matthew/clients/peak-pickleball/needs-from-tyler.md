@@ -68,6 +68,13 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
     that points to a change inside Patch (paused, edited, or given an end date). The same thing happened on Fri 25 Jul 2025, when five
     automations stopped within 35 minutes. **Where the answer is:** Patch > Automations: each one's status (Active / Paused / Ended), any end
     date, and its activity or history (who changed it, when). Our access can't see that screen.
+    **Confirmed 23 Nov (Matthew looked at Patch > Automations):** all 17 automations show Enabled OFF and status Draft. Last runs: Google
+    Review and Membership Create 2 Nov 12:51-12:52 am, PPU Pipeline 1 Nov 5:00 pm, Birthday Email 19 Nov 11:00 am, five on 25 Jul 2025
+    9:02-10:04 am (Target New Non-Members, Non-Member Reengagement, At-Risk/Lost Winback, New Paid Membership Welcome, Expired Membership
+    Winback). Patch's own revenue figures for them: Target New Non-Members $107,270, Google Review $36,324, Birthday $32,495, Non-Member
+    Pushing Convert $24,465, Membership Create $16,942, Non-Member Reengagement $15,188, PPU Pipeline $10,605. Nobody on our side has turned
+    anything back on. Ask Tyler: who switched them off and why (a choice, a cost, texting rules, Patch support?), and which he wants back on.
+    If nobody knows, Patch support can read who disabled them and when from the account's history.
 27. **Two small fixes the pull turned up:** the welcome emails say $6 an hour and 30 days' notice, CourtReserve says $7 and 15 days (which is
     right?); and "How did you hear about us?" is blank on 95% of accounts: making it required at sign-up lets ads be measured.
 28. **Missed dues payments: what happens today, and a reminder.** 21 paid accounts are suspended and 27 November dues charges ($1,690) are
