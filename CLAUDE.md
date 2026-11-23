@@ -7,7 +7,7 @@ Folder map and "where does this go" → [README.md](README.md).
 
 | Folder | What it is | Voice / rules |
 |---|---|---|
-| [surge/](surge/) | **Surge** — outsourced sales & marketing. Matthew's employer. | The two voice specs in `surge/` |
+| [surge/](surge/) | **Surge** — outsourced sales & marketing. Matthew works with Surge as a 1099 independent contractor (not an employee). | The two voice specs in `surge/` |
 | [sixfold/](sixfold/) | **Sixfold LLC** — fire mitigation. Different company, Brandon's. | [sixfold/README.md](sixfold/README.md) |
 | [matthew/](matthew/) | **Matthew's own** freelance websites & marketing offering. Brand name not chosen yet. | See §Matthew below |
 | [traverse/](traverse/) | **Traverse** — Matthew's field-sales app, his own product (was `door-app/`; renamed 2026-10-06). Editions TraverseRoofing and TraverseYards; Sixfold is its first user, not its owner. | [traverse/README.md](traverse/README.md) |
