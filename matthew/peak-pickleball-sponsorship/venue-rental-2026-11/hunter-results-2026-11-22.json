@@ -1,0 +1,684 @@
+{
+ "1 American Consumer Shows": {
+  "how": "domain",
+  "domain": "acsshows.com",
+  "pattern": "{first}.{last}",
+  "emails": [
+   {
+    "v": "orders@acsshows.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": "sales",
+    "type": "generic",
+    "conf": 10
+   }
+  ]
+ },
+ "2 The Expo Pros": {
+  "how": "domain",
+  "domain": "theexpopros.com",
+  "pattern": "{first}{l}",
+  "emails": [
+   {
+    "v": "info@theexpopros.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": "support",
+    "type": "generic",
+    "conf": 99
+   }
+  ]
+ },
+ "3 Springtime Productions": {
+  "how": "finder",
+  "domain": "hfgf.com",
+  "name": "Stephanie Floyd",
+  "email": "stephanie@hfgf.com",
+  "score": 98,
+  "position": null,
+  "verification": "valid"
+ },
+ "4 Body Mind Spirit Expo (BMSE)": {
+  "how": "finder",
+  "domain": "bmse.net",
+  "name": "Steve Strickland",
+  "email": "steve@bmse.net",
+  "score": 80,
+  "position": null,
+  "verification": "valid"
+ },
+ "5 L&L Exhibition Management (L&L Shows)": {
+  "how": "domain",
+  "domain": "homeshowcenter.com",
+  "pattern": "{first}{last}",
+  "emails": []
+ },
+ "6 Nationwide Expos": {
+  "how": "finder",
+  "domain": "nationwideexpos.com",
+  "name": "Sol Lee",
+  "email": "sol@nationwideexpos.com",
+  "score": 98,
+  "position": null,
+  "verification": "valid"
+ },
+ "7 Parents Challenge": {
+  "how": "finder",
+  "domain": "parentschallenge.org",
+  "name": "Deborah Hendrix",
+  "email": "dhendrix@parentschallenge.org",
+  "score": 99,
+  "position": "Executive Director",
+  "verification": "valid"
+ },
+ "8 The Gazette (Colorado Springs Gazette)": {
+  "how": "finder",
+  "domain": "gazette.com",
+  "name": "Karen Hogan",
+  "email": "karen.hogan@gazette.com",
+  "score": 99,
+  "position": "Manager",
+  "verification": "valid"
+ },
+ "9 Colorado Springs Sports Corporation": {
+  "how": "finder",
+  "domain": "thesportscorp.org",
+  "name": "Shelbi Lowery",
+  "email": "shelbi@thesportscorp.org",
+  "score": 96,
+  "position": null,
+  "verification": "valid"
+ },
+ "10 Colorado Cosmic Con (volunteer-run, local)": {
+  "how": "finder",
+  "domain": "coloradocosmiccon.com",
+  "name": "John Hernandez",
+  "email": null,
+  "score": null,
+  "position": null,
+  "verification": null
+ },
+ "11 Just Between Friends Colorado Springs (franchise)": {
+  "how": "finder",
+  "domain": "jbfsale.com",
+  "name": "Dawn Escarcega",
+  "email": "dawnescarcega@jbfsale.com",
+  "score": 97,
+  "position": null,
+  "verification": "valid"
+ },
+ "12 Colorado Springs Health & Fitness Expo LLC (powered by Sandi Griffin Fitness LLC)": {
+  "how": "finder",
+  "domain": "cosfitnessexpo.com",
+  "name": "Sandi Griffin",
+  "email": null,
+  "score": null,
+  "position": null,
+  "verification": null
+ },
+ "13 Colorado Springs Mineralogical Society": {
+  "how": "finder",
+  "domain": "csms1936.com",
+  "name": "Lisa Cooper",
+  "email": null,
+  "score": null,
+  "position": null,
+  "verification": null
+ },
+ "14 Pikes Peak Workforce Center": {
+  "how": "finder",
+  "domain": "elpasoco.com",
+  "name": "Erica Romero",
+  "email": "ericaromero@elpasoco.com",
+  "score": 99,
+  "position": null,
+  "verification": "valid"
+ },
+ "15 El Paso County Division of Veterans Services": {
+  "how": "finder",
+  "domain": "elpasoco.com",
+  "name": "Charles Graves",
+  "email": "charlesgraves@elpasoco.com",
+  "score": 97,
+  "position": "Division Manager",
+  "verification": "valid"
+ },
+ "16 Show Me Reptile Show": {
+  "how": "finder",
+  "domain": "showmereptileshows.com",
+  "name": "Micky Meyer",
+  "email": null,
+  "score": null,
+  "position": null,
+  "verification": null
+ },
+ "17 Destination Colorado": {
+  "how": "finder",
+  "domain": "destinationcolorado.com",
+  "name": "Kelly Layton",
+  "email": "kelly@destinationcolorado.com",
+  "score": 82,
+  "position": "Executive Director",
+  "verification": "accept_all"
+ },
+ "18 Apartment Association of Southern Colorado (AASC)": {
+  "how": "finder",
+  "domain": "aaschq.org",
+  "name": "Codi Foley",
+  "email": "codi@aaschq.org",
+  "score": 97,
+  "position": "Event Manager",
+  "verification": "valid"
+ },
+ "19 Altered Reality Entertainment": {
+  "how": "finder",
+  "domain": "alteredrealityentertainment.com",
+  "name": "Steven Perry",
+  "email": null,
+  "score": null,
+  "position": null,
+  "verification": null
+ },
+ "20 Pinners Conference": {
+  "how": "finder",
+  "domain": "pinnersconference.com",
+  "name": "Roxanne Bennett",
+  "email": "roxanne@pinnersconference.com",
+  "score": 78,
+  "position": null,
+  "verification": "accept_all"
+ },
+ "21 Totally Rad Vintage Fest": {
+  "how": "finder",
+  "domain": "totallyradvf.com",
+  "name": "Sarah Emerson",
+  "email": "sarah@totallyradvf.com",
+  "score": 95,
+  "position": "Owner",
+  "verification": "valid"
+ },
+ "22 Pikes Peak Outdoor Recreation Alliance (PPORA)": {
+  "how": "finder",
+  "domain": "pikespeakoutdoors.org",
+  "name": "Becky Leinweber",
+  "email": "becky@pikespeakoutdoors.org",
+  "score": 97,
+  "position": null,
+  "verification": "valid"
+ },
+ "23 BEACON Senior News": {
+  "how": "domain",
+  "domain": "beaconseniornews.com",
+  "pattern": "{first}",
+  "emails": [
+   {
+    "v": "cloie@beaconseniornews.com",
+    "first": "Cloie",
+    "last": "Sandlin",
+    "pos": "Editor In Chief",
+    "dept": "communication",
+    "type": "personal",
+    "conf": 70
+   },
+   {
+    "v": "kevin@beaconseniornews.com",
+    "first": "Kevin",
+    "last": "Vangundy",
+    "pos": "Publisher",
+    "dept": "communication",
+    "type": "personal",
+    "conf": 67
+   },
+   {
+    "v": "sarah@beaconseniornews.com",
+    "first": "Sarah",
+    "last": "McCaughey",
+    "pos": "Digital Media Specialist",
+    "dept": "communication",
+    "type": "personal",
+    "conf": 78
+   }
+  ]
+ },
+ "24 Motorcycle Expos": {
+  "how": "finder",
+  "domain": "motorcycleexpos.com",
+  "name": "Scott Schulz",
+  "email": "scott@motorcycleexpos.com",
+  "score": 82,
+  "position": null,
+  "verification": "valid"
+ },
+ "25 Rocky Mountain Ski Swaps": {
+  "how": "finder",
+  "domain": "utahskiswaps.com",
+  "name": "Dale Roberts",
+  "email": "dale@utahskiswaps.com",
+  "score": 95,
+  "position": null,
+  "verification": "valid"
+ },
+ "26 PALS Chess": {
+  "how": "finder",
+  "domain": "palschess.com",
+  "name": "Kevin McConnell",
+  "email": "kevin@palschess.com",
+  "score": 98,
+  "position": null,
+  "verification": "valid"
+ },
+ "27 LANFest Colorado": {
+  "how": "finder",
+  "domain": "lanfest.com",
+  "name": "Jacob Anderson",
+  "email": "jacob.anderson@lanfest.com",
+  "score": 82,
+  "position": null,
+  "verification": "valid"
+ },
+ "28 Villain Arts": {
+  "how": "finder",
+  "domain": "villainarts.com",
+  "name": "Troy Timpel",
+  "email": "troy@villainarts.com",
+  "score": 83,
+  "position": null,
+  "verification": "valid"
+ },
+ "29 Pikes Peak Radio Amateur Association": {
+  "how": "domain",
+  "domain": "ppraa.org",
+  "pattern": "{last}",
+  "emails": [
+   {
+    "v": "zerobeat@ppraa.org",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 79
+   },
+   {
+    "v": "treasurer@ppraa.org",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 79
+   },
+   {
+    "v": "station@ppraa.org",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 79
+   },
+   {
+    "v": "boardmembers@ppraa.org",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": "communication",
+    "type": "generic",
+    "conf": 79
+   },
+   {
+    "v": "officers@ppraa.org",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 78
+   },
+   {
+    "v": "ppraa@ppraa.org",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 77
+   },
+   {
+    "v": "secretary@ppraa.org",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": "management",
+    "type": "generic",
+    "conf": 76
+   },
+   {
+    "v": "xmas@ppraa.org",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 75
+   },
+   {
+    "v": "coqp-counties@ppraa.org",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 74
+   },
+   {
+    "v": "coqplogs@ppraa.org",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 73
+   }
+  ]
+ },
+ "30 Tanner Gun Show": {
+  "how": "domain",
+  "domain": "tannergunshow.com",
+  "pattern": null,
+  "emails": [
+   {
+    "v": "info@tannergunshow.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": "support",
+    "type": "generic",
+    "conf": 77
+   },
+   {
+    "v": "support@tannergunshow.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": "support",
+    "type": "generic",
+    "conf": 75
+   }
+  ]
+ },
+ "31 Train Expo Colorado (TECO)": {
+  "how": "finder",
+  "domain": "tecoshow.org",
+  "name": "Elizabeth Maline",
+  "email": null,
+  "score": null,
+  "position": null,
+  "verification": null
+ },
+ "32 Mt. Carmel Veterans Service Center": {
+  "how": "finder",
+  "domain": "veteranscenter.org",
+  "name": "Jon Dix",
+  "email": null,
+  "score": null,
+  "position": null,
+  "verification": null
+ },
+ "33 Hiring Our Heroes (U.S. Chamber of Commerce Foundation)": {
+  "how": "finder",
+  "domain": "hiringourheroes.org",
+  "name": "Melissa Sanderson",
+  "email": "sanderson@hiringourheroes.org",
+  "score": 83,
+  "position": null,
+  "verification": "accept_all"
+ },
+ "34 Space Foundation": {
+  "how": "finder",
+  "domain": "spacefoundation.org",
+  "name": "Thomas Dorame",
+  "email": "tdorame@spacefoundation.org",
+  "score": 97,
+  "position": "Senior Vice President",
+  "verification": "valid"
+ },
+ "35 Colorado FIRST": {
+  "how": "finder",
+  "domain": "coloradofirst.org",
+  "name": "Debbie English",
+  "email": "denglish@coloradofirst.org",
+  "score": 96,
+  "position": null,
+  "verification": "valid"
+ },
+ "36 Colorado Springs Hispanic Chamber": {
+  "how": "finder",
+  "domain": "cshispanicchamber.com",
+  "name": "Joe V. Aldaz",
+  "email": null,
+  "score": null,
+  "position": null,
+  "verification": null
+ },
+ "37 Colorado Anime Fest": {
+  "how": "domain",
+  "domain": "coanimefest.com",
+  "pattern": "{last}{first}",
+  "emails": [
+   {
+    "v": "registration@coanimefest.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 85
+   },
+   {
+    "v": "info@coanimefest.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": "support",
+    "type": "generic",
+    "conf": 85
+   },
+   {
+    "v": "harassment@coanimefest.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 84
+   },
+   {
+    "v": "cosplay@coanimefest.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 83
+   },
+   {
+    "v": "artists@coanimefest.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 82
+   },
+   {
+    "v": "jinnie.mcmanus@coanimefest.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "personal",
+    "conf": 79
+   },
+   {
+    "v": "videogaming@coanimefest.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 79
+   },
+   {
+    "v": "industry@coanimefest.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 79
+   },
+   {
+    "v": "cosplaytech@coanimefest.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 79
+   },
+   {
+    "v": "conchair@coanimefest.com",
+    "first": null,
+    "last": null,
+    "pos": null,
+    "dept": null,
+    "type": "generic",
+    "conf": 79
+   }
+  ]
+ },
+ "38 Donnell Productions": {
+  "how": "finder",
+  "domain": "womenslivingexpo.com",
+  "name": "Barbara Donnell",
+  "email": "bdonnell@womenslivingexpo.com",
+  "score": 96,
+  "position": null,
+  "verification": "valid"
+ },
+ "39 Black Forest Arts & Crafts Guild": {
+  "how": "finder",
+  "domain": "bfacg.org",
+  "name": "Amanda Kennedy",
+  "email": null,
+  "score": null,
+  "position": null,
+  "verification": null
+ },
+ "40 Quilt, Craft & Sewing Festival (tickets sold under \"Rusty Barn\")": {
+  "how": "domain",
+  "domain": "quiltcraftsew.com",
+  "pattern": null,
+  "emails": []
+ },
+ "41 Varsity Spirit (Spirit Sports)": {
+  "how": "domain",
+  "domain": "varsity.com",
+  "pattern": "{f}{last}",
+  "emails": [
+   {
+    "v": "cradecki@varsity.com",
+    "first": "Caitlin",
+    "last": "Radecki",
+    "pos": "Director of Marketing",
+    "dept": "marketing",
+    "type": "personal",
+    "conf": 99
+   },
+   {
+    "v": "jnewby@varsity.com",
+    "first": "John",
+    "last": "Newby",
+    "pos": "Executive Vice President, Sponsorships",
+    "dept": "executive",
+    "type": "personal",
+    "conf": 98
+   },
+   {
+    "v": "abonvillain@varsity.com",
+    "first": "Amy",
+    "last": "Bonvillain",
+    "pos": "Director",
+    "dept": "executive",
+    "type": "personal",
+    "conf": 98
+   },
+   {
+    "v": "bahn@varsity.com",
+    "first": "Brian",
+    "last": "Ahn",
+    "pos": "Regional Director",
+    "dept": "executive",
+    "type": "personal",
+    "conf": 98
+   },
+   {
+    "v": "nlauchaire@varsity.com",
+    "first": "Nicole",
+    "last": "Lauchaire",
+    "pos": "Chief Marketing Officer",
+    "dept": "marketing",
+    "type": "personal",
+    "conf": 98
+   },
+   {
+    "v": "ycharleston@varsity.com",
+    "first": "Yarica",
+    "last": "Charleston",
+    "pos": "Director of Communications",
+    "dept": "communication",
+    "type": "personal",
+    "conf": 98
+   },
+   {
+    "v": "mturner@varsity.com",
+    "first": "Michael",
+    "last": "Turner",
+    "pos": "Senior Vice President, Digital",
+    "dept": "executive",
+    "type": "personal",
+    "conf": 97
+   },
+   {
+    "v": "jcarrier@varsity.com",
+    "first": "Justin",
+    "last": "Carrier",
+    "pos": "Vice President",
+    "dept": "executive",
+    "type": "personal",
+    "conf": 96
+   },
+   {
+    "v": "kgreene@varsity.com",
+    "first": "Kelly",
+    "last": "Greene",
+    "pos": "Director of Content Marketing",
+    "dept": "marketing",
+    "type": "personal",
+    "conf": 96
+   },
+   {
+    "v": "teaston@varsity.com",
+    "first": "Tayler",
+    "last": "Quinn",
+    "pos": "Vice President of Marketing",
+    "dept": "marketing",
+    "type": "personal",
+    "conf": 96
+   }
+  ]
+ }
+}
