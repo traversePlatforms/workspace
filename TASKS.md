@@ -1095,6 +1095,7 @@ possible, and right now nobody could list those accounts from memory. That's X-1
 
 Matthew's own work for Peak (matthew/clients/peak-pickleball/, matthew/peak-pickleball-sponsorship/). Not Surge. Section added 23 Nov 2026.
 
+- [ ] **PK-11 — MATTHEW'S TO-DO (23 Nov), in order:** (1) send Tyler the one-list email, Nathan the sponsor-payments reply and Cammie's reply (all on the "Emails to send" page, claude.ai/artifact/9YFvSFyJ1FomVoRgzAmBc5); the Wes email waits for Tyler's intro. (2) Accept Cammie's Facebook Group invite and tell her (she then makes him admin). (3) Move the Traverse Page into Traverse (Step 5: remove from 365 Aeration and Seeding, add in Traverse Platforms, assign to Traverse Claude with Full control). (4) Screenshot Peak's Google Performance > Engagement tab (Jun-Nov 2026). (5) Tomorrow: check Chime caught up in SimpleFIN, reconnect if not. (6) Surge: when ADA confirms Content + Insights, do the one-time sign-in so the post calendar can post. (7) Ask Tyler/Wes before adding an Application Password under peakadmin.
 - [ ] **PK-1 — Nightly data pull (Patch Retention + CourtReserve), read-only.** Matthew 23 Nov: "Lets do a full pull as we need. Maybe a daily,
       nightly pull to keep numbers accurate." Building 23 Nov (tools/nightly-pull.sh); then a VM timer.
 - [ ] **PK-2 — Patch automations: what's automated, what's missing, the missing ones written out.** DRAFT only: nothing created in Patch
@@ -1105,6 +1106,7 @@ Matthew's own work for Peak (matthew/clients/peak-pickleball/, matthew/peak-pick
 - [ ] **PK-6 — Coffee partner** (free coffee for members, beans/grounds to Peak, in exchange for exposure). List + approach + DRAFT email. Same file.
 - [ ] **PK-9 — Google Business Profile API: requested 23 Nov, case 9-3376000041660** (7-10 business days; don't resubmit). Then nightly GBP numbers + reviews.
 - [ ] **PK-10 — Sponsor payments: first payment easy (QuickBooks invoice + pay link), then ACH autopay in month one** (Tyler + Nathan, 23 Nov). Matthew has Sales Manager in Peak's QuickBooks. Waiting on Nathan's answers (Payments on? recurring/autopay? tier products? fees?), then propose the flow and wire it to the desk's Signed step.
+- [ ] **PK-12 — Website forms keep no record:** 5 Avada forms (Contact, Sign Up, newsletters, shop) store no entries in WordPress, and the Ninja "Volunteer Form" has 8 submissions ever. Website leads aren't countable until Avada "save entries" is on or the Contact Form feeds the desk (Tyler/Wes OK first).
 - [ ] **PK-7 — Peak site metrics.** Needs GA4 (or Search Console) read access from Peak: ask Tyler.
 - [x] **PK-8 — Peak desk Inbox: links in emails clickable** (the Snooze email). Deployed 23 Nov (inbox-links-1123).
 
