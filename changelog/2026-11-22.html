@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>End of Day catch-up: 19 to 22 November 2026</title>
+<!-- Matthew's end-of-day change log. Same layout as Brandon's end-of-day picture. Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License).
+     Catch-up for Thu 19 to Sun 22 Nov (the daily reports lapsed after 18 Nov; written 22 Nov at Matthew's request). -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sec{break-inside:avoid;page-break-inside:avoid}
+.row{break-inside:avoid}h2{break-after:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .k i{display:block;font-style:normal;font-weight:400;color:var(--soft);font-size:12px}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.run{background:var(--warnbg);color:var(--warn)}
+.wait .row .k{color:var(--orange)}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media print{body{font-size:12px;line-height:1.36}.page{padding:0 4px 8px}.head{padding:14px 22px}.head h1{font-size:26px}.kpis{margin:12px 0 4px;gap:10px}.kpi{padding:8px 14px}.kpi b{font-size:28px}.kpi small{font-size:11.5px}h2{font-size:16px;margin:10px 0 5px}.row{padding:4px 14px;grid-template-columns:140px 1fr}.foot{margin-top:6px;padding-top:6px;font-size:11px}.sec{break-inside:auto;page-break-inside:auto}}
+@media (max-width:620px){.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="head">
+  <div><div class="tag">End of day · catch-up</div><h1>Thursday 19 to Sunday 22 November 2026</h1><div class="d">Everything we changed over four days across the apps, sites, data and the cloud</div></div>
+  <div class="d">J.A.R.V.I.S. · Peak · Cloud move · Backup</div>
+</div>
+<div class="kpis">
+  <div class="kpi"><b>100</b><span>Changes saved</span><small>Commits from 19 to 22 Nov</small></div>
+  <div class="kpi"><b>42/42</b><span>Cloud J.A.R.V.I.S. tests</span><small>On the new machine, before it went live</small></div>
+  <div class="kpi"><b>67</b><span>Peak emails queued</span><small>32 sponsors, 35 expo; first send Mon 23 Nov 9 am, 6 an hour</small></div>
+  <div class="kpi warn"><b>7</b><span>Waiting on you</span><small>Listed at the bottom</small></div>
+</div>
+
+<div class="sec">
+<h2>J.A.R.V.I.S. <span class="n">10</span></h2>
+<div class="card">
+  <div class="row"><div class="k">The eight<i>19 Nov</i></div><div class="v"><span class="pill live">Live</span>Laptop-asleep warning, meeting notes, reminders that push to your phone, morning brief, Waiting on you, money, Remember this, driving mode.</div></div>
+  <div class="row"><div class="k">Its own app<i>19 Nov</i></div><div class="v"><span class="pill live">Live</span>Off the Sixfold app completely: your desk chats live in J.A.R.V.I.S., with its own phone alerts, installable on its own. The hub’s Assistant tab removed; no briefing on open.</div></div>
+  <div class="row"><div class="k">Voice<i>19–21 Nov</i></div><div class="v"><span class="pill live">Live</span>Talk without Siri (iPhone Shortcut and a laptop “Hey Jarvis” wake word, refined 21 Nov so it stops waking on its own). Speaks in the ElevenLabs voice Daniel.</div></div>
+  <div class="row"><div class="k">Record a meeting<i>20–21 Nov</i></div><div class="v"><span class="pill live">Live</span>Record meeting button inside the app; everyone’s consent tap is required; transcribed, then the audio is deleted.</div></div>
+  <div class="row"><div class="k">Morning brief<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>Full brief with news on request, and the Assistant routes each request itself.</div></div>
+  <div class="row"><div class="k">Money<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>Read-only bank link (SimpleFIN: Chime, Bank of America, Cash App). Money view, Bills &amp; debts register, bill warnings, alerts with quiet hours, pay stubs read from Desktop\paystubs. Never moves money; bank data stays off every backup.</div></div>
+  <div class="row"><div class="k">Top bar<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>Inbox count and API cost removed (you get a push at 75%, 90% and 100% of the budget instead). Now shows weather, the next event, the next money date and cash on hand (blurred until tapped).</div></div>
+  <div class="row"><div class="k">The globe<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>All 8 ideas built: reacts to sound, a speaking ring, red for alerts, bigger on the laptop, and a ring that shows how far a build has got (builders now report every few minutes).</div></div>
+  <div class="row"><div class="k">Fixes<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>Clear button for the conversation; Approve no longer dim and taps take items off at once; Check off works on the builds card; alerts moved into Settings with a real cog; no Drive button on the laptop.</div></div>
+  <div class="row"><div class="k">In the other apps<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>J.A.R.V.I.S. inside the Peak desk (Cai, Brandon and Nneka can ask it to do their work and small changes), the post calendar (restricted: drafts only, never approves) and the Houston install.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Cloud machine and backup <span class="n">5</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Cloud J.A.R.V.I.S.<i>20 Nov</i></div><div class="v"><span class="pill live">Live</span>Answers your desk and the staff chats when the laptop is off (after 15 minutes away). Went live on your go.</div></div>
+  <div class="row"><div class="k">Azure upgraded<i>22 Nov</i></div><div class="v"><span class="pill live">Live</span>Pay-as-you-go after Microsoft’s account review. Budget alert set at $100/month. First invoice 9 Dec.</div></div>
+  <div class="row"><div class="k">New machine<i>22 Nov</i></div><div class="v"><span class="pill live">Live</span>J.A.R.V.I.S. moved to “Jarvis” (D2as_v7, Central US, $66.28/month): 42 of 42 checks passed, then switched over. The old machine stays on only for the lawn job.</div></div>
+  <div class="row"><div class="k">Off-site backup<i>22 Nov</i></div><div class="v"><span class="pill live">Live</span>Every night at 2:15 am the server’s own files (accounts, leads, customers, notes, the Peak desk) go to your Azure storage, encrypted to a key only your laptop holds. 30 nightly + monthly copies, free tier. Restore tested: 4,690 of 4,690 files. The laptop backup still runs too.</div></div>
+  <div class="row"><div class="k">Saved off the old machine<i>22 Nov</i></div><div class="v"><span class="pill live">Live</span>The 1.3 GB worth keeping (storm history run, prospects places list, El Paso and PO-box results) copied to the laptop.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Peak <span class="n">9</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Blasts<i>20–21 Nov</i></div><div class="v"><span class="pill run">Starting</span>You started both lists; 6 an hour from Mon 23 Nov 9 am, done about Tuesday. Cai’s wording, Peak’s logo, “reply STOP” opt-out, links on Peak’s own address. DKIM signing passes.</div></div>
+  <div class="row"><div class="k">Cai’s follow-ups<i>20 Nov</i></div><div class="v"><span class="pill posted">Sent</span>Six follow-ups from Peak Partnerships on your go.</div></div>
+  <div class="row"><div class="k">Desk emails<i>19–21 Nov</i></div><div class="v"><span class="pill live">Live</span>Write an email on every card, shared booking links, tour confirmations with a calendar invite, an Inbox tab with reply alerts. Each person’s own signature with Peak’s logo (yours with (303) 596-9515, Brandon’s with his number, Cai and Nneka without one).</div></div>
+  <div class="row"><div class="k">Email counts<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>Counts companies contacted by email once each; duplicates and the Snooze contact form taken off.</div></div>
+  <div class="row"><div class="k">Booking emails<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>Heads-up emails for bookings fixed (they failed from the web server).</div></div>
+  <div class="row"><div class="k">Signatures<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>Your Outlook signature, and one for the partnerships@ mailbox with no name and Brandon’s number.</div></div>
+  <div class="row"><div class="k">Tyler and Cammie<i>21 Nov</i></div><div class="v"><span class="pill posted">Sent</span>You sent Tyler the full access list and Cammie the social access ask.</div></div>
+  <div class="row"><div class="k">Expo contacts<i>22 Nov</i></div><div class="v"><span class="pill off">Built, off</span>Hunter credits reset: 26 named contacts found for the 41 expo and venue leads, plus role inboxes for a few more. Saved; not on the desk yet.</div></div>
+  <div class="row"><div class="k">Brandon’s sheet<i>20 Nov</i></div><div class="v"><span class="pill off">Built, off</span>Sponsor tech add-ons one-pager (draft).</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Posts, email and sites <span class="n">5</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Change photo<i>19 Nov</i></div><div class="v"><span class="pill live">Live</span>Jen can swap the photo behind a designed card herself and attach photos to change requests.</div></div>
+  <div class="row"><div class="k">Surge posts<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>All Surge posting held until Facebook ownership. Unposted posts roll forward instead of being dropped; Thanksgiving posts pinned to Thanksgiving. LinkedIn connected.</div></div>
+  <div class="row"><div class="k">Email tracking<i>20 Nov</i></div><div class="v"><span class="pill live">Live</span>Opens and clicks on every automatic email, shown in Outbox. Sixfold 365 emails got the social footer (19 Nov).</div></div>
+  <div class="row"><div class="k">Site stats<i>20 Nov</i></div><div class="v"><span class="pill live">Live</span>Cookie-free visitor stats for traverseplatforms.com and 365aeration.com.</div></div>
+  <div class="row"><div class="k">Website leads<i>22 Nov</i></div><div class="v"><span class="pill live">Live</span>Checked: website leads reach the pipeline (Jen’s since 15 Nov). Matt Hall replied STOP and Jen removed him.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Traverse, data and Claire <span class="n">5</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Claire<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>Measure-only account on Traverse Yards, Peak lead research, Traverse prospect outreach (approved scripts only, nothing sent by her yet).</div></div>
+  <div class="row"><div class="k">Lawn accuracy<i>22 Nov</i></div><div class="v"><span class="pill run">Running</span>Jen’s 11 hand measures added; on her lawns the typical miss drops from 40% to 29%. Re-measuring the “Check before quoting” homes near Englewood on the old cloud machine overnight. Nothing live until you spot-check it.</div></div>
+  <div class="row"><div class="k">App health check<i>22 Nov</i></div><div class="v"><span class="pill live">Live</span>Every test suite run on the cloud machine: no broken features found. One out-of-date test fixed.</div></div>
+  <div class="row"><div class="k">Prospect emails<i>22 Nov</i></div><div class="v"><span class="pill live">Live</span>1,230 follow-up addresses checked: none would bounce; 21 addresses sit on more than one company. The follow-up already went out 8 to 12 Nov.</div></div>
+  <div class="row"><div class="k">Calendar<i>21 Nov</i></div><div class="v"><span class="pill live">Live</span>School breaks, MLK Day (no school), School First Choice 1 Dec 10 am with a reminder the day before, and the two January birthdays.</div></div>
+</div>
+</div>
+
+<div class="sec wait">
+<h2>Waiting on you <span class="n">7</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Old cloud machine</div><div class="v">When J.A.R.V.I.S. alerts that lawn batch 1 is done: Azure › Virtual machines › yardtest › Stop (about $4.70 a day while it runs).</div></div>
+  <div class="row"><div class="k">Lawn spot-check</div><div class="v">Look at the before and after (mostly lots just under an acre that read 0 and now read 10,000+ sq ft) before it goes live.</div></div>
+  <div class="row"><div class="k">Expo contacts</div><div class="v">Put the 26 Hunter contacts on the Peak desk for Cai and Nneka?</div></div>
+  <div class="row"><div class="k">Claire</div><div class="v">Her 3 codes, Windows sign-in, the 4 outreach scripts, claire@traverseplatforms.com, a callback number, whose Nextdoor and Facebook she uses.</div></div>
+  <div class="row"><div class="k">Tell the team</div><div class="v">Peak sellers about the blue J.A.R.V.I.S. button; Jen about J.A.R.V.I.S. in the Posts app.</div></div>
+  <div class="row"><div class="k">Money view</div><div class="v">Due days for the Alisha entries and the hotel; unknown debt amounts; 2FA on SimpleFIN; Discover if wanted.</div></div>
+  <div class="row"><div class="k">Houston</div><div class="v">Bryce from Monday, when you’re ready.</div></div>
+</div>
+</div>
+<div class="foot">Catch-up for 19 to 22 November (the daily reports stopped after 18 November). Full detail of every change is in the workspace’s git history.</div>
+</div>
+</body>
+</html>

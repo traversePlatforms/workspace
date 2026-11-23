@@ -8,6 +8,16 @@ One entry per day of everything Matthew and Claude changed across the sites, app
 
 ---
 
+## 2026-11-19 to 2026-11-22 (Thursday to Sunday, catch-up)
+
+- **J.A.R.V.I.S. (live):** the eight (reminders that push, meeting notes, morning brief, Waiting on you, money, Remember this, driving), its own app off the Sixfold app, talk without Siri plus the Hey Jarvis wake word (refined), ElevenLabs voice, Record a meeting with a consent tap, the full morning brief, a new globe with a build ring, top bar weather/next event/next money date/cash, Clear button, fixes; J.A.R.V.I.S. inside the Peak desk, the post calendar and Houston.
+- **Money (live, read only):** SimpleFIN link to Chime, Bank of America and Cash App; money view, Bills & debts, bill warnings, alerts, pay stubs from Desktop\paystubs. Never moves money; bank data in no backup.
+- **Cloud (live):** cloud J.A.R.V.I.S. live 20 Nov; Azure upgraded to pay-as-you-go 22 Nov (budget alert $100); moved to the new machine Jarvis (D2as_v7, Central US, $66.28/mo), 42/42 checks. Nightly off-site backup of the server to Azure storage, encrypted to a key only the laptop holds; restore tested.
+- **Peak:** blasts started by Matthew, first sends Mon 23 Nov 9 am at 6 an hour; Cai's six follow-ups sent 20 Nov; desk emails, booking links, tour confirmations, Inbox tab, per-person signatures with the logo; email counts by company; Outlook signatures; Tyler list and Cammie ask sent; 26 Hunter contacts found (not on the desk).
+- **Posts and sites (live):** Jen's Change photo; Surge posts held and rolling forward, Thanksgiving pinned; opens and clicks on every automatic email; cookie-free stats for Traverse and 365aeration.
+- **Data and Claire:** Claire's measure-only account, Peak research and Traverse outreach roles; lawn accuracy pass running on the old cloud machine (nothing live until Matthew spot-checks); app health check (no broken features); prospect follow-up addresses checked (none would bounce).
+- **Waiting on you:** stop the old cloud machine when alerted; lawn spot-check; Hunter contacts onto the desk; Claire's set-up items; tell the Peak sellers and Jen about J.A.R.V.I.S.; money view details; Bryce.
+
 ## 2026-11-18 (Wednesday)
 
 - **J.A.R.V.I.S. (live):** the Assistant and the desk merged into one page in the Halo design, opened by the hub's J.A.R.V.I.S. tab; Traverse calendar connected (read only); Check off on Builds and Team requests; spoken replies (iPhone too); chip buttons toggle; no screen jump to the desk; one bad panel can't blank the page. 119/119 tests.
