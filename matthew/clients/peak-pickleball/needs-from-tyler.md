@@ -115,6 +115,15 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
     accounts have opted in to marketing texts, and Patch now prompts "It's Time to Send an SMS Blast!". Ask Tyler: why texting stopped (cost,
     complaints, a choice?) and whether Peak wants it back for the free-class and failed-payment reminders.
 
+30. **Yes to your offer:** please send the sponsor tracking spreadsheet and the current sponsorship agreements.
+31. **Wes:** yes please, connect us by email (hosting, theme and Avada licence ownership, backups, the two custom Peak plugins).
+32. **Website changes, your OK first:** publish a real privacy policy (the site's "Privacy Policy" is an unpublished WordPress draft, and the
+    Meta Pixel and Google Analytics run without one; your attorney may want to see it), and take the Ziggi's line off the Amenities page.
+33. **WordPress login:** a login in Matthew's own name, and change the shared "peakadmin" password since it went by email. Worth telling Wes:
+    the "WP File Manager" plugin is switched on (a common target for attackers) and 4 plugin updates are waiting.
+34. **Google Analytics (G-WDBWJ1Q6HN):** add m.sharpe@traverseplatforms.com as a Viewer (probably Wes has it), and Search Console as a
+    Restricted user. This was item 16a; no answer yet.
+
 ## Fact-check log
 - Shared mailbox, Send As and the extra app permission: Microsoft 365 needs an Exchange or Global admin for each. Matthew isn't one. The "Grant admin consent" button was greyed out for him on 17 Nov.
 - Tyler's OK for the read-only cancellation report: given 13 Nov (memory, peak-internal-systems-and-site).

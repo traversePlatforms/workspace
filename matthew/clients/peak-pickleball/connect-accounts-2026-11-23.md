@@ -5,6 +5,9 @@ the cloud computer (never into chat, email or the repo).
 
 ## Already connected
 - **CourtReserve** and **Patch Retention**: nightly at 2:30 am (tools/nightly-pull.sh).
+- **Peak Brand & Marketing Library** (Google Drive, shared by Cammie with m.sharpe@traverseplatforms.com): 41.8 GB of branding, memberships,
+  events, leagues, tournaments, sponsors, website, socials content, pro shop and Whistle Pig material, a content calendar and the 2026 site
+  map. Readable from the cloud computer; used as needed, not copied whole.
 
 ## 1. Google Business Profile (calls, website clicks, directions, searches, reviews)
 Source: Google's own prerequisites page (developers.google.com/my-business/content/prereqs, read 23 Nov 2026).
