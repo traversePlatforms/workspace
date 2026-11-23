@@ -14,7 +14,7 @@ $line = in_array('--line', $argv, true);
 $PUBLIC = '#^/(|index\.html|editions/?|demo/?|find/?|start/?|start/welcome/?|terms/?|terms-of-use/?|privacy/?|cancellation/?)(\?.*)?$#';
 $PRIVATE = '#^/(prospects-|tr-|ty-|ts-|tq-|tg-|summit-|a-e018bb82|peak-desk|hub|api/|traverse-tools|stats-54b859)#';   /* + the site stats page (2026-11-20) */
 $BOT = '#bot|crawl|spider|slurp|preview|facebookexternalhit|curl|wget|python|go-http|node-fetch|undici|axios|okhttp|java/|libwww|httpclient|headless|lighthouse|monitor|uptime|scan|zgrab|semrush|ahrefs|mj12|dataforseo|petal|bytespider|gptbot|claude|anthropic|perplexity|ccbot|^-$#i';
-$OURS = ['20.91.198.101', '35.208.70.82', '127.0.0.1'];
+$OURS = ['20.91.198.101', '40.78.175.13', '35.208.70.82', '127.0.0.1'];
 $rows = [];
 foreach (glob("$dir/traverseplatforms.com-*.gz") as $f) {
     if (filemtime($f) < $OPEN) continue;
