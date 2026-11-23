@@ -55,6 +55,14 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
     Patch, even switched off. Tyler's 4 Nov consent was to look, not change.
 25. **Holiday hours:** tours and booking links around Thanksgiving and Christmas: which days Peak is closed or short-staffed, so nobody is
     offered a tour then (Cai offered a prospect Wed 25 Nov at 5 pm).
+26. **URGENT: Patch's automatic emails have stopped** (found 23 Nov in the read-only pull; detail in patch-automations-2026-11-23.md).
+    The birthday email sent 23-41 a day until 19 Nov, then none. The per-plan welcomes and the visit thank-you stopped at the same minute
+    on 1 Nov (33 new paying members since got no welcome). The free-class reminder and "unlock Starter" stopped 29 Sep (~103 first-timers
+    missed). The new-account welcome stopped 13 Jul (1,569 accounts). Blasts still go out (Thanksgiving, 5,001 people), so either the
+    automations were switched off or the CourtReserve-to-Patch connection broke (possibly the 15 Oct Momentum upgrade or the branded app).
+    Ask Tyler: did anyone turn them off, and can he (or Patch support) check the CourtReserve connection.
+27. **Two small fixes the pull turned up:** the welcome emails say $6 an hour and 30 days' notice, CourtReserve says $7 and 15 days (which is
+    right?); and "How did you hear about us?" is blank on 95% of accounts: making it required at sign-up lets ads be measured.
 
 ## Fact-check log
 - Shared mailbox, Send As and the extra app permission: Microsoft 365 needs an Exchange or Global admin for each. Matthew isn't one. The "Grant admin consent" button was greyed out for him on 17 Nov.
