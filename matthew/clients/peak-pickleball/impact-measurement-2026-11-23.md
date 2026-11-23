@@ -251,6 +251,16 @@ This uses the transactions store, which holds every Membership Fee charge, paid 
 CourtReserve doesn't keep every failed charge, so the dues data undercounts suspensions. The member list's Suspended count is the true
 figure from 23 Nov on.
 
+### 2.14 Social and ads (added 23 Nov 2026)
+
+Source: `tools/meta-pull.mjs` (Meta Graph API v21.0, GET only, counts only; Peak's Page, its Instagram account and its two ad accounts). Stored in `data/pulls/store/meta/`; computed by the SOCIAL AND ADS block of `tools/impact.mjs` (nightly `impact.json` `social`, and rows in the weekly scorecard).
+
+- **Followers (Page, Instagram):** at the end of the Sunday; change = this Sunday less last Sunday. Day one (23 Nov): Page 1,833, Instagram 962.
+- **Posts:** posts and Instagram feed items published that week (30 days kept from the first pull).
+- **Reach:** Page `page_total_media_view_unique` and Instagram `reach`, each added up day by day. **Engagement:** Page `page_post_engagements`; Instagram `accounts_engaged`.
+- **Ads:** spend, link clicks and leads by day over both ad accounts. Leads = Meta `lead` plus `onsite_conversion.lead_grouped` actions. Cost per link click = spend / link clicks; cost per lead = spend / leads (blank when the divisor is 0).
+- Meta days are Pacific. A value reads n/a where the store does not reach back. No 12-month normal.
+
 ## 3. What each of the six places to grow will be judged on
 
 | Change (from the packet) | Primary metric | Secondary | Earliest fair read |
@@ -265,7 +275,7 @@ figure from 23 Nov on.
 
 ## 4. How to rerun it
 
-- **Nightly:** `tools/nightly-pull.sh` runs CourtReserve, then Patch, then `impact.mjs`. It writes `data/pulls/<date>/impact.json` and logs one line to `data/pulls/pull.log`.
+- **Nightly:** `tools/nightly-pull.sh` runs CourtReserve, then Patch, then Meta (`meta-pull.mjs`; its failure is logged as `meta=fail` and never fails the run), then `impact.mjs`. It writes `data/pulls/<date>/impact.json` and logs one line to `data/pulls/pull.log`.
 - **By hand:** `node tools/impact.mjs` (a readable summary), `--json` (everything) or `--day=YYYY-MM-DD` (as of a past snapshot).
 - **Weekly scorecard:** `node tools/impact.mjs --week-end=YYYY-MM-DD` (a Sunday; add `--json` for everything). It shows the week, the week before, the same week last year and the 12-month normal, and writes nothing. Matthew's Sunday business report runs it. Week 0 and day one are in `peak-scorecard-start-2026-11-23.md`.
 - The definitions above are the same ones used in the code. **Change them in both places together.**
@@ -302,3 +312,5 @@ figure from 23 Nov on.
   - Normals fill out as cohorts close (until about Feb 2027).
   - The regulars' plan exclusions use today's member list.
 - **Family members and the 807 count:** whether family members on a paying parent's plan should count as members is Tyler's call. Today they're in the 807 and out of the dues counts.
+
+**Verified: social and ads (23 Nov 2026):** definitions above match `socialIn()` in `tools/impact.mjs`; day-one 1,833 / 962 read from the API; ad rows sum to the accounts' lifetime spend. Details in `peak-scorecard-start-2026-11-23.md`.

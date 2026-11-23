@@ -65,6 +65,9 @@ function collect() {
   // network, writes nothing). Monday-to-Sunday weeks, so it only runs when the report ends on a Sunday.
   if (new Date(END + 'T12:00:00Z').getUTCDay() !== 0) raw.peakScore = { error: `the club scorecard runs for Monday-to-Sunday weeks; this report ends on a ${longDay(END, { weekday: 'long' })}` };
   else raw.peakScore = tryJson('Peak scorecard', () => execFileSync('node', [path.join(REPO, 'matthew/clients/peak-pickleball/tools/impact.mjs'), `--week-end=${END}`, '--json'], { timeout: 180000, maxBuffer: 16 << 20, stdio: ['ignore', 'pipe', 'pipe'] }).toString());
+  // Sixfold 365 and Traverse Platforms Facebook / Instagram numbers (Meta Graph API, GET only; counts only; saved to ProjectBackup/meta/<end>.json)
+  try { raw.metaSocial = JSON.parse(execFileSync('node', [path.join(REPO, 'traverse/ops/meta-social-snapshot.mjs'), `--end=${END}`], { timeout: 180000, maxBuffer: 4 << 20, stdio: ['ignore', 'pipe', 'ignore'] }).toString()); }
+  catch (e) { raw.metaSocial = { error: 'the Meta snapshot did not answer' }; }
   return raw;
 }
 
@@ -79,7 +82,8 @@ function previous() {
 // ---------------------------------------------------------------------------------------------------------------- metrics
 // A metric: { label, src, last, this, unit ('n' | '$'), better ('up' | 'down' | ''), na: 'why' (both weeks), lastNa: 'why', text }
 const usd = (v) => (v < 0 ? '-' : '') + '$' + Math.abs(Math.round(v)).toLocaleString('en-US');
-const num = (v, u) => (v == null ? '' : u === '$' ? usd(v) : u === '%' ? Number(v).toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%' : Number(v).toLocaleString('en-US', { maximumFractionDigits: 1 }));
+const usd2 = (v) => (v < 0 ? '-' : '') + '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = (v, u) => (v == null ? '' : u === '$' ? usd(v) : u === '$2' ? usd2(v) : u === '%' ? Number(v).toLocaleString('en-US', { maximumFractionDigits: 1 }) + '%' : Number(v).toLocaleString('en-US', { maximumFractionDigits: 1 }));
 function build(raw, prev) {
   const S = { sixfold: [], traverse: [], peak: [] };
   const err = (x) => x && x.error;
@@ -108,6 +112,23 @@ function build(raw, prev) {
     if (pAd != null) S.sixfold.push({ label: 'Ad spend this week', src: `the change in the all-time total since last week's snapshot${prevNote}; only as fresh as the last time spend was typed in`, this: Math.round((sx.adSpendLifetime - pAd) * 100) / 100, unit: '$', better: '', lastNa: 'needs two snapshots before last week' });
     else S.sixfold.push({ label: 'Ad spend this week', src: 'the change in the all-time total between two weekly snapshots', na: 'not available yet (the app keeps only the all-time total typed in Stats; the first weekly figure comes next week)' });
   }
+  const ms = raw.metaSocial && !raw.metaSocial.error ? raw.metaSocial : null;
+  const metaRows = (list, ent, label, withAds) => {
+    const e = ms && ms[ent] && ms[ent].this ? ms[ent] : null;
+    if (!e) { list.push({ label: `${label} Facebook and Instagram`, src: 'Meta Graph API via traverse/ops/meta-social-snapshot.mjs', na: `not available yet (${(raw.metaSocial && raw.metaSocial.error) || 'the Page did not answer'})` }); return; }
+    const row = (name, src, key, o = {}) => { const t = e.this[key], l = e.last[key]; if (t == null && l == null) return; list.push({ label: `${label} ${name}`, src, this: t, last: l, lastNa: l == null ? 'no earlier count kept' : '', better: o.better ?? 'up', unit: o.unit }); };
+    row('Facebook followers', 'the Page\'s followers at the end of the week (Meta, read only)', 'pageFollowers');
+    row('Facebook reach, 7 days', 'different people who saw Page content, added up day by day (Meta page_total_media_view_unique)', 'pageReach7d');
+    if (e.hasInstagram) {
+      row('Instagram followers', 'Instagram followers at the end of the week (Meta; Instagram keeps no history under 100 followers, so last week comes from last week\'s saved count)', 'igFollowers');
+      row('Instagram reach, 7 days', 'accounts reached, added up day by day (Meta)', 'igReach7d');
+    } else list.push({ label: `${label} Instagram`, src: 'Meta', na: 'no Instagram account is linked to this Page' });
+    if (withAds) {
+      row('Meta ad spend, 7 days', 'the ad account\'s spend over the 7 days (Meta, read only; the app\'s typed-in total above is separate)', 'adSpend', { unit: '$2', better: '' });
+      row('Meta ad leads, 7 days', 'lead actions Meta counts on the ads (the Facebook lead forms; the app\'s own lead count above is what counts)', 'adLeads');
+    }
+  };
+  metaRows(S.sixfold, 'sixfold', 'Sixfold 365', true);
   const pl = typeof raw.profitLine === 'string' ? raw.profitLine : '';
   const pm = /Sixfold profit: (.*?) \|/.exec(pl);
   if (pm) S.sixfold.push({ label: 'Profit, by month (known costs)', src: 'sixfold-tools/profit-check.php --line: jobs done less crew share, materials, card fees, ads and fixed costs; insurance, phone, gas and owner pay are not seen anywhere and not counted', text: pm[1] });
@@ -127,6 +148,7 @@ function build(raw, prev) {
 
   // ---- Traverse
   site('traverse', 'traverseplatforms.com', S.traverse);
+  metaRows(S.traverse, 'traverse', 'Traverse', false);
   const rd = raw.reads || {};
   if (rd.demos && !rd.demos.error) S.traverse.push({ label: 'Demo bookings', src: `the website's /demo/ page bookings, by the day booked (cancelled: ${rd.demos.this.cancelled} this week, ${rd.demos.last.cancelled} last week; ${rd.demos.allTime} ever)`, last: rd.demos.last.booked, this: rd.demos.this.booked, better: 'up' });
   else S.traverse.push({ label: 'Demo bookings', src: 'traverse-site-private/bookings.json', na: `not available yet (${(rd.demos && rd.demos.error) || rd.error || 'no answer'})` });
@@ -215,7 +237,6 @@ function build(raw, prev) {
     S.peakClub.push({ label: 'Patch blasts', src: 'campaign subjects and how many people each went to', text: aw(sc.blastsThisWeek) });
   }
   S.peakClub.push({ label: 'Website visitors and conversions', src: 'Google Analytics on Peak\'s site', na: 'not available yet (waiting on access from Peak)' });
-  S.peakClub.push({ label: 'Meta ads', src: 'Peak\'s ad account (spend, reach, leads)', na: 'not available yet (waiting on access from Peak)' });
   return S;
 }
 
@@ -228,7 +249,7 @@ function change(m) {
   if (m.unit === '%') return `<span class="chg${tone}">${d > 0 ? '+' : '−'}${Math.abs(Math.round(d * 10) / 10)} pts</span>`;
   const pc = m.last ? Math.round((100 * d) / Math.abs(m.last)) : null;
   const pct = pc != null && Math.abs(pc) < 1000 ? ` (${d > 0 ? '+' : ''}${pc}%)` : '';
-  return `<span class="chg${tone}">${d > 0 ? '+' : '−'}${num(Math.abs(d), m.unit)}${m.unit === '$' ? '' : pct}</span>`;
+  return `<span class="chg${tone}">${d > 0 ? '+' : '−'}${num(Math.abs(d), m.unit)}${m.unit === '$' || m.unit === '$2' ? '' : pct}</span>`;
 }
 function rowHtml(m) {
   const lab = `<div class="m">${esc(m.label)}<i>${esc(m.src)}</i></div>`;

@@ -7,7 +7,7 @@
 //        writes nothing. Day one of Matthew's work for Peak = 23 Nov 2026, so Week 0 is 16-22 Nov 2026 (see WEEK MODE below).
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { PULLS, readStore, readGz, writeJson, denverDate, addDays } from './pull-lib.mjs';
+import { PULLS, STORE, readStore, readGz, writeJson, denverDate, addDays } from './pull-lib.mjs';
 
 const arg = (k) => (process.argv.find((a) => a.startsWith('--' + k + '=')) || '').split('=')[1];
 const quiet = process.argv.includes('--quiet');
@@ -356,6 +356,61 @@ function email(r, cls) {
   return { sent: n, sms: xs.filter((m) => m.ch === 'SMS').length, openRate: pct(xs.filter((m) => m.stats?.opened).length, del), clickRate: pct(xs.filter((m) => m.stats?.clicked).length, del), unsubRate: pct(xs.filter((m) => m.stats?.unsubscribed).length, del) };
 }
 
+// ==== SOCIAL AND ADS (added 23 Nov 2026): Peak's Facebook Page, Instagram account and two Meta ad accounts, from tools/meta-pull.mjs ====
+// Counts only. Meta's daily numbers are Pacific days (the ad accounts follow their own account clock); we file each under the date Meta gives.
+// Every value says null when the store does not reach back that far (no guessing): the Page history starts 90 days before the first pull,
+// Instagram daily 28 days, posts and Instagram media 30 days, ads 1 Jan 2025. Followers "at the end of a day" = Page: Meta's page_follows
+// for that day; Instagram: today's count less the net new followers (follower_count) of the days after it.
+const mPage = Object.fromEntries(readStore('meta/page-daily').map((r) => [r.date, r]));
+const mIg = Object.fromEntries(readStore('meta/ig-daily').map((r) => [r.date, r]));
+const mPosts = readStore('meta/posts'), mIgMedia = readStore('meta/ig-media'), mAds = readStore('meta/ads-daily'), mFol = readStore('meta/followers');
+const mDays = (o) => Object.keys(o).sort();
+const SOC = { DAY_ONE: '2026-11-23', pageFrom: mDays(mPage)[0], igFrom: mDays(mIg)[0], postsFrom: mPosts.length ? addDays(mPosts.map((p) => p.fetched).sort()[0], -30) : null, igMediaFrom: mIgMedia.length ? addDays(mIgMedia.map((p) => p.fetched).sort()[0], -30) : null, adsFrom: '2025-01-01' };
+const folLatest = mFol.length ? mFol[mFol.length - 1] : null;
+const dayOneFol = mFol.find((f) => f.date === SOC.DAY_ONE) || null;
+const sumDays = (o, key, r, from) => { if (!from || r.from < from) return null; let s = 0; for (let d = r.from; d <= r.to; d = addDays(d, 1)) s += (o[d] && o[d][key]) || 0; return s; };
+const pageFolAt = (d) => (mPage[d] && mPage[d].page_follows != null ? mPage[d].page_follows : (mFol.find((f) => f.date === d) || {}).pageFollowers ?? null);
+const igFolAt = (d) => { // net-new followers after d, taken off the newest known count
+  const f = mFol.find((x) => x.date === d); if (f && f.igFollowers != null) return f.igFollowers;
+  if (!folLatest || folLatest.igFollowers == null || !SOC.igFrom || d < SOC.igFrom || d > folLatest.date) return null;
+  let v = folLatest.igFollowers; for (let x = addDays(d, 1); x <= folLatest.date; x = addDays(x, 1)) v -= (mIg[x] && mIg[x].follower_count) || 0; return v;
+};
+const diff = (a, b) => (a == null || b == null ? null : a - b);
+function socialIn(r) {
+  const ads = mAds.filter((a) => a.date >= r.from && a.date <= r.to);
+  const sum = (f) => ads.reduce((s, a) => s + (f(a) || 0), 0);
+  const covered = r.from >= SOC.adsFrom && r.to <= (folLatest ? addDays(folLatest.date, -1) : '0000');
+  const spend = covered ? round(sum((a) => a.spend), 2) : null, link = covered ? sum((a) => a.actions.link_click) : null, lp = covered ? sum((a) => a.actions.landing_page_view) : null;
+  const leads = covered ? sum((a) => (a.actions.lead || 0) + (a.actions['onsite_conversion.lead_grouped'] || 0)) : null;
+  const posts = (rows, from) => (from && r.from >= from ? rows.filter((p) => p.date >= r.from && p.date <= r.to) : null);
+  const fp = posts(mPosts, SOC.postsFrom), ip = posts(mIgMedia, SOC.igMediaFrom);
+  const prev = { from: addDays(r.from, -7), to: addDays(r.from, -1) };
+  return {
+    fbFollowers: pageFolAt(r.to), fbFollowChange: diff(pageFolAt(r.to), pageFolAt(prev.to)),
+    igFollowers: igFolAt(r.to), igFollowChange: diff(igFolAt(r.to), igFolAt(prev.to)),
+    fbPosts: fp ? fp.length : null, igPosts: ip ? ip.length : null,
+    fbReach: sumDays(mPage, 'page_total_media_view_unique', r, SOC.pageFrom), fbViews: sumDays(mPage, 'page_media_view', r, SOC.pageFrom), fbEngagement: sumDays(mPage, 'page_post_engagements', r, SOC.pageFrom),
+    igReach: sumDays(mIg, 'reach', r, SOC.igFrom), igProfileViews: sumDays(mIg, 'profile_views', r, SOC.igFrom), igEngaged: sumDays(mIg, 'accounts_engaged', r, SOC.igFrom),
+    adSpend: spend, adLinkClicks: link, adLandingViews: lp, adLeads: leads, adImpressions: covered ? sum((a) => a.impressions) : null,
+    adCpc: spend != null && link ? round(spend / link, 2) : null, adCpl: spend != null && leads ? round(spend / leads, 2) : null,
+  };
+}
+// nightly impact.json block: day-one values, today, change since day one, the last 7 complete days and the ad history to date
+function socialNightly() {
+  const y = addDays(known, -1), r7 = { from: addDays(y, -6), to: y };
+  const camps = existsSync(join(STORE, 'meta', 'campaigns.json.gz')) ? readGz(join(STORE, 'meta', 'campaigns.json.gz')) : [];
+  const lifetime = {}; for (const a of mAds) { const x = (lifetime[a.accountName] ||= { spend: 0, linkClicks: 0, clicks: 0, impressions: 0, firstDay: a.date, lastDay: a.date }); x.spend += a.spend || 0; x.linkClicks += a.actions.link_click || 0; x.clicks += a.clicks || 0; x.impressions += a.impressions || 0; if (a.date < x.firstDay) x.firstDay = a.date; if (a.date > x.lastDay) x.lastDay = a.date; }
+  for (const x of Object.values(lifetime)) { x.spend = round(x.spend, 2); x.cpc = x.linkClicks ? round(x.spend / x.linkClicks, 3) : null; }
+  return {
+    source: 'tools/meta-pull.mjs (Graph API v21.0, GET only); definitions in ../impact-measurement-2026-11-23.md section 2.14',
+    dayOne: dayOneFol ? { day: SOC.DAY_ONE, pageFollowers: dayOneFol.pageFollowers, igFollowers: dayOneFol.igFollowers, igMedia: dayOneFol.igMedia } : null,
+    latest: folLatest, changeSinceDayOne: dayOneFol && folLatest ? { pageFollowers: diff(folLatest.pageFollowers, dayOneFol.pageFollowers), igFollowers: diff(folLatest.igFollowers, dayOneFol.igFollowers) } : null,
+    last7CompleteDays: { ...r7, ...socialIn(r7) }, adsToDate: lifetime,
+    campaigns: camps.map((c) => ({ account: c.accountName, name: c.name, status: c.status, dailyBudget: c.dailyBudget, lifetimeBudget: c.lifetimeBudget, start: c.start })),
+    coverage: SOC,
+  };
+}
+
 // ==== WEEK MODE: the weekly club scorecard (Matthew, 23 Nov 2026: "I am considering today the first day of work for peak ... track
 // where they are at currently so that I can see how much they are growing week to week ... I need to be measuring whatever we can").
 // The numbers go ONLY in his Sunday business report (shared/tools/eod/weekly.mjs runs this with --json). Same definitions as above:
@@ -426,6 +481,7 @@ if (weekEnd) {
   const calc = (r, isBase) => {
     const dc$ = duesCash(r), f7 = freeCohort(r, 7), f60 = freeCohort(r, 60), op = openPlay(r), p = patch(r), kept = regsIn(r), canc = cancelsIn(r);
     const flow = (n) => (isBase ? perWk(n, r) : n);
+    const soc = isBase ? {} : socialIn(r);
     const list = isBase ? null : listAt(r.to);
     // day-one measures. Lagging ones read the cohort whose follow-up closed by this Sunday (the baseline pools its closed cohorts)
     const co = (w) => (isBase ? r : sh(r, w));
@@ -441,7 +497,7 @@ if (weekEnd) {
       duesLate: flow(mp.paidLate), duesLateMedianDays: mp.medianDaysLate, duesUnpaid: flow(mp.stillUnpaid), duesSuspended: flow(mp.reachedSuspension), duesRecovered: flow(mp.recoveredBeforeCancel),
       day1Detail: { retention: ret, starterUpgrades: upg, regularsJoined30: rj30, regularsJoined60: rj60, winBack: wb, missed: mp, birthday: bm },
     };
-    return { ...day1,
+    return { ...day1, ...soc,
       payingDues: isBase ? round(avg(sundays(r).map(payingAt)), 0) : payingAt(r.to),
       listActive: list ? list.active : null, listSuspended: list ? list.suspended : null, listSnapshot: list ? list.snapshot : null,
       newMembers: flow(newIn(r)), lapsed: flow(lapsedIn(r)),
@@ -503,6 +559,22 @@ if (weekEnd) {
         ['birthdayGearIndex', 'Birthday-month gear sales vs an average month', '%', 'up', `the same members: pro-shop gear (Apparel/Pro Shop, Paddles/Gear, Shoes) in the birthday month / their average month ($${bm.birthday.gearInMonth} against $${bm.birthday.gearAvgMonth}). Not born that month: ${bm.notBirthday.gearIndex ?? 'n/a'}%. Baseline gear lift ${ND.birthday.gearLift ?? 'n/a'}%`, { monthly: true }],
       ];
     })(),
+    // social and ads (23 Nov 2026): tools/meta-pull.mjs. No 12-month normal (the history is too short); null where the store does not reach back
+    ['fbFollowers', 'Facebook Page followers (end of week)', 'n', 'up', 'Peak Pickleball Page followers at the end of the Sunday (Meta page_follows)'],
+    ['fbFollowChange', 'Facebook Page followers, change in the week', 'n', 'up', 'followers at this Sunday less last Sunday'],
+    ['igFollowers', 'Instagram followers (end of week)', 'n', 'up', 'peakpickleball.us followers at the end of the Sunday (Instagram count, walked back with the daily net-new followers)'],
+    ['igFollowChange', 'Instagram followers, change in the week', 'n', 'up', 'followers at this Sunday less last Sunday'],
+    ['fbPosts', 'Facebook posts published', 'n', '', 'posts on the Page that week (the store keeps 30 days of posts from the first pull, 23 Nov)'],
+    ['igPosts', 'Instagram posts published', 'n', '', 'feed posts, reels and carousels that week (30 days kept from the first pull)'],
+    ['fbReach', 'Facebook reach (sum of daily viewers)', 'n', 'up', 'Page: different people who saw any Page content, added up day by day (a person on two days counts twice). Meta page_total_media_view_unique'],
+    ['fbEngagement', 'Facebook post engagements', 'n', 'up', 'reactions, comments, shares and clicks on Page posts (Meta page_post_engagements)'],
+    ['igReach', 'Instagram reach (sum of daily accounts)', 'n', 'up', 'accounts reached, added up day by day (Meta reach)'],
+    ['igEngaged', 'Instagram accounts engaged (sum of days)', 'n', 'up', 'accounts that liked, commented, saved, shared or replied, added up day by day'],
+    ['adSpend', 'Meta ad spend', '$2', '', 'Peak\'s two ad accounts (Peak Pickleball and Social DFY), spend by day. Both have been quiet since 3 Oct 2026'],
+    ['adLinkClicks', 'Meta ad link clicks', 'n', 'up', 'clicks on a link in an ad (not every tap), both ad accounts'],
+    ['adLeads', 'Meta ad leads', 'n', 'up', 'lead actions reported by Meta (lead form or lead event). None of the ads has ever optimised for leads, so this is expected to read 0 until one does'],
+    ['adCpc', 'Meta cost per link click', '$2', 'down', 'spend / link clicks for the week (blank when there was no spend)'],
+    ['adCpl', 'Meta cost per lead', '$2', 'down', 'spend / leads for the week (blank when there were no leads)'],
     ['patchSent', 'Patch messages sent', 'n', '', 'every Patch message out that week (Colorado day)'],
     ['patchBlasts', 'Patch: blasts', 'n', '', 'campaign sends'],
     ['patchAutomations', 'Patch: automations', 'n', 'up', 'automation sends (welcomes, birthday, thank-you and the rest)'],
@@ -512,7 +584,6 @@ if (weekEnd) {
   ].map(([key, label, unit, better, note, x]) => ({ key, label, unit, better, this: T[key], last: L[key], lastYear: Y[key], normal: N[key], note, ...(x || {}) }));
   const notAvailable = [
     { label: 'Website visitors and conversions (Google Analytics)', why: 'not available yet (waiting on access from Peak)' },
-    { label: 'Meta ads (spend, reach, leads)', why: 'not available yet (waiting on access from Peak)' },
     { label: 'Membership Report and leagues from the API', why: 'CourtReserve answers 401 (not granted); leagues are counted inside event registrations' },
     { label: 'Monthly churn', why: 'a month rule (impact.json churn), readable two months after the month; weekly lapses above stand in for it' },
   ];
@@ -555,6 +626,7 @@ const out = {
   email: { baseline: email(B), after: email(A), baselineAutomations: email(B, 'AUTOMATION'), afterAutomations: email(A, 'AUTOMATION') },
   // the day-one measures (23 Nov 2026): definitions in the DAY-ONE MEASURES block above and impact-measurement §2.9-2.13. Lagging rates
   // count only people whose follow-up has closed by the data day (followUpNotOver = still waiting).
+  social: socialNightly(),
   dayOneMeasures: {
     dataDay: known, regularsNow: { day: addDays(today, -1), count: regularsAt(addDays(today, -1)).length },
     baseline: dayOneSet(B, BMONTHS), prior12Months: dayOneSet(B1, B1MONTHS), after: { missed: missed(A), retention30: retention(A, 30), winBack90: winBack(A) },

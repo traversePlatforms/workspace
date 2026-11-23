@@ -66,6 +66,18 @@ how much they are growing week to week ... I need to be measuring whatever we ca
 | Suspended charges paid by day 11, before cancel (due 2-8 Nov) | **0** | 0.2 | 0 | 0 |
 | Birthday-month spend vs an average month, monthly (Oct 2026: 60 members) | **95.9%** | 99.6% | 99.4% (Oct 2025) | 95.9% |
 | Birthday-month gear sales vs an average month, monthly (Oct 2026) | **0%** | 117% | 194.7% (Oct 2025) | 0% |
+| *Social and ads (added 23 Nov; Meta, read only. No 12-month normal and no last-year column: the history is too short)* | | | | |
+| Facebook Page followers, end of week | **1,833** | n/a | n/a | 1,822 |
+| Facebook Page followers, change in the week | **+11** | n/a | n/a | +3 |
+| Instagram followers (peakpickleball.us), end of week | **962** | n/a | n/a | 942 |
+| Instagram followers, change in the week | **+20** | n/a | n/a | +9 |
+| Facebook / Instagram posts published | **6 / 6** | n/a | n/a | 3 / 4 |
+| Facebook reach (sum of daily viewers) | **10,313** | n/a | n/a | 1,918 |
+| Facebook post engagements | **1,209** | n/a | n/a | 447 |
+| Instagram reach (sum of daily accounts) | **7,053** | n/a | n/a | 1,286 |
+| Instagram accounts engaged (sum of days) | **276** | n/a | n/a | 54 |
+| Meta ad spend / link clicks / leads | **$0 / 0 / 0** | n/a | $0 / 0 / 0 | $0 / 0 / 0 |
+| Meta cost per link click, per lead | **n/a** | n/a | n/a | n/a |
 
 **Patch automations that sent anything:**
 
@@ -83,7 +95,6 @@ how much they are growing week to week ... I need to be measuring whatever we ca
 **Not in the scorecard yet:**
 
 - **Website (Google Analytics):** not available yet (waiting on access from Peak).
-- **Meta ads:** not available yet (waiting on access from Peak).
 - **Membership Report and leagues:** the API answers 401. League play is counted inside event registrations.
 - **Monthly churn:** stays monthly in impact.json (11.4% baseline). It can only be read two months after the month. Weekly lapses
   stand in for it here.
@@ -142,6 +153,8 @@ past due. No Patch reminder exists.
 | Google Review | Google review count and star rating | to capture (Google Business Profile) |
 | Birthday Email | Spend in the birthday month; gear sales | All spend: 99.6% of an average month (members not in their birthday month: 96.9%, so a lift of 2.8%). Gear: 117% of an average month (others 57.4%, so a lift of about 2x); 5.1% bought gear in the birthday month against 3.1%. 12-month normal, while the birthday email was running |
 | A missed-payment reminder (new) | Suspended accounts recovered before cancelling; unpaid dues | 21 suspended on the member list. 2 charges ($194) more than a day past due among November's 27 open ones; 16 ($795) past due in all. Normal per month: 57.8 charges paid late (median 1 day), 3.3 still unpaid at 10 days, about 0.75 of those paid by day 11 |
+
+**Social and ads on day one (Mon 23 Nov 2026, from the first Meta pull):** Facebook Page **1,833 followers** (Peak Pickleball Page), Instagram **962 followers** (peakpickleball.us, 360 posts). Week 0 added 11 Page and 20 Instagram followers. Meta ads: two ad accounts, **$1,108.70** (Peak Pickleball) and **$205.60** (Social DFY) spent in their lifetime; nothing spent since 3 Oct, though PickleFest and one Social DFY link-click campaign are still switched on. The baseline of what the past ads cost per link click is in `meta-ad-plan-2026-11-23.md`. The week's reach and engagement are high because of one Reel on 20-21 Nov (about 5,800 reached on Instagram); read them with that in mind.
 
 **How the day-one measures are defined** (in full: `impact-measurement-2026-11-23.md` §2.9-2.13 and the DAY-ONE MEASURES block of
 `tools/impact.mjs`):
@@ -257,3 +270,12 @@ checked with `diff -rq`. The existing Week 0 figures and impact.json fields came
 - **Starter upgrades miss small prorations.** An upgrade billed only as a prorated difference under $39 isn't seen.
 - **Family members:** whether family members on a paying parent's plan count as members is still Tyler's call. They are in the 807
   and out of the dues count.
+
+**Verified: social and ads** (23 Nov 2026, `tools/meta-pull.mjs` then `tools/impact.mjs --week-end=2026-11-22`, Meta Graph API v21.0, GET only)
+
+- Day-one counts came straight from the API: Page `followers_count` = `fan_count` = 1,833; Instagram `followers_count` 962. They match the 1,833 and 962 Matthew read on the screen the same day.
+- Week 0 followers: the Page figure is Meta's daily `page_follows` for Sun 22 Nov (1,833) and for 15 Nov (1,822). Instagram is today's count less the daily net new followers (962 and 942).
+- Ad spend per day adds up to the accounts' own lifetime totals exactly ($1,108.70 and $205.60).
+- Meta's days are Pacific, not Mountain, so a day's figures can differ slightly from a Colorado-day count. Reach added up day by day counts a person once per day.
+- **Metrics the API refused and were dropped:** `page_impressions`, `page_impressions_unique`, `page_fan_adds` (not valid for Pages in v21.0). `post_impressions_unique` and `post_engaged_users` are also refused for posts; the pull uses `post_total_media_view_unique`, `post_media_view` and `post_clicks` instead.
+- **Unresolved:** Google Analytics is still waiting on access. No ad has recorded a lead, so cost per lead reads n/a. Posts and Instagram media are kept from 23 Nov back 30 days, so post counts before 24 Oct are not available.

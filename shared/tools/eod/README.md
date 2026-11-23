@@ -151,7 +151,9 @@ with the same filters: test leads and their jobs are left out, and jobs taken of
 | Desk: companies past "new", in "meeting", tours | `php desk.php check` in `public_html/peak-desk-28d38d/api` (stages per pipeline) | yes; movement from the second run |
 | Tours booked, held (no-shows, cancelled), sponsors signed and value, expos booked and value | `server/reads.php` `peakwins`: the desk's own logs (`peak-desk-data/events.log`, `expo-events.log`), read line by line. Tours booked by the day booked, held by the tour's date; signed totals are the lines' price x quantity | yes |
 | **Club scorecard** (its own section, with a "same week last year" column and the 12-month normal under each metric; "Week N since day one (23 Nov)") | `matthew/clients/peak-pickleball/tools/impact.mjs --week-end=<end> --json`, run on this machine on the nightly pulls' local store (no server call). Only when the report ends on a Sunday | yes; Week 0 = 16-22 Nov 2026 |
-| Website (Google Analytics), Meta ads | none yet | **"not available yet (waiting on access from Peak)"** |
+| Peak Facebook / Instagram / Meta ads rows (in the club scorecard: followers, posts, reach, engagement, ad spend, link clicks, leads, cost per click and lead) | `tools/meta-pull.mjs` (nightly, Meta Graph API v21.0, GET only) read by `impact.mjs --week-end`; Meta days are Pacific | yes; from 23 Nov 2026 (Page history 90 days back) |
+| Sixfold 365 and Traverse Facebook / Instagram followers and 7-day reach; Sixfold ad spend and leads (7 days) | `traverse/ops/meta-social-snapshot.mjs --end=<end>` (GET only, counts only; saved to `ProjectBackup/meta/<end>.json`). Sixfold's lead-ads pipeline is not read. Instagram has no follower history under 100 followers, so last week's count is last week's saved file | yes |
+| Website (Google Analytics) | none yet | **"not available yet (waiting on access from Peak)"** |
 
 **The club scorecard** (Matthew 23 Nov: "I am considering today the first day of work for peak ... so that I can see how much they are
 growing week to week"). These numbers go only in this report. The starting point is in `matthew/clients/peak-pickleball/peak-scorecard-start-2026-11-23.md`.

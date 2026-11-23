@@ -103,8 +103,8 @@ Three more points from the data:
 - Value per new member in their first 180 days: **$148 in dues**, $291 in total spend
 
 **Assumptions (not Peak data; replace them with week-2 actuals):**
-- Peak has no ad history to learn from: no Meta ads were found on 4 Nov and none on Google.
-- The cost per free-class booking is unknown. The table shows three **assumed** costs: $20, $40 and $60 per booking.
+- Peak does have Meta ad history, but none of it was built to get free-class bookings (see "What Peak's past ads cost" below). The earlier line here, "no Meta ads were found on 4 Nov", was wrong: it was written before Peak's two ad accounts were reachable (23 Nov). None is known on Google.
+- The cost per free-class booking is still unknown, because no past ad counted bookings or leads. The table shows three **assumed** costs: $20, $40 and $60 per booking.
 - Ad-sourced people may convert worse than people who found Peak themselves. A row at **half** Peak's rate is included.
 
 Members = bookings × 78.5% × join rate.
@@ -114,6 +114,27 @@ Members = bookings × 78.5% × join rate.
 | $500 | $20 / $40 / $60 | 25 / 12 / 8 | 20 / 10 / 7 | 6 / 3 / 2 | 3 / 2 / 1 | $80–240 / $160–480 |
 | $1,000 | $20 / $40 / $60 | 50 / 25 / 17 | 39 / 20 / 13 | 13 / 6 / 4 | 6 / 3 / 2 | $80–240 / $160–480 |
 | $2,000 | $20 / $40 / $60 | 100 / 50 / 33 | 79 / 39 / 26 | 25 / 13 / 8 | 13 / 6 / 4 | $80–240 / $160–480 |
+
+**What Peak's past ads cost (baseline, read 23 Nov 2026 from the two ad accounts, read only: `tools/meta-pull.mjs`, `data/pulls/store/meta/`).**
+
+- **Peak Pickleball** (act_1188880533429803): **$1,108.70 lifetime**. Spend runs 29 Dec 2025 to 3 Oct 2026: Dec 2025 $161, Jan 2026 $713, Feb $51, Sep $163, Oct $20. 276,959 impressions, 5,916 clicks, 3,099 link clicks.
+- **Social DFY** (act_3855284241380919): **$205.60 lifetime**, all between 3 and 13 Sep 2026. 25,722 impressions, 1,710 clicks, 1,128 link clicks.
+- **Both accounts have a campaign still switched on and neither has spent since 3 Oct (last 30 days: $0).** "PickleFest" (awareness, $8 a day since 14 Sep, active) and "Promoting ... CourtReserve event" in Social DFY (link clicks, $12 a day since 3 Sep, active).
+- **No ad ever recorded a lead.** Meta shows no lead actions, so the cost of a free-class booking has no baseline.
+
+| Campaign (account) | Spend | Link clicks | Cost per link click | Landing-page views |
+|---|---|---|---|---|
+| Glow Pickleball Event Traffic (Peak) | $119.73 | 562 | $0.21 | 510 |
+| Golden Ring National Championship (two copies, Peak) | $152.75 and $274.97 | 477 and 1,110 | $0.32 and $0.25 | 369 and 907 |
+| Golden Ring 5.0+ Traffic (two copies, Peak) | $83.05 and $149.89 | 256 and 452 | $0.32 and $0.33 | 204 and 402 |
+| Traffic (Targeting CCC3) (Peak) | $65.54 | 136 | $0.48 | 82 |
+| Promoting a CourtReserve event page (Social DFY) | $119.69 | 789 | $0.15 | 548 |
+| Promoting peakpickleball.us/play-pickleball (Social DFY) | $85.91 | 339 | $0.25 | 284 |
+| Awareness campaigns: Glow Awareness, PickleFest, Intro to Pickleball (Peak) | $79.81, $153.13 and $29.83 | 41, 54 and 11 | $1.95, $2.84 and $2.71 | none |
+
+- **Read it as:** traffic ads to an event or site page cost **about $0.15 to $0.48 per link click** (the whole traffic set: about $0.27). Awareness ads cost ten times that per link click, as expected (they buy views, not clicks), and "Intro to Pickleball" ($30, 11 link clicks) never got going.
+- **What it does not say:** how many of those clicks became bookings. A click is not a booking, so these numbers set the floor for the cost of a click, not for the $20 to $60 per booking assumed above.
+- **Going forward:** the nightly pull adds Peak's Page, Instagram and ad numbers to the Sunday scorecard (spend, link clicks, leads, cost per click and per lead), so a new campaign reads against this baseline.
 
 How to read it:
 
@@ -160,17 +181,19 @@ How to read it:
 
 **Verified**
 - **Entry-point table, 45.6% / 3.2%, 7-day and 60-day rates, 30-day monthly range, value per convert, booked → attended rate, free-class capacity, ZIPs and age bands:** computed 23 Nov 2026 from the CourtReserve pull (`tools/impact.mjs`, `data/pulls/2026-11-23/impact.json`).
+- **Past ad spend, clicks and cost per link click:** Meta Graph API (read only), both ad accounts, 23 Nov 2026; campaign totals computed from account insights at campaign level.
 - **Pixel id and GA tag:** on the homepage, and /privacy-policy/ and /privacy/ return 404 (curl, 23 Nov 2026).
 - **Meta Business Tools Terms §1 and §3 wording:** facebook.com/legal/businesstech, read 23 Nov 2026.
 - **Lookalike seed of at least 100 people per country:** Meta Marketing API docs, developers.facebook.com/docs/marketing-api/audiences/guides/lookalike-audiences. A third-party test (Jon Loomer) reports the minimum isn't strictly enforced; plan on 100+ anyway.
 - **Prices:** CourtReserve membership types, 23 Nov.
 
 **Corrected**
+- "No Meta ads were found" (4 Nov draft) was wrong: Peak has two ad accounts with history, $1,108.70 and $205.60 lifetime, none spending since 3 Oct (Graph API v21.0 read, 23 Nov 2026; the per-day rows sum to the accounts' lifetime totals exactly).
 - The free class does convert best, but not at 80%. Earlier notes used 45%, which matches "everyone who took it" (45.6% here). For new people from ads, the right rate is about 32% (first visit = free class).
 - The 4 Nov first-draft figure of 18.6% was already withdrawn.
 
 **Unresolved**
-- The cost per booking on Meta for Peak: no data until ads run, so every scenario row is an assumption.
+- The cost per booking on Meta for Peak: no past ad counted bookings or leads, so every scenario row is still an assumption (the past cost per link click is known).
 - Whether ad-sourced people convert like everyone else.
 - The radius distances (not measured).
 - Whether Meta still offers the pickleball interest in Peak's ad account.
