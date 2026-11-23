@@ -116,7 +116,8 @@ how much they are growing week to week ... I need to be measuring whatever we ca
 ## Day one: the state of Peak's own tools (23 Nov 2026)
 
 Matthew, 23 Nov: everything as it stood before he came on board is the "before", including what Peak had switched off. Telling Peak to turn
-the Patch automations back on is part of his work, so their return counts toward his results. The raw data as of today is frozen, read-only,
+the Patch automations back on is part of his work, so their return counts toward his results. Why they were off (Cammie, 23 Nov): she paused them on purpose to redesign each one (branding, logos, voice,
+calls to action, rules and triggers); the redesign is joint work with her, and the relaunch date goes in the changes log. The raw data as of today is frozen, read-only,
 in `data/baseline-day-one-2026-11-23/` (store + snapshot, MD5SUMS; gitignored; carried by the nightly workspace backup).
 
 **Patch automations on day one: all 17 Enabled OFF, status Draft** (Matthew's screenshots of Patch > Automations, 23 Nov):

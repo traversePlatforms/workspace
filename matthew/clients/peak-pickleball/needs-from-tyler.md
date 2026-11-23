@@ -96,6 +96,7 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
     Pushing Convert $24,465, Membership Create $16,942, Non-Member Reengagement $15,188, PPU Pipeline $10,605. Nobody on our side has turned
     anything back on. Ask Tyler: who switched them off and why (a choice, a cost, texting rules, Patch support?), and which he wants back on.
     If nobody knows, Patch support can read who disabled them and when from the account's history.
+    **Answered 23 Nov, 4:29 pm (Cammie, by email to Matthew):** she turned the automations off on purpose, "for now", so each email can be revisited and redesigned: Peak's branding and the correct logos, a stronger brand voice, better calls to action, and a review of each one's rules and triggers. She agreed with the order (automations first, then the website, then ads) and wants to work on both together, with visibility and oversight for both of them. So bringing them back is a joint redesign with Cammie, not a switch-on.
     **Last Modification Time (Matthew, Patch list view, 23 Nov):** Google Review edited **23 Nov 6:17 am** (today); Birthday 20 Nov 4:26 pm;
     Non-Member Pushing Convert 16 Nov 2:33 pm; PPU Pipeline 9 Nov 9:35 am; Membership Create 2 Nov 5:00 pm; PEAK QR Code 2 Nov 9:49 am;
     three SMS drafts (test, 101 People copy, Intro Automation) 21 Sep 3:25-3:33 pm (the one text since Jul 2025 went out that day);

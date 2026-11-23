@@ -389,6 +389,8 @@ Keep row 1 (gear 50%). It's Peak's longest-running automation, but it has sent n
 
 ## 5. What to ask Tyler before anything is built
 
+**Answered 23 Nov, 4:29 pm (Cammie, by email to Matthew):** she turned the automations off on purpose, "for now", so each email can be revisited and redesigned: Peak's branding and the correct logos, a stronger brand voice, better calls to action, and a review of each one's rules and triggers. She agreed with the order (automations first, then the website, then ads) and wants to work on both together, with visibility and oversight for both of them. So bringing them back is a joint redesign with Cammie, not a switch-on.
+
 1. Were the welcome and thank-you automations switched off on 1 Nov, the free-class pair on 29 Sep, and the birthday email after 19 Nov, on purpose? Has something changed in the CourtReserve to Patch connection (for example with the 15 Oct Momentum upgrade or the branded app)?
 2. Can Matthew have a read-only look at Patch's automation screen (or sign in to Patch's MCP connector) to confirm the triggers inferred here?
 3. Which CourtReserve events can Patch trigger on: past due or suspended, end date set, no-show, next payment date?
