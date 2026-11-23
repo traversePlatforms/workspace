@@ -167,6 +167,12 @@ past due. No Patch reminder exists.
   that same month are the control.
 - **Missed payments:** late = paid more than 24 hours after the due day. The suspension point is 10 days unpaid and the cancel point is 11.
 
+**Google Business Profile on day one** (Matthew's screenshots, 23 Nov 2026, as manager m.sharpe@traverseplatforms.com):
+- Rating **4.9** from **587 Google reviews**; 4 new reviews not yet replied to.
+- Performance, Jun-Nov 2026 (Google's 6-month view): **26,181 views** (down 24.6% on the 6 months before) and **11,516 interactions**
+  (down 7.6%). The breakdown (calls, directions, website clicks, searches) is in the Engagement tab; capture it once the API is approved.
+- Google is offering Peak a $500 Google Ads credit for new advertisers (noted only).
+
 **Changes log** (every change made on Matthew's advice, with its date, so the before/after reads against it):
 
 | Date | Change | Who made it |
