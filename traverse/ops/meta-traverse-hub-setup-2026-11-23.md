@@ -19,7 +19,13 @@ token cover everything, and access can be removed cleanly if a client ever leave
 **Rules that stay:** anything public (posts, replies, messages, ads) waits for Matthew's OK on each item. Tokens go only into `~/.ssh/` on
 the cloud computer, never into chat or email.
 
-## Step 1. Create the Traverse Platforms business portfolio
+## Step 1 done differently (23 Nov): reuse the empty "Sixfold Colorado" portfolio
+Meta wouldn't allow another portfolio (limit reached). Matthew's empty "Sixfold Colorado" portfolio (no Pages, Instagram, ad accounts,
+datasets or billing; checked 23 Nov) is renamed **Traverse Platforms**, Jen removed from it (her 365 access is separate). Its ID stays
+**1302132595284587**: that's the Business portfolio ID partners add. Matthew's Facebook login email moves from the Sixfold address to
+m.sharpe@traverseplatforms.com.
+
+## Step 1 (original). Create the Traverse Platforms business portfolio
 1. Go to **business.facebook.com/overview** → **Create an account** (or the portfolio menu → **Create a business portfolio**).
 2. Business name **Traverse Platforms**, your name, business email **m.sharpe@traverseplatforms.com**.
 3. Open **Settings → Business info** and copy the **Business portfolio ID** (a long number). Partners need it in steps 3 and 4.
