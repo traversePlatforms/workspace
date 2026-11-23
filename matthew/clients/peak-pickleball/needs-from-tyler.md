@@ -124,6 +124,11 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
 34. **Google Analytics (G-WDBWJ1Q6HN):** add m.sharpe@traverseplatforms.com as a Viewer (probably Wes has it), and Search Console as a
     Restricted user. This was item 16a; no answer yet.
 
+35. **OK to read Peak's QuickBooks for reporting?** Nathan gave Matthew access to Peak's company QuickBooks for payroll setup. With Tyler's OK,
+    a read-only connection would pull reports only (monthly profit and loss, revenue by area: memberships, events, pro shop, Whistle Pig,
+    sponsorships; marketing spend), never payroll or employee pay, and never write anything. It makes the before/after results and ad return
+    complete.
+
 ## Fact-check log
 - Shared mailbox, Send As and the extra app permission: Microsoft 365 needs an Exchange or Global admin for each. Matthew isn't one. The "Grant admin consent" button was greyed out for him on 17 Nov.
 - Tyler's OK for the read-only cancellation report: given 13 Nov (memory, peak-internal-systems-and-site).
