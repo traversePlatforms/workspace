@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Business numbers: week to 23 November 2026</title>
+<!-- Matthew's weekly business numbers, week 2026-11-17 to 2026-11-23. Made by shared/tools/eod (README.md there). Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License). -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+h3{font:600 14px 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sec{break-inside:avoid;page-break-inside:avoid}
+.row{break-inside:avoid}h2{break-after:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .k i{display:block;font-style:normal;font-weight:400;color:var(--soft);font-size:12px}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.run{background:var(--warnbg);color:var(--warn)}
+.wait .row .k{color:var(--orange)}
+.mrow{display:grid;grid-template-columns:1fr 120px 120px 110px;gap:12px;padding:10px 18px;border-top:1px solid var(--line);align-items:baseline}
+.mrow:first-child{border-top:0}
+.mrow.th{background:#f8f9fb;font:700 11.5px 'DM Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--soft);padding-top:7px;padding-bottom:7px}
+.mrow .m{font-weight:700}
+.mrow .m i{display:block;font-style:normal;font-weight:400;color:var(--soft);font-size:12px;line-height:1.35}
+.mrow .n{text-align:right;font-variant-numeric:tabular-nums}
+.mrow .n.this{font-weight:700;color:var(--navy)}
+.mrow .na{grid-column:2 / 5;color:var(--soft);font-style:italic;text-align:right}
+.mrow .txt{grid-column:2 / 5;text-align:right;color:#2a3446}
+.chg{display:inline-block;font:700 12.5px 'DM Sans',sans-serif;border-radius:999px;padding:1px 9px;background:#eef0f4;color:var(--soft)}
+.chg.up{background:var(--goodbg);color:var(--good)}
+.chg.down{background:var(--warnbg);color:var(--warn)}
+.dash{color:#9aa3b2}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media print{body{font-size:12px;line-height:1.36}.page{padding:0 4px 8px}.head{padding:14px 22px}.head h1{font-size:26px}.kpis{margin:12px 0 4px;gap:10px}.kpi{padding:8px 14px}.kpi b{font-size:28px}.kpi small{font-size:11.5px}h2{font-size:16px;margin:10px 0 5px}h3{margin:8px 0 4px}.row{padding:4px 14px;grid-template-columns:140px 1fr}.mrow{padding:4px 14px}.mrow .m i{font-size:10.5px}.foot{margin-top:6px;padding-top:6px;font-size:11px}.sec{break-inside:auto;page-break-inside:auto}}
+@media (max-width:620px){.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}.mrow{grid-template-columns:1fr 70px 70px 70px}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="head">
+  <div><div class="tag">Business numbers · weekly</div><h1>Week to Monday 23 November</h1><div class="d">Tue 17 Nov to Mon 23 Nov, against Tue 10 Nov to Mon 16 Nov</div></div>
+  <div class="d">Sixfold 365 · Traverse · Peak</div>
+</div>
+<div class="kpis">
+  <div class="kpi"><b>$408</b><span>Sixfold 365 money in</span><small>$1,991 last week; Square, net of refunds</small></div>
+  <div class="kpi"><b>39</b><span>Sixfold 365 new leads</span><small>44 last week; in the app</small></div>
+  <div class="kpi"><b>6</b><span>Peak outreach emails sent</span><small>1 replied</small></div>
+  <div class="kpi"><b>4</b><span>Traverse website visitors</span><small>0 demo bookings</small></div>
+</div>
+
+<div class="sec">
+<h2>Sixfold 365 <span class="n">14</span></h2>
+<div class="card">
+<div class="mrow th"><div>Metric and source</div><div class="n">Last week</div><div class="n">This week</div><div class="n">Change</div></div>
+<div class="mrow"><div class="m">New leads<i>Sixfold 365 app, leads by the day they came in. Facebook form leads arrive by themselves; Messenger only when typed in. This week: Facebook form 35, Other 2, Messenger (as entered) 1, Website 1</i></div><div class="n">44</div><div class="n this">39</div><div class="n"><span class="chg down">−5 (-11%)</span></div></div>
+<div class="mrow"><div class="m">Quotes sent<i>Sixfold 365 app, a quote counts on the day it was first sent (eod-report.php rule)</i></div><div class="n">15</div><div class="n this">12</div><div class="n"><span class="chg down">−3 (-20%)</span></div></div>
+<div class="mrow"><div class="m">Quotes sent, value<i>the same quotes, their prices</i></div><div class="n">$7,123</div><div class="n this">$4,433</div><div class="n"><span class="chg down">−$2,690</span></div></div>
+<div class="mrow"><div class="m">Jobs booked<i>Sixfold 365 app, by the day the job was booked</i></div><div class="n">4</div><div class="n this">2</div><div class="n"><span class="chg down">−2 (-50%)</span></div></div>
+<div class="mrow"><div class="m">Jobs booked, value<i>the same jobs, their prices</i></div><div class="n">$1,956</div><div class="n this">$408</div><div class="n"><span class="chg down">−$1,548</span></div></div>
+<div class="mrow"><div class="m">Jobs done<i>Sixfold 365 app, jobs dated that week and marked done</i></div><div class="n">5</div><div class="n this">3</div><div class="n"><span class="chg down">−2 (-40%)</span></div></div>
+<div class="mrow"><div class="m">Jobs done, value<i>the same jobs, their prices</i></div><div class="n">$1,817</div><div class="n this">$1,106</div><div class="n"><span class="chg down">−$711</span></div></div>
+<div class="mrow"><div class="m">Money collected<i>Square, completed payments net of refunds (the same count as Brandon's end-of-day report). 2 payments this week, 7 last week</i></div><div class="n">$1,991</div><div class="n this">$408</div><div class="n"><span class="chg down">−$1,583</span></div></div>
+<div class="mrow"><div class="m">Ad spend, all time<i>Stats page &quot;Update ad spend&quot; (lifetime Meta totals, typed in Thu 19 Nov; the app cannot read the ad account)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">$5,774</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Ad spend this week<i>the change in the all-time total between two weekly snapshots</i></div><div class="na">not available yet (the app keeps only the all-time total typed in Stats; the first weekly figure comes next week)</div></div>
+<div class="mrow"><div class="m">Profit, by month (known costs)<i>sixfold-tools/profit-check.php --line: jobs done less crew share, materials, card fees, ads and fixed costs; insurance, phone, gas and owner pay are not seen anywhere and not counted</i></div><div class="txt">Oct 2026 $542, Nov 2026 so far -$667, since Sep -$685, your 5% since Nov $0</div></div>
+<div class="mrow"><div class="m">Sixfold 365 (365aeration.com) website visitors<i>our cookie-free site counting, a visitor counted once a day; bots and our own visits left out. This week counts from Fri 20 Nov (counting began then).</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">8</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Sixfold 365 (365aeration.com) page views<i>the same counting</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">8</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Sixfold 365 (365aeration.com) website conversions<i>conversion events counted on the site (quote request, quote accepted, agreement signed, deposit tap, call, text). This week: text tap 2, quote request 1</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">3</div><div class="n"><span class="dash">–</span></div></div>
+</div>
+<div class="foot" style="margin-top:6px;border:0;padding-top:0">n/a last week: first weekly snapshot: the change shows from next week; counting began Fri 20 Nov.</div>
+</div>
+
+<div class="sec">
+<h2>Traverse <span class="n">15</span></h2>
+<div class="card">
+<div class="mrow th"><div>Metric and source</div><div class="n">Last week</div><div class="n">This week</div><div class="n">Change</div></div>
+<div class="mrow"><div class="m">traverseplatforms.com website visitors<i>our cookie-free site counting, a visitor counted once a day; bots and our own visits left out. This week counts from Fri 20 Nov (counting began then).</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">4</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">traverseplatforms.com page views<i>the same counting</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">9</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">traverseplatforms.com website conversions<i>conversion events counted on the site (demo booked, checkout started, paid sign-up, call, text, email).</i></div><div class="n"><span class="dash" title="counting began Fri 20 Nov">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Demo bookings<i>the website's /demo/ page bookings, by the day booked (cancelled: 0 this week, 0 last week; 1 ever)</i></div><div class="n">0</div><div class="n this">0</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Installs in a Stripe trial<i>every install's billing.json, status &quot;trialing&quot; (0 installs have a billing record)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Paying installs<i>every install's billing.json, status &quot;active&quot; (Stripe webhooks write it)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">New paying installs<i>billing.json first-payment day (paid_at) in the week</i></div><div class="n">0</div><div class="n this">0</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Website sign-ups<i>the /start/ checkout's client registry (traverse-shared/clients/registry.json), all time</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Stripe charges, month so far<i>J.A.R.V.I.S. money summary, read only: succeeded charges net of refunds since the 1st (0 charges); balance $0 available, $0 pending</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">$0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Prospect emails sent<i>Prospect Desk events.log (sent rows; send failures: 0 this week, 15 last). Nothing on the desk since Sun 15 Nov.</i></div><div class="n">673</div><div class="n this">0</div><div class="n"><span class="chg">−673 (-100%)</span></div></div>
+<div class="mrow"><div class="m">Prospect bounces<i>Prospect Desk events.log</i></div><div class="n">6</div><div class="n this">0</div><div class="n"><span class="chg up">−6 (-100%)</span></div></div>
+<div class="mrow"><div class="m">Prospect unsubscribes<i>Prospect Desk events.log</i></div><div class="n">1</div><div class="n this">0</div><div class="n"><span class="chg up">−1 (-100%)</span></div></div>
+<div class="mrow"><div class="m">Prospect link clicks<i>Prospect Desk events.log (clicks; mail scanners kept apart)</i></div><div class="n">0</div><div class="n this">0</div><div class="n"><span class="chg">no change</span></div></div>
+<div class="mrow"><div class="m">Prospects added<i>Prospect Desk events.log (lead rows)</i></div><div class="n">141</div><div class="n this">0</div><div class="n"><span class="chg">−141 (-100%)</span></div></div>
+<div class="mrow"><div class="m">Prospect replies<i>the desk does not record replies (they land in m.sharpe@ and the Assistant)</i></div><div class="na">not available yet (no reply count is kept anywhere readable)</div></div>
+</div>
+<div class="foot" style="margin-top:6px;border:0;padding-top:0">n/a last week: counting began Fri 20 Nov; first weekly snapshot: the change shows from next week.</div>
+</div>
+
+<div class="sec">
+<h2>Peak Pickleball <span class="n">11</span></h2>
+<div class="card">
+<div class="mrow th"><div>Metric and source</div><div class="n">Last week</div><div class="n">This week</div><div class="n">Change</div></div>
+<div class="mrow"><div class="m">Outreach emails sent<i>the Peak sender's events.log (what cron.php stats counts). This week by list: sponsors 3, expo 3</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">6</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">People who replied<i>the same log, first reply per person (STOP replies included)</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">1</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Bookings from the emails<i>the same log, booked rows (the booking link)</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Bounces<i>the same log</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Unsubscribes<i>the same log</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">0</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">People who opened<i>the same log, first open per person (Apple Mail opens every email, Outlook often blocks: a rough signal)</i></div><div class="n"><span class="dash" title="lists started Mon 23 Nov">n/a</span></div><div class="n this">2</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Sponsor desk: companies past &quot;new&quot;<i>php desk.php check (stages now: called 4, emailed 14, meeting 2, new 209, notnow 3; 232 companies, 2 tours)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">23</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Expo desk: companies past &quot;new&quot;<i>php desk.php check (stages now: contacted 3, new 61; 64 companies, 0 tours)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">3</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Sponsor desk: in &quot;meeting&quot;<i>php desk.php check</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">2</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Tours on the desk<i>php desk.php check (sponsor + expo)</i></div><div class="n"><span class="dash" title="first weekly snapshot: the change shows from next week">n/a</span></div><div class="n this">2</div><div class="n"><span class="dash">–</span></div></div>
+<div class="mrow"><div class="m">Club numbers (members, new members)<i>the nightly CourtReserve and Patch pulls (matthew/clients/peak-pickleball/data/pulls)</i></div><div class="na">pull not running yet</div></div>
+</div>
+<div class="foot" style="margin-top:6px;border:0;padding-top:0">n/a last week: lists started Mon 23 Nov; first weekly snapshot: the change shows from next week.</div>
+</div>
+
+<div class="foot">Week Tue 17 Nov to Mon, 23 Nov 2026, compared with the 7 days before it, Colorado time. Every number above comes from the source named under it, read only; 3 metrics have no source yet and say why. Collected Nov 23, 2026, 9:56 AM MT by shared/tools/eod/weekly.mjs; snapshot weekly-2026-11-23.json in ProjectBackup/eod. Sixfold figures are company numbers: keep this inside the company. Surge's numbers are not in this report.</div>
+</div>
+</body>
+</html>

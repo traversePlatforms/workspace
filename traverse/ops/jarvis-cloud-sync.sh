@@ -209,7 +209,7 @@ vm_eod() {   # 23 Nov: end-of-day reports made on the VM (changelog/*.pdf + .htm
   local D="${JARVIS_EOD_DIR:-$(dirname "$REPO")/End of Day Reports}" f n W
   mkdir -p "$D" 2>/dev/null || { log "eod: cannot make $D"; return 0; }
   W=$(cygpath -m "$REPO" 2>/dev/null || echo "$REPO")
-  for f in "$REPO"/changelog/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.pdf "$REPO"/changelog/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.html; do
+  for f in "$REPO"/changelog/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.pdf "$REPO"/changelog/20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.html "$REPO"/changelog/weekly-20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.pdf "$REPO"/changelog/weekly-20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]*.html; do   # + weekly-* (23 Nov: the Sunday business numbers, shared/tools/eod)
     [ -f "$f" ] || continue; n=$(basename "$f")
     if [ "${n##*.}" = html ]; then   # the Desktop copy's fonts point at the repo
       sed "s#url('\.\./traverse/#url('file:///${W#/}/traverse/#g" "$f" > "$D/$n.tmp" && { cmp -s "$D/$n.tmp" "$D/$n" && rm -f "$D/$n.tmp" || { mv "$D/$n.tmp" "$D/$n"; log "eod: $n to the Desktop"; }; }

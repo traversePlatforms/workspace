@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-23",
+  "headline": "What changed today in the apps, sites, settings and tools",
+  "traverse": [
+    { "k": "Free-map follow-up", "when": "23 Nov", "pill": "off", "text": "Draft now carries the 7-day line; nothing queued." }
+  ],
+  "sixfold": [
+    { "k": "Brad's crew login", "pill": "live", "text": "Brad reaches J.A.R.V.I.S. from his crew login through an account switch." }
+  ],
+  "peak": [
+    { "k": "Inbox links", "pill": "live", "text": "Links inside an Inbox email now open (the Snooze locations link wasn't clickable)." },
+    { "k": "Tenants and coffee", "pill": "off", "text": "26 in-club tenant prospects and 14 coffee partners with draft first emails; nothing sent." },
+    { "k": "Blasts", "pill": "starting", "text": "First sends went out at 9 am, 6 an hour." }
+  ],
+  "jarvis": [
+    { "k": "The flip", "pill": "live", "text": "The cloud computer is the main workspace; the laptop only pulls." },
+    { "k": "6 PM backup", "pill": "live", "text": "Drive backup and the GitHub copy run on the cloud computer's timer now." }
+  ],
+  "personal": [],
+  "surge": 0,
+  "running": [
+    { "k": "Peak blasts", "text": "6 an hour until both lists are done, about Tuesday." }
+  ],
+  "waiting": [
+    { "k": "Example", "text": "One plain line per thing Matthew has to do or decide." }
+  ],
+  "foot": "EXAMPLE input for shared/tools/eod/daily.mjs: not a real report."
+}
