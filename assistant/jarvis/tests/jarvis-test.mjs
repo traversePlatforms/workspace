@@ -9,6 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+if (!process.env.TZ) process.env.TZ = 'America/Denver';   /* 23 Nov: the cloud computer runs in UTC; the apps and these checks work in Colorado time */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..', '..');

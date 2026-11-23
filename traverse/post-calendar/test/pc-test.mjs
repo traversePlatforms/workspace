@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve, dirname, basename } from 'node:path';
 import { deflateSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+if (!process.env.TZ) process.env.TZ = 'America/Denver';   /* 23 Nov: the cloud computer runs in UTC; the apps and these checks work in Colorado time */
 
 const HERE = dirname(fileURLToPath(import.meta.url)); const ROOT = resolve(HERE, '..');
 let pass = 0, failN = 0; const fails = [];

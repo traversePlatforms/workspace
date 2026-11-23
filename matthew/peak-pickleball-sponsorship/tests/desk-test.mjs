@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os';
 import http from 'node:http';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+if (!process.env.TZ) process.env.TZ = 'America/Denver';   /* 23 Nov: the cloud computer runs in UTC; the apps and these checks work in Colorado time */
 const cdpDirs = []; const cdpDir = () => { const d = mkdtempSync(join(tmpdir(), 'cdp-')); cdpDirs.push(d); return d; };
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..').replace(/\\/g, '/');
 const pageArg = process.argv.indexOf('--page'); const PAGE = pageArg > 0 ? process.argv[pageArg + 1] : 'app/index.html';
@@ -1115,6 +1116,9 @@ try {
   let k = 0; const pend = new Map(), errors = [];
   const send = (m, p = {}) => new Promise((res, rej) => { const i = ++k; pend.set(i, { res, rej }); ws.send(JSON.stringify({ id: i, method: m, params: p })); });
   const js = async (e) => (await send('Runtime.evaluate', { expression: e, awaitPromise: true, returnByValue: true })).result?.value;
+  /* 23 Nov 2026 (the cloud computer: 2 cores, other jobs running): a read-only page check looks again for up to 6 s before it counts as
+     failed, instead of once after a fixed pause; checks that click or type are left as single looks */
+  const jsUntil = async (e, ms = 6000) => { let v; for (let t = 0; t <= ms; t += 200) { v = await js(e); if (v) return v; await sleep(200); } return v; };
   const waitFor = async (e, l, ms = 15000) => { for (let i = 0; i < ms; i += 150) { if (await js(e)) return true; await sleep(150); } throw new Error('timeout: ' + l); };
   const shot = async (n) => writeFileSync(join(ROOT, 'tests', n), Buffer.from((await send('Page.captureScreenshot', { format: 'png' })).data, 'base64'));
   const click = async (sel, wait = 400) => { const r = await js(`(()=>{const e=document.querySelector(${JSON.stringify(sel)});if(!e)return false;e.click();return true})()`); await sleep(wait); return r; };
@@ -1136,25 +1140,25 @@ try {
   await waitFor(`!!document.querySelector('.kpis')`, 'Today');
 
   const bgS = `(function(){var c=getComputedStyle(document.body).backgroundColor.match(/\\d+/g).map(Number);return c[0]+c[1]+c[2]})()`;
-  ok(await js(`document.documentElement.dataset.theme==='dark'&&!localStorage.getItem('peakdesk.theme')`) && (await js(bgS)) < 120, 'the facelift: dark is the default (nothing chosen on this device, the device itself set to light)');
+  ok(await jsUntil(`document.documentElement.dataset.theme==='dark'&&!localStorage.getItem('peakdesk.theme')`) && (await js(bgS)) < 120, 'the facelift: dark is the default (nothing chosen on this device, the device itself set to light)');
   ok(await js(`(async()=>{await document.fonts.ready;return getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()==='#17a9cd'&&document.fonts.check('800 20px "Golos Text"')})()`), 'Sponsors glow Peak cyan; the Golos Text and Inter fonts load from the desk itself');
-  ok(await js(`[...document.querySelectorAll('.world button')].map(b=>b.textContent).join(',')==='Sponsors,Expo leads'&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Inbox,Pipeline,Companies,Tours & deals,More'`), 'the bar: Sponsors | Expo leads, then Today, Inbox, Pipeline, Companies, Tours & deals, More');
-  ok(await js(`document.querySelector('main').dataset.section==='today'&&location.hash==='#sponsor/today'`), 'it opens on Today (#sponsor/today)');
+  ok(await jsUntil(`[...document.querySelectorAll('.world button')].map(b=>b.textContent).join(',')==='Sponsors,Expo leads'&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Inbox,Pipeline,Companies,Tours & deals,More'`), 'the bar: Sponsors | Expo leads, then Today, Inbox, Pipeline, Companies, Tours & deals, More');
+  ok(await jsUntil(`document.querySelector('main').dataset.section==='today'&&location.hash==='#sponsor/today'`), 'it opens on Today (#sponsor/today)');
   D = await b('data'); const dueN = D.sponsor.recs.filter((r) => r.next && r.next.date && r.next.date <= today() && !['signed', 'lost'].includes(r.stage)).length;
-  ok(await js(`+document.querySelector('.kpi[data-k="due"] b').textContent`) === dueN && dueN >= 1 && await js(`document.querySelectorAll('[data-blk="due"] .row').length`) === dueN, `Today: follow-ups due (${dueN}), each listed`);
-  ok(await js(`['due','fresh','wait','tours','week'].every(k=>!!document.querySelector('[data-blk="'+k+'"]'))&&/Proposals waiting/.test(document.querySelector('[data-blk="wait"]').textContent)`), 'Today has follow-ups due, to contact next, proposals waiting, tours coming up, this week');
+  ok(await jsUntil(`+document.querySelector('.kpi[data-k="due"] b').textContent`) === dueN && dueN >= 1 && await js(`document.querySelectorAll('[data-blk="due"] .row').length`) === dueN, `Today: follow-ups due (${dueN}), each listed`);
+  ok(await jsUntil(`['due','fresh','wait','tours','week'].every(k=>!!document.querySelector('[data-blk="'+k+'"]'))&&/Proposals waiting/.test(document.querySelector('[data-blk="wait"]').textContent)`), 'Today has follow-ups due, to contact next, proposals waiting, tours coming up, this week');
   ok(await js(`(()=>{const r=[...document.querySelectorAll('[data-blk="week"] tr')].find(r=>/Test Seller/.test(r.textContent));return !!r&&r.children[1].textContent===String(${(D.sponsor.week['Test Seller'] || {}).calls || 0})})()`) && (D.sponsor.week['Test Seller'] || {}).calls >= 3, 'This week shows the seller\u2019s calls');
   await shot('desk-today.png');
   /* J.A.R.V.I.S. on the screen (2026-11-21) */
-  ok(await js(`!!document.getElementById('jvfab')&&getComputedStyle(document.getElementById('jvfab')).position==='fixed'`), 'J.A.R.V.I.S.: the blue chat button is on every screen');
+  ok(await jsUntil(`!!document.getElementById('jvfab')&&getComputedStyle(document.getElementById('jvfab')).position==='fixed'`), 'J.A.R.V.I.S.: the blue chat button is on every screen');
   await click('#jvfab', 700);
   ok(await js(`(()=>{const w=document.querySelector('.jvchat');return !!w&&/J\.A\.R\.V\.I\.S\. at your service/.test(w.textContent)&&!/Kaiser: called back/.test(w.textContent)})()`), 'J.A.R.V.I.S.: opens with the greeting, the closed chat not reopened');
-  ok(await js(`['rgb(125, 180, 238)','rgb(31, 95, 173)'].includes(getComputedStyle(document.querySelector('.jvhd')).backgroundColor)`), 'J.A.R.V.I.S.: stays J.A.R.V.I.S. blue on the Night Session look');
+  ok(await jsUntil(`['rgb(125, 180, 238)','rgb(31, 95, 173)'].includes(getComputedStyle(document.querySelector('.jvhd')).backgroundColor)`), 'J.A.R.V.I.S.: stays J.A.R.V.I.S. blue on the Night Session look');
   await js(`(()=>{const t=document.querySelector('.jvbar textarea');t.value='Add a Region column to Companies please';t.dispatchEvent(new Event('input'));return 1})()`); await click('.jvsend', 900);
-  ok(await js(`[...document.querySelectorAll('.jvmsg.me')].some(m=>/Region column/.test(m.textContent))&&!!document.querySelector('.jvwork')`), 'J.A.R.V.I.S.: the message is sent and waits for the watcher');
+  ok(await jsUntil(`[...document.querySelectorAll('.jvmsg.me')].some(m=>/Region column/.test(m.textContent))&&!!document.querySelector('.jvwork')`), 'J.A.R.V.I.S.: the message is sent and waits for the watcher');
   await shot('desk-jarvis.png');
   ok((await b('jvlist')).tickets.some((t) => /Region column/.test(t.msgs[0].text)), 'J.A.R.V.I.S.: the server has it, as the seller');
-  await click('.jvx', 300); ok(await js(`!document.querySelector('.jvchat')`), 'J.A.R.V.I.S.: closes back to the button');
+  await click('.jvx', 300); ok(await jsUntil(`!document.querySelector('.jvchat')`), 'J.A.R.V.I.S.: closes back to the button');
 
   console.log('Priority 5 (Sixfold’s)');
   D = await b('data');
@@ -1174,27 +1178,27 @@ try {
   /* whose: Mine */
   await click('.ownbar [data-owner="mine"]');
   const mineN = D.sponsor.recs.filter((r) => r.owner === 'Test Seller').length;
-  ok(await js(`localStorage.getItem('peakdesk.owner')==='mine'&&/Mine/.test(document.querySelector('.ownbar [aria-pressed="true"]').textContent)&&+document.querySelector('.ownbar [data-owner="mine"] b').textContent===${mineN}`), `Whose: Mine (${mineN}) is kept on this device`);
+  ok(await jsUntil(`localStorage.getItem('peakdesk.owner')==='mine'&&/Mine/.test(document.querySelector('.ownbar [aria-pressed="true"]').textContent)&&+document.querySelector('.ownbar [data-owner="mine"] b').textContent===${mineN}`), `Whose: Mine (${mineN}) is kept on this device`);
   await click('.ownbar [data-owner="all"]');
   /* Pipeline */
   await tab('pipe');
-  ok(await js(`document.querySelectorAll('.funnel .fr').length===10&&!document.querySelector('.list')`), 'Pipeline opens on the stages (10, with counts), no list until one is picked');
+  ok(await jsUntil(`document.querySelectorAll('.funnel .fr').length===10&&!document.querySelector('.list')`), 'Pipeline opens on the stages (10, with counts), no list until one is picked');
   await click('.funnel .fr[data-st="emailed"]');
   const emailedIds = D.sponsor.recs.filter((r) => r.stage === 'emailed').map((r) => r.id);
   ok((await rowIds()).length === emailedIds.length && (await rowIds()).every((i) => emailedIds.includes(i)), `the Emailed stage lists its ${emailedIds.length}`);
-  ok(await js(`[...document.querySelectorAll('.list .row .lc')].every(e=>/email/i.test(e.textContent))`), 'each row says how it was last contacted (an email, or their reply)');
+  ok(await jsUntil(`[...document.querySelectorAll('.list .row .lc')].every(e=>/email/i.test(e.textContent))`), 'each row says how it was last contacted (an email, or their reply)');
   await click('.stagechips [data-st="new"]');
   /* a card: log a call */
   const fresh = await js(`document.querySelector('.list .row').getAttribute('data-id')`);
   await click('.list .row');
-  ok(await js(`!!document.querySelector('.detail .strip')&&/Not contacted yet/.test(document.querySelector('.detail .strip').textContent)&&/Open/.test(document.querySelector('.detail .ownerpick').selectedOptions[0].textContent)`), 'a card shows its stage, owner (Open), last contact (not yet) and next follow-up');
-  ok(await js(`[...document.querySelectorAll('.detail .qb button')].map(b=>b.textContent).join(',')==='No answer,Left voicemail,Talked,Emailed,Texted,More…'`), 'one-tap buttons: No answer, Left voicemail, Talked, Emailed, Texted, More…');
-  ok(await js(`document.querySelector('.detail .fu [aria-pressed="true"]').dataset.fu==='3'`), 'the follow-up starts at In 3 days (working days)');
+  ok(await jsUntil(`!!document.querySelector('.detail .strip')&&/Not contacted yet/.test(document.querySelector('.detail .strip').textContent)&&/Open/.test(document.querySelector('.detail .ownerpick').selectedOptions[0].textContent)`), 'a card shows its stage, owner (Open), last contact (not yet) and next follow-up');
+  ok(await jsUntil(`[...document.querySelectorAll('.detail .qb button')].map(b=>b.textContent).join(',')==='No answer,Left voicemail,Talked,Emailed,Texted,More…'`), 'one-tap buttons: No answer, Left voicemail, Talked, Emailed, Texted, More…');
+  ok(await jsUntil(`document.querySelector('.detail .fu [aria-pressed="true"]').dataset.fu==='3'`), 'the follow-up starts at In 3 days (working days)');
   await js(`(()=>{const n=document.querySelector('.detail .tnote');n.value='front desk took a message';return 1})()`);
   await click('.detail .qb [data-m="call/noanswer"]', 900);
   D = await b('data'); let fr0 = find('sponsor', fresh);
   ok(fr0.stage === 'called' && fr0.owner === 'Test Seller' && fr0.last.note === 'front desk took a message' && fr0.next && fr0.next.date === D.nextBiz, 'No answer: logged with the note, Called, mine, the follow-up the next working day (Sixfold\u2019s rule)');
-  ok(await js(`/Logged: Called, no answer/.test(document.getElementById('toast').textContent)&&!!document.querySelector('#toast button')`), 'the toast says what was logged and offers Undo');
+  ok(await jsUntil(`/Logged: Called, no answer/.test(document.getElementById('toast').textContent)&&!!document.querySelector('#toast button')`), 'the toast says what was logged and offers Undo');
   await shot('desk-card-logged.png');
   await click('#toast button', 900);
   D = await b('data'); ok(find('sponsor', fresh).stage === 'new' && find('sponsor', fresh).touches.length === 0, 'Undo takes it back to To contact' + (find('sponsor', fresh).stage === 'new' ? '' : ' (now ' + find('sponsor', fresh).stage + ', ' + find('sponsor', fresh).touches.length + ' touches, hist ' + JSON.stringify(find('sponsor', fresh).hist.slice(-1)) + ')'));
@@ -1208,13 +1212,13 @@ try {
   ok(telOk === true || telOk === 'none', 'tapping a phone number asks how the call went' + (telOk === 'none' ? ' (this company has no phone)' : ''));
   /* stage: Not now and Lost forms */
   await click('.detail .stagesec [data-st="notnow"]');
-  ok(await js(`/come back/.test(document.querySelector('.detail .stagesec .inl').textContent)&&document.querySelector('.detail .stagesec .inl input[type=date]').value.length===10`), 'Not now asks for the day to come back');
+  ok(await jsUntil(`/come back/.test(document.querySelector('.detail .stagesec .inl').textContent)&&document.querySelector('.detail .stagesec .inl input[type=date]').value.length===10`), 'Not now asks for the day to come back');
   await click('.detail .stagesec [data-st="lost"]');
-  ok(await js(`/Lost: why/.test(document.querySelector('.detail .stagesec .inl').textContent)&&document.querySelectorAll('.detail .stagesec .inl .seg button').length===5`), 'Lost offers five reasons or a typed one');
+  ok(await jsUntil(`/Lost: why/.test(document.querySelector('.detail .stagesec .inl').textContent)&&document.querySelectorAll('.detail .stagesec .inl .seg button').length===5`), 'Lost offers five reasons or a typed one');
   await clickText('.detail .stagesec .inl .seg button', '/Not a fit/', 100); await clickText('.detail .stagesec .inl button', '/Mark Lost/', 900);
   D = await b('data'); ok(find('sponsor', fresh).stage === 'lost' && find('sponsor', fresh).lost.why === 'Not a fit', 'marked Lost: Not a fit');
-  ok(await js(`/Moved to Lost: Not a fit/.test(document.querySelector('.detail').textContent)&&/connected with the marketing lead/.test(document.querySelector('.detail').textContent)`), 'Activity lists the touches, notes and stage changes');
-  ok(await js(`!document.querySelector('.detail img')`), 'nothing in a card is read as HTML');
+  ok(await jsUntil(`/Moved to Lost: Not a fit/.test(document.querySelector('.detail').textContent)&&/connected with the marketing lead/.test(document.querySelector('.detail').textContent)`), 'Activity lists the touches, notes and stage changes');
+  ok(await jsUntil(`!document.querySelector('.detail img')`), 'nothing in a card is read as HTML');
   /* owner: Take it */
   await click('.detail .close'); await js(`(()=>{const b=document.querySelector('.stagechips [data-st="new"]');if(b&&b.getAttribute('aria-pressed')!=='true')b.click();return 1})()`); await sleep(400); await click('.list .row');
   const takeId = await js(`document.querySelector('.detail').dataset.id`);
@@ -1223,7 +1227,7 @@ try {
   await click('.detail .close');
   /* board */
   await click('.controls [data-view="board"]');
-  ok(await js(`[...document.querySelectorAll('.bhead b')].map(b=>b.textContent).join('|')==='Called|Left voicemail|Emailed|Texted|Meeting / tour booked|Proposal sent|Signed|Not now'`), 'Board: a column per stage past To contact');
+  ok(await jsUntil(`[...document.querySelectorAll('.bhead b')].map(b=>b.textContent).join('|')==='Called|Left voicemail|Emailed|Texted|Meeting / tour booked|Proposal sent|Signed|Not now'`), 'Board: a column per stage past To contact');
   await shot('desk-board.png');
   await click('.controls [data-view="stages"]');
   /* Companies */
@@ -1240,7 +1244,7 @@ try {
   ok(/Test Sponsor Co/.test(await text()) && /\$24,500 a year/.test(await text()), 'Tours & deals \u203a Signed: the signed sponsors and what they are worth');
   await sub('props'); ok(/\$24,500/.test(await text()), 'Proposals');
   await clickText('main .card button', '/Open · save as PDF/', 500);
-  ok(await js(`!!document.querySelector('.paper')&&/sponsorship proposal/.test(document.querySelector('.paper').textContent)`), 'a proposal opens as a page to save as PDF');
+  ok(await jsUntil(`!!document.querySelector('.paper')&&/sponsorship proposal/.test(document.querySelector('.paper').textContent)`), 'a proposal opens as a page to save as PDF');
   writeFileSync(join(ROOT, 'tests', 'desk-proposal.pdf'), Buffer.from((await send('Page.printToPDF', { printBackground: true })).data, 'base64'));
   await clickText('.printbar button', '/Back/', 300);
   /* more (2026-11-20): a seller sees My email & booking link, My calendar and Look only; the report and the money pages are the admin's */
@@ -1260,11 +1264,11 @@ try {
   await sub('report');
   ok(/Who is on the desk/.test(await text()), 'More \u203a Report with who has done what');
   await clickText('main .btn', '/Open the report/', 400);
-  ok(await js(`/Sponsor pipeline/.test(document.querySelector('.paper h1').textContent)&&/This week by person/.test(document.querySelector('.paper').textContent)&&/Proposals out/.test(document.querySelector('.paper').textContent)`), 'the report page: stages, the week by person, proposals out');
+  ok(await jsUntil(`/Sponsor pipeline/.test(document.querySelector('.paper h1').textContent)&&/This week by person/.test(document.querySelector('.paper').textContent)&&/Proposals out/.test(document.querySelector('.paper').textContent)`), 'the report page: stages, the week by person, proposals out');
   writeFileSync(join(ROOT, 'tests', 'desk-report.pdf'), Buffer.from((await send('Page.printToPDF', { printBackground: true })).data, 'base64'));
   await clickText('.printbar button', '/Back/', 300);
   for (const s of ['pl', 'pk', 'offer', 'better']) { await sub(s); }
-  ok(await js(`/What we could offer/.test(document.querySelector('main').textContent)`), 'P&L, Packages, What Peak offers, What we could offer still open (the admin)');
+  ok(await jsUntil(`/What we could offer/.test(document.querySelector('main').textContent)`), 'P&L, Packages, What Peak offers, What we could offer still open (the admin)');
   await signAs(SELLER, 'the seller again'); await world('sponsor'); await tab('more');
   await sub('look'); await click('[data-look="light"]');
   const bgSum = bgS;
@@ -1273,20 +1277,20 @@ try {
   ok((await js(bgSum)) < 120, 'Look: Dark again'); await js(`localStorage.removeItem('peakdesk.theme')`);
   /* expo */
   await world('expo'); await tab('today');
-  ok(await js(`location.hash==='#expo/today'&&/Expo leads/.test(document.querySelector('.shead h1').textContent)&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Inbox,Pipeline,Organisations,Tours & quotes,More'`), 'Expo leads: the same tabs (Today, Inbox, Pipeline, Organisations, Tours & quotes, More)');
+  ok(await jsUntil(`location.hash==='#expo/today'&&/Expo leads/.test(document.querySelector('.shead h1').textContent)&&[...document.querySelectorAll('.tabs .tl')].map(b=>b.textContent).join(',')==='Today,Inbox,Pipeline,Organisations,Tours & quotes,More'`), 'Expo leads: the same tabs (Today, Inbox, Pipeline, Organisations, Tours & quotes, More)');
   ok(/Quotes waiting/.test(await text()), 'expo Today: quotes waiting on an answer');
   await tab('pipe');
-  ok(await js(`document.querySelectorAll('.funnel .fr').length===7`), 'expo Pipeline: its 7 stages');
+  ok(await jsUntil(`document.querySelectorAll('.funnel .fr').length===7`), 'expo Pipeline: its 7 stages');
   await click('.funnel .fr[data-st="new"]'); await click('.list .row');
-  ok(await js(`/Their events/.test(document.querySelector('.detail').textContent)&&document.querySelectorAll('.detail .qb button').length===6`), 'an expo card: their events and the same one-tap buttons');
+  ok(await jsUntil(`/Their events/.test(document.querySelector('.detail').textContent)&&document.querySelectorAll('.detail .qb button').length===6`), 'an expo card: their events and the same one-tap buttons');
   const xid = await js(`document.querySelector('.detail').dataset.id`);
   await click('.detail .qb [data-m="email/sent"]', 900);
   ok((await b('data')).expo.recs.find((r) => r.id === xid).stage === 'contacted', 'Emailed on an expo lead: Contacted');
   await shot('expo-card.png');
   await click('.detail .close');
-  await tab('list'); ok(await js(`!!document.querySelector('.xprichips')&&!!document.querySelector('select.xcat')`), 'Organisations keeps priority and category filters');
+  await tab('list'); ok(await jsUntil(`!!document.querySelector('.xprichips')&&!!document.querySelector('select.xcat')`), 'Organisations keeps priority and category filters');
   await tab('deals'); await sub('quotes'); ok(/Booked/.test(await text()) && new RegExp(XA.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).test(await text()), 'Tours & quotes \u203a Quotes and bookings');
-  await tab('more'); await sub('ref'); ok(await js(`document.querySelectorAll('main .xq li').length===10`), 'Questions and venues kept');
+  await tab('more'); await sub('ref'); ok(await jsUntil(`document.querySelectorAll('main .xq li').length===10`), 'Questions and venues kept');
   ok((await chipsNow()) === 'ref,mine,cal,look' && await js(`/^The questions for Peak and the competing venues, your email and booking link/.test(document.querySelector('.sdesc').textContent)`), 'More on the Expo leads (a seller): Questions and venues, My email & booking link, My calendar, Look; no Report');
   /* kept from the earlier desk: the lists, Peak's tracker, the reading pages, P&L, add / remove / bring back, the expo details */
   console.log('What the desk already did');
@@ -1294,34 +1298,34 @@ try {
   await js(`(()=>{const s=document.querySelector('.sortsel');s.value='name';s.dispatchEvent(new Event('change'));return 1})()`); await sleep(200);
   const nn = await js(`[...document.querySelectorAll('.list .row .nm b')].map(b=>b.textContent)`); ok(nn.length > 5 && nn.join('|') === [...nn].sort((p, q) => p.localeCompare(q)).join('|'), 'Companies › New leads sort by name on a tap');
   await click('.xstagechips [data-x="called"]');
-  await sub('local'); ok(await js(`document.querySelector('.xstagechips [data-x="all"]').getAttribute('aria-pressed')==='true'`), 'a stage picked under New leads does not carry into Local businesses');
-  await sub('new'); ok(await js(`document.querySelector('.xstagechips [data-x="called"]').getAttribute('aria-pressed')==='true'`), 'and New leads keeps its own when you come back'); await click('.xstagechips [data-x="all"]');
+  await sub('local'); ok(await jsUntil(`document.querySelector('.xstagechips [data-x="all"]').getAttribute('aria-pressed')==='true'`), 'a stage picked under New leads does not carry into Local businesses');
+  await sub('new'); ok(await jsUntil(`document.querySelector('.xstagechips [data-x="called"]').getAttribute('aria-pressed')==='true'`), 'and New leads keeps its own when you come back'); await click('.xstagechips [data-x="all"]');
   await js(`(()=>{const q=document.querySelector('.controls .search');q.value=${JSON.stringify(K.name.toLowerCase())};q.dispatchEvent(new Event('input'));return 1})()`); await sleep(200); await click('.list .row');
-  ok(await js(`/<img src=x/.test(document.querySelector('.detail').textContent)&&!document.querySelector('.detail img')&&[...document.querySelectorAll('.detail .ct a')].some(a=>a.href==='mailto:pat@example.com')&&/From: Added on the desk by Test Seller/.test(document.querySelector('.detail').textContent)`), 'a card: a note with HTML shows as text; an added contact is tap-to-email and says who added it');
-  ok(await js(`/Looked up/.test(document.querySelector('.detail').textContent)&&/Tour and proposal/.test(document.querySelector('.detail').textContent)`), 'the card keeps Looked up and Tour and proposal');
+  ok(await jsUntil(`/<img src=x/.test(document.querySelector('.detail').textContent)&&!document.querySelector('.detail img')&&[...document.querySelectorAll('.detail .ct a')].some(a=>a.href==='mailto:pat@example.com')&&/From: Added on the desk by Test Seller/.test(document.querySelector('.detail').textContent)`), 'a card: a note with HTML shows as text; an added contact is tap-to-email and says who added it');
+  ok(await jsUntil(`/Looked up/.test(document.querySelector('.detail').textContent)&&/Tour and proposal/.test(document.querySelector('.detail').textContent)`), 'the card keeps Looked up and Tour and proposal');
   await click('.detail .close');
   if (precs.length) {
     await sub('peak');
     ok((await rowIds()).length === D.sponsor.recs.filter((r) => r.list === 'renew').length && await js(`/Active/.test(document.querySelector('.list .row .pill').textContent)&&document.querySelector('.sortsel').value==='peak'`), `Companies › Peak sponsors: every sponsor on Peak’s tracker, active first`);
     await clickText('.list .row', '/Petrali/', 400);
-    ok(await js(`/On Peak’s tracker/.test(document.querySelector('.detail').textContent)&&!!document.querySelector('.detail .chk')`), 'a sponsor shows its Peak record and what to check'); await shot('desk-peak-sponsor.png');
+    ok(await jsUntil(`/On Peak’s tracker/.test(document.querySelector('.detail').textContent)&&!!document.querySelector('.detail .chk')`), 'a sponsor shows its Peak record and what to check'); await shot('desk-peak-sponsor.png');
     await click('.detail .close'); await clickText('.list .row', '/Rally Back/', 400);
     ok((await js(`document.querySelectorAll('.detail .kv').length`)) === 2, 'a sponsor with two agreements shows both (Rally Back)'); await click('.detail .close');
   }
   await signAs(ADMIN, 'the admin, for the reading pages and P&L'); await world('sponsor');
   await tab('more'); await sub('offer');
-  ok(await js(`/Court sponsor: .12,000 a year/.test(document.querySelector('main').textContent)&&document.querySelectorAll('main .info').length===5`), 'More › What Peak offers: five sections');
-  await sub('better'); ok(await js(`/Springs Pickleball/.test(document.querySelector('main table').textContent)&&[...document.querySelectorAll('main .src a')].every(a=>/^https:/.test(a.href))`), 'More › What we could offer: the price table, sources are links');
-  await sub('pl'); ok(await js(`/\\$10,500 a year \\(88%\\)/.test(document.querySelector('main').textContent)&&/\\$21,260/.test(document.querySelector('.numbers').textContent)&&/No cost entered for: Banner/.test(document.querySelector('.numbers').textContent)`), 'More › P&L: $24,500 in, $3,000 to deliver, $240 running = $21,260; flags the banner has no cost');
+  ok(await jsUntil(`/Court sponsor: .12,000 a year/.test(document.querySelector('main').textContent)&&document.querySelectorAll('main .info').length===5`), 'More › What Peak offers: five sections');
+  await sub('better'); ok(await jsUntil(`/Springs Pickleball/.test(document.querySelector('main table').textContent)&&[...document.querySelectorAll('main .src a')].every(a=>/^https:/.test(a.href))`), 'More › What we could offer: the price table, sources are links');
+  await sub('pl'); ok(await jsUntil(`/\\$10,500 a year \\(88%\\)/.test(document.querySelector('main').textContent)&&/\\$21,260/.test(document.querySelector('.numbers').textContent)&&/No cost entered for: Banner/.test(document.querySelector('.numbers').textContent)`), 'More › P&L: $24,500 in, $3,000 to deliver, $240 running = $21,260; flags the banner has no cost');
   await sub('pk'); ok((await js(`document.querySelectorAll('main .pkrow').length`)) === 2, 'More › Packages lists the packages');
   await signAs(SELLER, 'the seller again'); await world('sponsor');
   await tab('deals'); await sub('tours');
-  ok(await js(`[...document.querySelectorAll('main button')].some(b=>b.textContent==='Add to my calendar')&&/Tours coming up/.test(document.querySelector('main').textContent)`), 'Tours: the tours ahead with Add to my calendar'); await shot('desk-tours.png');
+  ok(await jsUntil(`[...document.querySelectorAll('main button')].some(b=>b.textContent==='Add to my calendar')&&/Tours coming up/.test(document.querySelector('main').textContent)`), 'Tours: the tours ahead with Add to my calendar'); await shot('desk-tours.png');
   await sub('signed'); await clickText('main button', '/\\+ Add a sponsor/', 300);
   await js(`(()=>{const i=document.querySelector('.sheet input');i.value=${JSON.stringify(K.name.toLowerCase())};i.dispatchEvent(new Event('input'));return 1})()`); await sleep(100);
-  ok(await js(`/already on the desk/.test(document.querySelector('.sheet').textContent)`), '+ Add a sponsor: a company already on the desk is offered instead');
+  ok(await jsUntil(`/already on the desk/.test(document.querySelector('.sheet').textContent)`), '+ Add a sponsor: a company already on the desk is offered instead');
   await js(`(()=>{const i=document.querySelector('.sheet input');i.value='Sheet Sponsor LLC';i.dispatchEvent(new Event('input'));[...document.querySelectorAll('.sheet button')].find(b=>b.textContent==='Add the sponsor').click();return 1})()`); await sleep(900);
-  ok(await js(`!document.querySelector('.sheet')&&/Sheet Sponsor LLC/.test(document.querySelector('main').textContent)`), 'the new sponsor is listed under Signed'); await shot('desk-signed.png');
+  ok(await jsUntil(`!document.querySelector('.sheet')&&/Sheet Sponsor LLC/.test(document.querySelector('main').textContent)`), 'the new sponsor is listed under Signed'); await shot('desk-signed.png');
   await js(`(()=>{const c=[...document.querySelectorAll('main .card')].find(c=>/Sheet Sponsor LLC/.test(c.textContent));[...c.querySelectorAll('button')].find(b=>b.textContent==='Remove').click();return 1})()`); await sleep(900);
   ok(!/Sheet Sponsor LLC/.test(await text()), 'Remove takes it off Signed');
   await tab('list'); await sub('removed');
@@ -1331,9 +1335,9 @@ try {
   const NEWCO = 'Rebuild Check ' + Math.random().toString(36).slice(2, 8);
   await clickText('.shead button', '/Add a company/', 200);
   await js(`(()=>{const i=document.querySelectorAll('.addcard input');i[0].value='${NEWCO}';i[1].value='Test';[...document.querySelectorAll('.addcard button')].find(b=>b.textContent==='Add').click();return 1})()`); await sleep(1000);
-  ok(await js(`location.hash==='#sponsor/list/added'&&new RegExp('${NEWCO}').test(document.querySelector('.detail h2').textContent)`) && (await b('data')).sponsor.recs.find((r) => r.name === NEWCO).owner === 'Test Seller','+ Add a company: it opens under Added on the desk, owned by whoever added it');
+  ok(await jsUntil(`location.hash==='#sponsor/list/added'&&new RegExp('${NEWCO}').test(document.querySelector('.detail h2').textContent)`) && (await b('data')).sponsor.recs.find((r) => r.name === NEWCO).owner === 'Test Seller','+ Add a company: it opens under Added on the desk, owned by whoever added it');
   await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
-  ok(await js(`location.hash==='#sponsor/list/added'&&document.querySelector('main').dataset.section==='list'`), 'a reload comes back to the same place');
+  ok(await jsUntil(`location.hash==='#sponsor/list/added'&&document.querySelector('main').dataset.section==='list'`), 'a reload comes back to the same place');
 
   console.log('The Sixfold tools on the screen');
   const openCo = async (id, name) => { await tab('list'); await sub('all'); await js(`(()=>{const q=document.querySelector('.controls .search');q.value=${JSON.stringify(name.toLowerCase())};q.dispatchEvent(new Event('input'));return 1})()`); await sleep(250); await click(`.list .row[data-id="${id}"]`, 500); return js(`document.querySelector('.detail')&&document.querySelector('.detail').dataset.id===${JSON.stringify(id)}`); };
@@ -1341,7 +1345,7 @@ try {
   ok(await openCo(USA.id, USA.name), 'a card opens from the list');
   ok(await js(`(()=>{const c=document.querySelector('.detail .ct.dnc[data-key=${JSON.stringify(JSON.stringify(dk)).slice(1, -1)}]');return !!c&&/Do not contact/.test(c.textContent)&&/Asked not to be contacted/.test(c.textContent)&&!c.querySelector('a[href^="tel:"],a[href^="sms:"],a[href^="mailto:"]')&&!!c.querySelector('[data-dnc="off"]')})()`), 'Don’t contact: the person shows the tag and the reason, with no call, text or email links');
   await click('.detail .tplpick [data-tpl="first"]', 300);
-  ok(await js(`![...document.querySelectorAll('.detail .tplwho option')].some(o=>o.textContent.indexOf(${JSON.stringify(usP.name)})===0)&&document.querySelectorAll('.detail .tplwho option').length>0`), 'and is not offered in Send a message');
+  ok(await jsUntil(`![...document.querySelectorAll('.detail .tplwho option')].some(o=>o.textContent.indexOf(${JSON.stringify(usP.name)})===0)&&document.querySelectorAll('.detail .tplwho option').length>0`), 'and is not offered in Send a message');
   await js(`(()=>{const s=document.querySelector('.detail .tplwho');const o=[...s.options].find(o=>o.textContent.indexOf(${JSON.stringify(usOk.name)})===0);s.value=o.value;s.dispatchEvent(new Event('change'));return 1})()`); await sleep(150);
   const tv = await js(`({t:document.querySelector('.detail .tpltext').value,b:document.querySelector('.detail .tplbody').value,s:document.querySelector('.detail .tplsub').value,sms:document.querySelector('.detail [data-send="text"]').getAttribute('href'),mail:document.querySelector('.detail [data-send="email"]').getAttribute('href')})`);
   const fn = usOk.name.split(' ')[0];
@@ -1351,12 +1355,12 @@ try {
   D = await b('data'); let ul = find('sponsor', USA.id).last;
   ok(ul.m === 'text' && ul.out === 'sent' && ul.tpl === 'first' && ul.by === 'Test Seller' && /From the template “First outreach” to /.test(ul.note) && await js(`/Texted from “First outreach”/.test(document.getElementById('toast').textContent)`), 'tapping Text logs it: Texted, from the template, by that person (with Undo)');
   await click('.detail .tplpick [data-tpl="tour"]', 300);
-  ok(await js(`/needs the tour time/.test(document.querySelector('.detail .tplbox').textContent)&&document.querySelector('.detail [data-send="text"]').classList.contains('off')`), 'Tour confirmation waits for a tour to be booked');
+  ok(await jsUntil(`/needs the tour time/.test(document.querySelector('.detail .tplbox').textContent)&&document.querySelector('.detail [data-send="text"]').classList.contains('off')`), 'Tour confirmation waits for a tour to be booked');
   await click('.detail .close', 300);
   /* the tries rule on the card */
   ok(await openCo(T4.id, T4.name) && await js(`!!document.querySelector('.detail .tries4')&&/4 of 4 tries/.test(document.querySelector('.detail .strip').textContent)`), 'after 4 misses: the card says so, with Send a last text or email and Move to Not now (60 days)');
   await click('.detail [data-act="lasttry"]', 400);
-  ok(await js(`document.querySelector('.detail .tplpick [data-tpl="last"]').getAttribute('aria-pressed')==='true'&&/tried to reach you a few times|tried you a few times/.test(document.querySelector('.detail .tplbox').textContent+document.querySelector('.detail .tpltext').value)`), 'Send a last text or email opens the Last try template');
+  ok(await jsUntil(`document.querySelector('.detail .tplpick [data-tpl="last"]').getAttribute('aria-pressed')==='true'&&/tried to reach you a few times|tried you a few times/.test(document.querySelector('.detail .tplbox').textContent+document.querySelector('.detail .tpltext').value)`), 'Send a last text or email opens the Last try template');
   ok((await b('data')).sponsor.recs.find((r) => r.id === T4.id).stage !== 'notnow', 'nothing moved by itself');
   await click('.detail [data-act="notnow60"]', 1000);
   D = await b('data'); const t4r = find('sponsor', T4.id);
@@ -1380,7 +1384,7 @@ try {
   ok(await js(`(()=>{const d=document.querySelector('.addcard .dupbox');return !d.hidden&&/may already be on the desk/.test(d.textContent)&&!!d.querySelector('[data-act="merge"][data-id="${DUP.id}"]')&&!!d.querySelector('[data-act="keep"]')})()`), '+ Add a company: a warning as the name is typed, with Merge or Keep both');
   await shot('facelift-duplicate-warning.png');
   await click(`.addcard .dupbox [data-act="merge"][data-id="${DUP.id}"]`, 1200);
-  ok(await js(`document.querySelector('.detail').dataset.id===${JSON.stringify(DUP.id)}`) && !(await b('data')).sponsor.recs.some((r) => r.name === DUP.name.toLowerCase() + ' llc'), 'Merge opens the one already there; nothing new is made');
+  ok(await jsUntil(`document.querySelector('.detail').dataset.id===${JSON.stringify(DUP.id)}`) && !(await b('data')).sponsor.recs.some((r) => r.name === DUP.name.toLowerCase() + ' llc'), 'Merge opens the one already there; nothing new is made');
   await click('.detail .close', 300);
   /* expo details */
   await world('expo'); await tab('list');
@@ -1396,17 +1400,17 @@ try {
   ok(await js(`(()=>{const d=document.querySelector('.detail');return [...d.querySelectorAll('a')].some(a=>a.href.toLowerCase()==='mailto:terri@trilakeschamber.com')&&/published/.test(d.textContent)&&/confidence high/.test(d.textContent)&&/best route/.test(d.textContent)&&[...d.querySelectorAll('a')].some(a=>/^tel:/.test(a.href))})()`), 'an expo card: tap-to-email, tap-to-call, published, confidence high, best route');
   await click('.detail .close');
   await js(`(()=>{const q=document.querySelector('.controls .search');q.value='American Consumer';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(200); await click('.list .row');
-  ok(await js(`[...document.querySelectorAll('.detail .xn.chk')].some(n=>/CORRECTION/.test(n.textContent))`), 'a contact note that warns (a correction) shows in the amber box');
+  ok(await jsUntil(`[...document.querySelectorAll('.detail .xn.chk')].some(n=>/CORRECTION/.test(n.textContent))`), 'a contact note that warns (a correction) shows in the amber box');
   await click('.detail .close'); await js(`(()=>{const q=document.querySelector('.controls .search');q.value='';q.dispatchEvent(new Event('input'));return 1})()`); await sleep(150);
   await sub('removed'); ok(/Test Expo Promoter/.test(await text()), 'Organisations › Removed lists the removed lead');
   await js(`(()=>{const r=[...document.querySelectorAll('main .row')].find(r=>/Test Expo Promoter/.test(r.textContent));r.querySelector('button').click();return 1})()`); await sleep(900);
   ok((await b('data')).expo.recs.some((o) => o.name === 'Test Expo Promoter'), 'Bring back puts it in the Expo leads again');
   await sub('all'); await clickText('.shead button', '/Add an expo lead/', 200);
   await js(`(()=>{const i=document.querySelectorAll('.addcard input');i[0].value='Screen Expo Co';i[1].value='Senior expos';[...document.querySelectorAll('.addcard button')].find(b=>b.textContent==='Add').click();return 1})()`); await sleep(1000);
-  ok(await js(`/Screen Expo Co/.test(document.querySelector('.detail h2').textContent)`) && !(await b('data')).sponsor.recs.some((r) => r.name === 'Screen Expo Co'), '+ Add an expo lead opens it, and it never reaches the sponsors');
+  ok(await jsUntil(`/Screen Expo Co/.test(document.querySelector('.detail h2').textContent)`) && !(await b('data')).sponsor.recs.some((r) => r.name === 'Screen Expo Co'), '+ Add an expo lead opens it, and it never reaches the sponsors');
   await clickText('.detail button', '/Remove this lead/', 900);
   ok((await b('data')).expo.removed.some((r) => r.name === 'Screen Expo Co'), 'Remove this lead takes it out (to Removed)');
-  await tab('more'); await sub('ref'); ok(await js(`/Douglas County Fairgrounds/.test(document.querySelector('.xvenues').textContent)`), 'the competing venues table');
+  await tab('more'); await sub('ref'); ok(await jsUntil(`/Douglas County Fairgrounds/.test(document.querySelector('.xvenues').textContent)`), 'the competing venues table');
   await js(`(()=>{localStorage.removeItem('peakdesk.theme');window.__lookApply();return 1})()`); await sleep(300); await tab('pipe');
   ok((await js(bgSum)) < 120 && await js(`getComputedStyle(document.documentElement).getPropertyValue('--acc').trim()==='#e6781d'`), 'Expo leads in dark mode, glowing Peak orange'); await shot('expo-pipeline-dark.png');
   /* Edit and Remove on a contact (2026-11-18) */
@@ -1424,7 +1428,7 @@ try {
   await js(`(()=>{const f=document.querySelector(${JSON.stringify(scSel('e:screen@exmaple.com') + ' .cform')});f.querySelector('[data-f="email"]').value='screen@example.com';f.querySelector('[data-f="phone"]').value='';return 1})()`);
   await click(scSel('e:screen@exmaple.com') + ' [data-act="csave"]', 1500);
   ok(await js(`(()=>{const c=document.querySelector(${JSON.stringify(scSel('e:screen@example.com'))});return !!c&&/screen@example\\.com/.test(c.textContent)&&!c.querySelector('a[href^="tel:"]')&&/edited by Test/.test(c.textContent)&&!document.querySelector(${JSON.stringify(scSel('e:screen@exmaple.com'))})})()`), 'saved: the corrected email shows, the cleared phone is gone, and it says who edited it');
-  ok(await js(`/Contact edited: Screen Person/.test(document.querySelector('.detail .tl').textContent)&&/Email: screen@exmaple\\.com → screen@example\\.com/.test(document.querySelector('.detail .tl').textContent)&&/Phone: 719-555-0177 → \\(cleared\\)/.test(document.querySelector('.detail .tl').textContent)`), 'the card’s Activity shows each change, old → new');
+  ok(await jsUntil(`/Contact edited: Screen Person/.test(document.querySelector('.detail .tl').textContent)&&/Email: screen@exmaple\\.com → screen@example\\.com/.test(document.querySelector('.detail .tl').textContent)&&/Phone: 719-555-0177 → \\(cleared\\)/.test(document.querySelector('.detail .tl').textContent)`), 'the card’s Activity shows each change, old → new');
   await shot('contact-edited-desktop.png');
   /* on a phone */
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
@@ -1436,7 +1440,7 @@ try {
   await js(`window.__cf=window.confirm;window.confirm=()=>true`);
   await click(scSel('e:screen@example.com') + ' [data-act="cdel"]', 1500);
   await js(`window.confirm=window.__cf`);
-  ok(await js(`!document.querySelector(${JSON.stringify(scSel('e:screen@example.com'))})&&/Contact removed: Screen Person/.test(document.querySelector('.detail .tl').textContent)`), 'Remove (after a confirm): off the card, and the Activity says so');
+  ok(await jsUntil(`!document.querySelector(${JSON.stringify(scSel('e:screen@example.com'))})&&/Contact removed: Screen Person/.test(document.querySelector('.detail .tl').textContent)`), 'Remove (after a confirm): off the card, and the Activity says so');
   /* phone */
   await world('sponsor'); await tab('today');
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
@@ -1463,9 +1467,9 @@ try {
     await js(`document.querySelector('${f}').scrollIntoView({block:'center'})`); await sleep(250); await shot('tour-mail-form.png');
     const n0 = GM.calls; await clickText(`${f} button`, '/^Book the tour$/', 1500);
     ok(GM.calls === n0 + 1 && await js(`/Tour booked\\. Email sent to casey@example.com/.test(document.getElementById('toast').textContent)`), 'Book the tour: booked, and the toast says the email went');
-    ok(await js(`[...document.querySelectorAll('.detail .tmline')].some(l=>/Confirmation sent to casey@example.com/.test(l.textContent))`), 'the card shows it went');
+    ok(await jsUntil(`[...document.querySelectorAll('.detail .tmline')].some(l=>/Confirmation sent to casey@example.com/.test(l.textContent))`), 'the card shows it went');
     await tab('deals'); await sub('tours');
-    ok(await js(`[...document.querySelectorAll('main .card .tmline')].some(l=>/Confirmation sent to casey@example.com/.test(l.textContent))`), 'and so does the tour on Tours');
+    ok(await jsUntil(`[...document.querySelectorAll('main .card .tmline')].some(l=>/Confirmation sent to casey@example.com/.test(l.textContent))`), 'and so does the tour on Tours');
     ok((await a('tourmailset', { on: false })).tourmail.on === false, 'switched off again');
     await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
     ok(await openCo(TS.id, find('sponsor', TS.id).name), 'the card again');
@@ -1480,7 +1484,7 @@ try {
     await b('contact', { world: 'sponsor', id: ES.id, name: 'Morgan Lane', email: 'morgan@example.com' }); D = await b('data');
     await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
     ok(await openCo(ES.id, find('sponsor', ES.id).name), 'a card opens');
-    ok(await js(`!!document.querySelector('.detail .dmsec [data-act="dmopen"]')&&/Write an email/.test(document.querySelector('.detail .dmsec h3').textContent)`), 'every card has Write an email');
+    ok(await jsUntil(`!!document.querySelector('.detail .dmsec [data-act="dmopen"]')&&/Write an email/.test(document.querySelector('.detail .dmsec h3').textContent)`), 'every card has Write an email');
     await click('.detail [data-act="dmopen"]', 300);
     await js(`(()=>{const s=document.querySelector('.detail .dmto');s.value=[...s.options].find(o=>/morgan@example.com/.test(o.textContent)).value;s.dispatchEvent(new Event('change'));return 1})()`); await sleep(100);
     ok(await js(`(()=>{const b=document.querySelector('.detail .dmbox');return !b.hidden&&!!b.querySelector('.dmtpl option[value="first"]')&&!!b.querySelector('.dmsub')&&!!b.querySelector('.dmbody')&&!b.querySelector('[data-act="dmsend"]').disabled&&!b.querySelector('[data-act="dmbook"]').disabled&&!!b.querySelector('[data-act="dmpreview"]')&&!!b.querySelector('[data-act="dmcopy"]')&&!!b.querySelector('[data-act="dmmailto"]')})()`), 'the box: To (a contact, or typed), Start from a template, Subject, Message, Insert my booking link, Preview, Send, Copy, Open in my mail app');
@@ -1488,16 +1492,16 @@ try {
     ok(await js(`(()=>{const b=document.querySelector('.detail .dmbox'),v=b.querySelector('.dmbody').value;return /^Hi Morgan,/.test(v)&&b.querySelector('.dmsub').value.length>3&&/Thanks,$/.test(v.trim())&&!/Peak Pickleball\\s*$/.test(v)})()`), 'a saved template fills it in for Morgan, to change as wanted (its sign-off name left for the signature)');
     await js(`(()=>{const t=document.querySelector('.detail .dmbody');t.value='Hi Morgan,\\n\\nThanks for the chat today. ';t.selectionStart=t.selectionEnd=t.value.length;t.dispatchEvent(new Event('input'));return 1})()`);
     await click('.detail [data-act="dmbook"]', 150);
-    ok(await js(`/Thanks for the chat today\\. Pick a time that suits you: \\{book\\}/.test(document.querySelector('.detail .dmbody').value)`), 'Insert my booking link puts it where the cursor is');
+    ok(await jsUntil(`/Thanks for the chat today\\. Pick a time that suits you: \\{book\\}/.test(document.querySelector('.detail .dmbody').value)`), 'Insert my booking link puts it where the cursor is');
     await click('.detail [data-act="dmpreview"]', 900);
     ok(await js(`(()=>{const p=document.querySelector('.detail .dmbox pre');return !p.hidden&&/^To: Morgan Lane <morgan@example.com>/.test(p.textContent)&&/Reply-To: seller@example.com/.test(p.textContent)&&/\\[your booking link for this email\\]/.test(p.textContent)&&/Test Seller\\nPeak Pickleball\\n\\(719\\) 555-0100/.test(p.textContent)})()`), 'Preview: to Morgan, Reply-To the seller, the booking link marked, the seller’s signature');
     await js(`document.querySelector('.detail .dmbox').scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-email-box.png');
     let n0 = GM.calls; await click('.detail [data-act="dmsend"]', 2000);
     ok(GM.calls === n0 + 1 && await js(`/Email sent to morgan@example.com/.test(document.getElementById('toast').textContent)`), 'Send (after the confirm): it went, and the toast says so');
     ok(/Pick a time that suits you: http:\/\/127\.0\.0\.1:\d+\/api\/book\.php\?m=dm/.test(mimeParts(GM.sent[GM.sent.length - 1]).text), 'the email carries the booking link for it');
-    ok(await js(`[...document.querySelectorAll('.detail .tli')].some(i=>/Emailed “/.test(i.textContent)&&!!i.querySelector('.dmline'))`), 'the Activity shows it, with Show the email');
+    ok(await jsUntil(`[...document.querySelectorAll('.detail .tli')].some(i=>/Emailed “/.test(i.textContent)&&!!i.querySelector('.dmline'))`), 'the Activity shows it, with Show the email');
     await clickText('.detail .dmline button', '/Show the email/', 200);
-    ok(await js(`[...document.querySelectorAll('.detail pre.dmtext')].some(p=>!p.hidden&&/Thanks for the chat today/.test(p.textContent))`), 'Show the email opens the whole email');
+    ok(await jsUntil(`[...document.querySelectorAll('.detail pre.dmtext')].some(p=>!p.hidden&&/Thanks for the chat today/.test(p.textContent))`), 'Show the email opens the whole email');
     await js(`[...document.querySelectorAll('.detail .tli')].find(i=>!!i.querySelector('.dmline')).scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-email-activity.png');
     await click('.detail .close', 300);
     /* their reply on the Activity, and Reply (2026-11-19) */
@@ -1515,10 +1519,10 @@ try {
     await js(`document.querySelector('.inrow .inhd').click()`); await waitFor(`!!document.querySelector('.inrow .intext')`, 'an email opened');
     ok(await js(`(()=>{const t=document.querySelector('.inrow .intext');return !t.querySelector('*')&&['inreply','inattach','inclaim','indone'].every(a=>!!document.querySelector('.inrow [data-act="'+a+'"]'))})()`), 'opened: their words as plain text (nothing from the email is HTML), with Reply, Attach to a company, Claim and Done');
     await click('.inrow [data-act="inattach"]', 200);
-    ok(await js(`!!document.querySelector('.inrow .inq')`), 'Attach to a company asks which company');
+    ok(await jsUntil(`!!document.querySelector('.inrow .inq')`), 'Attach to a company asks which company');
     await shot('desk-inbox.png');
     await sub('other'); await waitFor(`document.querySelectorAll('.inrow.other').length>=3`, 'Other');
-    ok(await js(`[...document.querySelectorAll('.inrow')].every(r=>r.classList.contains('other'))`), 'Other: the notices, the auto-replies and CourtReserve');
+    ok(await jsUntil(`[...document.querySelectorAll('.inrow')].every(r=>r.classList.contains('other'))`), 'Other: the notices, the auto-replies and CourtReserve');
     await sub('open'); await tab('more'); await sub('mine');
     ok(await js(`(()=>{const c=document.querySelector('[data-set="alerts"]');return !!c&&!!c.querySelector('[data-act="pushon"]')&&/Home Screen/.test(c.textContent)&&/iOS 16\\.4/.test(c.textContent)&&!!c.querySelector('[data-al="quiet"]')&&!!c.querySelector('[data-al="inbox"]')&&!!c.querySelector('[data-al="mine"]')&&!!c.querySelector('[data-al="email"]')})()`), 'More › My email & booking link: Alerts (turn on per device, the iPhone Home Screen note, who gets what, quiet hours)');
     await js(`document.querySelector('[data-set="alerts"]').scrollIntoView()`); await sleep(200); await shot('desk-alerts.png');
@@ -1526,14 +1530,14 @@ try {
     ok(await js(`(()=>{const b=document.querySelector('[data-blk="linkbooked"]');return !!b&&/Booked from your booking link/.test(b.textContent)&&/Brand New Co/.test(b.textContent)})()`), 'Today: "Booked from your booking link", for the host');
     await js(`document.querySelector('[data-blk="linkbooked"]').scrollIntoView({block:'center'})`); await sleep(200); await shot('desk-booked-today.png');
     await tab('deals'); await sub('tours');
-    ok(await js(`[...document.querySelectorAll('main .card')].some(c=>/Brand New Co/.test(c.textContent)&&/Booked from Test Seller’s link/.test(c.textContent))`), 'Tours: the tour says it was booked from the seller’s link');
+    ok(await jsUntil(`[...document.querySelectorAll('main .card')].some(c=>/Brand New Co/.test(c.textContent)&&/Booked from Test Seller’s link/.test(c.textContent))`), 'Tours: the tour says it was booked from the seller’s link');
     await tab('more'); await sub('mine'); await click('[data-act="booklink"]', 800);
-    ok(await js(`/Your emails go out as Peak Partnerships \\(partnerships@peakpickleball.us\\)/.test(document.querySelector('[data-set="mysig"]').textContent)&&/replies come to Peak Partnerships \\(partnerships@peakpickleball.us\\)/.test(document.querySelector('[data-set="mysig"]').textContent)`), 'My email: who it goes out as (read only) and where replies come');
+    ok(await jsUntil(`/Your emails go out as Peak Partnerships \\(partnerships@peakpickleball.us\\)/.test(document.querySelector('[data-set="mysig"]').textContent)&&/replies come to Peak Partnerships \\(partnerships@peakpickleball.us\\)/.test(document.querySelector('[data-set="mysig"]').textContent)`), 'My email: who it goes out as (read only) and where replies come');
     ok(await js(`/book\\.php\\?p=[0-9a-f]{12}-[0-9a-f]{16}$/.test(document.querySelector('.bookurl').value)&&document.querySelector('.mysig').value.endsWith('(719) 555-0100')&&document.querySelector('.myreply').value==='seller@example.com'&&/Mon, Wed, Fri 2:00-4:00 pm/.test(document.querySelector('main').textContent)`), 'More › My email & booking link: the link, the shared hours, my signature and reply address');
     await shot('desk-my-email-booking.png');
     const BL = await js(`document.querySelector('.bookurl').value`);
     await send('Page.navigate', { url: BL }); await waitFor(`!!document.querySelector('form [name="slot"]')`, 'booking page'); await sleep(200);
-    ok(await js(`/Book a time with Peak Pickleball/.test(document.body.textContent)&&!/Test Seller/.test(document.body.textContent)`), 'the booking page, as a visitor sees it');
+    ok(await jsUntil(`/Book a time with Peak Pickleball/.test(document.body.textContent)&&!/Test Seller/.test(document.body.textContent)`), 'the booking page, as a visitor sees it');
     await shot('booking-page.png');
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
     ok(await js(fits), 'the booking page fits a phone'); await shot('booking-page-phone.png');
@@ -1548,19 +1552,19 @@ try {
   }
   console.log('Settings, My calendar, the look and contrast');
   await world('sponsor'); await tab('more');
-  ok(await js(`!document.querySelector('.subchips [data-sub="settings"]')&&!!document.querySelector('.subchips [data-sub="cal"]')`), 'a seller sees My calendar but not Settings');
+  ok(await jsUntil(`!document.querySelector('.subchips [data-sub="settings"]')&&!!document.querySelector('.subchips [data-sub="cal"]')`), 'a seller sees My calendar but not Settings');
   await sub('cal'); await click('[data-act="callink"]', 700);
-  ok(await js(`/api\\/desk\\.php\\?action=calfeed&p=[0-9a-f]{12}&t=[0-9a-f]{32}$/.test(document.querySelector('.calurl').value)&&[...document.querySelectorAll('main a')].some(a=>a.href.startsWith('webcal:'))`), 'My calendar: the private link, a Subscribe link for the iPhone, and one for Google');
+  ok(await jsUntil(`/api\\/desk\\.php\\?action=calfeed&p=[0-9a-f]{12}&t=[0-9a-f]{32}$/.test(document.querySelector('.calurl').value)&&[...document.querySelectorAll('main a')].some(a=>a.href.startsWith('webcal:'))`), 'My calendar: the private link, a Subscribe link for the iPhone, and one for Google');
   await shot('facelift-my-calendar.png');
   /* the look: one tap in the bar, kept on this device */
   await tab('today'); await click('#lookbtn', 300);
-  ok(await js(`document.documentElement.dataset.theme==='light'&&localStorage.getItem('peakdesk.theme')==='light'`) && (await js(bgS)) > 600, 'the sun button: light mode, kept on this device');
+  ok(await jsUntil(`document.documentElement.dataset.theme==='light'&&localStorage.getItem('peakdesk.theme')==='light'`) && (await js(bgS)) > 600, 'the sun button: light mode, kept on this device');
   await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
-  ok(await js(`document.documentElement.dataset.theme==='light'`), 'still light after a reload');
+  ok(await jsUntil(`document.documentElement.dataset.theme==='light'`), 'still light after a reload');
   await tab('more'); await sub('look');
-  ok(await js(`[...document.querySelectorAll('[data-look]')].map(b=>b.dataset.look).join(',')==='dark,light,auto'&&document.querySelector('[data-look="light"]').getAttribute('aria-pressed')==='true'`), 'More › Look: Dark (the default), Light, Match this device');
+  ok(await jsUntil(`[...document.querySelectorAll('[data-look]')].map(b=>b.dataset.look).join(',')==='dark,light,auto'&&document.querySelector('[data-look="light"]').getAttribute('aria-pressed')==='true'`), 'More › Look: Dark (the default), Light, Match this device');
   await click('[data-look="dark"]', 300);
-  ok(await js(`document.documentElement.dataset.theme==='dark'`) && (await js(bgS)) < 120, 'back to dark');
+  ok(await jsUntil(`document.documentElement.dataset.theme==='dark'`) && (await js(bgS)) < 120, 'back to dark');
   /* contrast: every piece of text on the screen against what is behind it, 4.5:1 or better */
   const CONTRAST = `(()=>{const P=s=>{if(!s)return null;let m=s.match(/rgba?\\(([^)]+)\\)/);if(m){const v=m[1].split(/[\\s,\\/]+/).filter(Boolean).map(Number);return [v[0],v[1],v[2],v[3]==null?1:v[3]]}m=s.match(/color\\(srgb ([^)]+)\\)/);if(m){const v=m[1].split(/[\\s\\/]+/).filter(Boolean).map(Number);return [v[0]*255,v[1]*255,v[2]*255,v[3]==null?1:v[3]]}return null};
     const L=c=>{const f=v=>{v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4)};return 0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2])};const over=(t,b)=>{const a=t[3];return [t[0]*a+b[0]*(1-a),t[1]*a+b[1]*(1-a),t[2]*a+b[2]*(1-a),1]};
@@ -1593,19 +1597,19 @@ try {
   await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${ADMIN}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
   await waitFor(`!!document.querySelector('.shead')`, 'the admin’s page'); await world('sponsor'); await tab('more'); await sub('settings');
-  ok(await js(`document.querySelector('[data-set="eod"] [data-eod="off"]').getAttribute('aria-pressed')==='true'&&/6 pm Colorado time, Monday to Friday/.test(document.querySelector('[data-set="eod"]').textContent)`), 'More › Settings (admin): the end-of-day email, Off');
-  ok(await js(`document.querySelectorAll('[data-set="templates"] .tpled').length===6&&[...document.querySelectorAll('[data-set="templates"] .tpled .tag')].filter(t=>t.textContent==='starter').length===6`), 'and the six templates to edit, each marked starter');
+  ok(await jsUntil(`document.querySelector('[data-set="eod"] [data-eod="off"]').getAttribute('aria-pressed')==='true'&&/6 pm Colorado time, Monday to Friday/.test(document.querySelector('[data-set="eod"]').textContent)`), 'More › Settings (admin): the end-of-day email, Off');
+  ok(await jsUntil(`document.querySelectorAll('[data-set="templates"] .tpled').length===6&&[...document.querySelectorAll('[data-set="templates"] .tpled .tag')].filter(t=>t.textContent==='starter').length===6`), 'and the six templates to edit, each marked starter');
   await click('[data-act="eodpreview"]', 700);
-  ok(await js(`/WHO DID WHAT TODAY/.test(document.querySelector('pre.eodpre').textContent)&&/Not going now: it is off/.test(document.querySelector('pre.eodpre').textContent)`), 'Preview shows today’s email and says it is not going (it is off)');
+  ok(await jsUntil(`/WHO DID WHAT TODAY/.test(document.querySelector('pre.eodpre').textContent)&&/Not going now: it is off/.test(document.querySelector('pre.eodpre').textContent)`), 'Preview shows today’s email and says it is not going (it is off)');
   await shot('facelift-settings.png');
   ok(await js(`(()=>{const c=document.querySelector('[data-set="tourmail"]');return !!c&&c.querySelector('[data-tmset="off"]').getAttribute('aria-pressed')==='true'&&/Nothing goes out while it is Off/.test(c.textContent)&&c.querySelector('[data-tmw="body"]').value.includes('{address}')})()`), 'More › Settings: Tour confirmation emails, Off, with the wording to edit');
   await click('[data-act="tmpreview"]', 700);
-  ok(await js(`/the cancellation/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)&&/BEGIN:VCALENDAR/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)`), 'its Preview: the confirmation, the cancellation and the invite (nothing sent)');
+  ok(await jsUntil(`/the cancellation/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)&&/BEGIN:VCALENDAR/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)`), 'its Preview: the confirmation, the cancellation and the invite (nothing sent)');
   await js(`document.querySelector('[data-set="tourmail"]').scrollIntoView()`); await sleep(200); await shot('tour-mail-settings.png');
   ok((await a('data')).tourmail.on === false, 'the switch is left Off for Matthew');
   ok(await js(`(()=>{const d=document.querySelector('[data-set="deskmail"]'),k=document.querySelector('[data-set="booking"]');return !!d&&!!k&&d.querySelector('[data-dmset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('[data-bkset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('.bkweek').value==='Mon 14:00-16:00\\nTue 08:00-16:00\\nWed 14:00-16:00\\nThu 08:00-16:00\\nFri 14:00-16:00'&&k.querySelector('.bkmins').value==='30'&&k.querySelector('.bkmeet').value===''&&/Who meets visitors/.test(k.textContent)&&/Nothing|Off/.test(d.textContent)})()`), 'More › Settings: Desk emails Off and Booking links Off, with the shared hours (Mon, Wed, Fri 2-4 pm; Tue, Thu 8 am-4 pm) to edit');
   await js(`document.querySelector('[data-set="deskmail"]').scrollIntoView()`); await sleep(200); await shot('desk-email-settings.png');
-  await clickText('[data-set="booking"] button', '/Show the general link/', 700); ok(await js(`/book\\.php\\?g=[0-9a-f]{16}$/.test(document.querySelector('.bkgen').value)`), 'and the general link (no host)');
+  await clickText('[data-set="booking"] button', '/Show the general link/', 700); ok(await jsUntil(`/book\\.php\\?g=[0-9a-f]{16}$/.test(document.querySelector('.bkgen').value)`), 'and the general link (no host)');
   { const DA = await a('data'); ok(!DA.deskmail.on && !DA.book.on && !DA.tourmail.on, 'desk emails, booking links and tour confirmations are all left Off for Matthew'); }
   /* the expo-only account in the browser */
   await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
@@ -1614,7 +1618,7 @@ try {
   const xo = await js(`({hidden:document.getElementById('world').hidden,world:document.querySelector('main').dataset.world,leak:((document.querySelector('main').innerText+' '+document.getElementById('bar').innerText).match(/Kaiser Permanente|Sponsors:[^.]{0,30}|Peak sponsors/)||[''])[0]})`);
   ok(xo.hidden && xo.world === 'expo' && !xo.leak, 'the expo-only account: no Sponsors switch, the Expo leads only' + (xo.hidden && xo.world === 'expo' && !xo.leak ? '' : ' ' + JSON.stringify(xo)));
   await js(`location.hash='#sponsor/pipe'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
-  ok(await js(`document.querySelector('main').dataset.world==='expo'`), 'a sponsor address still lands on the Expo leads');
+  ok(await jsUntil(`document.querySelector('main').dataset.world==='expo'`), 'a sponsor address still lands on the Expo leads');
   /* the research account in the browser (2026-11-21, Claire) */
   await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${globalThis.__RES}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
@@ -1625,8 +1629,8 @@ try {
   const rc = await js(`(()=>{const d=document.querySelector('.detail');return {touch:!!d.querySelector('.touchp'),stage:!!d.querySelector('.stagesec'),dm:!!d.querySelector('.dmsec'),looked:!!d.querySelector('[data-act="looked"]'),tel:d.querySelectorAll('a[href^="tel:"],a[href^="sms:"],a[href^="mailto:"]').length,rm:[...d.querySelectorAll('button')].some(b=>/^Remove/.test(b.textContent.trim())),dnc:!!d.querySelector('[data-dnc]'),edit:!!d.querySelector('[data-act="cedit"]'),owner:d.querySelector('.ownerpick').disabled,hunter:/Find people \\(Hunter/.test(d.textContent)}})()`);
   ok(rc && !rc.touch && !rc.stage && !rc.dm && rc.looked && rc.tel === 0 && !rc.rm && !rc.dnc && rc.edit && rc.owner && !rc.hunter, 'research card: no touch, stage, email, Remove or Don\u2019t contact; phones and emails as text only; Edit and Mark looked up there; the owner can\u2019t be changed ' + JSON.stringify(rc));
   await js(`(()=>{const t=document.querySelector('.lookedsec textarea');t.value='Main phone from their contact page';document.querySelector('[data-act="looked"]').click();return 1})()`); await sleep(1200);
-  ok(await js(`/Looked up by Test Research/.test((document.querySelector('.detail .lookedsec')||{}).textContent||'')`), 'research card: Mark looked up saves a note and shows who looked it up');
-  ok(await js(`!document.body.classList.contains('jvchat-on')`), 'research in the browser: no J.A.R.V.I.S. button');
+  ok(await jsUntil(`/Looked up by Test Research/.test((document.querySelector('.detail .lookedsec')||{}).textContent||'')`), 'research card: Mark looked up saves a note and shows who looked it up');
+  ok(await jsUntil(`!document.body.classList.contains('jvchat-on')`), 'research in the browser: no J.A.R.V.I.S. button');
   await shot('research-card.png');
   ok(!errors.length, 'no page errors' + (errors.length ? ': ' + errors[0] : ''));
 } catch (e) { failN++; console.log('  FAIL threw: ' + e.stack); }
