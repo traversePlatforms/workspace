@@ -72,6 +72,15 @@ if [ -f "$QS" ]; then
   fi
 fi
 
+# 2c. The off-site server backup on the cloud J.A.R.V.I.S. machine (22 Nov 2026, traverse/ops/cloud-server-backup.sh): last night's run
+#     must be "ok" and under 30 hours old. One quiet retry: hotel Wi-Fi drops single SSH connections now and then.
+CBL=""; for t in 1 2; do CBL=$(ssh -i "$HOME/.ssh/azure_yard" -o BatchMode=yes -o ConnectTimeout=20 yard@40.78.175.13 'tail -1 ~/backup/backup.log 2>/dev/null' < /dev/null 2>/dev/null) && break; sleep 20; done
+if [ -z "$CBL" ]; then say "  info  Cloud backup: the cloud machine did not answer (checked again next run)"
+else cbt=$(date -d "$(echo "$CBL" | cut -c1-16)Z" +%s 2>/dev/null || echo 0); cbh=$(( ( $(date +%s) - cbt ) / 3600 ))
+  if echo "$CBL" | grep -q " ok " && [ "$cbh" -lt 30 ]; then say "  ok    Cloud backup: ${CBL#*Z }"
+  else bad "Cloud backup: last run ${cbh} h ago: ${CBL#*Z } (cloud machine ~/backup/backup.log)"; fi
+fi
+
 # 3. The live server: app page, API answering, Sixfold town list readable, PHP fatal errors in the last hour
 SRV=$($SG "cd ~/www/traverseplatforms.com && \
   echo page \$(curl -s -o /dev/null -w '%{http_code}' https://traverseplatforms.com/summit-de59ae83/); \
