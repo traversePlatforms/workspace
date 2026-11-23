@@ -13,7 +13,10 @@
  *   claim   on/off: "Cai is answering this". Since 2026-11-23 a lock (Matthew: "when someone claims they are answering this does that
  *           prevent others from responding? because it should"): only the claimer replies to it, from the Inbox or from a card's Write an
  *           email to that address; only the claimer or an admin releases it; an admin may take it over (take: true). Replying claims it.
- *   done    on/off: off the open list (the Done view keeps it)
+ *   done    on/off: pressed Done (the Done view keeps it)
+ *   back    Back to To answer (2026-11-23): we replied but still owe them something
+ *   hide    on/off: Remove, for one under Other (2026-11-23); a bounce's addresses and the cards they are on go with it (bounce)
+ * Which of the four lists an email is on (To answer, Waiting on them, Done, Other) is worked out when the list is read: inStates.
  *   attach  put on a company's card (a touch, as a matched reply is)
  *   rmail   the words of a reply sent from the Inbox with no card; reply: each reply's result
  *   read    the first time a seller opened it (it is then marked read in Peak Partnerships; nothing is ever moved or deleted)
@@ -31,7 +34,7 @@ declare(strict_types=1);
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
 
 const IN_LOG = 'inbox.log';
-const IN_V = '1';                   /* bump to rebuild the table from inbox.log after a change to how rows are read */
+const IN_V = '2';                   /* bump to rebuild the table from inbox.log after a change to how rows are read */
 const IN_FILE_MAX = 15 * 1048576;   /* attachments up to 15 MB download through the desk; bigger ones: open in Outlook */
 const AL_GAP = 600;                 /* an email alert at most once every 10 minutes per person */
 const AL_KEEP = 3 * 86400;          /* an alert not delivered in 3 days is dropped */
@@ -78,10 +81,14 @@ function inApply(?array $R, array $r): ?array {
         case 'done': $R['done'] = !empty($r['on']) ? ['by' => $by, 'at' => $at] : null; break;
         case 'attach': $R['card'] = ['w' => (string) $r['w'], 'id' => (string) $r['id'], 'by' => $by, 'at' => $at]; break;
         case 'read': if (empty($R['read'])) $R['read'] = $at; break;
+        case 'back': $R['back'] = ['by' => $by, 'at' => $at]; break;   /* Back to To answer (2026-11-23) */
+        case 'hide': $R['hide'] = !empty($r['on']) ? ['by' => $by, 'at' => $at, 'bounce' => (array) ($r['bounce'] ?? [])] : null; break;   /* Remove, from Other */
         case 'rmail': $x = $r; unset($x['t'], $x['iid']); $R['rmails'][(string) $r['ref']] = $x; break;
         case 'reply': {
             $x = ['ref' => (string) ($r['ref'] ?? ''), 'ok' => !empty($r['ok']), 'why' => (string) ($r['why'] ?? ''), 'to' => (string) ($r['to'] ?? ''), 'by' => $by, 'at' => $at];
-            $R['replies'] = array_values(array_filter($R['replies'] ?? [], fn($y) => $y['ref'] !== $x['ref'])); $R['replies'][] = $x; break;
+            $R['replies'] = array_values(array_filter($R['replies'] ?? [], fn($y) => $y['ref'] !== $x['ref'])); $R['replies'][] = $x;
+            if ($x['ok']) $R['back'] = null;   /* a reply after Back to To answer: Waiting again (by the log's order, not the clock) */
+            break;
         }
     }
     return $R;
@@ -120,9 +127,39 @@ function inGet(string $iid): ?array {
 }
 function inAll(): array { inSync(); return array_map(fn($r) => json_decode((string) $r['rec'], true), inDb()->query('SELECT rec FROM inbox ORDER BY at DESC, iid')->fetchAll()); }
 function inRow(array $row): void { if (!logAdd($row + ['at' => time()], IN_LOG)) throw new RuntimeException('The Inbox log could not be written.'); }
-/** which list an email is on: open (to answer), done, other */
-function inBucket(array $R): string { return $R['cat'] === 'other' ? 'other' : (!empty($R['done']) ? 'done' : 'open'); }
-function inCounts(): array { $n = ['open' => 0, 'done' => 0, 'other' => 0]; foreach (inAll() as $R) $n[inBucket($R)]++; return $n; }
+/* ---- the four lists (2026-11-23, Matthew): To answer | Waiting on them | Done | Other. Worked out when the list is read, from the rows; no
+   job runs. The thread an email is in: the same sender and the same subject without "Re:" / "Fw:" (the Peak email sender keeps no thread
+   id for an incoming email, and a reply from the desk goes in the same thread, so their answer comes back as "RE: <subject>").
+     done      pressed Done (Undo: Not done)
+     open      "Back to To answer" (a back row; a reply after it clears it) not older than their newer email: we still owe them something
+     done      superseded: they wrote again in the same thread (the newer email is its own row, on To answer until it is answered)
+     wait      we replied (a reply that went) and nothing newer came from them: Waiting on them; 14 days of that counts as Done
+               ("Closed: no reply in 14 days")
+     open      the rest: nobody on our side has replied yet
+   Other (notices, bounces, auto-replies): Remove hides one (a hide row; Undo puts it back); nothing leaves the log. */
+const IN_WAIT_DAYS = 14;
+function inSubj(string $s): string { return trim((string) preg_replace('/\s+/u', ' ', mb_strtolower((string) preg_replace('/^\s*((re|aw|fw|fwd|sv|antw|wg)\s*(\[\d+\])?\s*:\s*)+/iu', '', $s)))); }
+function inThread(array $R): string { $f = strtolower(trim((string) ($R['from'] ?? ''))); return $f === '' || ($R['cat'] ?? '') === 'other' ? '' : $f . '|' . inSubj((string) ($R['subject'] ?? '')); }
+function inReplyAt(array $R): int { $t = 0; foreach ($R['replies'] ?? [] as $x) if (!empty($x['ok'])) $t = max($t, (int) $x['at']); return $t; }
+/** iid => ['b' => open|wait|done|other|removed, 'how' => done|auto|newer|back|'' , 'at' => when it got there, 'newer' => iid] for every email */
+function inStates(array $all, ?int $now = null): array {
+    $now ??= inNow(); $newest = []; $S = [];
+    foreach ($all as $R) { $k = inThread($R); if ($k !== '' && (!isset($newest[$k]) || (int) $R['at'] > (int) $newest[$k]['at'])) $newest[$k] = $R; }
+    foreach ($all as $R) {
+        $iid = (string) $R['iid'];
+        if (($R['cat'] ?? '') === 'other') { $S[$iid] = ['b' => !empty($R['hide']) ? 'removed' : 'other', 'how' => '', 'at' => (int) ($R['hide']['at'] ?? 0)]; continue; }
+        if (!empty($R['done'])) { $S[$iid] = ['b' => 'done', 'how' => 'done', 'at' => (int) $R['done']['at']]; continue; }
+        $k = inThread($R); $N = $k !== '' ? $newest[$k] : null; $newerAt = $N && (string) $N['iid'] !== $iid && (int) $N['at'] > (int) $R['at'] ? (int) $N['at'] : 0;
+        $rep = inReplyAt($R); $back = (int) ($R['back']['at'] ?? 0);
+        if ($back > 0 && $back >= $newerAt) $S[$iid] = ['b' => 'open', 'how' => 'back', 'at' => $back];
+        elseif ($newerAt) $S[$iid] = ['b' => 'done', 'how' => 'newer', 'at' => $newerAt, 'newer' => (string) $N['iid']];
+        elseif ($rep) $S[$iid] = $now - $rep >= IN_WAIT_DAYS * 86400 ? ['b' => 'done', 'how' => 'auto', 'at' => $rep + IN_WAIT_DAYS * 86400] : ['b' => 'wait', 'how' => '', 'at' => $rep];
+        else $S[$iid] = ['b' => 'open', 'how' => '', 'at' => (int) $R['at']];
+    }
+    return $S;
+}
+function inTally(array $S): array { $n = ['open' => 0, 'wait' => 0, 'done' => 0, 'other' => 0, 'removed' => 0]; foreach ($S as $x) $n[$x['b']]++; return $n; }
+function inCounts(): array { return inTally(inStates(inAll())); }
 /** company names for the cards emails are on */
 function inNames(array $items): array {
     $want = []; foreach ($items as $R) if (!empty($R['card']['id'])) $want[$R['card']['w']][(string) $R['card']['id']] = 1;
@@ -131,23 +168,26 @@ function inNames(array $items): array {
     return $o;
 }
 /** an email as the page gets it: never where it is in the mailbox (mid, mb, imid), never an attachment's id */
-function inOut(array $R, array $names, bool $full): array {
+function inOut(array $R, array $names, bool $full, ?array $st = null): array {
     $o = ['iid' => (string) $R['iid'], 'at' => (int) $R['at'], 'from' => (string) $R['from'], 'name' => (string) $R['name'], 'subject' => (string) $R['subject'], 'cat' => (string) $R['cat'], 'why' => (string) ($R['why'] ?? ''),
         'files' => array_map(fn($a, $i) => ['n' => $a['n'], 'i' => $i, 'dl' => inFileOk($a), 'size' => (int) $a['size']], $R['att'] ?? [], array_keys($R['att'] ?? [])),
         'claim' => $R['claim'] ?? null, 'done' => $R['done'] ?? null, 'read' => !empty($R['read']), 'stop' => !empty($R['stop']), 'auto' => !empty($R['auto']),
         'replies' => array_map(fn($x) => ['by' => $x['by'], 'at' => $x['at'], 'ok' => $x['ok'], 'why' => $x['why']], $R['replies'] ?? []), 'card' => null, 'rp' => (string) ($R['mid'] ?? '') !== '' || (string) ($R['imid'] ?? '') !== ''];
     if (!empty($R['card']['id'])) { $k = $R['card']['w'] . ':' . $R['card']['id']; $o['card'] = ['w' => (string) $R['card']['w'], 'id' => (string) $R['card']['id'], 'name' => (string) ($names[$k][0] ?? ''), 'off' => !empty($names[$k][1]), 'by' => (string) ($R['card']['by'] ?? '')]; }
+    $st ??= inStates(inAll())[(string) $R['iid']] ?? ['b' => 'open', 'how' => '', 'at' => 0];
+    $o['box'] = $st['b']; $o['how'] = $st['how']; $o['boxAt'] = (int) $st['at']; if (!empty($st['newer'])) $o['newer'] = $st['newer'];
+    $o['back'] = $R['back'] ?? null; $o['hide'] = isset($R['hide']) ? ['by' => $R['hide']['by'], 'at' => $R['hide']['at'], 'bounce' => $R['hide']['bounce'] ?? []] : null;
     $t = (string) $R['text'];
     if ($full) $o['text'] = $t; else $o['preview'] = mb_strlen($t) > 220 ? rtrim(mb_substr($t, 0, 220)) . '…' : $t;
     return $o;
 }
-/** the list for the page: f = open | done | other | all; newest first, at most 300 */
+/** the list for the page: f = open | wait | done | other | removed | all; newest first, at most 300; each with its list (box) and why */
 function inList(string $f, string $me): array {
-    $all = inAll(); $n = ['open' => 0, 'done' => 0, 'other' => 0]; foreach ($all as $R) $n[inBucket($R)]++;
-    $f = in_array($f, ['open', 'done', 'other', 'all'], true) ? $f : 'open';
-    $items = array_slice(array_values(array_filter($all, fn($R) => $f === 'all' || inBucket($R) === $f)), 0, 300);
+    $all = inAll(); $S = inStates($all); $n = inTally($S);
+    $f = in_array($f, ['open', 'wait', 'done', 'other', 'removed', 'all'], true) ? $f : 'open';
+    $items = array_slice(array_values(array_filter($all, fn($R) => $f === 'all' ? $S[$R['iid']]['b'] !== 'removed' : $S[$R['iid']]['b'] === $f)), 0, 300);
     $names = inNames($items);
-    return ['ok' => true, 'f' => $f, 'counts' => $n, 'items' => array_map(fn($R) => inOut($R, $names, false), $items), 'mailbox' => defined('TM_ORGANIZER') ? TM_ORGANIZER : 'partnerships@peakpickleball.us'];
+    return ['ok' => true, 'f' => $f, 'counts' => $n, 'wait' => IN_WAIT_DAYS, 'items' => array_map(fn($R) => inOut($R, $names, false, $S[$R['iid']]), $items), 'mailbox' => defined('TM_ORGANIZER') ? TM_ORGANIZER : 'partnerships@peakpickleball.us'];
 }
 /** a seller (not Claude Check) opening it marks it read in Peak Partnerships, once; nothing is moved or deleted */
 function inOpen(string $iid, string $me, bool $act): array {
@@ -156,7 +196,7 @@ function inOpen(string $iid, string $me, bool $act): array {
         try { $b = inBox($R); if ($b !== '') { [$s] = pmGraph('PATCH', $b . '/messages/' . rawurlencode((string) $R['mid']), ['isRead' => true]); if ($s === 200) inRow(['t' => 'read', 'iid' => $iid, 'by' => $me]); } }
         catch (Throwable $e) { error_log('peak desk inbox read: ' . $e->getMessage()); }
     }
-    return ['ok' => true, 'item' => inOut($R, inNames([$R]), true)];
+    return ['ok' => true, 'item' => inOut($R, inNames([$R]), true, inStates(inAll())[$iid] ?? null)];
 }
 /** the Graph path of the mailbox an email is in, when it is Peak Partnerships and the sender's code is here ('' otherwise) */
 function inBox(array $R): string {
@@ -182,10 +222,11 @@ function inFile(string $iid, int $n): void {
 /** the claim lock (2026-11-23): who is answering it, and what someone else is told */
 function inLockMsg(string $by): string { $f = strtok($by, ' ') ?: $by; return $by . ' is answering this. Ask ' . (strcasecmp($f, 'Matthew') === 0 ? 'Matthew' : $by . ' or Matthew') . ' to release it.'; }
 function inLocked(?array $c, string $me): bool { return $c !== null && (string) ($c['by'] ?? '') !== $me; }
-/** a card's email to $to: the newest open (not Done) Inbox email from that address, when someone else has it claimed (else null) */
+/** a card's email to $to: the newest Inbox email from that address still To answer or Waiting on them (not Done), when someone else has it
+    claimed (else null) */
 function inLockFor(string $to, string $me): ?array {
-    $to = strtolower(trim($to)); if ($to === '') return null;
-    foreach (inAll() as $R) if (inBucket($R) === 'open' && strtolower(trim((string) $R['from'])) === $to) return inLocked($R['claim'] ?? null, $me) ? ['iid' => (string) $R['iid'], 'claim' => $R['claim']] : null;
+    $to = strtolower(trim($to)); if ($to === '') return null; $all = inAll(); $S = inStates($all);
+    foreach ($all as $R) if (in_array($S[$R['iid']]['b'], ['open', 'wait'], true) && strtolower(trim((string) $R['from'])) === $to) return inLocked($R['claim'] ?? null, $me) ? ['iid' => (string) $R['iid'], 'claim' => $R['claim']] : null;
     return null;
 }
 /** Claim / Unclaim: a claim someone else holds is theirs; an admin may release it, or take it over (take: true) */
@@ -204,6 +245,51 @@ function inDone(string $iid, bool $on, string $me): array {
         if ((bool) ($R['done'] ?? null) !== $on) inRow(['t' => 'done', 'iid' => $iid, 'on' => $on, 'by' => $me]);
         return ['ok' => true];
     });
+}
+/** Back to To answer (2026-11-23): we replied, but still owe them something (or an auto-closed or superseded one wants answering after all).
+    A reply after it moves it to Waiting again; their newer email in the thread takes over as before. */
+function inBack(string $iid, string $me): array {
+    return withLock(function () use ($iid, $me) {
+        $R = inGet($iid); if (!$R) return ['ok' => false, 'error' => 'No such email.', 'code' => 404];
+        if (($R['cat'] ?? '') === 'other') return ['ok' => false, 'error' => 'This one is under Other: there is nothing to answer.', 'code' => 400];
+        if (!empty($R['done'])) inRow(['t' => 'done', 'iid' => $iid, 'on' => false, 'by' => $me]);
+        $all = inAll(); if ((inStates($all)[$iid]['b'] ?? '') !== 'open') inRow(['t' => 'back', 'iid' => $iid, 'by' => $me]);
+        return ['ok' => true];
+    });
+}
+/** the addresses a bounce notice names (not Peak's own) */
+function inBounceAddrs(array $R): array {
+    preg_match_all('/[A-Za-z0-9._%+\'-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', (string) ($R['text'] ?? '') . ' ' . (string) ($R['subject'] ?? ''), $m);
+    return array_values(array_filter(array_unique(array_map('strtolower', $m[0])), fn($e) => !preg_match('/@(.+\.)?peakpickleball\.us$/', $e) && $e !== strtolower((string) $R['from'])));
+}
+/** a bounce, before it is removed from Other: is it on the card of the company that address belongs to (a touch "email, bounced", as the
+    Peak email sender puts it there)? If a card has the address and not the bounce, it is put on (deskBounced, once); if no card has the
+    address, nothing is lost: the notice stays in inbox.log, the hide row says so, and Removed lists it. [[to, w, id, name, how]] with how
+    'on card' | 'put on the card' | 'no card' */
+function inBounceCheck(array $R, string $me, string $iid): array {
+    $o = [];
+    foreach (inBounceAddrs($R) as $e) {
+        $hit = null;
+        foreach (['sponsor', 'expo'] as $w) { foreach (recs($w) as $C) {
+            if (!empty($C['off'])) continue;
+            $bounced = false; foreach ($C['touches'] ?? [] as $t) if (($t['out'] ?? '') === 'bounced' && strtolower((string) ($t['to'] ?? '')) === $e) $bounced = true;
+            if ($bounced || in_array($e, recEmails($C), true)) { $hit = [$w, $C, $bounced]; if ($bounced) break 2; }
+        } }
+        if (!$hit) { $o[] = ['to' => $e, 'w' => '', 'id' => '', 'name' => '', 'how' => 'no card']; continue; }
+        [$w, $C, $bounced] = $hit;
+        if (!$bounced) { $x = deskBounced($w, (string) $C['id'], $e, 'the notice in the Inbox, removed by ' . $me, 'Peak email', 'inbox-bounce:' . $iid . ':' . substr(sha1($e), 0, 8)); if (empty($x['ok'])) { $o[] = ['to' => $e, 'w' => '', 'id' => '', 'name' => '', 'how' => 'no card']; continue; } }
+        $o[] = ['to' => $e, 'w' => $w, 'id' => (string) $C['id'], 'name' => (string) $C['name'], 'how' => $bounced ? 'on card' : 'put on the card'];
+    }
+    return $o;
+}
+/** Remove (2026-11-23): take a notice, bounce or auto-reply off Other (a hide row; on: false puts it back). Never deleted from the log. */
+function inHide(string $iid, bool $on, string $me): array {
+    $R = inGet($iid); if (!$R) return ['ok' => false, 'error' => 'No such email.', 'code' => 404];
+    if (($R['cat'] ?? '') !== 'other') return ['ok' => false, 'error' => 'Only the ones under Other can be removed.', 'code' => 400];
+    if ((bool) ($R['hide'] ?? null) === $on) return ['ok' => true, 'same' => true, 'bounce' => $R['hide']['bounce'] ?? []];
+    $b = $on && ($R['why'] ?? '') === 'bounce' ? inBounceCheck($R, $me, $iid) : [];
+    withLock(fn() => inRow(['t' => 'hide', 'iid' => $iid, 'on' => $on, 'by' => $me] + ($b ? ['bounce' => $b] : [])));
+    return ['ok' => true, 'bounce' => $b];
 }
 /** the email as a card shows one of their emails (deskMailIn's shape, mid and mailbox kept on the server for Reply) */
 function inMail(array $R): array {

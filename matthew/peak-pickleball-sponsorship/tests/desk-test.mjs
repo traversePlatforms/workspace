@@ -882,24 +882,24 @@ try {
       let RP = GM.replies[GM.replies.length - 1] || {}; D = await b('data');
       ok(rr.ok && rr.state === 'sent' && GM.calls === n0 + 1 && RP.of === 'AAMkInbox1' && RP.box === MB && RP.create.message.toRecipients[0].emailAddress.address === 'jo@inboxtest.com' && RP.subject === 'RE: Sponsoring'
         && /Friday is fine\.[\s\S]*Test Seller[\s\S]*Their email, quoted/.test(RP.body.content) && find('sponsor', EO.id).touches.some((x) => x.dm === rr.ref && /^Replied “RE: Sponsoring” to jo@inboxtest\.com from the desk, answering their email/.test(x.note) && x.by === 'Test Seller'), 'Reply from the Inbox: Microsoft’s own reply on her message in Peak Partnerships, signed by the seller, logged on the card');
-      IB = await c2('inbox'); const iKI2 = IB.items.find((x) => x.iid === KI);
-      ok(iKI2.replies.length === 1 && iKI2.replies[0].ok && iKI2.replies[0].by === 'Test Seller' && iKI2.claim && iKI2.claim.by === 'Test Seller', 'the Inbox shows who replied, and the one who replied has it claimed');
+      IB = await c2('inbox&f=wait'); const iKI2 = IB.items.find((x) => x.iid === KI);
+      ok(iKI2.replies.length === 1 && iKI2.replies[0].ok && iKI2.replies[0].by === 'Test Seller' && iKI2.claim && iKI2.claim.by === 'Test Seller', 'the Inbox shows who replied, and the one who replied has it claimed; replied, it is under Waiting on them');
       /* Reply on an email on no card: same thread, on the Inbox only; {book} needs a card */
       ok(/needs a company/.test((await c2('inboxreply', { iid: ST, subject: 'RE: x', text: 'Pick a time that suits you: {book}' })).error || ''), 'a booking link needs a company first');
       const tc0 = JSON.stringify(D.sponsor.recs.map((r) => r.touches.length));
       n0 = GM.calls; rr = await c2('inboxreply', { iid: ST, subject: 'RE: Sponsorship question', text: 'Hello Pat, happy to help.' }); RP = GM.replies[GM.replies.length - 1] || {}; D = await b('data');
-      ok(rr.ok && rr.state === 'sent' && GM.calls === n0 + 1 && RP.of === 'AAMkInbox2' && /Hello Pat, happy to help\.[\s\S]*Second Seller/.test(RP.body.content) && JSON.stringify(D.sponsor.recs.map((r) => r.touches.length)) === tc0 && (await b('inbox')).items.find((x) => x.iid === ST).replies[0].by === 'Second Seller' && (await b('inbox')).items.find((x) => x.iid === ST).claim.by === 'Second Seller', 'on no card: the same thread, logged on the Inbox only (no card touched); once released the second seller answers it, and it is theirs');
+      ok(rr.ok && rr.state === 'sent' && GM.calls === n0 + 1 && RP.of === 'AAMkInbox2' && /Hello Pat, happy to help\.[\s\S]*Second Seller/.test(RP.body.content) && JSON.stringify(D.sponsor.recs.map((r) => r.touches.length)) === tc0 && (await b('inbox&f=wait')).items.find((x) => x.iid === ST).replies[0].by === 'Second Seller' && (await b('inbox&f=wait')).items.find((x) => x.iid === ST).claim.by === 'Second Seller', 'on no card: the same thread, logged on the Inbox only (no card touched); once released the second seller answers it, and it is theirs');
       /* Attach to a company */
       let at = await b('inboxattach', { iid: ST, w: 'sponsor', id: EA.id }); D = await b('data'); const ea = find('sponsor', EA.id), eat = ea.touches.filter((x) => x.mail && x.mail.from === 'pat@acmeplumbing.com');
       ok(at.ok && at.name === EA.name && eat.length === 1 && eat[0].out === 'replied' && eat[0].by === 'Peak email' && /put on this card from the Inbox by Test Seller/.test(eat[0].note) && eat[0].mail.text.startsWith('<b>Hi</b>') && eat[0].mail.files.join() === 'logo.png,big.zip,Forwarded.msg' && ea.next.date === D.today && eat[0].mail.rp === 1, 'Attach to a company: their email on that card (words, files by name, Reply), with a follow-up today');
       at = await b('inboxattach', { iid: ST, w: 'sponsor', id: EA.id }); D = await b('data');
-      ok(at.ok && at.dup && find('sponsor', EA.id).touches.filter((x) => x.mail && x.mail.from === 'pat@acmeplumbing.com').length === 1 && (await b('inbox')).items.find((x) => x.iid === ST).card.id === EA.id, 'attached twice: once; the Inbox shows the card');
+      ok(at.ok && at.dup && find('sponsor', EA.id).touches.filter((x) => x.mail && x.mail.from === 'pat@acmeplumbing.com').length === 1 && (await b('inbox&f=wait')).items.find((x) => x.iid === ST).card.id === EA.id, 'attached twice: once; the Inbox shows the card');
       ok((await b('inboxattach', { iid: ST, w: 'sponsor', id: 'nosuchid1' }))._status === 404, 'a company not on the desk is refused');
       /* Done */
-      ok((await b('inboxdone', { iid: ST, on: true })).ok && !(await b('inbox')).items.some((x) => x.iid === ST), 'Done: off the open list');
+      ok((await b('inbox&f=wait')).items.some((x) => x.iid === ST) && (await b('inboxdone', { iid: ST, on: true })).ok && !(await b('inbox&f=wait')).items.some((x) => x.iid === ST), 'Done: off Waiting on them (it was replied to)');
       const DN = await b('inbox&f=done');
-      ok(DN.items.length === 1 && DN.items[0].iid === ST && DN.items[0].done.by === 'Test Seller' && DN.counts.open === 1 && DN.counts.done === 1, 'the Done view keeps it');
-      ok((await c2('inboxdone', { iid: ST, on: false })).ok && (await b('inbox')).items.some((x) => x.iid === ST), 'Not done brings it back');
+      ok(DN.items.length === 1 && DN.items[0].iid === ST && DN.items[0].done.by === 'Test Seller' && DN.items[0].how === 'done' && DN.counts.open === 0 && DN.counts.wait === 1 && DN.counts.done === 1, 'the Done view keeps it (both replied: nothing To answer, one Waiting)');
+      ok((await c2('inboxdone', { iid: ST, on: false })).ok && (await b('inbox&f=wait')).items.some((x) => x.iid === ST), 'Not done brings it back, to Waiting on them');
       await b('inboxdone', { iid: ST, on: true });
       ok(!readFileSync(join(LD, 'inbox.log'), 'utf8').includes('AT-') && php(['inboxcount']).includes('"open"'), 'php desk.php inboxcount (counts only); no token in the Inbox log');
 
@@ -978,6 +978,61 @@ try {
       ok((await b('pushunsub', { endpoint: DB.sub.endpoint })).alerts.devices.length === 0, 'Turn off on this device takes it off');
       ok(!/PRIVATE KEY/.test(JSON.stringify(await b('data'))) && !lines('alerts.log').join('').match(/@|Secret/), 'no key in the data; the alerts log has counts only');
       psrv.close();
+      /* ---- the four lists (2026-11-23, Matthew): To answer | Waiting on them | Done | Other ---- */
+      console.log('The Inbox: four lists');
+      const lst = async (f, who = b) => (await who('inbox&f=' + f));
+      const has = async (f, iid) => (await lst(f)).items.some((x) => x.iid === iid);
+      const FA = inIn({ from: 'sam@fourlists.com', name: 'Sam Four', subject: 'Venue question', at: now - 100, text: 'Can we rent the courts?', mid: 'AAMkFour1', mb: MB, imid: '<four1@fourlists.com>' });
+      ok(await has('open', FA) && !(await has('wait', FA)), 'a new email: To answer');
+      let g1 = GM.calls, rq = await b('inboxreply', { iid: FA, subject: 'RE: Venue question', text: 'Yes, happy to.' });
+      let W1 = await lst('wait');
+      ok(rq.ok && rq.state === 'sent' && GM.calls === g1 + 1 && W1.items.some((x) => x.iid === FA && x.box === 'wait') && !(await has('open', FA)), 'a reply moves it to Waiting on them by itself (no Done pressed)');
+      ok(W1.items.find((x) => x.iid === FA).claim.by === 'Test Seller', 'Waiting: the claim shows there too (the one who replied)');
+      g1 = GM.calls; let lk = await c2('inboxreply', { iid: FA, subject: 'RE: Venue question', text: 'Me too' }), lk2 = await c2('dmsend', { world: 'sponsor', id: EA.id, to: 'sam@fourlists.com', subject: 'Hi', text: 'Hi Sam' });
+      ok(lk._status === 409 && lk2._status === 409 && /Test Seller is answering this/.test(lk2.error) && GM.calls === g1, 'and in Waiting it is still locked: the second seller can’t answer it, from the Inbox or a card (nothing sent)');
+      /* they write back: the new email is its own row on To answer; the older one leaves Waiting (superseded) */
+      const FB = inIn({ from: 'Sam@FourLists.com', name: 'Sam Four', subject: 'RE: Venue question', at: now - 40, text: 'Great, what about Saturday?', mid: 'AAMkFour2', mb: MB, imid: '<four2@fourlists.com>' });
+      let D4 = await lst('done'), fa = D4.items.find((x) => x.iid === FA);
+      ok(FB !== FA && await has('open', FB) && !(await has('wait', FA)) && fa && fa.how === 'newer' && fa.newer === FB, 'they write back (same sender, same subject without “RE:”): the new email is on To answer; the older one leaves Waiting (Done: they wrote again)');
+      ok(!(await lst('open')).items.find((x) => x.iid === FB).claim && (await lst('all')).items.filter((x) => [FA, FB].includes(x.iid)).length === 2, 'the new email is unclaimed, and nothing is listed twice');
+      const FC = inIn({ from: 'sam@fourlists.com', subject: 'A different thing', at: now - 30, mid: 'AAMkFour3', mb: MB, imid: '<four3@fourlists.com>' });
+      ok(await has('open', FC) && await has('open', FB), 'another subject from the same sender is its own conversation');
+      /* Back to To answer */
+      await b('inboxreply', { iid: FB, subject: 'RE: Venue question', text: 'Saturday works.' });
+      ok(await has('wait', FB), 'answered: Waiting');
+      ok((await c2('inboxback', { iid: FB })).ok && (await lst('open')).items.some((x) => x.iid === FB && x.how === 'back' && x.back.by === 'Second Seller') && !(await has('wait', FB)), 'Back to To answer (we still owe them something): on To answer, saying who moved it');
+      ok((await b('inboxback', { iid: FB })).ok && lines('inbox.log').filter((l) => l.includes('"t":"back"') && l.includes(FB)).length === 1, 'pressed twice: one row');
+      await b('inboxreply', { iid: FB, subject: 'RE: Venue question', text: 'Here is the floor plan.' });
+      ok(await has('wait', FB), 'a reply after it moves it back to Waiting');
+      ok((await b('inboxback', { iid: FA })).ok && await has('open', FA) && (await b('inboxdone', { iid: FA, on: true })).ok && (await lst('done')).items.find((x) => x.iid === FA).how === 'done', 'a superseded one can come back too (Not done), and be Done again');
+      ok((await cc('inboxback', { iid: FB }))._status === 403 && (await b('inboxback', { iid: 'ffffffffffff' }))._status === 404, 'Claude Check moves nothing; no such email: 404');
+      /* 14 days with no answer: Done ("Closed: no reply in 14 days"), worked out when the list is read */
+      const at14 = (days) => JSON.parse(inject('$L = inList("all", "Test Seller"); echo json_encode(["c" => $L["counts"], "fb" => array_values(array_filter($L["items"], fn($x) => $x["iid"] === getenv("I")))[0]]);', { I: FB, DESK_NOW: String(now + days * 86400) }));
+      const d13 = at14(13), d15 = at14(15);
+      ok(d13.fb.box === 'wait' && d15.fb.box === 'done' && d15.fb.how === 'auto' && d15.c.wait === 0 && d15.c.done === d13.c.done + d13.c.wait, 'waiting 13 days: still Waiting; 15 days: Done, closed by itself (every Waiting one)');
+      ok(!lines('inbox.log').some((l) => l.includes('"t":"done"') && l.includes(FB)), 'no row is written for it: derived when read (no job)');
+      /* Remove, under Other */
+      const KG = LOC[128]; ok((await b('contact', { world: 'sponsor', id: KG.id, name: 'Gil Bounce', role: '', email: 'gil@bouncetest.com' })).ok, 'a card with gil@bouncetest.com');
+      const BX = (to, n) => inIn({ from: 'postmaster@outlook.com', name: 'Microsoft Outlook', subject: 'Undeliverable: Hello', at: now - 20 + n, text: 'Your message to ' + to + ' couldn\'t be delivered. partnerships@peakpickleball.us', mid: 'AAMkBounce' + n, imid: '<bx' + n + '@outlook.com>', cat: 'other', why: 'bounce' });
+      const B1 = BX('gone@x.com', 1), B2 = BX('gil@bouncetest.com', 2), B3 = BX('nobody@nowhere-test.com', 3);
+      let O0 = await lst('other'); const o0 = O0.counts.other;
+      ok([B1, B2, B3].every((i) => O0.items.some((x) => x.iid === i)), 'three bounces under Other');
+      const eb0 = (await b('data')).sponsor.recs.find((r) => r.id === EB.id).touches.filter((t) => t.out === 'bounced').length;
+      let h1 = await b('inboxhide', { iid: B1, on: true }); D = await b('data');
+      ok(h1.ok && h1.bounce.length === 1 && h1.bounce[0].how === 'on card' && h1.bounce[0].id === EB.id && find('sponsor', EB.id).touches.filter((t) => t.out === 'bounced').length === eb0 && !(await has('other', B1)) && (await lst('other')).counts.other === o0 - 1, 'Remove a bounce already on its card (gone@x.com): off Other, nothing added to the card');
+      let h2 = await b('inboxhide', { iid: B2, on: true }); D = await b('data');
+      const gb = find('sponsor', KG.id).touches.filter((t) => t.out === 'bounced');
+      ok(h2.ok && h2.bounce[0].how === 'put on the card' && h2.bounce[0].id === KG.id && gb.length === 1 && gb[0].to === 'gil@bouncetest.com' && /removed by Test Seller/.test(gb[0].note), 'Remove a bounce whose address is on a card without it: the bounce goes on that card first (as the sender records one)');
+      await b('inboxhide', { iid: B2, on: false }); await b('inboxhide', { iid: B2, on: true }); D = await b('data');
+      ok(find('sponsor', KG.id).touches.filter((t) => t.out === 'bounced').length === 1, 'removed again: still one bounce on the card');
+      let h3 = await b('inboxhide', { iid: B3, on: true }); const RM = await lst('removed');
+      ok(h3.ok && h3.bounce[0].how === 'no card' && RM.items.some((x) => x.iid === B3 && x.hide.by === 'Test Seller' && x.hide.bounce[0].how === 'no card') && lines('inbox.log').some((l) => l.includes('"t":"in"') && l.includes(B3)), 'a bounce on no card: kept (the email stays in the log; Removed lists it, saying it is on no card)');
+      ok((await b('inboxhide', { iid: B3, on: false })).ok && await has('other', B3) && !(await has('removed', B3)), 'Undo: back under Other');
+      ok((await b('inboxhide', { iid: FB, on: true }))._status === 400 && (await cc('inboxhide', { iid: B3, on: true }))._status === 403, 'only an Other one can be removed; Claude Check removes nothing');
+      /* the counts on each tab */
+      const CT = await lst('open'), SUMS = {};
+      for (const f of ['open', 'wait', 'done', 'other', 'removed']) SUMS[f] = (await lst(f)).items.length;
+      ok(['open', 'wait', 'done', 'other', 'removed'].every((f) => CT.counts[f] === SUMS[f]) && (await b('data')).inbox.wait === SUMS.wait && JSON.parse(php(['inboxcount'])).wait === SUMS.wait, 'each tab’s count is the length of its list (' + JSON.stringify(SUMS) + '), in the data and in inboxcount');
     }
     /* left on for the screens; turned off at the end */
   }
@@ -1079,7 +1134,7 @@ try {
       ['add', { world: 'sponsor', name: 'Research Added Co' }], ['add', { world: 'expo', name: 'Research Added Expo' }], ['todo', { id: K.id, text: 'x' }],
       ['dmsend', { world: 'sponsor', id: K.id, to: 0, subject: 'x', text: 'x' }], ['dmretry', { id: K.id, ref: 'x' }], ['dmpreview', { id: K.id, subject: 'x', text: 'x' }], ['tourmail', { tid: 'x' }], ['tourpreview', { id: K.id, date: later(5), time: '10:00' }],
       ['tourmailtest', { email: 'x@example.com' }], ['tourmailset', { on: true }], ['dmset', { on: true }], ['bookset', { on: true }], ['bookgeneric', {}], ['booklink', {}], ['settings', { on: false, to: [] }], ['templates', { world: 'sponsor', reset: true }], ['eodpreview', {}],
-      ['inbox', null], ['inboxone', null], ['inboxreply', { iid: 'x', text: 'x' }], ['inboxclaim', { iid: 'x', on: true }], ['inboxdone', { iid: 'x', on: true }], ['inboxattach', { iid: 'x', w: 'sponsor', id: K.id }],
+      ['inbox', null], ['inboxone', null], ['inboxreply', { iid: 'x', text: 'x' }], ['inboxclaim', { iid: 'x', on: true }], ['inboxdone', { iid: 'x', on: true }], ['inboxback', { iid: 'x' }], ['inboxhide', { iid: 'x', on: true }], ['inboxattach', { iid: 'x', w: 'sponsor', id: K.id }],
       ['emailed', { world: 'sponsor', id: K.id, to: 'x@example.com' }], ['emailreply', { world: 'sponsor', id: K.id, from: 'x@example.com' }], ['emailbounce', { world: 'sponsor', id: K.id, to: 'x@example.com' }],
       ['scan', { world: 'sponsor', id: K.id, hunter: true }], ['myset', { sig: 'x' }], ['callink', {}], ['pushkey', null], ['pushsub', { subscription: {} }], ['alertset', { inbox: true }], ['alerttest', {}],
       ['jvsend', { text: 'Please send an email to Kaiser for me' }], ['jvclose', { id: 'h00000000000000abcd' }]];
@@ -1535,6 +1590,31 @@ try {
     await shot('desk-inbox.png');
     await sub('other'); await waitFor(`document.querySelectorAll('.inrow.other').length>=3`, 'Other');
     ok(await jsUntil(`[...document.querySelectorAll('.inrow')].every(r=>r.classList.contains('other'))`), 'Other: the notices, the auto-replies and CourtReserve');
+    /* the four lists (2026-11-23) */
+    ok(await js(`(()=>{const c=document.querySelector('.shead .subchips');const L=[...c.querySelectorAll('button')].map(b=>b.getAttribute('data-sub'));return L.join()==='open,wait,done,other'&&/Waiting on them/.test(c.textContent)&&[...c.querySelectorAll('button')].every(b=>b.querySelector('b')&&/^\\d+$/.test(b.querySelector('b').textContent))})()`), 'four tabs, To answer | Waiting on them | Done | Other, each with its count');
+    ok(await js(`/Waiting on them: we replied/.test(document.querySelector('.shead .sdesc').textContent)&&/14 days/.test(document.querySelector('.shead .sdesc').textContent)`), 'the help says what the four lists are');
+    await js(`[...document.querySelectorAll('.inrow.other .inhd')].find(h=>/bounce/.test(h.textContent)).click()`); await waitFor(`!!document.querySelector('.inrow [data-act="inhide"]')`, 'an Other one opened');
+    ok(await js(`!document.querySelector('.inrow [data-act="indone"]')&&document.querySelector('.inrow [data-act="inhide"]').textContent==='Remove'`), 'Other: Remove, and no Done');
+    await shot('desk-inbox-other.png');
+    const nOther = await js(`document.querySelectorAll('.inrow.other').length`);
+    await click('.inrow [data-act="inhide"]', 600);
+    ok(await jsUntil(`!document.getElementById('toast').hidden&&/^Removed/.test(document.getElementById('toast').textContent)&&/Undo/.test(document.getElementById('toast').textContent)&&document.querySelectorAll('.inrow.other').length===${nOther}-1`), 'Remove: off the list, with Undo');
+    await js(`document.querySelector('#toast button').click()`);
+    ok(await jsUntil(`document.querySelectorAll('.inrow.other').length===${nOther}`), 'Undo puts it back');
+    ok(await jsUntil(`!!document.querySelector('[data-act="inremoved"]')`), 'Removed (n): show them, under Other');
+    await sub('wait'); await waitFor(`!!document.querySelector('.inrow')`, 'Waiting on them');
+    ok(await jsUntil(`[...document.querySelectorAll('.inrow')].every(r=>/Waiting on them · closes/.test(r.textContent))&&[...document.querySelectorAll('.inrow')].some(r=>/is answering this|You are answering this/.test(r.textContent))`), 'Waiting on them: each says so, and the claims show');
+    await js(`document.querySelector('.inrow .inhd').click()`); await waitFor(`!!document.querySelector('.inrow [data-act="inback"]')`, 'a Waiting one opened');
+    ok(await js(`document.querySelector('.inrow [data-act="inback"]').textContent==='Back to To answer'&&!!document.querySelector('.inrow [data-act="indone"]')`), 'Waiting: Back to To answer, and Done');
+    await shot('desk-inbox-wait.png');
+    await sub('done'); await waitFor(`!!document.querySelector('.inrow')`, 'Done');
+    ok(await jsUntil(`[...document.querySelectorAll('.inrow')].some(r=>/Done \\(Test/.test(r.textContent))`), 'Done: who pressed Done shows on it');
+    await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
+    await sub('open'); await waitFor(`!!document.querySelector('.inrow')`, 'To answer on a phone');
+    ok(await js(fits), 'the Inbox fits a phone (To answer)'); await shot('desk-inbox-phone.png');
+    await sub('wait'); await waitFor(`!!document.querySelector('.inrow')`, 'Waiting on a phone');
+    ok(await js(fits), 'and Waiting on them'); await shot('desk-inbox-wait-phone.png');
+    await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false }); await sleep(200);
     await sub('open'); await tab('more'); await sub('mine');
     ok(await js(`(()=>{const c=document.querySelector('[data-set="alerts"]');return !!c&&!!c.querySelector('[data-act="pushon"]')&&/Home Screen/.test(c.textContent)&&/iOS 16\\.4/.test(c.textContent)&&!!c.querySelector('[data-al="quiet"]')&&!!c.querySelector('[data-al="inbox"]')&&!!c.querySelector('[data-al="mine"]')&&!!c.querySelector('[data-al="email"]')})()`), 'More › My email & booking link: Alerts (turn on per device, the iPhone Home Screen note, who gets what, quiet hours)');
     await js(`document.querySelector('[data-set="alerts"]').scrollIntoView()`); await sleep(200); await shot('desk-alerts.png');

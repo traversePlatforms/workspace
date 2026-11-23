@@ -313,7 +313,7 @@ button.kpi:hover{border-color:var(--c,var(--acc))}
 .inl1{display:flex;gap:4px 10px;align-items:baseline;flex-wrap:wrap}.inl1 .infrom{font-weight:700}.inrow.unread .infrom::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--acc);margin-right:7px;vertical-align:1px}
 .inaddr{color:var(--soft);font-size:12.5px;overflow-wrap:anywhere}.inat{margin-left:auto;color:var(--soft);font-size:12.5px;white-space:nowrap}
 .insub{font-weight:650;margin:3px 0 2px;overflow-wrap:anywhere}.inpre{color:var(--soft);font-size:13.5px;white-space:pre-wrap;overflow-wrap:anywhere;max-height:2.9em;overflow:hidden;line-height:1.45}
-.intags{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px}.intags .tag{margin:0}
+.intags{margin-top:5px;display:flex;flex-wrap:wrap;gap:4px}.intags .tag{margin:0;white-space:normal}
 .inbody{border-top:1px solid var(--line);padding:12px 14px}.inbody .inmeta{font-size:12.5px;color:var(--soft);margin-bottom:6px;overflow-wrap:anywhere}
 .inbody .intext{white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.5;background:var(--bg);border-radius:8px;padding:10px 12px}
 .infiles,.incard{margin-top:8px;font-size:13.5px;overflow-wrap:anywhere}.inbody .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.inpane{margin-top:10px}.inpane:empty{display:none}
@@ -571,19 +571,19 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     expo: [['today', 'Today'], ['inbox', 'Inbox'], ['pipe', 'Pipeline'], ['list', 'Organisations'], ['deals', 'Tours & quotes'], ['more', 'More']]
   };
   var SUBS = {
-    sponsor: { inbox: [['open', 'To answer'], ['done', 'Done'], ['other', 'Other']], list: [['all', 'All companies'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added on the desk'], ['removed', 'Removed']],
+    sponsor: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], list: [['all', 'All companies'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added on the desk'], ['removed', 'Removed']],
       deals: [['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed']],
       more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['look', 'Look'], ['settings', 'Settings']] },
-    expo: { inbox: [['open', 'To answer'], ['done', 'Done'], ['other', 'Other']], list: [['all', 'All organisations'], ['removed', 'Removed']], deals: [['tours', 'Tours'], ['quotes', 'Quotes and bookings']],
+    expo: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], list: [['all', 'All organisations'], ['removed', 'Removed']], deals: [['tours', 'Tours'], ['quotes', 'Quotes and bookings']],
       more: [['report', 'Report'], ['ref', 'Questions and venues'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['look', 'Look'], ['settings', 'Settings']] }
   };
   var DESC = {
-    sponsor: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. Done takes it off this list. Notices, bounces and out-of-office replies are under Other. Alerts: More, My email & booking link.',
+    sponsor: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. To answer: nobody here has replied yet, or they wrote again. Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
       today: 'What to do now: follow-ups due, who to reach next, proposals waiting, tours coming up, and the week so far.',
       pipe: 'Every company by stage, from To contact to Signed. Pick a stage to work it.',
       list: 'Every company on the desk, by list: the researched new leads, Peak’s own sponsors, local businesses and the ones added on the desk.',
       deals: 'Tours at Peak, proposals sent and signed sponsors.', more: 'The report, profit and loss, packages, what Peak offers sponsors, your calendar link and the look.' },
-    expo: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. Done takes it off this list. Notices, bounces and out-of-office replies are under Other. Alerts: More, My email & booking link.',
+    expo: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. To answer: nobody here has replied yet, or they wrote again. Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
       today: 'Expo leads to work now: follow-ups due, who to reach next, quotes waiting, tours coming up, and the week so far.',
       pipe: 'Every expo lead by stage, from To contact to Booked. Kept apart from the sponsors: nothing here counts there.',
       list: 'Organisations that run expos, shows and fairs and could rent Peak as their venue.', deals: 'Tours of Peak for organisers, quotes sent and events booked.',
@@ -2058,7 +2058,12 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
      (partnerships@peakpickleball.us), newest first, read every 5 minutes. Open one to read it (it is then marked read in Outlook); Reply
      (from Peak Partnerships with your signature, in the same thread; logged on the card when it is on one), Attach to a company, Claim
      ("Cai is answering this": since 23 Nov a lock, so only Cai can answer it, here or from a card's Write an email, until she or Matthew
-     releases it; an admin may also take it over), Done. Notices, bounces and auto-replies are under Other. Their words are shown as text, never as HTML.
+     releases it; an admin may also take it over), Done. Four lists (23 Nov, Matthew), worked out on the server when the list is read
+     (inStates): To answer (nobody here has replied, or they wrote again: their newer email in the thread, same sender and subject without
+     "Re:", is its own row and the older one counts as Done), Waiting on them (we replied: it moves there by itself; Back to To answer if we
+     still owe them something; 14 days with no answer counts as Done, "Closed: no reply in 14 days"), Done (pressed, or closed; Not done
+     undoes it), Other (notices, bounces and auto-replies; Remove hides one, with Undo, and a bounce is checked onto its card first). A claim
+     shows on every row in every list. Their words are shown as text, never as HTML.
      Claude Check may look and never act. The Expo-only account has no Inbox. ---- */
   var inboxOn = function () { return !!(S.data && S.data.inbox); };
   var readOnly = function () { return !!(S.data && S.data.me.name === 'Claude Check'); };
@@ -2072,8 +2077,14 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       box.textContent = '';
       if (!j.ok) { box.appendChild(el('div', 'empty', j.error || 'The Inbox did not load.')); return; }
       S.data.inbox = j.counts; inChips(); bar();
-      if (!j.items.length) { box.appendChild(el('div', 'empty', sub === 'open' ? 'Nothing to answer. New emails to ' + j.mailbox + ' show here within about 5 minutes.' : sub === 'done' ? 'Nothing marked Done yet.' : 'Nothing under Other.')); return; }
+      var rmv = (sub === 'other' || sub === 'removed') && (j.counts.removed || sub === 'removed') ? function () {   /* Remove (23 Nov): the removed ones stay in the log, listed here */
+        var rl = el('button', 'lnk inremoved', sub === 'removed' ? '‹ Back to Other' : 'Removed (' + j.counts.removed + '): show them'); rl.type = 'button'; rl.setAttribute('data-act', 'inremoved');
+        rl.addEventListener('click', function () { box.remove(); drawInbox(sub === 'removed' ? 'other' : 'removed'); }); box.appendChild(el('div', 'mt')).appendChild(rl);
+      } : null;
+      if (!j.items.length) { box.appendChild(el('div', 'empty', sub === 'open' ? 'Nothing to answer. New emails to ' + j.mailbox + ' show here within about 5 minutes.' : sub === 'wait' ? 'Nobody to wait on: when someone here replies to an email, it moves here until they answer.' : sub === 'done' ? 'Nothing marked Done yet.' : sub === 'removed' ? 'Nothing removed.' : 'Nothing under Other.')); if (rmv) rmv(); return; }
+      if (sub === 'removed') box.appendChild(el('div', 'fuhint', 'Removed from Other. They are kept; Put back returns one to Other.'));
       j.items.forEach(function (it) { box.appendChild(inRow(it)); });
+      if (rmv) rmv();
       if (S.inSel) { var want = S.inSel; S.inSel = null; [].forEach.call(box.querySelectorAll('.inrow'), function (d) { if (d.getAttribute('data-iid') === want && d._open) d._open(); }); }
     }).catch(function () { box.textContent = ''; box.appendChild(el('div', 'empty', 'No connection. Try again when you have signal.')); });
   }
@@ -2089,6 +2100,11 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var rp = (it.replies || []).filter(function (x) { return x.ok; }).slice(-1)[0]; if (rp) tg.appendChild(el('span', 'tag', 'Replied by ' + first(rp.by) + ', ' + when(rp.at)));
     if (it.files && it.files.length) tg.appendChild(el('span', 'tag', plural(it.files.length, 'attachment')));
     if (it.cat === 'other') tg.appendChild(el('span', 'tag', it.why || 'Other'));
+    if (it.box === 'wait') tg.appendChild(el('span', 'tag wait', 'Waiting on them · closes ' + new Date((it.boxAt + 14 * 86400) * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' if no reply'));
+    if (it.how === 'auto') tg.appendChild(el('span', 'tag', 'Closed: no reply in 14 days'));
+    if (it.how === 'newer') tg.appendChild(el('span', 'tag', 'They wrote again ' + when(it.boxAt) + ': see their newer email'));
+    if (it.how === 'back' && it.back) tg.appendChild(el('span', 'tag', 'Back to To answer (' + first(it.back.by) + ')'));
+    if (it.hide) tg.appendChild(el('span', 'tag', 'Removed by ' + first(it.hide.by) + ', ' + when(it.hide.at)));
     if (it.done) tg.appendChild(el('span', 'tag', 'Done (' + first(it.done.by) + ')'));
     if (tg.children.length) hd.appendChild(tg);
     d.appendChild(hd);
@@ -2130,7 +2146,10 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var kb = theirs && !isAdmin() ? null : mk(mine ? 'Unclaim' : theirs ? 'Take it over' : 'Claim: I’m answering this', 'inclaim');
       var rel = theirs && isAdmin() ? mk('Release it', 'inrelease') : null;
       if (theirs && rb && !isAdmin()) { rb.remove(); rb = null; }   /* the claim lock (23 Nov): a seller can't answer someone else's */
-      var db = mk(it.done ? 'Not done' : 'Done', 'indone');
+      /* the four lists (23 Nov): Other gets Remove (or Put back) and no Done; Waiting gets Back to To answer; a closed one's Not done is Back to To answer */
+      var oth = it.cat === 'other', db = oth ? null : mk(it.box === 'done' ? 'Not done' : 'Done', 'indone');
+      var bk = it.box === 'wait' ? mk('Back to To answer', 'inback') : null;
+      var hb = oth ? mk(it.hide ? 'Put back' : 'Remove', 'inhide') : null;
       body.appendChild(acts);
       if (theirs) body.appendChild(el('div', 'fuhint inlock', it.claim.by + ' is answering this. ' + (isAdmin() ? 'Only they can answer it until it is released: Release it, or Take it over to answer it yourself.' : 'Ask ' + (/^matthew\b/i.test(it.claim.by) ? 'Matthew' : it.claim.by + ' or Matthew') + ' to release it.')));
       var pane = el('div', 'inpane'); body.appendChild(pane);
@@ -2141,7 +2160,21 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         claim(kb, !mine, theirs, mine ? 'Unclaimed' : 'You’re answering this one');
       });
       if (rel) rel.addEventListener('click', function () { if (confirm('Release it? ' + it.claim.by + ' is answering this; anyone can then claim it.')) claim(rel, false, false, 'Released'); });
-      db.addEventListener('click', function () { db.disabled = true; api('inboxdone', { iid: it.iid, on: !it.done }).then(function (x) { db.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after(it.done ? 'Back on the open list' : 'Done: off the open list'); }); });
+      var back = function (b) { b.disabled = true; api('inboxback', { iid: it.iid }).then(function (x) { b.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after('Back on To answer'); }); };
+      if (db) db.addEventListener('click', function () {
+        if (it.box === 'done' && !it.done) return back(db);   /* closed after 14 days, or they wrote again: no Done to undo */
+        db.disabled = true; api('inboxdone', { iid: it.iid, on: !it.done }).then(function (x) { db.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after(it.done ? 'Not done: back on its list' : 'Done'); });
+      });
+      if (bk) bk.addEventListener('click', function () { back(bk); });
+      if (hb) hb.addEventListener('click', function () {
+        var on = !it.hide; hb.disabled = true;
+        api('inboxhide', { iid: it.iid, on: on }).then(function (x) {
+          hb.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; }
+          var bn = (x.bounce || []).map(function (y) { return y.how === 'no card' ? 'the bounce to ' + y.to + ' is on no card (kept under Removed)' : 'the bounce to ' + y.to + ' is on ' + y.name + '’s card'; }).join('; ');
+          load(function () { draw(); });
+          if (on) toast('Removed' + (bn ? ': ' + bn : ''), 'Undo', function () { api('inboxhide', { iid: it.iid, on: false }).then(function () { after('Put back'); }); }); else toast('Put back on Other');
+        });
+      });
       ab.addEventListener('click', function () { inAttachPane(it, pane, after); });
       if (rb) rb.addEventListener('click', function () { inReplyPane(it, pane, after); });
     }).catch(function () { body.textContent = ''; body.appendChild(el('div', 'warnline', 'No connection.')); });

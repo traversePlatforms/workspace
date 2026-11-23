@@ -53,9 +53,9 @@
  * 2026-11-20 (Matthew: "I think the inbox tab is better but i dont think we currently have any notification that an email reply has
  * happened"): the Inbox tab (every email in Peak Partnerships' Inbox, read every 5 minutes: Reply, Attach to a company, Claim, Done) and
  * alerts (Web Push to the desk app per device, an optional email heads-up), desk-inbox.php explains (actions inbox, inboxone, inboxfile,
- * inboxclaim, inboxdone, inboxattach, inboxreply, pushkey, pushsub, pushunsub, alertset, alerttest).
+ * inboxclaim, inboxdone, inboxattach, inboxreply, inboxback, inboxhide, pushkey, pushsub, pushunsub, alertset, alerttest).
  *   php desk.php alerts      deliver the alerts that are due (the 5-minute and the hourly runs do this)
- *   php desk.php inboxcount  how many emails are open, done and Other (counts only) */
+ *   php desk.php inboxcount  how many emails are To answer, Waiting on them, Done, Other and removed (counts only) */
 declare(strict_types=1);
 define('DESK', 1);
 const BUILD = '2026-11-21.2';
@@ -269,7 +269,7 @@ function handleIn(string $action, bool $isPost, array $body, string $ME, string 
 
     if ($action === 'data') return dataOut($ME, $ROLE);
     /* the Inbox (2026-11-20): sellers and admins; Claude Check may look (it is never marked read for it) and never acts */
-    $INBOX = ['inbox', 'inboxone', 'inboxfile', 'inboxclaim', 'inboxdone', 'inboxattach', 'inboxreply'];
+    $INBOX = ['inbox', 'inboxone', 'inboxfile', 'inboxclaim', 'inboxdone', 'inboxattach', 'inboxreply', 'inboxback', 'inboxhide'];
     if (in_array($action, $INBOX, true) && !in_array($ROLE, ['admin', 'seller'], true)) fail('The Inbox is for the sellers and admins.', 403);
     if ($action === 'inbox') return inList((string) ($_GET['f'] ?? 'open'), $ME);
     if ($action === 'inboxone') { $x = inOpen((string) ($_GET['iid'] ?? ''), $ME, $ME !== 'Claude Check'); if (empty($x['ok'])) fail($x['error'], (int) $x['code']); return $x; }
@@ -332,9 +332,10 @@ function handleIn(string $action, bool $isPost, array $body, string $ME, string 
         return ['ok' => true, 'deskmail' => dmOut(true, $ME), 'book' => bkOut(true, $ME)];
     }
     /* the Inbox's actions and my alerts (2026-11-20) */
-    if (in_array($action, ['inboxclaim', 'inboxdone', 'inboxattach', 'inboxreply'], true)) {
+    if (in_array($action, ['inboxclaim', 'inboxdone', 'inboxattach', 'inboxreply', 'inboxback', 'inboxhide'], true)) {
         $iid = (string) ($body['iid'] ?? '');
         $x = match ($action) { 'inboxclaim' => inClaim($iid, !empty($body['on']), $ME, $ROLE, !empty($body['take'])), 'inboxdone' => inDone($iid, !empty($body['on']), $ME),
+            'inboxback' => inBack($iid, $ME), 'inboxhide' => inHide($iid, !empty($body['on']), $ME),
             'inboxattach' => inAttach($iid, (string) ($body['w'] ?? ''), (string) ($body['id'] ?? ''), $ME), default => inReply($iid, $body, $ME, $ROLE) };
         if (empty($x['ok'])) { if (isset($x['claim'])) { http_response_code((int) $x['code']); return ['ok' => false, 'error' => $x['error'], 'claim' => $x['claim']]; } fail((string) $x['error'], (int) ($x['code'] ?? 400)); }
         unset($x['code']); return $x;
