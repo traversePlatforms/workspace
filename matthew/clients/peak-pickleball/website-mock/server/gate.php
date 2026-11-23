@@ -76,10 +76,21 @@ $root = realpath("$P/site");
 $f = realpath("$root/$rel");
 if ($f === false || !str_starts_with($f, $root . '/') || !is_file($f)) { http_response_code(404); header('Content-Type: text/plain'); exit('Not found'); }
 $types = ['html' => 'text/html; charset=utf-8', 'css' => 'text/css; charset=utf-8', 'js' => 'text/javascript; charset=utf-8', 'webp' => 'image/webp',
-    'png' => 'image/png', 'jpg' => 'image/jpeg', 'svg' => 'image/svg+xml', 'woff2' => 'font/woff2', 'pdf' => 'application/pdf'];
+    'png' => 'image/png', 'jpg' => 'image/jpeg', 'svg' => 'image/svg+xml', 'woff2' => 'font/woff2', 'pdf' => 'application/pdf', 'mp4' => 'video/mp4'];
 $ext = strtolower(pathinfo($f, PATHINFO_EXTENSION));
 if (!isset($types[$ext])) { http_response_code(404); exit; }
 header('Content-Type: ' . $types[$ext]);
 if ($ext !== 'html') header('Cache-Control: private, max-age=3600'); // assets: cached in this browser only
-header('Content-Length: ' . filesize($f));
+$size = filesize($f); header('Accept-Ranges: bytes');
+// Byte ranges (23 Nov, for the hero video): Safari on iPhone won't play a video without them.
+if (preg_match('/^bytes=(\d*)-(\d*)$/', (string) ($_SERVER['HTTP_RANGE'] ?? ''), $r)) {
+    $a = $r[1] === '' ? max(0, $size - (int) $r[2]) : (int) $r[1];
+    $z = ($r[1] !== '' && $r[2] !== '') ? min((int) $r[2], $size - 1) : $size - 1;
+    if ($a > $z || $a >= $size) { http_response_code(416); header("Content-Range: bytes */$size"); exit; }
+    http_response_code(206); header("Content-Range: bytes $a-$z/$size"); header('Content-Length: ' . ($z - $a + 1));
+    $h = fopen($f, 'rb'); fseek($h, $a); $left = $z - $a + 1;
+    while ($left > 0 && !feof($h)) { $c = fread($h, min(65536, $left)); echo $c; $left -= strlen($c); }
+    fclose($h); exit;
+}
+header('Content-Length: ' . $size);
 readfile($f);

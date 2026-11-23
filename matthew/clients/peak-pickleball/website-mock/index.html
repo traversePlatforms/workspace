@@ -61,7 +61,8 @@
 </header>
 <main id="main">
 <section class="hero">
-  <img class="hero-img" src="img/hero-courts.webp" alt="Players on Peak's indoor courts, with the Peak Pickleball sign on the back wall" width="1600" height="900" fetchpriority="high">
+  <video class="hero-img" id="hero-video" poster="img/hero-video-poster.webp" muted loop playsinline preload="none" aria-label="A fly-through of Peak Pickleball: the building, the courts, the stairs and the front desk" data-src-lg="video/peak-flight-1280.mp4" data-src-sm="video/peak-flight-854.mp4"></video>
+  <button class="hero-pause" id="hero-pause" type="button" aria-pressed="false" hidden>Pause video</button>
   <div class="wrap">
     <img class="slogan" src="img/logo-slogan-white.png" alt="Peak Pickleball: Learn. Play. Connect. Belong." width="760" height="136">
     <h1>Indoor pickleball in Colorado Springs</h1>
@@ -256,5 +257,20 @@
   <a class="m-call" href="tel:+17193774725" data-event="call_click">Call</a>
 </nav>
 <script src="js/site.js" defer></script>
+<script>
+/* Hero video (Peak's own site video, 23 Nov: Matthew). Smaller file on phones; the still only when the visitor asks for less motion or to save data. */
+(function () {
+  var v = document.getElementById('hero-video'), b = document.getElementById('hero-pause'); if (!v) return;
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches || (navigator.connection && navigator.connection.saveData);
+  if (still) return;
+  v.src = window.matchMedia('(max-width: 800px)').matches ? v.dataset.srcSm : v.dataset.srcLg;
+  var p = v.play(); if (p && p.catch) p.catch(function () {});
+  b.hidden = false;
+  b.addEventListener('click', function () {
+    if (v.paused) { v.play(); b.textContent = 'Pause video'; b.setAttribute('aria-pressed', 'false'); }
+    else { v.pause(); b.textContent = 'Play video'; b.setAttribute('aria-pressed', 'true'); }
+  });
+})();
+</script>
 </body>
 </html>
