@@ -61,6 +61,13 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
     missed). The new-account welcome stopped 13 Jul (1,569 accounts). Blasts still go out (Thanksgiving, 5,001 people), so either the
     automations were switched off or the CourtReserve-to-Patch connection broke (possibly the 15 Oct Momentum upgrade or the branded app).
     Ask Tyler: did anyone turn them off, and can he (or Patch support) check the CourtReserve connection.
+    **What the data shows (23 Nov):** not billing (blasts kept going all November, 6,766 so far, so the account is paid and sending); not one
+    cut-off date (they stopped 29 Sep, 1 Nov and 19 Nov). Each stopped right after a normal daily run: the welcome and thank-you ran their
+    usual 9 am batch on Sun 1 Nov and never again; the birthday email ran its normal 11 am batch on Thu 19 Nov (26 sent) and never again. The
+    birthday one doesn't need anything new from CourtReserve (the birthdays are already in Patch), so a broken connection wouldn't stop it:
+    that points to a change inside Patch (paused, edited, or given an end date). The same thing happened on Fri 25 Jul 2025, when five
+    automations stopped within 35 minutes. **Where the answer is:** Patch > Automations: each one's status (Active / Paused / Ended), any end
+    date, and its activity or history (who changed it, when). Our access can't see that screen.
 27. **Two small fixes the pull turned up:** the welcome emails say $6 an hour and 30 days' notice, CourtReserve says $7 and 15 days (which is
     right?); and "How did you hear about us?" is blank on 95% of accounts: making it required at sign-up lets ads be measured.
 
