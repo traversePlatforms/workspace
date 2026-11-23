@@ -85,7 +85,7 @@ The audience sizes are from the 23 Nov pull. The trigger types marked **proven**
 | B2. New account welcome | Stopped 13 Jul | 1,569 since 14 Jul | proven (account created) |
 | C. Lapsed member win-back | Ran in 2025, stopped Jul 2025 | Last dues 45 to 90 days ago: 80; 90 to 180 days: 197; 180 to 365 days: 469 | proven (days since last dues) |
 | C2. Cancellation save | None | ~22 paid plans with an end date set (Nov 2026 to Feb 2027) | unconfirmed (end date set) |
-| D. Failed payment / card expiring | None in Patch | Nov 2026: 27 unpaid dues charges, $1,690; 21 paid accounts suspended | unconfirmed (past due / suspended) |
+| D. Failed payment / card expiring | None in Patch | Nov 2026: 21 paid accounts suspended; 2 November dues charges ($194) past due on 23 Nov (corrected: the earlier 27/$1,690 counted charges not yet due) | unconfirmed (past due / suspended) |
 | E. Birthday | Gear 50%, not sending since 19 Nov | 14,883 accounts have a birth date | proven |
 | F. Membership renewal (prepaid annual) | None | 39 accounts next billed Sep to Oct 2027 | unconfirmed (next payment date) |
 | G. League / event reminders, release your spot | None in Patch (CourtReserve's own booking emails unknown) | 17.2% of event sign-ups cancelled in the baseline year; 60% of Open Play cancels in the last 24 h (4 Nov baseline); 2,331 still waitlisted | proven (booked: row 5) |
@@ -101,7 +101,7 @@ The audience sizes are from the 23 Nov pull. The trigger types marked **proven**
 2. **B and B2, the welcome series.** Both are off. With monthly churn averaging 11.4% in the baseline (paid in one month, then nothing for two), the first month is where members are lost.
 3. **J, drop-in regulars to members.** 426 people already play at least 3 times in 60 days and pay $12 an hour.
 4. **C and C2, win-back and cancellation save.** 80 + 197 recent lapses, plus ~22 scheduled cancellations that can still be caught.
-5. **D, failed payment.** 27 unpaid dues charges ($1,690) this month. Plans suspend 10 days past due and cancel at 11 (CourtReserve plan settings), so a reminder has to land inside 10 days.
+5. **D, failed payment.** 21 suspended accounts and about 3 charges a month still unpaid at 10 days (corrected 23 Nov: the earlier 27/$1,690 counted charges raised before their due day). Plans suspend 10 days past due and cancel at 11 (CourtReserve plan settings), so a reminder has to land inside 10 days.
 
 ## 4. The automations, written out (paste-ready drafts)
 
@@ -412,7 +412,7 @@ Keep row 1 (gear 50%). It's Peak's longest-running automation, but it has sent n
   - 194 Starter
   - 807 paid active
   - lapsed 80 / 197 / 469
-  - 27 unpaid dues ($1,690)
+  - 27 open November charges ($1,690) on 23 Nov, but only 2 ($194) past due (corrected 23 Nov)
   - 21 suspended
   - 1,569 new accounts since 14 Jul
   - 33 new paying members since 1 Nov (first-ever dues, 1 to 22 Nov)
