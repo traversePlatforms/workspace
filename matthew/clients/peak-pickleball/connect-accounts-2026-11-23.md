@@ -33,23 +33,10 @@ Source for the API steps: Google's prerequisites page (developers.google.com/my-
 - **Until then:** screenshot the Performance tab and the star rating and review count once now (the day-one value).
 
 ## 2. Facebook and Instagram (insights, posts, messages, ads)
-This lives in **Peak's own Meta business portfolio**, never in the Sixfold 365 portfolio our "Pipeline" app sits in.
-1. **Check your access:** business.facebook.com → pick **Peak's portfolio** → Settings → Users → People → your name. You need **Full
-   control** (admin of the business). If Cammie gave partial access, ask her to make you a full-control admin.
-2. **Create the system user:** Settings → Users → **System users** → Add → name **"Peak Claude"**, role **Admin**.
-3. **Give it the assets with full control:** on the system user → Assign assets:
-   - **Page:** Peak Pickleball → **Full control** (everything: content, messages, community activity, ads, insights).
-   - **Instagram account:** Peak's → **Full control**.
-   - **Ad account:** Peak's (if there is one) → **Manage ad account**.
-4. **Make or pick the app:** Settings → Accounts → Apps. If Peak has none, go to developers.facebook.com → My Apps → Create App → type
-   **Business** → name "Peak Claude" → business portfolio **Peak's**. Then back in Business Settings, Apps → add it to the system user (Full
-   control).
-5. **Generate the token:** System users → Peak Claude → **Generate new token** → app "Peak Claude" → **Token expiration: Never** → tick:
-   pages_show_list, pages_read_engagement, pages_read_user_content, pages_manage_metadata, pages_manage_posts, pages_manage_engagement,
-   pages_messaging, read_insights, instagram_basic, instagram_manage_insights, instagram_content_publish, instagram_manage_comments,
-   instagram_manage_messages, business_management, ads_read, ads_management → Generate.
-6. **Save it on the cloud computer only:** in the VS Code terminal run `cat > ~/.ssh/peak-meta-token.txt`, paste the token, press Enter,
-   then Ctrl+D. Tell Claude it's there. Claude checks it (reads only), then the nightly pull adds Page and Instagram insights.
+Done through **Traverse** (Matthew, 23 Nov: everything he manages runs from Traverse). See the separate PDF **"Facebook and Instagram: run
+everything from Traverse"**. For Peak it's its Step 3: in Peak's business portfolio → Settings → Users → **Partners** → add Traverse's
+Business portfolio ID → share Peak's **Page, Instagram and ad account with Full control**. Peak keeps owning them. You need full control in
+Peak's portfolio for that, or Cammie can do it.
 - Posting, replying to messages or comments, and anything with ads still wait for your OK on each item.
 
 ## 3. WordPress (the website)
