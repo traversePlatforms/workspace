@@ -1186,7 +1186,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       speed. **Then** Claude makes the rest — every edition × crew / manager / admin × phone and desktop — each with its
       own storyline and a dry run first. Known nits: "Good morning" shows at the 4:45 PM scene and the storm report says
       8:30 AM (the app reads the real clock); the time picker can't be drawn, so 5:30 PM just appears.
-- [ ] **TR-17 — Try Desktop layout on a tablet (Matthew).** Added 2026-10-11. Once the change list is live: Profile → Layout →
+- [x] **TR-17 — Try Desktop layout on a tablet (Matthew). (ticked by Matthew on the Working Register page 30 Oct; synced 22 Nov).** Added 2026-10-11. Once the change list is live: Profile → Layout →
       Desktop on an iPad or other tablet; it should show the computer layout shrunk to fit the screen (the test browser could not
       shrink it the way a real tablet does). Say if it is too small to use or anything is cut off. Tablet puts it back.
 - [x] **TR-19 — Overnight 2026-10-11/12 work: ✅ LIVE (checked 2026-10-13: live rounds.php is byte-identical to the current source, which contains 19b0c70).** Built and tested, NOT live: security fixes (19b0c70),
@@ -1453,7 +1453,7 @@ Matthew's own field-sales app ([traverse/](traverse/)), its five editions and th
       representation an **Owner default**. Check the paper title before signing anything.
       **This is the highest-consequence item on the whole list** and the only one with a
       counterparty waiting on you.
-- [ ] **P-2 — Stringline plan**, finalise and start pushing. Still ahead: the full USPTO search
+- [x] **P-2 — Stringline plan** (ticked by Matthew on the Working Register page 6 Nov; synced 22 Nov), finalise and start pushing. Still ahead: the full USPTO search
       and the LLC-vs-trade-name question. Nothing registered yet.
 - [ ] **P-3 — Clear the phone photos.** ⚑ **Confirm they're in the OneDrive mirror before
       deleting anything** — and Sixfold has a standing photo gap, so check whether any job
