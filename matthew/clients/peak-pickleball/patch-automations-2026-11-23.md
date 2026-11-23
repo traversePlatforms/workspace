@@ -435,3 +435,23 @@ Keep row 1 (gear 50%). It's Peak's longest-running automation, but it has sent n
 - The court rate and Play notice conflicts.
 - Open rates are inflated by Apple Mail privacy.
 - The cause of the March 2025 text unsubscribes (STOP confirmations is an inference).
+
+## Addendum, 23 Nov: Patch's own list figures (Matthew, Patch > Automations, extra columns; nothing changed or saved there)
+
+| Automation | Sent | Patch revenue | $ per message | Opt-outs (rate) | Last run | Last modified |
+|---|---|---|---|---|---|---|
+| New Paid Membership Welcome | 274 | $4,973.76 | $18.15 | 0 (0%) | 24 Jul 2025 | 9 Jun 2026 |
+| Target New Non-Members | 6,506 | $107,269.78 | $16.49 | 47 (0.7%) | 25 Jul 2025 | 19 Aug 2026 |
+| Google Review | 4,326 | $36,324.28 | $8.40 | 10 (0.2%) | 2 Nov 2026 | 23 Nov 2026 6:17 am |
+| PPU Pipeline | 1,342 | $10,605.37 | $7.90 | 5 (0.4%) | 1 Nov 2026 | 9 Nov 2026 |
+| Membership Create | 2,357 | $16,942.31 | $7.19 | 9 (0.4%) | 2 Nov 2026 | 2 Nov 2026 5:00 pm |
+| Expired Membership Winback | 2,653 | $5,302.81 | $2.00 | 35 (1.3%) | 25 Jul 2025 | 6 Oct 2025 |
+| Birthday Email | 18,038 | $32,494.90 | $1.80 | 401 (2.2%) | 19 Nov 2026 | 20 Nov 2026 4:26 pm |
+| Non-Member At-Risk/Lost Winback | 6,837 | $7,347.00 | $1.07 | 94 (1.4%) | 25 Jul 2025 | 15 Jun 2026 |
+| Non-Member Reengagement | 16,710 | $15,187.85 | $0.91 | 126 (0.8%) | 25 Jul 2025 | 3 Aug 2026 |
+| Non-Member Pushing Convert | 47,341 | $24,464.57 | $0.52 | 390 (0.8%) | 26 Jun 2025 | 16 Nov 2026 |
+
+All 17 are Enabled off / Draft. Patch "revenue" is attribution (spend by anyone who got a message), not proof the message caused it: use it to
+rank, not as a result. Suggested order to bring back (Tyler decides): the two welcomes + Target New Non-Members, then Google Review and PPU
+Pipeline; review the Birthday email's audience and wording first (highest opt-out rate); Non-Member Pushing Convert last or not at all
+(47,341 sent, 0 clicks). Someone with Patch access is editing them now (latest 23 Nov 6:17 am): coordinate before building anything.
