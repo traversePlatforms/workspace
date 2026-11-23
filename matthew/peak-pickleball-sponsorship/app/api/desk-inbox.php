@@ -10,7 +10,9 @@
  *   in      one email: who, the subject, when, their own words (the quoted history cut, at most 3,200 characters), attachments, where it is
  *           (mid, mb, imid: never sent to the page), cat (mail | other) and why it is Other (Microsoft or system notices, bounces,
  *           auto-replies, calendar answers, CourtReserve, STOP replies, which are handled by themselves), and the card it matched (w, id)
- *   claim   on/off: "Cai is answering this", so two sellers don't answer the same email
+ *   claim   on/off: "Cai is answering this". Since 2026-11-23 a lock (Matthew: "when someone claims they are answering this does that
+ *           prevent others from responding? because it should"): only the claimer replies to it, from the Inbox or from a card's Write an
+ *           email to that address; only the claimer or an admin releases it; an admin may take it over (take: true). Replying claims it.
  *   done    on/off: off the open list (the Done view keeps it)
  *   attach  put on a company's card (a touch, as a matched reply is)
  *   rmail   the words of a reply sent from the Inbox with no card; reply: each reply's result
@@ -177,11 +179,21 @@ function inFile(string $iid, int $n): void {
     header('Content-Disposition: attachment; filename="' . $ascii . '"; filename*=UTF-8\'\'' . rawurlencode($nm)); header('Content-Length: ' . strlen($bytes)); header('Cache-Control: private, no-store');
     echo $bytes; exit;
 }
-function inClaim(string $iid, bool $on, string $me): array {
-    return withLock(function () use ($iid, $on, $me) {
+/** the claim lock (2026-11-23): who is answering it, and what someone else is told */
+function inLockMsg(string $by): string { $f = strtok($by, ' ') ?: $by; return $by . ' is answering this. Ask ' . (strcasecmp($f, 'Matthew') === 0 ? 'Matthew' : $by . ' or Matthew') . ' to release it.'; }
+function inLocked(?array $c, string $me): bool { return $c !== null && (string) ($c['by'] ?? '') !== $me; }
+/** a card's email to $to: the newest open (not Done) Inbox email from that address, when someone else has it claimed (else null) */
+function inLockFor(string $to, string $me): ?array {
+    $to = strtolower(trim($to)); if ($to === '') return null;
+    foreach (inAll() as $R) if (inBucket($R) === 'open' && strtolower(trim((string) $R['from'])) === $to) return inLocked($R['claim'] ?? null, $me) ? ['iid' => (string) $R['iid'], 'claim' => $R['claim']] : null;
+    return null;
+}
+/** Claim / Unclaim: a claim someone else holds is theirs; an admin may release it, or take it over (take: true) */
+function inClaim(string $iid, bool $on, string $me, string $role = 'seller', bool $take = false): array {
+    return withLock(function () use ($iid, $on, $me, $role, $take) {
         $R = inGet($iid); if (!$R) return ['ok' => false, 'error' => 'No such email.', 'code' => 404];
-        $c = $R['claim'] ?? null;
-        if ($on && $c && $c['by'] !== $me) return ['ok' => false, 'error' => $c['by'] . ' is answering this already.', 'code' => 409, 'claim' => $c];
+        $c = $R['claim'] ?? null; $adm = $role === 'admin';
+        if (inLocked($c, $me) && (!$adm || ($on && !$take))) return ['ok' => false, 'error' => inLockMsg((string) $c['by']), 'code' => 409, 'claim' => $c];
         if ((bool) $c === $on && (!$c || $c['by'] === $me)) return ['ok' => true, 'same' => true];
         inRow(['t' => 'claim', 'iid' => $iid, 'on' => $on, 'by' => $me]); return ['ok' => true];
     });
@@ -210,11 +222,11 @@ function inAttach(string $iid, string $w, string $id, string $me): array {
 }
 /** Reply from the Inbox: from Peak Partnerships with the seller's own signature, in the same thread (pmReplySend through pmDeskSend). On an
     email that is on a card it goes as a desk email on that card (logged there as a touch, "answering their email"); otherwise on the Inbox
-    only. Someone else's claim needs take: true. The one who replies takes the claim. */
-function inReply(string $iid, array $b, string $me): array {
+    only. Someone else's claim is a lock (2026-11-23): only an admin gets past it, with take: true. The one who replies takes the claim. */
+function inReply(string $iid, array $b, string $me, string $role = 'seller'): array {
     $R = inGet($iid); if (!$R) return ['ok' => false, 'error' => 'No such email.', 'code' => 404];
     if (!dmConf()['on']) return ['ok' => false, 'error' => 'Desk emails are off. They turn on once Matthew says go.', 'code' => 400];
-    $c = $R['claim'] ?? null; if ($c && $c['by'] !== $me && empty($b['take'])) return ['ok' => false, 'error' => $c['by'] . ' is answering this. Send anyway only if you have agreed it with them.', 'code' => 409, 'claim' => $c];
+    $c = $R['claim'] ?? null; if (inLocked($c, $me) && !($role === 'admin' && !empty($b['take']))) return ['ok' => false, 'error' => inLockMsg((string) $c['by']), 'code' => 409, 'claim' => $c];
     if ((string) ($R['mid'] ?? '') === '' && (string) ($R['imid'] ?? '') === '') return ['ok' => false, 'error' => 'This one can’t be answered from the desk.', 'code' => 400];
     $d = dmIn($b + ['to' => $R['from']]); if (isset($d['error'])) return ['ok' => false, 'error' => $d['error'], 'code' => 400];
     $mb = tmMailbox(); if (!$mb['ok']) return ['ok' => false, 'error' => 'It can\'t send right now: ' . $mb['why'] . '.', 'code' => 400];
@@ -222,7 +234,7 @@ function inReply(string $iid, array $b, string $me): array {
     unset($d['re']);
     $card = !empty($R['card']['id']) ? $R['card'] : null; $C = $card ? (recs((string) $card['w'])[(string) $card['id']] ?? null) : null;
     if ($C && !empty($C['off'])) $C = null;
-    if (!$c) inRow(['t' => 'claim', 'iid' => $iid, 'on' => true, 'by' => $me]);
+    if (!$c || inLocked($c, $me)) inRow(['t' => 'claim', 'iid' => $iid, 'on' => true, 'by' => $me]);
     if ($C) {
         $w = (string) $card['w'];
         $no = dmMayGet($C, $d['to']); if ($no !== '') return ['ok' => false, 'error' => 'Not sent: ' . $no . '.', 'code' => 400];

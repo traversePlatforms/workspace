@@ -863,8 +863,20 @@ try {
       ok((await b('inboxclaim', { iid: ST, on: true })).ok, 'Test Seller claims the stranger’s email');
       let cl = await c2('inboxclaim', { iid: ST, on: true });
       ok(cl._status === 409 && /Test Seller is answering this/.test(cl.error) && (await c2('inbox')).items.find((x) => x.iid === ST).claim.by === 'Test Seller', 'the second seller sees “Test Seller is answering this” and cannot claim it too');
-      cl = await c2('inboxreply', { iid: ST, subject: 'RE: Sponsorship question', text: 'Hello Pat' });
-      ok(cl._status === 409 && cl.claim && cl.claim.by === 'Test Seller', 'nor answer it without saying so (take)');
+      ok(cl.error === 'Test Seller is answering this. Ask Test Seller or Matthew to release it.', 'and is told to ask Test Seller or Matthew to release it');
+      /* the claim lock (2026-11-23, Matthew: "when someone claims they are answering this does that prevent others from responding? because it should") */
+      let g0 = GM.calls; cl = await c2('inboxreply', { iid: ST, subject: 'RE: Sponsorship question', text: 'Hello Pat' });
+      let cl2 = await c2('inboxreply', { iid: ST, subject: 'RE: Sponsorship question', text: 'Hello Pat', take: true });
+      ok(cl._status === 409 && cl.claim && cl.claim.by === 'Test Seller' && cl2._status === 409 && /Ask Test Seller or Matthew/.test(cl2.error) && GM.calls === g0, 'a seller is blocked from replying to someone else’s claimed email, even with take: true (nothing sent)');
+      cl = await c2('dmsend', { world: 'sponsor', id: EA.id, to: 'Pat@AcmePlumbing.com', subject: 'Hi Pat', text: 'Hello Pat' });
+      ok(cl._status === 409 && cl.error === 'Test Seller is answering this. Ask Test Seller or Matthew to release it.' && cl.claim.by === 'Test Seller' && GM.calls === g0, 'and from a card: Write an email to that address is refused the same way (nothing sent)');
+      cl = await c2('inboxclaim', { iid: ST, on: false });
+      ok(cl._status === 409 && (await b('inbox')).items.find((x) => x.iid === ST).claim.by === 'Test Seller', 'nor can a seller release someone else’s claim');
+      ok((await b('inboxclaim', { iid: ST, on: false })).ok && !(await b('inbox')).items.find((x) => x.iid === ST).claim, 'the claimer unclaims it');
+      ok((await b('inboxclaim', { iid: ST, on: true })).ok && (await a('inboxclaim', { iid: ST, on: true }))._status === 409 && (await a('inboxclaim', { iid: ST, on: true, take: true })).ok && (await b('inbox')).items.find((x) => x.iid === ST).claim.by === 'Test Admin', 'an admin takes it over only on purpose (take: true)');
+      ok((await b('inboxclaim', { iid: ST, on: true }))._status === 409 && (await b('inboxclaim', { iid: ST, on: true })).error === 'Test Admin is answering this. Ask Test Admin or Matthew to release it.', 'then the old claimer is locked out too');
+      ok((await a('inboxclaim', { iid: ST, on: false })).ok && (await b('inboxclaim', { iid: ST, on: true })).ok && (await a('inboxclaim', { iid: ST, on: false })).ok && !(await b('inbox')).items.find((x) => x.iid === ST).claim, 'an admin releases someone else’s claim');
+      ok(JSON.parse(inject('echo json_encode([inLockMsg("Matthew Sharpe"), inLockMsg("Cai")]);')).join('|') === 'Matthew Sharpe is answering this. Ask Matthew to release it.|Cai is answering this. Ask Cai or Matthew to release it.', 'Matthew’s own claim: “Ask Matthew to release it”');
       /* Reply on an email that is on a card: the thread kept, logged on the card */
       let n0 = GM.calls; let rr = await b('inboxreply', { iid: KI, subject: 'RE: Sponsoring', text: 'Friday is fine.' });
       let RP = GM.replies[GM.replies.length - 1] || {}; D = await b('data');
@@ -873,10 +885,10 @@ try {
       IB = await c2('inbox'); const iKI2 = IB.items.find((x) => x.iid === KI);
       ok(iKI2.replies.length === 1 && iKI2.replies[0].ok && iKI2.replies[0].by === 'Test Seller' && iKI2.claim && iKI2.claim.by === 'Test Seller', 'the Inbox shows who replied, and the one who replied has it claimed');
       /* Reply on an email on no card: same thread, on the Inbox only; {book} needs a card */
-      ok(/needs a company/.test((await c2('inboxreply', { iid: ST, subject: 'RE: x', text: 'Pick a time that suits you: {book}', take: true })).error || ''), 'a booking link needs a company first');
+      ok(/needs a company/.test((await c2('inboxreply', { iid: ST, subject: 'RE: x', text: 'Pick a time that suits you: {book}' })).error || ''), 'a booking link needs a company first');
       const tc0 = JSON.stringify(D.sponsor.recs.map((r) => r.touches.length));
-      n0 = GM.calls; rr = await c2('inboxreply', { iid: ST, subject: 'RE: Sponsorship question', text: 'Hello Pat, happy to help.', take: true }); RP = GM.replies[GM.replies.length - 1] || {}; D = await b('data');
-      ok(rr.ok && rr.state === 'sent' && GM.calls === n0 + 1 && RP.of === 'AAMkInbox2' && /Hello Pat, happy to help\.[\s\S]*Second Seller/.test(RP.body.content) && JSON.stringify(D.sponsor.recs.map((r) => r.touches.length)) === tc0 && (await b('inbox')).items.find((x) => x.iid === ST).replies[0].by === 'Second Seller', 'on no card: the same thread, logged on the Inbox only (no card touched); take: true lets the second seller answer');
+      n0 = GM.calls; rr = await c2('inboxreply', { iid: ST, subject: 'RE: Sponsorship question', text: 'Hello Pat, happy to help.' }); RP = GM.replies[GM.replies.length - 1] || {}; D = await b('data');
+      ok(rr.ok && rr.state === 'sent' && GM.calls === n0 + 1 && RP.of === 'AAMkInbox2' && /Hello Pat, happy to help\.[\s\S]*Second Seller/.test(RP.body.content) && JSON.stringify(D.sponsor.recs.map((r) => r.touches.length)) === tc0 && (await b('inbox')).items.find((x) => x.iid === ST).replies[0].by === 'Second Seller' && (await b('inbox')).items.find((x) => x.iid === ST).claim.by === 'Second Seller', 'on no card: the same thread, logged on the Inbox only (no card touched); once released the second seller answers it, and it is theirs');
       /* Attach to a company */
       let at = await b('inboxattach', { iid: ST, w: 'sponsor', id: EA.id }); D = await b('data'); const ea = find('sponsor', EA.id), eat = ea.touches.filter((x) => x.mail && x.mail.from === 'pat@acmeplumbing.com');
       ok(at.ok && at.name === EA.name && eat.length === 1 && eat[0].out === 'replied' && eat[0].by === 'Peak email' && /put on this card from the Inbox by Test Seller/.test(eat[0].note) && eat[0].mail.text.startsWith('<b>Hi</b>') && eat[0].mail.files.join() === 'logo.png,big.zip,Forwarded.msg' && ea.next.date === D.today && eat[0].mail.rp === 1, 'Attach to a company: their email on that card (words, files by name, Reply), with a follow-up today');

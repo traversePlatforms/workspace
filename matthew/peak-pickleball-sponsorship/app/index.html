@@ -578,12 +578,12 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       more: [['report', 'Report'], ['ref', 'Questions and venues'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['look', 'Look'], ['settings', 'Settings']] }
   };
   var DESC = {
-    sponsor: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim says you are answering it, so nobody answers twice. Done takes it off this list. Notices, bounces and out-of-office replies are under Other. Alerts: More, My email & booking link.',
+    sponsor: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. Done takes it off this list. Notices, bounces and out-of-office replies are under Other. Alerts: More, My email & booking link.',
       today: 'What to do now: follow-ups due, who to reach next, proposals waiting, tours coming up, and the week so far.',
       pipe: 'Every company by stage, from To contact to Signed. Pick a stage to work it.',
       list: 'Every company on the desk, by list: the researched new leads, Peak’s own sponsors, local businesses and the ones added on the desk.',
       deals: 'Tours at Peak, proposals sent and signed sponsors.', more: 'The report, profit and loss, packages, what Peak offers sponsors, your calendar link and the look.' },
-    expo: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim says you are answering it, so nobody answers twice. Done takes it off this list. Notices, bounces and out-of-office replies are under Other. Alerts: More, My email & booking link.',
+    expo: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. Done takes it off this list. Notices, bounces and out-of-office replies are under Other. Alerts: More, My email & booking link.',
       today: 'Expo leads to work now: follow-ups due, who to reach next, quotes waiting, tours coming up, and the week so far.',
       pipe: 'Every expo lead by stage, from To contact to Booked. Kept apart from the sponsors: nothing here counts there.',
       list: 'Organisations that run expos, shows and fairs and could rent Peak as their venue.', deals: 'Tours of Peak for organisers, quotes sent and events booked.',
@@ -1523,7 +1523,11 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         if (r.owner && r.owner !== me() && !confirm(r.owner + ' owns ' + r.name + '. Send anyway? It stays theirs.')) return;
         if (!confirm((RE ? 'Send this reply to ' : 'Send this email to ') + (w.name ? w.name + ' (' + w.email + ')' : w.email) + ' now? It goes as ' + FROML() + ', signed by you' + (RE ? ', in the same thread as their email.' : '.'))) return;
         var tpn = document.querySelector('.detail .touchp'), fu = tpn && tpn._fuDay ? tpn._fuDay('tpl') : '';
-        sd.disabled = true; save('dmsend', Object.assign(body(), { fu: fu })).then(function (j) { if (!j || !j.ok) sd.disabled = false; dmToast(j); });
+        var dmGo = function (take) { sd.disabled = true; return save('dmsend', Object.assign(body(), { fu: fu, take: !!take })).then(function (j) {
+          if (!j || !j.ok) sd.disabled = false;
+          if (j && j._status === 409 && j.claim) { if (!take && isAdmin() && confirm(j.claim.by + ' is answering their email in the Inbox. Take it over and send? Then only you can answer it.')) dmGo(true); return; }   /* the claim lock (23 Nov) */
+          dmToast(j); }); };
+        dmGo(false);
       });
       var plain = function () { var w = who(); return myBook().then(function (u) { var t = bd.value.replace(/\{book\}/g, u || '(my booking link)'); return { w: w, text: t + '\n\n' + (mine.sig || me()) }; }); };
       cp.addEventListener('click', function () { plain().then(function (p) { var v = sj.value + '\n\n' + p.text; if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(function () { promptAfter(r, 'copy', p.w.name, cur); }, function () { toast('Could not copy: select the words and copy them.'); }); else toast('Could not copy: select the words and copy them.'); }); });
@@ -2053,7 +2057,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   /* ---- the Inbox (2026-11-20, Matthew: "I think the inbox tab is better"): every email that comes to Peak Partnerships
      (partnerships@peakpickleball.us), newest first, read every 5 minutes. Open one to read it (it is then marked read in Outlook); Reply
      (from Peak Partnerships with your signature, in the same thread; logged on the card when it is on one), Attach to a company, Claim
-     ("Cai is answering this"), Done. Notices, bounces and auto-replies are under Other. Their words are shown as text, never as HTML.
+     ("Cai is answering this": since 23 Nov a lock, so only Cai can answer it, here or from a card's Write an email, until she or Matthew
+     releases it; an admin may also take it over), Done. Notices, bounces and auto-replies are under Other. Their words are shown as text, never as HTML.
      Claude Check may look and never act. The Expo-only account has no Inbox. ---- */
   var inboxOn = function () { return !!(S.data && S.data.inbox); };
   var readOnly = function () { return !!(S.data && S.data.me.name === 'Claude Check'); };
@@ -2121,18 +2126,21 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var mk = function (t, act, cls) { var b = el('button', cls || 'btn small ghost', t); b.type = 'button'; b.setAttribute('data-act', act); acts.appendChild(b); return b; };
       var rb = it.rp && it.from && !/^(bounce|Microsoft or system notice|system notice)$/.test(it.why || '') ? mk('Reply', 'inreply', 'btn small') : null;
       var ab = mk(it.card ? 'Move to another company' : 'Attach to a company', 'inattach');
-      var mine = it.claim && it.claim.by === me();
-      var kb = mk(mine ? 'Unclaim' : it.claim ? 'Take it over' : 'Claim: I’m answering this', 'inclaim');
+      var mine = it.claim && it.claim.by === me(), theirs = it.claim && !mine;
+      var kb = theirs && !isAdmin() ? null : mk(mine ? 'Unclaim' : theirs ? 'Take it over' : 'Claim: I’m answering this', 'inclaim');
+      var rel = theirs && isAdmin() ? mk('Release it', 'inrelease') : null;
+      if (theirs && rb && !isAdmin()) { rb.remove(); rb = null; }   /* the claim lock (23 Nov): a seller can't answer someone else's */
       var db = mk(it.done ? 'Not done' : 'Done', 'indone');
       body.appendChild(acts);
+      if (theirs) body.appendChild(el('div', 'fuhint inlock', it.claim.by + ' is answering this. ' + (isAdmin() ? 'Only they can answer it until it is released: Release it, or Take it over to answer it yourself.' : 'Ask ' + (/^matthew\b/i.test(it.claim.by) ? 'Matthew' : it.claim.by + ' or Matthew') + ' to release it.')));
       var pane = el('div', 'inpane'); body.appendChild(pane);
       var after = function (msg) { if (msg) toast(msg); load(function () { draw(); }); };
-      kb.addEventListener('click', function () {
-        var on = !mine; if (it.claim && !mine && !confirm(it.claim.by + ' is answering this. Take it over?')) return;
-        kb.disabled = true;
-        var go = function () { return api('inboxclaim', { iid: it.iid, on: on }).then(function (x) { kb.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after(on ? 'You’re answering this one' : 'Unclaimed'); }); };
-        (it.claim && !mine && on ? api('inboxclaim', { iid: it.iid, on: false }).then(go) : go());
+      var claim = function (b, on, take, msg) { b.disabled = true; return api('inboxclaim', { iid: it.iid, on: on, take: !!take }).then(function (x) { b.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after(msg); }); };
+      if (kb) kb.addEventListener('click', function () {
+        if (theirs && !confirm(it.claim.by + ' is answering this. Take it over? Then only you can answer it.')) return;
+        claim(kb, !mine, theirs, mine ? 'Unclaimed' : 'You’re answering this one');
       });
+      if (rel) rel.addEventListener('click', function () { if (confirm('Release it? ' + it.claim.by + ' is answering this; anyone can then claim it.')) claim(rel, false, false, 'Released'); });
       db.addEventListener('click', function () { db.disabled = true; api('inboxdone', { iid: it.iid, on: !it.done }).then(function (x) { db.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after(it.done ? 'Back on the open list' : 'Done: off the open list'); }); });
       ab.addEventListener('click', function () { inAttachPane(it, pane, after); });
       if (rb) rb.addEventListener('click', function () { inReplyPane(it, pane, after); });
@@ -2179,7 +2187,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       sd.disabled = true;
       api('inboxreply', { iid: it.iid, to: te.value.trim(), name: tn.value.trim(), subject: sj.value, text: bd.value, take: !!take }).then(function (j) {
         sd.disabled = false;
-        if (j._status === 409 && j.claim) { if (confirm(j.error + '\n\nSend it anyway?')) send(true); return; }
+        if (j._status === 409 && j.claim) { if (isAdmin() && confirm(j.claim.by + ' is answering this. Take it over and send? Then only you can answer it.')) send(true); else if (!isAdmin()) toast(j.error); return; }
         if (!j.ok) { toast(j.error || 'Not sent.'); return; }
         if (j.state === 'sent' || j.state === 'dup') after('Reply sent to ' + j.to); else toast('Not sent: ' + (j.why || 'it did not go') + '.');
       }).catch(function () { sd.disabled = false; toast('No connection. Not sent.'); });

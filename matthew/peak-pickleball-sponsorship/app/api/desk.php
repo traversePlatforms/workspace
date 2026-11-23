@@ -185,6 +185,7 @@ if (PHP_SAPI === 'cli') {
 
 /* ---- the web ---- */
 final class DeskFail extends Exception {}
+final class DeskLocked extends Exception { public function __construct(string $m, public array $claim) { parent::__construct($m); } }
 header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store'); header('X-Content-Type-Options: nosniff');
 function out(array $a): void { echo json_encode($a, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); exit; }
 function fail(string $m, int $code = 400): void { throw new DeskFail($m, $code); }
@@ -333,8 +334,8 @@ function handleIn(string $action, bool $isPost, array $body, string $ME, string 
     /* the Inbox's actions and my alerts (2026-11-20) */
     if (in_array($action, ['inboxclaim', 'inboxdone', 'inboxattach', 'inboxreply'], true)) {
         $iid = (string) ($body['iid'] ?? '');
-        $x = match ($action) { 'inboxclaim' => inClaim($iid, !empty($body['on']), $ME), 'inboxdone' => inDone($iid, !empty($body['on']), $ME),
-            'inboxattach' => inAttach($iid, (string) ($body['w'] ?? ''), (string) ($body['id'] ?? ''), $ME), default => inReply($iid, $body, $ME) };
+        $x = match ($action) { 'inboxclaim' => inClaim($iid, !empty($body['on']), $ME, $ROLE, !empty($body['take'])), 'inboxdone' => inDone($iid, !empty($body['on']), $ME),
+            'inboxattach' => inAttach($iid, (string) ($body['w'] ?? ''), (string) ($body['id'] ?? ''), $ME), default => inReply($iid, $body, $ME, $ROLE) };
         if (empty($x['ok'])) { if (isset($x['claim'])) { http_response_code((int) $x['code']); return ['ok' => false, 'error' => $x['error'], 'claim' => $x['claim']]; } fail((string) $x['error'], (int) ($x['code'] ?? 400)); }
         unset($x['code']); return $x;
     }
@@ -343,13 +344,24 @@ function handleIn(string $action, bool $isPost, array $body, string $ME, string 
     if ($action === 'alertset') { $x = alSave($ME, $body); if (isset($x['error'])) fail($x['error']); return ['ok' => true, 'alerts' => alOut($ME)]; }
     if ($action === 'alerttest') { $x = alTest($ME); return $x + ['alerts' => alOut($ME)]; }
     /* Write an email (2026-11-19): Send, and Retry of one that did not go */
+    /* the claim lock (2026-11-23): to an address whose newest open Inbox email someone else has claimed, only an admin sends (take: true,
+       and the claim becomes theirs) */
+    $inLock = function (string $to) use ($ME, $ROLE, $body) {
+        $L = inLockFor($to, $ME); if (!$L) return null;
+        if ($ROLE === 'admin' && !empty($body['take'])) return $L;
+        throw new DeskLocked(inLockMsg((string) $L['claim']['by']), $L['claim']);
+    };
     if ($action === 'dmsend') {
         $R = recs($w)[(string) ($body['id'] ?? '')] ?? null; if (!$R || !empty($R['off'])) fail('No such lead.', 404);
-        $x = dmSend($w, $R, $body, $ME); if (empty($x['ok'])) fail($x['error']); return $x;
+        try { $L = $inLock((string) ($body['to'] ?? '')); } catch (DeskLocked $e) { http_response_code(409); return ['ok' => false, 'error' => $e->getMessage(), 'claim' => $e->claim]; }
+        $x = dmSend($w, $R, $body, $ME); if (empty($x['ok'])) fail($x['error']);
+        if ($L) inClaim($L['iid'], true, $ME, $ROLE, true);
+        return $x;
     }
     if ($action === 'dmretry') {
         $R = recs($w)[(string) ($body['id'] ?? '')] ?? null; $ref = (string) ($body['ref'] ?? ''); if (!$R || !isset($R['dmails'][$ref])) fail('No such email.', 404);
         if (!dmConf()['on']) fail('Desk emails are off.');
+        try { $inLock((string) ($R['dmails'][$ref]['to'] ?? '')); } catch (DeskLocked $e) { http_response_code(409); return ['ok' => false, 'error' => $e->getMessage(), 'claim' => $e->claim]; }
         return ['ok' => true, 'ref' => $ref] + dmDeliver($w, (string) $R['id'], $ref, $ME);
     }
     if (!in_array($op, $BOTH, true) && !in_array($op, $SPONSOR, true) && !in_array($action, ['tourmailset', 'tourmailtest'], true)) fail('Unknown action.', 404);
