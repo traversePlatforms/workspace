@@ -86,6 +86,51 @@ how much they are growing week to week ... I need to be measuring whatever we ca
 - **The Week 0 open and click rates are high because of the blasts.** Two newsletters went to engaged lists. Compare automations with
   automations only.
 
+## Day one: the state of Peak's own tools (23 Nov 2026)
+
+Matthew, 23 Nov: everything as it stood before he came on board is the "before", including what Peak had switched off. Telling Peak to turn
+the Patch automations back on is part of his work, so their return counts toward his results. The raw data as of today is frozen, read-only,
+in `data/baseline-day-one-2026-11-23/` (store + snapshot, MD5SUMS; gitignored; carried by the nightly workspace backup).
+
+**Patch automations on day one: all 17 Enabled OFF, status Draft** (Matthew's screenshots of Patch > Automations, 23 Nov):
+
+| Automation | Last ran | Last edited | Sent (lifetime) | Patch revenue |
+|---|---|---|---|---|
+| Google Review | 2 Nov 2026 | 23 Nov 2026 6:17 am | 4,326 | $36,324 |
+| Birthday Email | 19 Nov 2026 | 20 Nov 2026 | 18,038 | $32,495 |
+| Membership Create (welcome) | 2 Nov 2026 | 2 Nov 2026 | 2,357 | $16,942 |
+| PPU Pipeline | 1 Nov 2026 | 9 Nov 2026 | 1,342 | $10,605 |
+| PEAK QR Code Automation | 16 Sep 2026 | 2 Nov 2026 | 1 | $0 |
+| Non-Member Pushing Convert | 26 Jun 2025 | 16 Nov 2026 | 47,341 | $24,465 |
+| Target New Non-Members | 25 Jul 2025 | 19 Aug 2026 | 6,506 | $107,270 |
+| Non-Member Reengagement | 25 Jul 2025 | 3 Aug 2026 | 16,710 | $15,188 |
+| Non-Member At-Risk/Lost Winback | 25 Jul 2025 | 15 Jun 2026 | 6,837 | $7,347 |
+| New Paid Membership Welcome | 24 Jul 2025 | 9 Jun 2026 | 274 | $4,974 |
+| Expired Membership Winback | 25 Jul 2025 | 6 Oct 2025 | 2,653 | $5,303 |
+| test, 101 People (copy), Intro Automation, Instructor Reminders, Member Recapture | never | 2025-2026 | 0 | $0 |
+
+**Texting on day one:** none since 25 Jul 2025 apart from one text on 21 Sep 2026; 2,882 accounts opted in to marketing texts.
+**Missed dues on day one:** 21 paid accounts suspended; 27 November dues charges unpaid ($1,690); no Patch reminder exists.
+**Week 0 automation sends:** 127, all the birthday email (blasts 5,874, mostly the 22 Nov Thanksgiving blast).
+
+**What each automation should move once it's back on** (the Week 0 / day-one value to beat is in the Week 0 table above unless noted):
+
+| Automation coming back | Measure it moves | Day-one value |
+|---|---|---|
+| Free-class follow-up (stopped 29 Sep) | Joined within 7 days of a free class; within 60 days | 26.7% (Week 0); 60-day normal 43.7% |
+| Membership Create / New Paid Membership Welcome | New members still paying after 3 months; upgrades from Starter | being added (see below) |
+| Target New Non-Members, PPU Pipeline, Non-Member Pushing Convert | Non-members and drop-in regulars becoming members | 426 non-members with 3+ check-ins in 60 days (23 Nov); conversion rate being added |
+| Winbacks (Expired, At-Risk/Lost, Reengagement) | Lapsed members coming back within 90 days | being added |
+| Google Review | Google review count and star rating | to capture (Google Business Profile) |
+| Birthday Email | Spend in the birthday month; gear sales | being added |
+| A missed-payment reminder (new) | Suspended accounts recovered before cancelling; unpaid dues | 21 suspended / $1,690 unpaid (Nov) |
+
+**Changes log** (every change made on Matthew's advice, with its date, so the before/after reads against it):
+
+| Date | Change | Who made it |
+|---|---|---|
+| 23 Nov 2026 | Day one. Nothing changed yet. | — |
+
 ## Fact-check log
 
 **Verified (23 Nov 2026, `tools/impact.mjs --week-end=2026-11-22` on the store of the 23 Nov pull)**
