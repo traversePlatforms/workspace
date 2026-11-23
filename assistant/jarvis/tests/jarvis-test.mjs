@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..', '..');
-const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
+const CHROME = process.env.CHROME || (process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : 'google-chrome');
 const SHOTS = process.env.SHOTS || path.join(REPO, 'assistant', 'jarvis', 'shots');
 const PORT = +process.env.JT_PORT || 8803, GPORT = +process.env.JT_GPORT || 8804, CDP = +process.env.JT_CDP || 9241;   /* other builders' tests may hold the defaults */
 const R = fs.mkdtempSync(path.join(os.tmpdir(), 'jarvis-'));   // stands in for ~/www/traverseplatforms.com
@@ -322,7 +322,7 @@ try {
 
   /* ================================================================ 4. the Halo pieces are there */
   ok(await ev('typeof window.JvGlobe==="function" && !!document.querySelector(".desk .mid .jvg canvas.jvg-cv") && !!document.querySelector(".desk .mid .jvg .jvg-st[role=button]") && !document.querySelector(".desk .core")'), '21 Nov: the new globe (JvGlobe) in the middle, in place of the old core');
-  ok(await ev('document.querySelectorAll(".desk .pnl .ph .n").length===8 && [...document.querySelectorAll(".ph .n")].map(n=>n.textContent).sort().join()==="01,02,03,05,06,07,08,09" && !!document.querySelector(".rail button[data-panel=brief]")'), 'eight panels open; the Morning brief (04) starts folded into its edge icon (19 Nov: "if i need a briefing I will ask for it")');
+  ok(await ev('document.querySelectorAll(".desk .pnl .ph .n").length===8 && [...document.querySelectorAll(".ph .n")].map(n=>n.textContent).sort().join()==="01,02,03,04,05,07,08,09" && !!document.querySelector(".rail button[data-panel=brief]")'), 'eight panels open; the Morning brief (06 since 23 Nov) starts folded into its edge icon (19 Nov: "if i need a briefing I will ask for it")');
   ok(await until('/^Standing by/.test(document.querySelector(".jvg-lb").textContent) && document.querySelector(".jvg").dataset.state==="idle" && document.getElementById("app").classList.contains("s-idle")', 4000), 'idle state label (on the globe)');
   /* 21 Nov: the globe's counts, mood and build progress come from what the page already has */
   { const gi = await ev('(()=>{const g=window.__jvGlobe&&window.__jvGlobe();return g?g.info():null})()') || { counts: {} };
@@ -350,7 +350,7 @@ try {
   ok(await ev('document.querySelector(".colL .rail button[data-panel=team] em").textContent==="1"'), 'the folded icon keeps a count (1 needs you)');
   for (const k of ['today', 'remind', 'cal', 'builds', 'money']) await click('#p-' + k + ' .ph .fold'); await sleep(200);
   const gc = await ev('getComputedStyle(document.getElementById("app")).gridTemplateColumns');
-  ok(/^394px .* 44px$/.test(gc), 'a fully folded side shrinks to its icon strip and the middle widens (' + gc + ')');
+  ok(/^(\d+)px .* \1px$/.test(gc), 'both sides keep the same width, so the globe stays centred when a side folds (23 Nov) (' + gc + ')');
   await cdp('Page.reload'); await until('!!document.querySelector(".desk .ibr")', 8000); await sleep(800); await ev('document.dispatchEvent(new Event("click"))');
   ok(await ev('document.querySelector(".ibr[data-inbox=\\"m.sharpe@traverse.example.test\\"]").classList.contains("open") && !document.getElementById("p-team") && !document.getElementById("p-today")'), 'open rows and folded panels are remembered on this device after a reload');
   for (const k of ['team', 'brief', 'today', 'remind', 'cal', 'builds', 'money']) await click('.rail button[data-panel=' + k + ']');

@@ -1263,12 +1263,14 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   /* ------------------------------------------------------------ the panels: one body each, shared by desktop and phone */
   /* 19 Nov (P-8): Waiting on you, Morning brief, Reminders and Money joined; every panel still folds into its edge */
   var PANELS = {
+    /* 23 Nov (Matthew: "2 on the left and 6 on the right ... maybe we should balance it out"): left = what needs you and what's on today,
+       right = what to read and watch */
     inbox: { side: 'L', n: '01', t: 'Inbox', icon: 'inbox' },
     waiting: { side: 'L', n: '02', t: 'Waiting on you', icon: 'vote' },
     team: { side: 'L', n: '03', t: 'Team requests', icon: 'help' },
-    brief: { side: 'R', n: '04', t: 'Morning brief', icon: 'brief' },
-    today: { side: 'R', n: '05', t: 'Today', icon: 'sun' },
-    remind: { side: 'R', n: '06', t: 'Reminders', icon: 'bell' },
+    today: { side: 'L', n: '04', t: 'Today', icon: 'sun' },
+    remind: { side: 'L', n: '05', t: 'Reminders', icon: 'bell' },
+    brief: { side: 'R', n: '06', t: 'Morning brief', icon: 'brief' },
     cal: { side: 'R', n: '07', t: 'Calendar', icon: 'cal' },
     builds: { side: 'R', n: '08', t: 'Builds running', icon: 'build' },
     money: { side: 'R', n: '09', t: 'Money', icon: 'coin' }
@@ -1842,7 +1844,10 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     if (!G) { coreBox = core(236); stateLbl = el('div', 'slbl'); stateLbl.style.margin = '2px 0 12px'; }   /* the globe failed to load: the old core */
     add(mid, G ? G.el : [coreBox, stateLbl], chatLog, cmd()); setTimeout(fitGlobe, 0);
     app.insertBefore(mid, app.children[2]);
-    app.style.gridTemplateColumns = (cols[0] ? cols[0] + 'px ' : '0 ') + 'minmax(0,1fr) ' + (cols[1] ? cols[1] + 'px' : '0');
+    /* 23 Nov (Matthew: opening a left panel moved the globe "abnormally"): both sides take the wider side's width, so the globe stays centred
+       and opening or folding a panel on one side never shifts it; with both sides folded the middle still gets the room */
+    var sw = Math.max(cols[0], cols[1]);
+    app.style.gridTemplateColumns = sw + 'px minmax(0,1fr) ' + sw + 'px';
     chatLog.scrollTop = chatLog.scrollHeight;
   }
   function drawPhone() {
