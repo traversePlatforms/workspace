@@ -170,7 +170,9 @@ past due. No Patch reminder exists.
 **Google Business Profile on day one** (Matthew's screenshots, 23 Nov 2026, as manager m.sharpe@traverseplatforms.com):
 - Rating **4.9** from **587 Google reviews**; 4 new reviews not yet replied to.
 - Performance, Jun-Nov 2026 (Google's 6-month view): **26,181 views** (down 24.6% on the 6 months before) and **11,516 interactions**
-  (down 7.6%). The breakdown (calls, directions, website clicks, searches) is in the Engagement tab; capture it once the API is approved.
+  (down 7.6%). Engagement tab, same 6 months (Google rounds these): **calls ~2K, directions ~4K, website clicks ~6K, bookings 0**.
+  Monthly interactions read off Google's chart (approximate): Jun ~2,350, Jul ~2,200, Aug ~2,150, Sep ~1,850, Oct ~1,850, Nov ~1,250
+  (Nov is 23 days). Exact counts come once the API is approved. Google also flags that no Analytics account is linked to the profile.
 - Google is offering Peak a $500 Google Ads credit for new advertisers (noted only).
 
 **Changes log** (every change made on Matthew's advice, with its date, so the before/after reads against it):

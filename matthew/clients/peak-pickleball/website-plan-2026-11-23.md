@@ -276,7 +276,7 @@ Same WordPress, same hosting, same domain, plugins, users, Yoast, Redirection, G
 
 > **Recommendation: Option B, on a staging copy at Peak's current host, with Wes's help.** Decide by Mon 30 Nov. If Wes's access isn't in place by Fri 4 Dec, fall back to Option A: rebuild the most-used pages (home, free class, memberships, Partner with Peak, contact) inside Avada, add the policy pages, forms and tracking for 1 Jan, and move to B in January.
 
-The 3 Nov quote ($3,000, six one-week sprints from access) covers the build. Whether the build sits inside Matthew's weekly arrangement or is billed separately is open (Tyler list item 3). This plan doesn't set a price.
+The 3 Nov quote ($3,000, six one-week sprints from access) covers the build. The build is inside Matthew's $300 a week (settled, Matthew 23 Nov); it isn't billed separately.
 
 ---
 
@@ -316,7 +316,7 @@ Six weeks from today, and two of them are holiday weeks (Thanksgiving, Thu 26 No
 
 ## 8. Open questions
 
-Already asked in the 23 Nov emails, so not repeated here: the WordPress login, GA and Search Console access, hosting and backups, Avada and theme ownership, the custom plugins, WP File Manager and updates, the privacy policy OK, the Ziggi's line, the $6/$7 rate and 15/30 days' notice, required "How did you hear", and whether the $3,000 build is in the deal.
+Already asked in the 23 Nov emails, so not repeated here: the WordPress login, GA and Search Console access, hosting and backups, Avada and theme ownership, the custom plugins, WP File Manager and updates, the privacy policy OK, the Ziggi's line, the $6/$7 rate and 15/30 days' notice, required "How did you hear". (The $3,000 build question is settled: it is inside the $300 a week.)
 
 **For Cammie**
 1. Do you agree with the site map choices in §3? The CR links become cards. Which pages that aren't on your map do we keep, fold in or redirect?

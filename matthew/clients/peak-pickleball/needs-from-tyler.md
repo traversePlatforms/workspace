@@ -7,7 +7,7 @@ Made 19 Nov 2026, after the meeting; updated 20 Nov (evening: 8a sponsor add-ons
 ## 1. The deal (first)
 1. A yes on price and scope, and the start date.
 2. Who signs: Tyler or Scott. Also a billing contact and how Peak will pay.
-3. Whether the website build ($3,000) is part of it.
+3. ~~Whether the website build ($3,000) is part of it.~~ Settled 23 Nov: the $300 a week includes the website.
 
 ## 2. Email (once committed)
 Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role, not Global Administrator. Then Matthew can do items 4 and 6 himself (the shared mailbox, an alias, Send As, sending from an alias, DKIM signing). It still leaves out the GoDaddy DNS records and app approvals (item 5). Cai and the other sellers have no Peak email addresses, so replies come to Matthew until the shared mailbox exists.
