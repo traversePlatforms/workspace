@@ -42,6 +42,25 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
 19. **Ads:** the monthly ad budget, who approves each ad, and access to the Meta ad account and Google Ads (or OK to create them).
 20. **TVs:** how many there are, where they are, what device feeds each one, and what they show. Also whether Peak is OK with sponsor slides on them. The sponsor TV reel (item 8a) needs this.
 
+## Tyler's answers, 23 Nov 2026 (his email to Matthew)
+- **Pay (item 1/2):** Peak pays contractors through QuickBooks, biweekly: Fri 4 Dec, then 18 Dec. He's heard "a setup fee plus $150/week"
+  and, from Brandon, "$300/wk", and asks Matthew for his price directly. Once agreed, their accountant **Nathan Kimbro** sets up direct
+  deposit. W-9: received.
+- **Website (item 16):** built by a contractor they still use, **Wes, wes@lighthousewd.com**; hosting, theme, backup and licence questions go
+  to him (Tyler offers to connect them by email). WordPress admin login sent by email (stored ~/.ssh/peak-wordpress.json; login page
+  peakpickleball.us/login-secure/ answers). It's a shared "peakadmin" login: still ask for one in Matthew's own name.
+- **Google Business Profile:** Tyler added Matthew (invitation sent): accept it; that also gives the review count/rating for the day-one
+  baseline. Google Analytics / Search Console (16a): not answered ("not sure about any of the other access").
+- **Facebook:** Cammie gave Matthew access (23 Nov).
+- **Sponsorships (items 8, 9):** three kinds: **Title** (large prominent signage), **Court** (large court signage + the court named in
+  CourtReserve), **Logo** (smaller signage + digital advertising). Usually also: logo in the biweekly newsletter, website and rotating digital
+  signage, plus two Unlimited memberships. Agreements have been customised (hard to fulfil); **Brandon is standardising packages**, so
+  structure goes through Brandon. Tyler offers the **sponsor tracking spreadsheet and current agreements**: say yes.
+- **TVs (item 20):** 4 at the WhistlePig bar (sports/free Samsung channels/YouTube TV, no ads); front desk vertical monitor (BrightSign);
+  pro shop TV (court layout); coffee bar TV (BrightSign); golf simulator TV (golf, not BrightSign); 3 downstairs (BrightSign: one court
+  layout, two upcoming events/programs). So sponsor slides would go on the BrightSign screens (front desk, coffee bar, downstairs).
+- **Not answered yet:** everything else on the list ("I'm not sure about any of the other access you're requesting").
+
 ## 5. New since the 21 Nov list (added 23 Nov 2026; not sent yet)
 21. **Sponsor exclusivity:** does any current sponsor deal give a sponsor exclusivity in its category? Matthew doesn't know. It matters
     before approaching in-club tenants or partners who compete with a sponsor (for example Stretch Zone vs StretchLab, a PT clinic vs
