@@ -1103,6 +1103,7 @@ Matthew's own work for Peak (matthew/clients/peak-pickleball/, matthew/peak-pick
 - [ ] **PK-4 — Meta ad plan for new members.** No budget yet (Peak decides); three budget scenarios; check the free-class conversion claim in the data. meta-ad-plan-2026-11-23.md. Must-fix first: privacy policy (GA4 + Pixel on the site).
 - [ ] **PK-5 — In-club tenants (rent a built-out space, perks for members), like Brandon's sauna.** Prospect list + approach + DRAFT first email. tenants-and-coffee-2026-11-23.md.
 - [ ] **PK-6 — Coffee partner** (free coffee for members, beans/grounds to Peak, in exchange for exposure). List + approach + DRAFT email. Same file.
+- [ ] **PK-9 — Google Business Profile API: requested 23 Nov, case 9-3376000041660** (7-10 business days; don't resubmit). Then nightly GBP numbers + reviews.
 - [ ] **PK-7 — Peak site metrics.** Needs GA4 (or Search Console) read access from Peak: ask Tyler.
 - [x] **PK-8 — Peak desk Inbox: links in emails clickable** (the Snooze email). Deployed 23 Nov (inbox-links-1123).
 
