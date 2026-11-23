@@ -554,7 +554,10 @@ $(cat "$WS/traverse/ops/jarvis-cloud-prompt.md" 2>/dev/null || cat "$OPS/jarvis-
       else log "$ID: quick pass gave no usable answer ($(( $(date +%s) - QS )) s): full session"; fi
     fi
     printf '%s' "$SYS" > "$ST/$ID.sys.md"
-    cd "$WS" && printf '%s' "$PROMPT" | timeout "${JARVIS_SESSION_MAX:-3600}" "$CLAUDE" -p --model "$M" --permission-mode auto --add-dir "$MEM" \
+    # 23 Nov (Matthew: "I want the jarvis desk session switch over"): his own desk also sees ~/main, where the door data, the editions'
+    # codes files and Surge's restricted notes live. Staff tickets (the Sixfold app's chat) never get it.
+    local -a XD=(); [ "$K" = jarvis ] && [ "$WRITE" = vm ] && [ -d "$HOME/main" ] && XD=(--add-dir "$HOME/main")
+    cd "$WS" && printf '%s' "$PROMPT" | timeout "${JARVIS_SESSION_MAX:-3600}" "$CLAUDE" -p --model "$M" --permission-mode auto --add-dir "$MEM" "${XD[@]}" \
       --append-system-prompt-file "$ST/$ID.sys.md" --output-format text > "$ST/$ID.out" 2>&1
   ); RC=$?
   rm -f "$ST/write-ok"

@@ -6,12 +6,12 @@ different here. Where the rules above name a laptop path or tool, use the one be
 ## Where things are
 
 - The repo: this folder, `~/workspace`, a copy of the laptop's `claude test 2` sent from the laptop (branch `cloud`). Surge's restricted
-  notes (`surge/brand/notes/`) are NOT here, on purpose: a Surge draft that needs RESTRICTED.md goes to the laptop (below).
+  notes (`surge/brand/notes/`) are not in this copy; since 23 Nov they are in `~/main` on this machine, for Matthew's own desk only (below).
 - Memory: Claude Code's memory folder for this repo (`~/.claude/projects/-home-yard-workspace/memory/`, the laptop's copy). Where a rule
   says `C:\Users\Matthew sharpe\.claude\...\memory\`, it means this folder. Saving to memory here is fine: the watcher hands what you write
   to the laptop, which merges it line by line.
 - The server: `bash ~/jarvis/bin/sg.sh trav '<command>'` (the Traverse account only) in place of `bash /c/Users/SURGEI~1/.ssh/sg.sh trav`.
-  There is no `six`, `surge` or `a365` here.
+  Since 23 Nov `six`, `surge` and `a365` work here too, on Matthew's own desk only (below).
 - Replies: `bash traverse/ops/help-reply.sh` and `bash assistant/jarvis/tools/jarvis-reply.sh` work as written (they use this machine's
   key). `jarvis-status.sh alert` works; its other commands are the laptop's and refuse here.
 - PDFs: `google-chrome --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf=<dir>/Name.pdf file://<dir>/page.html`.
@@ -42,8 +42,24 @@ When the watcher's note says **"this machine is the main workspace (VM mode)"**,
 longer commits. You always hold the write turn. Commit as above; the watcher rebases your commits onto the main history and pushes them
 itself after the session (never `git push` yourself). Memory is the one folder Matthew's own sessions use (`~/.claude/projects/-home-yard-main/memory/`),
 written directly. A deploy REFUSED here means `~/main` (Matthew's own sessions on this machine) deployed something this copy lacks: queue it
-for Matthew (`laptop-job.sh` still reaches the laptop for Windows-only work) and stop. Still the laptop's only: Sixfold's site (`six`),
-Surge, 365 Aeration, Desktop files, Drive letters, Windows tasks, and Surge drafts that need RESTRICTED.md.
+for Matthew (`laptop-job.sh` still reaches the laptop for Windows-only work) and stop.
+
+**23 Nov: everything is on this machine** (Matthew: "I want the jarvis desk session switch over. I want everything on this cloud
+computer that we can"). In VM mode, on **Matthew's own J.A.R.V.I.S. desk** (the watcher gives that session `~/main` as an extra folder):
+
+- **The websites:** `bash ~/jarvis/bin/sg.sh trav|six|surge|a365 '<command>'`. Same rules as on the laptop: Sixfold's site only changes
+  Matthew asks for; Surge live (`~/www/surgeftw.com`) only on his go, staging first; 365 Aeration launch needs his go.
+- **Full data builds and door-data pushes** run in `~/main`, which has the door data and the editions' real codes files (this copy has
+  neither): `cd ~/main/traverse/app && node i18n/sync-es.cjs && node ../editions/build-editions.cjs && node ../editions/minify-page.cjs`,
+  then `cd ~/main && bash traverse/ops/push-edition.sh ...` / `deploy-client.sh --data`. Commit code changes here in `~/workspace` as
+  always, and let them reach `~/main` (vm-main-sync, about 2 minutes) before a build there. Never commit in `~/main` from a desk session.
+- **Surge drafts:** read `~/main/surge/brand/notes/RESTRICTED.md` first (and the voice spec), as the project rules say; write the draft
+  in this copy's `surge/drafts/`. Never copy anything from `~/main/surge/brand/notes/` into this copy, a reply, or a commit.
+- **Google Drive:** `rclone ... gtrav:` (Traverse's Drive) once Matthew has signed it in; until then, say so.
+- **Still the laptop's** (`laptop-job.sh`): his Desktop, Windows tasks, the mic (wake word, meeting recorder).
+
+**Staff tickets** (the Sixfold app's chat) get none of the above: no `~/main`, no Surge, no other company's site. Their rules are
+unchanged.
 
 ## Queue for the laptop
 
@@ -53,11 +69,12 @@ Surge, 365 Aeration, Desktop files, Drive letters, Windows tasks, and Surge draf
 
 Then send a `working` reply in voice saying it is queued and will be done when the laptop is back (for Jen: "This one needs Matthew's
 computer; it's queued and I'll report back here when it's done."), and end without a final reply. Always queue these too, write turn
-or not: Sixfold's own website and email (the `six` account), Surge, 365 Aeration, anything on his Desktop, Drive letters (G:, H:, I:),
-Windows tasks, a full data build or a door-data push (`push-edition.sh`, `deploy-client.sh --data/--first`), and Surge drafts that need
-RESTRICTED.md.
+or not: anything on his Desktop and Windows tasks. In VM mode on Matthew's own desk, nothing else goes to the laptop (above); before VM
+mode, and on staff tickets, these go too: Sixfold's own website and email (the `six` account), Surge, 365 Aeration, Drive letters,
+a full data build or a door-data push, and Surge drafts that need RESTRICTED.md.
 
 ## Never here
 
-- No `--first` deploys, no full (data) builds, no new sign-in codes (`PRACTICE_NEW_CODES`), no `github-sync.sh`, no `git push`.
+- No `--first` deploys, no new sign-in codes (`PRACTICE_NEW_CODES`), no `github-sync.sh`, no `git push`. Full (data) builds only in
+  `~/main` on Matthew's own desk in VM mode (above): never in this copy, where the build would make new stand-in codes files.
 - No codes files, keys or tokens printed or copied off this machine.
