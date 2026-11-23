@@ -7,6 +7,8 @@
 # draft for Jen to approve.
 # One try per run. A request that is still open after 3 tries, or that the session marks "cannot", is left for a person: the overnight
 # check shows it (needs-person.txt). Log: %LOCALAPPDATA%/ProjectBackup/post-requests/watch.log
+# 23 Nov: the cloud computer runs this every 10 minutes now (traverse/ops/runs-on-vm.txt); the laptop's Windows task stands down
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) grep -qx "post-requests" "$(dirname "${BASH_SOURCE[0]}")/../../ops/runs-on-vm.txt" 2>/dev/null && exit 0;; esac
 set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"; REPO="$(cd "$HERE/../../.." && pwd)"; cd "$REPO" || exit 1
 LOCALAPPDATA="${LOCALAPPDATA:-$HOME/jarvis/localappdata}"   # 23 Nov: laptop or VM

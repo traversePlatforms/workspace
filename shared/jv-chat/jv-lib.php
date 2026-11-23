@@ -199,7 +199,7 @@ function jvNext(bool $peek): ?array {
         $t = $new[0]; if (!$peek) jvAppend(['t' => 'status', 'id' => $t['id'], 'status' => 'working']);
     } finally { flock($lk, LOCK_UN); fclose($lk); }
     $tz = jvTz(); $dir = jvFilesDir() . '/' . $t['id'];
-    $conv = array_map(fn($m) => ['from' => $m['from'], 'when' => (new DateTime('@' . $m['at']))->setTimezone($tz)->format('D j M g:i a'), 'text' => $m['text']]
+    $conv = array_map(fn($m) => ['from' => $m['from']] + (($m['role'] ?? '') !== '' ? ['role' => (string) $m['role']] : []) + (isset($m['scope']) ? ['scope' => $m['scope']] : []) + ['when' => (new DateTime('@' . $m['at']))->setTimezone($tz)->format('D j M g:i a'), 'text' => $m['text']]
         + (!empty($m['photos']) ? ['photos' => array_column($m['photos'], 'n')] : [])
         + (!empty($m['audio']) ? ['audio' => array_map(fn($a) => ['n' => (string) ($a['n'] ?? ''), 'secs' => (int) ($a['secs'] ?? 0)] + (isset($a['text']) ? ['text' => (string) $a['text']] : []) + (!empty($a['failed']) ? ['failed' => true] : []), $m['audio'])] : [])
         + (!empty($m['files']) ? ['files' => array_column($m['files'], 'n')] : []), $t['msgs']);

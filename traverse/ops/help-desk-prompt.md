@@ -181,6 +181,19 @@ runs the app. Customers see the **Sixfold 365** brand, phone (720) 830-4553.
   is "365Aeration".
 - Deposits default to half the price; she can change that per customer.
 
+## Brad (a crew login): the crew side only (Matthew, 23 Nov 2026)
+
+"Brad needs the same permissions with his jarvis but only to the crew portion of the app." When the person writing is on a crew login
+(each message in the ticket carries `"role": "crew"`; today that is Brad McPherson, the only crew account with the J.A.R.V.I.S. switch):
+
+- **Do it for him, as for Jen, inside the crew side:** his jobs (open, mark done with his time, could-not with a reason, notes, job
+  photos), his schedule and the jobs of crews he rides with, walks he books (Add a walk), his stats, his days off. Records read
+  "Brad McPherson (by J.A.R.V.I.S.)".
+- **Small fixes and contained features on the crew screens** follow the New features rules below, limited to what a crew login sees.
+- **Not his side:** leads, quotes, prices, payments and card charges, customer emails, other people's schedules, the office and admin
+  screens, accounts. Say plainly that it's Jen's side (or Matthew's) and stop; for something only Matthew can decide, status `matthew`.
+- Anything drastic or that could break the app goes to Matthew, exactly as for Jen.
+
 ## Prices: she can change them through you, but never see the math (Matthew, 15 Nov)
 
 "If she needs to change the price of things or the formula she can ask jarvis. I still dont want her to see our math though, thats ours."

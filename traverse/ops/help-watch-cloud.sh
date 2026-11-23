@@ -426,6 +426,10 @@ get_photos() {   # get_photos <ticket JSON> <ticket id>: each photo copied to $S
 conversation() {   # the chat as text (practice and installs), voice notes from the .txt files get_audio left
   printf '%s' "$1" | AD="$ST/audio/$2" node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{try{const t=JSON.parse(s);const fs=require('fs'),vt=a=>{try{return /^a[0-9]{10}[0-9a-f]{6}[.][a-z0-9]+$/.test(a.n||'')?fs.readFileSync(process.env.AD+'/'+a.n+'.txt','utf8').trim():''}catch(e){return ''}};console.log(t.conversation.map(m=>m.from+' ('+m.when+'): '+(m.text||'')+((m.photos||[]).length?' [sent '+m.photos.length+' photo'+(m.photos.length>1?'s':'')+(process.env.NAMES?': '+m.photos.join(', '):'')+']':'')+(m.audio||[]).map(a=>{const x=vt(a);return x?' [voice note: '+x+']':' [sent a voice note]'}).join('')).join('\n\n'))}catch(e){}})"
 }
+only_jen_posts() {   # 23 Nov (Matthew: Jen makes "the changes she needs to the app and calendar as she deems fit"): 1 when every person-written
+  # message in a post calendar conversation is Jen McPherson's Sixfold-only client sign-in (role client, scope exactly ["sixfold"], from jv-lib)
+  printf '%s' "$1" | jq -r '[.conversation[] | select((.from // "" | ascii_downcase | test("^(claude|j\\.?a\\.?r\\.?v\\.?i\\.?s\\.?)$")) | not)] | if length > 0 and all(.from == "Jen McPherson" and .role == "client" and (.scope == ["sixfold"])) then 1 else 0 end' 2>/dev/null || echo 0
+}
 only_matthew() {   # 1 when every person-written message is Matthew's (review 11 Nov: not just the ticket's `by`)
   printf '%s' "$1" | jq -r '[.conversation[] | select((.from // "" | ascii_downcase | test("^(claude|j\\.?a\\.?r\\.?v\\.?i\\.?s\\.?)$")) | not)] | if length > 0 and all(.from == "Matthew Sharpe") then 1 else 0 end' 2>/dev/null || echo 0
 }
@@ -632,7 +636,7 @@ app_reply() {   # app_reply <queue> <id> <answered|matthew> [refresh] < text: th
   return 0
 }
 one_app() {
-  local Q="$1" T ID BY MM=0 CF N PF M PICS AUD PROMPT SYS LF SS RC
+  local Q="$1" T ID BY MM=0 JEN=0 CF N PF M PICS AUD PROMPT SYS LF SS RC
   app_ok "$Q" || { inst_ok "$Q" && full_ok "$Q"; } || return 1; ready || return 0
   sync_workspace || { log "$Q: the repo copy could not be refreshed: nothing taken"; sleep 30; return 0; }
   PF=$(app_prompt "$Q"); [ -n "$PF" ] && [ -f "$PF" ] || { log "$Q: no prompt file"; return 1; }
@@ -651,7 +655,8 @@ one_app() {
     echo $(( N + 1 )) > "$CF"
   fi
   SS=$(date +%s); PICS=$(get_photos "$T" "$ID"); AUD=$(get_audio "$T" "$ID" "$Q")
-  if [ "$Q" = posts ] && [ "$MM" = 0 ]; then posts_session "$T" "$ID" "$PF" "$AUD"; DID=1; return 0; fi
+  JEN=0; [ "$Q" = posts ] && [ "$MM" = 0 ] && [ "$WRITE" = vm ] && [ "$(only_jen_posts "$T")" = 1 ] && JEN=1
+  if [ "$Q" = posts ] && [ "$MM" = 0 ] && [ "$JEN" = 0 ]; then posts_session "$T" "$ID" "$PF" "$AUD"; DID=1; return 0; fi
   M="${HELP_MODEL:-sonnet}"; [ "$MM" = 1 ] && M="${HELP_MODEL_MATTHEW:-opus}"
   log "$Q $ID: session started ($M, from $BY, cloud)"
   PROMPT="A new message in the J.A.R.V.I.S. chat of $(app_name "$Q") (queue $Q). Handle it now under the rules appended to your instructions, and reply with:
@@ -678,6 +683,9 @@ $AUD"
 (Watcher note: this machine may NOT change the repo, build, commit or deploy now: $WHY. Do what needs only an answer or server work (the app's data); queue code changes for the laptop with laptop-job.sh, as jarvis-cloud-prompt.md says.)"; fi
   SYS="$(cat "$PF")"
   # the post calendar's rules are for the restricted session; Matthew's own chat there is a working session (21 Nov)
+  [ "$JEN" = 1 ] && SYS="$(cat "$WS/traverse/ops/jarvis-posts-jen-prompt.md")
+
+$SYS"   # Jen's working session: her rules first, then the calendar's (jv-posts.sh still the way to change a post as her)
   [ "$Q" = posts ] && [ "$MM" = 1 ] && SYS="This message came from the post calendar's J.A.R.V.I.S. chat (traverse/post-calendar/README.md). You are a working session for Matthew, not the restricted one: reply with jv-reply.sh as the prompt says. Approving a post stays his own tap, and the Surge posts stay on hold."
   if [ "$MM" = 1 ]; then SYS="$SYS
 

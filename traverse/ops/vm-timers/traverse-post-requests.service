@@ -1,0 +1,10 @@
+[Unit]
+Description=Jen's post calendar change requests (moved from the laptop 23 Nov 2026; runs-on-vm.txt)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/yard/main
+Environment=PATH=/home/yard/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=LOCALAPPDATA=/home/yard/jarvis/localappdata
+ExecStart=/bin/bash /home/yard/main/traverse/post-calendar/tools/request-watch.sh
+TimeoutStartSec=45min
