@@ -1104,6 +1104,7 @@ Matthew's own work for Peak (matthew/clients/peak-pickleball/, matthew/peak-pick
 - [ ] **PK-5 — In-club tenants (rent a built-out space, perks for members), like Brandon's sauna.** Prospect list + approach + DRAFT first email. tenants-and-coffee-2026-11-23.md.
 - [ ] **PK-6 — Coffee partner** (free coffee for members, beans/grounds to Peak, in exchange for exposure). List + approach + DRAFT email. Same file.
 - [ ] **PK-9 — Google Business Profile API: requested 23 Nov, case 9-3376000041660** (7-10 business days; don't resubmit). Then nightly GBP numbers + reviews.
+- [ ] **PK-10 — Sponsor payments: first payment easy (QuickBooks invoice + pay link), then ACH autopay in month one** (Tyler + Nathan, 23 Nov). Matthew has Sales Manager in Peak's QuickBooks. Waiting on Nathan's answers (Payments on? recurring/autopay? tier products? fees?), then propose the flow and wire it to the desk's Signed step.
 - [ ] **PK-7 — Peak site metrics.** Needs GA4 (or Search Console) read access from Peak: ask Tyler.
 - [x] **PK-8 — Peak desk Inbox: links in emails clickable** (the Snooze email). Deployed 23 Nov (inbox-links-1123).
 
