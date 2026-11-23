@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your cloud workspace: the visual guide</title>
+<!-- The picture version of traverse/ops/VM-MAIN-WORKSPACE.md, for Matthew (22 Nov 2026: "can u make it has some info graphics ... and some color
+     to make it more digestible"). The .md stays the reference; keep the two in step. Fonts: Outfit + DM Sans (Open Font License). -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--cloud:#0f7b6c;--cloudbg:#e2f4f1;--lap:#2b4fa8;--lapbg:#e6ecfb;--red:#b42318;--redbg:#fde8e7;--amber:#a85d00;--amberbg:#fff2dc;--green:#2f7a3a;--greenbg:#e4f2e3}
+@page{size:Letter;margin:0.42in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:880px;margin:0 auto;padding:22px 16px 40px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:24px 28px;position:relative;overflow:hidden}
+.head:after{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,#2e6fd6 0%,rgba(46,111,214,0) 70%)}
+.head .tag{font:600 12.5px Outfit,sans-serif;letter-spacing:.09em;text-transform:uppercase;color:#ffb38f}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:4px 0 6px}
+.head p{margin:0;color:#c9d5e6;max-width:560px}
+h2{font:600 19px Outfit,sans-serif;color:var(--navy);margin:24px 0 10px;display:flex;align-items:center;gap:10px}
+h2 .num{font:800 13px Outfit,sans-serif;background:var(--orange);color:#fff;border-radius:999px;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;border-top:5px solid var(--green)}
+.tile b{display:block;font:800 22px/1.1 Outfit,sans-serif;color:var(--navy)}
+.tile span{display:block;font-size:12.5px;color:var(--soft);margin-top:3px}
+.tile.wait{border-top-color:var(--orange)}.tile.wait b{color:var(--orange)}
+.tile.run{border-top-color:#2e6fd6}
+/* before / after */
+.ba{display:grid;grid-template-columns:1fr 40px 1fr;align-items:stretch;gap:0}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.panel h3{margin:0 0 10px;font:600 15px Outfit,sans-serif;color:var(--soft);text-transform:uppercase;letter-spacing:.06em}
+.big-arrow{display:flex;align-items:center;justify-content:center;font:800 28px Outfit,sans-serif;color:var(--orange)}
+.box{border-radius:12px;padding:10px 12px;margin-bottom:8px;border:2px solid}
+.box .t{font:600 14.5px Outfit,sans-serif;display:flex;align-items:center;gap:7px}
+.box .d{font-size:12.5px;color:#2a3446;margin-top:2px}
+.lap{background:var(--lapbg);border-color:#b8c7ef}.lap .t{color:var(--lap)}
+.cld{background:var(--cloudbg);border-color:#a6dcd3}.cld .t{color:var(--cloud)}
+.dim{opacity:.55}
+.flow{font-size:12px;color:var(--soft);text-align:center;margin:-2px 0 6px}
+.ico{display:inline-flex;width:22px;height:22px;border-radius:6px;align-items:center;justify-content:center;font-size:13px;color:#fff;flex:none}
+.ico.l{background:var(--lap)}.ico.c{background:var(--cloud)}.ico.p{background:#7a4fc4}
+/* three ways */
+.ways{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.way{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.way .h{font:600 16px Outfit,sans-serif;color:var(--navy);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.way ol{margin:0;padding-left:18px}.way li{margin:3px 0}
+.way .note{margin-top:8px;font-size:12px;color:var(--soft);border-top:1px dashed var(--line);padding-top:6px}
+/* timeline */
+.tl{position:relative;margin-left:14px;padding-left:26px;border-left:3px solid #c9d3e6}
+.st{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:10px}
+.st:before{content:attr(data-n);position:absolute;left:-42px;top:9px;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font:800 13px Outfit,sans-serif;display:flex;align-items:center;justify-content:center;border:3px solid var(--bg)}
+.st .who{float:right;font:700 11px 'DM Sans',sans-serif;text-transform:uppercase;letter-spacing:.05em;border-radius:999px;padding:2px 9px}
+.who.me{background:var(--greenbg);color:var(--green)}.who.you{background:var(--amberbg);color:var(--amber)}
+.st b{font:600 15px Outfit,sans-serif;color:var(--navy)}
+code{font:12.5px Consolas,'Courier New',monospace;background:#0d1d36;color:#e8eef8;border-radius:6px;padding:2px 7px;white-space:nowrap}
+.undo{display:flex;gap:12px;align-items:center;background:var(--amberbg);border:1px solid #f2d39b;border-radius:12px;padding:10px 14px;margin-top:4px}
+.undo .i{font:800 22px Outfit,sans-serif;color:var(--amber)}
+/* where things live */
+.live3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.col{border-radius:14px;padding:12px 14px;border:2px solid}
+.col h4{margin:0 0 6px;font:600 15px Outfit,sans-serif}
+.col ul{margin:0;padding-left:17px}.col li{margin:3px 0}
+.col.c{background:var(--cloudbg);border-color:#a6dcd3}.col.c h4{color:var(--cloud)}
+.col.l{background:var(--lapbg);border-color:#b8c7ef}.col.l h4{color:var(--lap)}
+.col.n{background:var(--redbg);border-color:#f3b4ae}.col.n h4{color:var(--red)}
+/* data bars */
+.bars{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.bar{display:grid;grid-template-columns:200px 1fr 70px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+.track{height:16px;border-radius:999px;background:#eef1f6;overflow:hidden}
+.fill{height:100%;border-radius:999px}
+.f-send{background:linear-gradient(90deg,#0f7b6c,#2bb39b)}.f-skip{background:repeating-linear-gradient(45deg,#c9d0dc,#c9d0dc 6px,#dfe4ec 6px,#dfe4ec 12px)}
+.bar .gb{text-align:right;font-weight:700;color:var(--navy)}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--soft);margin-top:6px}
+.legend i{display:inline-block;width:14px;height:10px;border-radius:3px;margin-right:5px;vertical-align:0}
+/* trouble */
+.trouble{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tr{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--orange);border-radius:12px;padding:10px 14px}
+.tr b{display:block;font:600 14.5px Outfit,sans-serif;color:var(--navy)}
+.gaps{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 16px}
+.gaps li{margin:4px 0}
+.foot{color:var(--soft);font-size:12px;margin-top:18px;border-top:1px solid var(--line);padding-top:10px}
+.sec{break-inside:avoid;page-break-inside:avoid}
+@media print{body{font-size:12.5px}.page{padding:0 2px}h2{margin:14px 0 7px;font-size:17px}.head{padding:18px 24px}.head h1{font-size:26px}.way,.panel{padding:11px}.st{padding:8px 12px;margin-bottom:7px}.bar{margin:5px 0}}
+@media (max-width:700px){.tiles{grid-template-columns:1fr 1fr}.ba{grid-template-columns:1fr}.big-arrow{transform:rotate(90deg);height:36px}.ways,.live3,.trouble{grid-template-columns:1fr}.bar{grid-template-columns:120px 1fr 54px}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="head">
+  <div class="tag">Your cloud workspace · visual guide</div>
+  <h1>Work that keeps going when the laptop sleeps</h1>
+  <p>Everything moves to your cloud machine in Azure. Your laptop becomes the screen and keyboard. Prepared 22 Nov; the switch is yours to make.</p>
+</div>
+
+<div class="tiles">
+  <div class="tile"><b>Ready</b><span>Cloud machine set up, memory and settings copied</span></div>
+  <div class="tile wait"><b>Your go</b><span>The switch: one command, with an undo</span></div>
+  <div class="tile"><b>60 / 60</b><span>J.A.R.V.I.S. checks passing on the cloud machine</span></div>
+  <div class="tile run"><b>10 GB</b><span>Data uploading overnight, every piece checked</span></div>
+</div>
+
+<div class="sec">
+<h2><span class="num">1</span> What changes</h2>
+<div class="ba">
+  <div class="panel">
+    <h3>Today</h3>
+    <div class="box lap"><div class="t"><span class="ico l">💻</span>Laptop: the main copy</div><div class="d">Files, builds, deploys and Claude all run here. Sleep, a dead battery or a Wi-Fi drop stops the work.</div></div>
+    <div class="flow">↓ sends a copy</div>
+    <div class="box cld dim"><div class="t"><span class="ico c">☁</span>Cloud machine: the helper</div><div class="d">Answers J.A.R.V.I.S. requests, but may only change code after the laptop has been away 15 minutes.</div></div>
+  </div>
+  <div class="big-arrow">➜</div>
+  <div class="panel">
+    <h3>After the switch</h3>
+    <div class="box cld"><div class="t"><span class="ico c">☁</span>Cloud machine: the main copy</div><div class="d">Your workspace, J.A.R.V.I.S.’s workspace and the one shared history. Runs day and night in Azure.</div></div>
+    <div class="flow">↑ VS Code connects to it &nbsp;·&nbsp; ↑ your phone asks J.A.R.V.I.S.</div>
+    <div class="box lap"><div class="t"><span class="ico l">💻</span>Laptop: screen + Windows jobs</div><div class="d">Shows the cloud workspace in VS Code. Still runs Hey Jarvis, the pay stub folder, backups and Surge drafting.</div></div>
+  </div>
+</div>
+</div>
+
+<div class="sec">
+<h2><span class="num">2</span> Three ways to get a job done</h2>
+<div class="ways">
+  <div class="way"><div class="h"><span class="ico l">💻</span>At the laptop</div>
+    <ol><li>Open VS Code, <b>File → Open Recent → jarvis-cloud</b>.</li><li>Ask Claude, same as now.</li><li>It edits, tests and deploys on the cloud machine.</li></ol>
+    <div class="note">First time only: Ctrl+Shift+P → <b>Remote-SSH: Connect to Host</b> → jarvis-cloud → open <b>/home/yard/main</b>.</div></div>
+  <div class="way"><div class="h"><span class="ico p">📱</span>From your phone</div>
+    <ol><li>Open J.A.R.V.I.S.</li><li>Type or say the request.</li><li>The cloud machine does it right away, laptop on or off.</li></ol>
+    <div class="note">After the switch there’s no more 15-minute wait for code changes.</div></div>
+  <div class="way"><div class="h"><span class="ico c">☁</span>Long jobs</div>
+    <ol><li>Data runs, big builds, uploads start in the background.</li><li>Close the laptop if you like.</li><li>Watch the ring on the globe; your phone gets an alert when it’s done.</li></ol>
+    <div class="note">Our chat pauses while you’re disconnected; the job doesn’t.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2><span class="num">3</span> Switch day: about 10 minutes</h2>
+<div class="tl">
+  <div class="st" data-n="1"><span class="who me">Claude</span><b>Save the leftovers</b><br>A few unsaved files from other sessions (J.A.R.V.I.S. screenshots, Peak mail drafts) get committed. The switch won’t start while anything is unsaved.</div>
+  <div class="st" data-n="2"><span class="who you">You, or I run it</span><b>Run the switch</b><br><code>bash traverse/ops/vm-main.sh flip --matthew-said-go</code><br>It checks first, and stops with a plain message at the first problem, changing nothing.</div>
+  <div class="st" data-n="3"><span class="who you">You</span><b>Connect VS Code</b><br>Ctrl+Shift+P → Remote-SSH: Connect to Host → <b>jarvis-cloud</b> → Open Folder <b>/home/yard/main</b> → say Yes to trust → Terminal → <code>claude</code></div>
+  <div class="st" data-n="4"><span class="who me">Claude</span><b>Check both sides</b><br><code>bash traverse/ops/vm-main.sh status</code> and a J.A.R.V.I.S. test. Then work as normal.</div>
+</div>
+<div class="undo"><div class="i">↺</div><div><b>Changed your mind?</b> One command puts everything back the way it is today, including any work done on the cloud machine since:<br><code>bash traverse/ops/vm-main.sh rollback --matthew-said-go</code></div></div>
+</div>
+
+<div class="sec">
+<h2><span class="num">4</span> Where everything lives</h2>
+<div class="live3">
+  <div class="col c"><h4>☁ Cloud machine</h4><ul><li>The main copy of all the apps and sites</li><li>J.A.R.V.I.S. (answers you and the staff 24/7)</li><li>My memory notes</li><li>Door data and customer files (your OK)</li><li>Builds, tests, deploys</li><li>Nightly encrypted server backup</li></ul></div>
+  <div class="col l"><h4>💻 Stays on the laptop</h4><ul><li>“Hey Jarvis” wake word</li><li>Pay stubs folder pickup</li><li>Drive / OneDrive / GitHub backups</li><li>Surge drafting</li><li>Pushing new door data to the apps</li><li>The map-data refresh jobs (for now)</li><li>Desktop copy of end-of-day reports</li></ul></div>
+  <div class="col n"><h4>⛔ Never on the cloud</h4><ul><li>Surge Tier 1 restricted notes</li><li>Your pay note</li><li>Sign-in codes and keys files</li><li>Bank data (stays on the app server only)</li></ul></div>
+</div>
+</div>
+
+<div class="sec">
+<h2><span class="num">5</span> The overnight upload</h2>
+<div class="bars">
+  <div class="bar"><span>Door data</span><div class="track"><div class="fill f-send" style="width:12%"></div></div><span class="gb">3.6 GB</span></div>
+  <div class="bar"><span>Map working data</span><div class="track"><div class="fill f-send" style="width:17%"></div></div><span class="gb">~5 GB</span></div>
+  <div class="bar"><span>Photos, research, client files</span><div class="track"><div class="fill f-send" style="width:5%"></div></div><span class="gb">~1.4 GB</span></div>
+  <div class="bar"><span>County assessor downloads</span><div class="track"><div class="fill f-skip" style="width:77%"></div></div><span class="gb">23 GB</span></div>
+  <div class="bar"><span>Built app editions</span><div class="track"><div class="fill f-skip" style="width:25%"></div></div><span class="gb">7.6 GB</span></div>
+  <div class="legend"><span><i style="background:#14937f"></i>Uploading (10 GB, 71 pieces, each checked)</span><span><i style="background:#cfd5e0"></i>Not uploaded: the cloud machine rebuilds or re-downloads it</span></div>
+  <div class="legend">Nothing under Surge, nothing of your pay, no codes or keys. A Wi-Fi drop only redoes the piece it was on.</div>
+</div>
+</div>
+
+<div class="sec">
+<h2><span class="num">6</span> If something looks wrong</h2>
+<div class="trouble">
+  <div class="tr"><b>“Stuck” alert on your phone</b>J.A.R.V.I.S.’s change clashed with one of ours. Nothing is lost: it’s parked, and I sort it out in a session.</div>
+  <div class="tr"><b>A deploy says “refused”</b>The two copies need to catch up first. It fixes itself within 2 minutes, or I run the sync.</div>
+  <div class="tr"><b>VS Code says “reconnecting”</b>Wi-Fi blip. It reconnects on its own; background jobs never stopped.</div>
+  <div class="tr"><b>Anything else</b>Run the undo above, or ask me. The laptop copy is kept as it was at the switch.</div>
+</div>
+</div>
+
+<div class="sec">
+<h2><span class="num">7</span> Not done yet</h2>
+<div class="gaps"><ul>
+  <li><b>Door-data pushes</b> stay on the laptop: they need sign-in codes that never leave it.</li>
+  <li><b>About 30 older data scripts</b> still assume Windows. The deploy and J.A.R.V.I.S. scripts are fixed; the map-data jobs move later.</li>
+  <li><b>The first full data build on the cloud machine</b> happens after the upload, checked against the live apps before it’s trusted.</li>
+  <li><b>The switch and undo commands</b> were checked by reading, not by a live rehearsal, so we run the switch together.</li>
+</ul></div>
+</div>
+
+<div class="foot">Visual summary of <b>traverse/ops/VM-MAIN-WORKSPACE.md</b> (the full technical guide). Cloud machine: “Jarvis”, Azure Central US, about $66 a month. Prepared 22 November 2026.</div>
+</div>
+</body>
+</html>
