@@ -1,0 +1,11 @@
+[Unit]
+Description=6 PM backup to Google Drive + GitHub copy (moved from the laptop 23 Nov 2026; shared/tools/drive-backup.sh)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/yard/main
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=LOCALAPPDATA=/home/yard/jarvis/localappdata
+ExecStart=/bin/bash /home/yard/main/shared/tools/drive-backup.sh
+TimeoutStartSec=4h
+Nice=15

@@ -29,6 +29,8 @@
 surge/brand/photos/**
 !surge/brand/photos/**/
 !surge/brand/photos/**/*.md
+# 23 Nov 2026: the restricted boards stay out of git on every machine (the line above re-included their README.md on the VM)
+surge/brand/photos/restricted-boards-DO-NOT-PUBLISH/
 
 # --- Archive payload: superseded, duplicated and unrelated material.
 #     Keep the record of what was set aside, not the bytes.

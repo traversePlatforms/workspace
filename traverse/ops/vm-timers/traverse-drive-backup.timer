@@ -1,0 +1,9 @@
+[Unit]
+Description=6 PM Drive backup (Colorado time)
+
+[Timer]
+OnCalendar=*-*-* 18:00:00 America/Denver
+Persistent=true
+
+[Install]
+WantedBy=timers.target

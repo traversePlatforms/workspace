@@ -1,0 +1,9 @@
+[Unit]
+Description=Overnight check every 30 minutes
+
+[Timer]
+OnCalendar=*:05,35
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -14,6 +14,7 @@
 # Log: ~/backup/backup.log (one line per run, beside the server backup's).
 set -u -o pipefail
 B="$HOME/backup"; LOG="$B/backup.log"; D=$(date -u +%Y-%m-%d); C=server-backups; P=workspace
+export AZURE_STORAGE_ACCOUNT=jarvisbackup4821 AZURE_STORAGE_KEY="$(cat "$B/secrets/storage.key")" AZURE_CORE_ONLY_SHOW_ERRORS=1   # as server-backup.sh
 R=$(cat "$B/recipient.txt"); S="$B/workspace-snap"; mkdir -p "$S"
 W=$(mktemp -d "$B/wtmp.XXXXXX"); trap 'rm -rf "$W"' EXIT
 log() { echo "$(date -u '+%Y-%m-%d %H:%M')Z workspace: $*" >> "$LOG"; }

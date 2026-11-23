@@ -4,6 +4,8 @@
 # thing: when a town build has finished and its Sixfold upload has not happened (the session that would have done it was closed),
 # it runs that upload, which Matthew asked for. Report: %LOCALAPPDATA%\ProjectBackup\overnight-checks.log (one block per run) and
 # overnight-latest.txt (the last run only). Never prints secrets; server checks go through sg.sh.
+# 23 Nov: the cloud computer runs this every 30 min now (traverse/ops/runs-on-vm.txt); the laptop's Windows task stands down
+case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) grep -qx "overnight-check" "$(dirname "${BASH_SOURCE[0]}")/../../traverse/ops/runs-on-vm.txt" 2>/dev/null && exit 0;; esac
 set -u
 LOCALAPPDATA="${LOCALAPPDATA:-$HOME/jarvis/localappdata}"   # 23 Nov: laptop or VM
 LOGDIR="$LOCALAPPDATA/ProjectBackup"; mkdir -p "$LOGDIR"
@@ -18,7 +20,8 @@ age_min() { echo $(( ( $(date +%s) - $(stat -c %Y "$1") ) / 60 )); }
 say "== $(date '+%Y-%m-%d %H:%M')"
 
 # 1. Town builds: running, finished, or stopped part-way
-SSID=$(command -v netsh >/dev/null 2>&1 && netsh wlan show interfaces 2>/dev/null | tr -d '' | awk -F': ' '/^ *SSID/{print $2; exit}')
+SSID=$(command -v netsh >/dev/null 2>&1 && netsh wlan show interfaces 2>/dev/null | tr -d '
+' | awk -F': ' '/^ *SSID/{print $2; exit}')
 case "$SSID" in *iPhone*) say "  info  network: $SSID (phone hotspot: tree downloads stay paused)";; *) say "  info  network: ${SSID:-wired}";; esac
 if [ -f "$DT/logs-paused.flag" ]; then ok "tree work PAUSED since $(date -r "$DT/logs-paused.flag" "+%m-%d %H:%M") (hotspot); resume: bash traverse/data-pipeline/door-territory/resume-trees-2026-10-16.sh"; else
 NODES=$(tasklist //FI "IMAGENAME eq node.exe" 2>/dev/null | grep -c node.exe)
@@ -59,7 +62,9 @@ up towns-catchup-2026-10-16 "$DT/logs-batch5-fix/done.flag" $T40 $SIX
 
 # 2b. The Wi-Fi queue (2026-10-20): its status line, a parked job, or a runner that stopped updating
 QS="$REPO/traverse/ops/wifi-queue/state/status.txt"   # 23 Nov: laptop or VM
-if [ -f "$QS" ]; then
+ONVM=0; [ -d /c ] || ONVM=1   # 23 Nov: on the cloud computer the queue's state here is a stale copy: the queue runs on the laptop
+if [ $ONVM = 1 ]; then say "  info  Wi-Fi queue: runs on the laptop (its state is not visible from the cloud computer)"
+elif [ -f "$QS" ]; then
   say "  info  Wi-Fi queue: $(sed -n 2p "$QS" | cut -c1-160)"
   grep -q "PARKED" "$QS" && bad "Wi-Fi queue: a job is parked after 3 failures (traverse/ops/wifi-queue/state/status.txt)"
   if ! grep -q "everything in the queue is done" "$QS"; then qm=$(age_min "$QS")
@@ -75,7 +80,12 @@ fi
 
 # 2c. The off-site server backup on the cloud J.A.R.V.I.S. machine (22 Nov 2026, traverse/ops/cloud-server-backup.sh): last night's run
 #     must be "ok" and under 30 hours old. One quiet retry: hotel Wi-Fi drops single SSH connections now and then.
-CBL=""; for t in 1 2; do CBL=$(ssh -i "$HOME/.ssh/azure_yard" -o BatchMode=yes -o ConnectTimeout=20 yard@40.78.175.13 'tail -1 ~/backup/backup.log 2>/dev/null' < /dev/null 2>/dev/null) && break; sleep 20; done
+CBL=""; if [ $ONVM = 1 ]; then CBL=$(grep -v ' workspace: ' "$HOME/backup/backup.log" 2>/dev/null | tail -1)   # 23 Nov: this IS the cloud machine
+  WBL=$(grep ' workspace: ' "$HOME/backup/backup.log" 2>/dev/null | tail -1)
+  if [ -n "$WBL" ]; then wbt=$(date -d "$(echo "$WBL" | cut -c1-16)Z" +%s 2>/dev/null || echo 0); wbh=$(( ( $(date +%s) - wbt ) / 3600 ))
+    if echo "$WBL" | grep -q "workspace: ok " && [ "$wbh" -lt 30 ]; then ok "Workspace backup: ${WBL#*workspace: }"; else bad "Workspace backup: last run ${wbh} h ago: ${WBL#*workspace: } (~/backup/backup.log)"; fi
+  else bad "Workspace backup: no run logged yet (~/backup/workspace-backup.sh)"; fi
+else for t in 1 2; do CBL=$(ssh -i "$HOME/.ssh/azure_yard" -o BatchMode=yes -o ConnectTimeout=20 yard@40.78.175.13 'tail -1 ~/backup/backup.log 2>/dev/null' < /dev/null 2>/dev/null) && break; sleep 20; done; fi
 if [ -z "$CBL" ]; then say "  info  Cloud backup: the cloud machine did not answer (checked again next run)"
 else cbt=$(date -d "$(echo "$CBL" | cut -c1-16)Z" +%s 2>/dev/null || echo 0); cbh=$(( ( $(date +%s) - cbt ) / 3600 ))
   if echo "$CBL" | grep -q " ok " && [ "$cbh" -lt 30 ]; then say "  ok    Cloud backup: ${CBL#*Z }"
@@ -108,13 +118,18 @@ while IFS='|' read -r n t r; do [ -z "$n" ] && continue
   if [ "$r" = 0 ]; then ok "$n: last run $t ok"; elif [ "$r" = 267009 ]; then ok "$n: running now (started $t)"; elif [ "$r" = 267011 ]; then ok "$n: not run yet"; else bad "$n: last run $t ended with code $r"; fi
 done <<< "$TASKS"
 GD=$(tail -1 "$LOGDIR/gdrive.log" 2>/dev/null); say "  info  Drive backup log: ${GD:-none}"
+# 4b. 23 Nov: the cloud computer's own timers (the jobs moved off the laptop, traverse/ops/runs-on-vm.txt)
+if [ $ONVM = 1 ]; then for u in $(systemctl --user list-unit-files 'traverse-*.timer' 'jarvis-*.timer' --no-legend 2>/dev/null | awk '{print $1}'); do
+  sv=${u%.timer}.service; res=$(systemctl --user show "$sv" -p Result --value 2>/dev/null); last=$(systemctl --user show "$sv" -p ExecMainExitTimestamp --value 2>/dev/null)
+  if [ -z "$last" ] || [ "$last" = n/a ]; then ok "${u%.timer}: not run yet"; elif [ "$res" = success ]; then ok "${u%.timer}: last run ${last% *} ok"; else bad "${u%.timer}: last run ${last% *} ended: $res (journalctl --user -u $sv)"; fi
+done; fi
 
 # 5. This computer's disk
 # throwaway Chrome profiles from test and print scripts (cdp-*), more than a day old (2026-10-25: 10,717 had piled up, about 170 GB)
 SWEPT=$(find "$LOCALAPPDATA/Temp" -maxdepth 1 -type d -name 'cdp-*' -mtime +1 2>/dev/null | head -2000 | while IFS= read -r d; do rm -rf "$d" 2>/dev/null && echo x; done | wc -l)
 [ "$SWEPT" -gt 0 ] && say "  info  removed $SWEPT old test-browser folders from Temp"
 DFP=/c; [ -d /c ] || DFP="$REPO"   # 23 Nov: laptop or VM
-FREE=$(df -Pm "$DFP" | awk 'NR==2{print int($4/1024)}'); [ "$FREE" -lt 20 ] && bad "C: has only ${FREE} GB free" || ok "C: ${FREE} GB free"
+FREE=$(df -Pm "$DFP" | awk 'NR==2{print int($4/1024)}'); DL="C:"; [ -d /c ] || DL="disk"; [ "$FREE" -lt 20 ] && bad "$DL has only ${FREE} GB free" || ok "$DL ${FREE} GB free"
 
 # 6. The crews' job photos, copied once a day by address (2026-10-26, Matthew: "go ahead and set up the nightly copy")
 JP=$(bash "$REPO/traverse/ops/pull-job-photos.sh" 2>&1 | tail -1)

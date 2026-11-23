@@ -64,6 +64,10 @@ $LogDir   = Join-Path $env:LOCALAPPDATA "ProjectBackup"
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 $Log = Join-Path $LogDir "gdrive.log"
 function Say([string]$m) { $line = "{0:yyyy-MM-dd HH:mm:ss}  {1}" -f (Get-Date), $m; Add-Content -Path $Log -Value $line; Write-Host $line }
+# 23 Nov 2026: once the cloud computer runs this backup (shared/tools/drive-backup.sh; "drive-backup" in traverse/ops/runs-on-vm.txt),
+# the laptop's task stands down. The list comes down with the repo.
+$onVm = Join-Path $PSScriptRoot "..\..\traverse\ops\runs-on-vm.txt"
+if ((Test-Path -LiteralPath $onVm) -and (Select-String -LiteralPath $onVm -Pattern '^drive-backup$' -Quiet)) { Say "runs on the cloud computer now (runs-on-vm.txt); not run here"; exit 0 }
 
 try {
     # 2026-10-15: after the 14 Oct restart Google Drive for desktop did not come back, and two nights failed. Start it and wait for it.

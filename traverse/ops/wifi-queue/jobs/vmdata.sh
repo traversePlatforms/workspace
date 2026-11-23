@@ -23,7 +23,7 @@ v 'test -d ~/main/.git' || { echo "the VM did not answer, or has no ~/main (vm-m
 if [ ! -s "$S/plan.tsv" ] || [ -z "$(cd "$S/chunks" && for l in *.list; do [ -f "$l" ] && [ ! -f "${l%.list}.done" ] && echo "$l"; done 2>/dev/null | head -1)" ]; then
   [ -s "$S/plan.tsv" ] && [ -f "$S/pass.done" ] && [ "${VMDATA_AGAIN:-}" != 1 ] && { echo "all sent (VMDATA_AGAIN=1 for a new pass)"; exit 0; }
   rm -rf "$S/chunks"; mkdir -p "$S/chunks"; rm -f "$S/pass.done"
-  ( cd "$REPO" && git ls-files --others --ignored --exclude-standard -z )   # 23 Nov: the whole repo (Matthew: move everything over) > "$S/ignored.z" || { echo "git listing failed"; exit 1; }
+  ( cd "$REPO" && git ls-files --others -z ) > "$S/ignored.z" || { echo "git listing failed"; exit 1; }   # 23 Nov: every untracked file in the whole repo, ignored or not (Matthew: move everything over)
   ( cd "$REPO" && node -e '
     const fs = require("fs"), [lf, sent, dir] = process.argv.slice(1), MAX = 150e6;
     const NEVER = /chrome-profile|\/Chrome[^\/]*\/|(^|\/)\.ssh\//i;   // 23 Nov: everything else goes now (Matthew: codes, Surge notes, pay, finance too)

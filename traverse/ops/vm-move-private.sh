@@ -64,8 +64,8 @@ echo "== sending $(du -h "$T/move.tgz" | cut -f1) to $VM"
 v 'set -e; D=$(mktemp -d); trap "rm -rf $D" EXIT; tar -xzf - -C $D; cd $D; md5sum -c --quiet MD5 || { echo "MD5 FAILED in transit"; exit 3; }
    mkdir -p ~/.ssh; chmod 700 ~/.ssh; kept=""
    for f in ssh/*; do [ -f "$f" ] || continue; b=$(basename "$f")
-     if [ -e ~/.ssh/$b ] && ! cmp -s "$f" ~/.ssh/$b; then cp "$f" ~/.ssh/$b.from-laptop; chmod 600 ~/.ssh/$b.from-laptop; kept="$kept $b"
-     else cp "$f" ~/.ssh/$b; chmod 600 ~/.ssh/$b; fi; done
+     if [ -e "$HOME/.ssh/$b" ] && ! cmp -s "$f" "$HOME/.ssh/$b"; then cp "$f" "$HOME/.ssh/$b.from-laptop"; chmod 600 "$HOME/.ssh/$b.from-laptop"; kept="$kept $b"
+     else cp "$f" "$HOME/.ssh/$b"; chmod 600 "$HOME/.ssh/$b"; fi; done   # 23 Nov: quoted (key files with spaces in their names broke it)
    [ -n "$kept" ] && echo "   kept the VM own copy (laptop copy beside it as .from-laptop):$kept"
    cd ~/main && tar -xpf $D/repo.tar && tar -tf $D/repo.tar | while IFS= read -r f; do [ -d "$f" ] || [ -f "$f" ] || echo "   MISSING $f"; done
    ( cd $D && tar -xOf repo.tar > /dev/null )
