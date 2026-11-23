@@ -177,8 +177,9 @@ assistant and shared, into the same paths in `~/main`. It sends nothing the VM c
 - **Bundles left at the flip.** A watcher session that writes memory or notes in the minute between the flip's checks and the switch
   leaves a bundle in `~/jarvis/outbox/changes/`. After the flip nothing merges those. `ls ~/jarvis/outbox/changes` after the flip should
   be empty: if it isn't, a session merges it by hand.
-- ⚑ **Seen while doing this.** Memory notes that already reached the VM (since 19 Nov, through the watcher's copy) mention Tier 1 topics by
-  name: `three-entities-surge-sixfold-horizon.md` (the exit plan), `matthew-user.md`. The pay note's `MEMORY.md` index line, which carries
+- ⚑ **Seen while doing this.** Two memory notes that already reached the VM (since 19 Nov, through the watcher's copy) mentioned restricted
+  topics by name: `three-entities-surge-sixfold-horizon.md` and `matthew-user.md`. **Trimmed 22 Nov on Matthew's OK**, on the laptop and
+  in both VM copies (`~/.claude/projects/-home-yard-main/memory`, `~/jarvis/memory-base`). The pay note's `MEMORY.md` index line, which carries
   figures, was going to the VM until tonight. It's now left out of every copy sent (`jarvis-cloud-sync.sh` push and `vm-main.sh`), and the
   old copies on Jarvis were removed: `~/jarvis/incoming/memory.applied.tgz` deleted, the line deleted from `~/jarvis/memory-base/MEMORY.md`.
   The old machine yardtest was not touched and may still hold old copies.
