@@ -1,0 +1,12 @@
+[Unit]
+Description=Peak Pickleball nightly read-only pull: CourtReserve + Patch Retention + impact (Matthew 23 Nov 2026)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/yard/main/matthew/clients/peak-pickleball
+Environment=PATH=/home/yard/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=TZ=America/Denver
+ExecStart=/bin/bash /home/yard/main/matthew/clients/peak-pickleball/tools/nightly-pull.sh
+SuccessExitStatus=75
+TimeoutStartSec=45min
+Nice=10
