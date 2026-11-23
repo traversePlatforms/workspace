@@ -70,6 +70,15 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
     date, and its activity or history (who changed it, when). Our access can't see that screen.
 27. **Two small fixes the pull turned up:** the welcome emails say $6 an hour and 30 days' notice, CourtReserve says $7 and 15 days (which is
     right?); and "How did you hear about us?" is blank on 95% of accounts: making it required at sign-up lets ads be measured.
+28. **Missed dues payments: what happens today, and a reminder.** 21 paid accounts are suspended and 27 November dues charges ($1,690) are
+    unpaid (CourtReserve suspends a plan at 10 days past due and cancels at 11). From the data: about 60-90 dues charges a month are paid
+    late, most within about 2 days, and nearly all are paid in the end, which looks like CourtReserve retrying the card or sending its own
+    notice. Patch sends nothing about it. Ask Tyler: does CourtReserve retry and email automatically, does staff call anyone, and is he OK
+    adding a Patch failed-payment reminder (text and email) that lands inside the 10 days (drafted as D in patch-automations-2026-11-23.md).
+29. **Texting:** Peak texted members heavily from Feb to Jul 2025 (about 9,000 automated texts a month, and a 32,000-text blast in March
+    2025), then stopped on Fri 25 Jul 2025, the same morning five automations were switched off. Since then: one text (Sep 2026). 2,882
+    accounts have opted in to marketing texts, and Patch now prompts "It's Time to Send an SMS Blast!". Ask Tyler: why texting stopped (cost,
+    complaints, a choice?) and whether Peak wants it back for the free-class and failed-payment reminders.
 
 ## Fact-check log
 - Shared mailbox, Send As and the extra app permission: Microsoft 365 needs an Exchange or Global admin for each. Matthew isn't one. The "Grant admin consent" button was greyed out for him on 17 Nov.
