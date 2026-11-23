@@ -1,5 +1,7 @@
 # Peak: what I need from Tyler (or Peak's admin)
 
+**23 Nov 2026 evening: the full consolidated list (21 items + pay line) was drafted as one email for Matthew to send; Wes email drafted too (matthew/clients/peak-pickleball/emails-2026-11-23.md).**
+
 Made 19 Nov 2026, after the meeting; updated 20 Nov (evening: 8a sponsor add-ons, the GoDaddy note under 16, and the TVs) and 21 Nov (the website access under 16; a clean ask-list copy for Matthew on the Desktop, "Peak - what I need from Tyler.txt"). **21 Nov: Matthew SENT Tyler the open-items list (the Desktop copy).** Waiting on his answers. **DONE** marks what is already sorted.
 
 ## 1. The deal (first)
