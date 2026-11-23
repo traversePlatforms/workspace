@@ -42,13 +42,19 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
 19. **Ads:** the monthly ad budget, who approves each ad, and access to the Meta ad account and Google Ads (or OK to create them).
 20. **TVs:** how many there are, where they are, what device feeds each one, and what they show. Also whether Peak is OK with sponsor slides on them. The sponsor TV reel (item 8a) needs this.
 
-## 5. Sponsors and partners (added 23 Nov 2026)
-17. **Sponsor exclusivity:** does any current sponsor deal give a sponsor exclusivity in its category? Matthew doesn't know. It matters
-    before approaching in-club tenants or new partners who compete with a sponsor (for example Stretch Zone vs StretchLab, a PT clinic vs
+## 5. New since the 21 Nov list (added 23 Nov 2026; not sent yet)
+21. **Sponsor exclusivity:** does any current sponsor deal give a sponsor exclusivity in its category? Matthew doesn't know. It matters
+    before approaching in-club tenants or partners who compete with a sponsor (for example Stretch Zone vs StretchLab, a PT clinic vs
     Rally Back Therapy or Orthopedic Centers of Colorado). Ask for the list of deals with any exclusivity terms.
-18. **Website: the Ziggi's coffee line is out of date.** peakpickleball.us/amenities still says Ziggi's provides the free self-serve
-    coffee. Matthew, 23 Nov: Ziggi's used to and no longer does. Ask Tyler to have it taken down (or changed to a new partner once there
+22. **Website: the Ziggi's coffee line is out of date.** peakpickleball.us/amenities still says Ziggi's provides the free self-serve
+    coffee. Matthew, 23 Nov: Ziggi's used to and no longer does. Ask Tyler to have it taken down (or changed to the new partner once there
     is one): as it stands it's free advertising for Ziggi's. Who edits the site is item 16.
+23. **Coffee partner:** does Peak still want free coffee for members, and roughly how many cups a week the station served; is a partner's
+    coffee for sale in the pro shop OK, and at what margin.
+24. **Patch Retention automations:** once Matthew has written up the missing ones, his OK (or a named approver) before any is created in
+    Patch, even switched off. Tyler's 4 Nov consent was to look, not change.
+25. **Holiday hours:** tours and booking links around Thanksgiving and Christmas: which days Peak is closed or short-staffed, so nobody is
+    offered a tour then (Cai offered a prospect Wed 25 Nov at 5 pm).
 
 ## Fact-check log
 - Shared mailbox, Send As and the extra app permission: Microsoft 365 needs an Exchange or Global admin for each. Matthew isn't one. The "Grant admin consent" button was greyed out for him on 17 Nov.

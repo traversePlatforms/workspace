@@ -4,8 +4,8 @@ DRAFT, 23 Nov 2026. Research only: nobody on these lists has been contacted, and
 
 ## Check with Tyler before any approach
 1. **Sub-letting: settled.** Brandon is handling the mall space and the sub-letting with the mall; if he says it is possible, it is (Matthew, 23 Nov). Pitches can go ahead on his word.
-2. **Coffee: Ziggi's no longer provides it** (Matthew, 23 Nov: they used to, they don't now), so the station is open for a new partner. Peak's amenities page still names Ziggi's, which is free advertising for them: on the list for Tyler to have it changed (needs-from-tyler.md item 18).
-3. **Sponsor exclusivity: unknown.** Matthew doesn't know whether any current sponsor has category exclusivity; it's on the list for Tyler (needs-from-tyler.md item 17). Until he answers, hold the rows that compete with a current sponsor. Three current sponsors share categories with this list:
+2. **Coffee: Ziggi's no longer provides it** (Matthew, 23 Nov: they used to, they don't now), so the station is open for a new partner. Peak's amenities page still names Ziggi's, which is free advertising for them: on the list for Tyler to have it changed (needs-from-tyler.md item 22).
+3. **Sponsor exclusivity: unknown.** Matthew doesn't know whether any current sponsor has category exclusivity; it's on the list for Tyler (needs-from-tyler.md item 21). Until he answers, hold the rows that compete with a current sponsor. Three current sponsors share categories with this list:
    - Rally Back Therapy (title sponsor).
    - Orthopedic Centers of Colorado (court sponsor).
    - StretchLab and Prime IV (court sponsors).
@@ -181,7 +181,7 @@ Counts: 13 prospects, plus Ziggi's as the former sponsor.
 
 ## Fact-check log
 
-- 23 Nov, Matthew: Ziggi's no longer provides Peak's coffee (the amenities page is out of date); sub-letting is Brandon's to handle; sponsor exclusivity unknown (Tyler item 17); member figures limited to the two already used (630 dues-paying members, 67,000 sign-ups a year).
+- 23 Nov, Matthew: Ziggi's no longer provides Peak's coffee (the amenities page is out of date); sub-letting is Brandon's to handle; sponsor exclusivity unknown (Tyler item 21); member figures limited to the two already used (630 dues-paying members, 67,000 sign-ups a year).
 
 | Claim | Source | Status |
 |---|---|---|
