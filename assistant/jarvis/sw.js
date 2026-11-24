@@ -5,7 +5,7 @@
      shows a notification (Safari drops a subscription after silent ones); a tap opens J.A.R.V.I.S. at the thread or panel it is about.
    - It keeps nothing: email, chats and answers are never stored on the device. With no connection, it says so.
    Bump V when this file changes (the page registers it with updateViaCache 'none'). */
-const V = 'jarvis-sw-2026-11-19a';
+const V = 'jarvis-sw-2026-11-24a';
 self.addEventListener('install', function () { self.skipWaiting(); });
 self.addEventListener('activate', function (e) { e.waitUntil(self.clients.claim()); });
 self.addEventListener('fetch', function (e) {
@@ -23,7 +23,15 @@ self.addEventListener('push', function (e) {
   if (e.data) { try { d = Object.assign(d, e.data.json()); } catch (x) { d.body = e.data.text(); } }
   var shown = self.registration.showNotification(d.title, { body: d.body, tag: String(d.tag || 'jarvis'), renotify: true, icon: 'icon-192.png', badge: 'badge-96.png',
     timestamp: d.at ? d.at * 1000 : Date.now(), data: { url: d.url } });
-  if (self.navigator && typeof self.navigator.setAppBadge === 'function') shown = shown.then(function () { return self.navigator.setAppBadge(1); }).catch(function () {});
+  /* 24 Nov: the badge says something new arrived while he was away (1, or the count the server sent); while J.A.R.V.I.S. is on screen it is
+     left to the page, which sets the real count. Opening the app, a tap on the alert, or the page reporting none clears it (the 19 Nov
+     version set 1 on every alert and only the tap took it off, so the 1 stayed). */
+  var n = Math.max(1, Math.min(99, parseInt(d.badge, 10) || 1));
+  shown = shown.then(function () { return self.clients.matchAll({ type: 'window', includeUncontrolled: true }); }).then(function (wins) {
+    var onScreen = wins.some(function (w) { return w.url.indexOf(self.registration.scope) === 0 && w.visibilityState === 'visible'; });
+    if (onScreen) { wins.forEach(function (w) { try { w.postMessage({ type: 'badge-refresh' }); } catch (x) {} }); return; }
+    if (self.navigator && typeof self.navigator.setAppBadge === 'function') return self.navigator.setAppBadge(n);
+  }).catch(function () {});
   e.waitUntil(shown);
 });
 self.addEventListener('notificationclick', function (e) {
@@ -38,6 +46,13 @@ self.addEventListener('notificationclick', function (e) {
     }
     return self.clients.openWindow(url);
   }).then(function () { if (self.navigator && typeof self.navigator.clearAppBadge === 'function') return self.navigator.clearAppBadge().catch(function () {}); }));
+});
+/* the page reports what still needs him (0: clear) */
+self.addEventListener('message', function (e) {
+  var m = e.data || {}; if (m.type !== 'badge' || !self.navigator) return;
+  var n = Math.max(0, Math.min(99, parseInt(m.n, 10) || 0));
+  var p = n ? (typeof self.navigator.setAppBadge === 'function' ? self.navigator.setAppBadge(n) : null) : (typeof self.navigator.clearAppBadge === 'function' ? self.navigator.clearAppBadge() : null);
+  if (p && e.waitUntil) e.waitUntil(p.catch(function () {}));
 });
 self.addEventListener('pushsubscriptionchange', function (e) {
   var old = e.oldSubscription, key = (e.newSubscription && e.newSubscription.options && e.newSubscription.options.applicationServerKey) || (old && old.options && old.options.applicationServerKey);

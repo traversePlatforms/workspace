@@ -1712,6 +1712,47 @@ try {
   await click('.phone .needs .li'); await until('!!document.getElementById("reply")');
   ok(await ev('(()=>{const s=document.querySelector(".sheet").getBoundingClientRect();return s.width<=390 && s.left>=0})()'), 'phone: the reply sheet fills the screen');
   await ev('document.querySelector(".sheet .x").click()'); await sleep(200);
+  /* 24 Nov (Matthew: the Home Screen badge stuck on 1; and "i open thread it cant close it ... shrink the screen enough to hit the X"):
+     a desk chat that needs him, with a long unbroken link, on a 390 px phone with the iPhone's safe areas (status bar 47, home bar 34) */
+  { const bid = 'h20261124080000beef', long = 'https://traverseplatforms.com/' + 'x'.repeat(400) + ' and ' + 'y'.repeat(300);
+    fs.appendFileSync(DESKLOG, JSON.stringify({ t: 'msg', id: bid, from: 'Matthew Sharpe', text: 'Badge test: can you check this', ctx: null, at: now - 60 }) + '\n'
+      + JSON.stringify({ t: 'reply', id: bid, from: 'J.A.R.V.I.S.', text: 'This needs you at the computer: ' + long, status: 'matthew', at: now - 30 }) + '\n');
+    await cdp('Page.addScriptToEvaluateOnNewDocument', { source: 'window.__badge=[];Object.defineProperty(navigator,"setAppBadge",{configurable:true,value:function(n){window.__badge.push(n);return Promise.resolve()}});Object.defineProperty(navigator,"clearAppBadge",{configurable:true,value:function(){window.__badge.push(0);return Promise.resolve()}});' });
+    const sa = await cdp('Emulation.setSafeAreaInsetsOverride', { insets: { top: 47, bottom: 34, left: 0, right: 0 } }), saOn = !sa.error;
+    await cdp('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 3, mobile: true }); await cdp('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+    await cdp('Page.reload'); await until('!!document.querySelector(".phone .tabs")', 9000);
+    ok(await until('window.__badge.length>0', 6000), 'badge: the page sets the Home Screen badge once his desk chats load');
+    const b0 = await ev('window.__badge[window.__badge.length-1]');
+    ok(b0 >= 1, 'badge: a desk chat that needs him counts (' + b0 + ')');
+    ok(await until('!![...document.querySelectorAll(".msg.needs button")].find(b=>/Open the thread/.test(b.textContent))', 6000), 'the needs-you reply shows in the chat with Open the thread');
+    await ev('[...document.querySelectorAll(".msg.needs button")].reverse().find(b=>/Open the thread/.test(b.textContent)).click()');
+    ok(await until('!!document.getElementById("deskthread") && /This needs you/.test(document.getElementById("deskmsgs").innerText)'), 'phone: the thread opens');
+    await sleep(400);
+    const geo = await ev('(()=>{const r=e=>e.getBoundingClientRect(),c=r(document.getElementById("shclose")),x=r(document.querySelector(".sheet .shd .x")),b=document.querySelector(".sheet .shb"),i=+getComputedStyle(document.querySelector(".sheetbg")).paddingTop.replace("px","");return {doc:document.documentElement.scrollWidth,body:document.body.scrollWidth,sheet:r(document.querySelector(".sheet")).width,shb:b.scrollWidth-b.clientWidth,top:c.top,left:c.left,right:c.right,bottom:c.bottom,h:c.height,xl:x.left,xt:x.top,inset:i}})()');
+    ok(geo.doc <= 390 && geo.body <= 390 && geo.sheet <= 390 && geo.shb <= 0, 'phone thread: nothing wider than the screen, a long link included (' + JSON.stringify(geo) + ')');
+    ok(geo.left >= 0 && geo.right <= 390 && geo.bottom <= 844 && geo.xl >= 0 && geo.h >= 44, 'phone thread: Close and Back are on screen and big enough to tap');
+    ok(!saOn || (geo.inset === 47 && geo.top >= 47 && geo.xt >= 47), 'phone thread: Close and Back sit below the status bar (safe area ' + (saOn ? 'emulated' : 'not emulated in this Chrome') + ')');
+    await shot('jarvis-phone-thread');
+    await ev('document.getElementById("deskmsgs").parentNode.scrollTop=99999'); await sleep(200);
+    ok(await ev('(()=>{const c=document.getElementById("shclose").getBoundingClientRect();return c.top>=0 && c.bottom<=844})()'), 'phone thread: Close stays on screen when the thread is scrolled to the end');
+    await shot('jarvis-phone-thread-end');
+    ok(await until('window.__badge[window.__badge.length-1]===' + (b0 - 1), 3000), 'badge: opening that thread takes it off the count (' + (b0 - 1) + ')');
+    await ev('history.back()');
+    ok(await until('!document.getElementById("sheet")', 3000), 'phone: Back (the swipe, or history back) closes the thread');
+    await ev('[...document.querySelectorAll(".msg.needs button")].reverse().find(b=>/Open the thread/.test(b.textContent)).click()'); await until('!!document.getElementById("deskthread")');
+    await click('#shclose'); await sleep(300);
+    ok(await ev('!document.getElementById("sheet") && !(history.state&&history.state.jvSheet)'), 'phone: Close closes it and takes its history step back off');
+    /* the team request passed to him: opened, the count is none, and the badge is cleared */
+    await click('.tabs button[data-tab=team]'); await sleep(300);
+    for (const tk of await ev('[...document.querySelectorAll("[data-ticket]")].map(e=>e.getAttribute("data-ticket"))')) { await click('[data-ticket="' + tk + '"]'); await sleep(250); await click('#shclose'); await sleep(150); }
+    ok(await until('window.__badge[window.__badge.length-1]===0', 3000), 'badge: once he has opened what needs him, it is cleared (' + JSON.stringify(await ev('window.__badge')) + ')');
+    await cdp('Page.reload'); await until('!!document.querySelector(".phone .tabs")', 9000);
+    ok(await until('window.__badge.length>0', 6000) && await ev('window.__badge[window.__badge.length-1]') === 0, 'badge: opening the app again keeps it clear (nothing new)');
+    await click('.tabs button[data-tab=team]'); await sleep(300);
+    if (saOn) await cdp('Emulation.setSafeAreaInsetsOverride', { insets: { top: 0, bottom: 0, left: 0, right: 0 } });
+    await cdp('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); }
+  const swT = fs.readFileSync(path.join(REPO, 'assistant', 'jarvis', 'sw.js'), 'utf8');
+  ok(!/setAppBadge\(1\)/.test(swT) && /clearAppBadge/.test(swT) && /type !== 'badge'/.test(swT) && /visibilityState === 'visible'/.test(swT), 'sw.js: no fixed 1 on every alert; the page can set or clear the badge; nothing set while J.A.R.V.I.S. is on screen');
   await click('.tabs button[data-tab=team]'); await sleep(300);
   ok(/Deposit link says/.test(await ev('document.querySelector(".pscroll").innerText')) && await ev('!!document.getElementById("p-waiting")'), 'phone Team tab: Waiting on you, then the team requests');
   ok(await ev('!!document.querySelector(".phone .hd #drivebtn")'), 'phone: Drive is one tap away in the header');

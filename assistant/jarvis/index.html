@@ -421,7 +421,13 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
 .mrec .fld{width:min(360px,100%);text-align:left}
 .mrec .hint{max-width:520px}
 .mlist{display:grid;gap:8px}.mi{border:1px solid #3ee8ff1a;padding:9px 11px;background:#3ee8ff06;display:grid;gap:4px;font-size:13px}.mi span{color:var(--mut);font-size:12px}.mi .wa{display:flex;gap:6px;flex-wrap:wrap}.mi .btn{padding:5px 10px}
-@media (max-width:760px){.sheetbg{padding:0}.sheet{max-height:100%;height:100%;width:100%;border:0}.sheet .txt{max-height:none}}
+/* 24 Nov (Matthew: "when I am chatting with Jarvis and i open thread it cant close it. it doesnt allow me to shrink the screen enough to hit the X"):
+   on the Home Screen app the page runs under the status bar (viewport-fit=cover, black-translucent), so a full-screen sheet put its Back and
+   Close buttons behind the clock and battery, where a tap never reaches the page. The sheet now starts below the safe area, keeps its header
+   on screen, ends above the home bar, and nothing in it can be wider than the screen. */
+@media (max-width:760px){.sheetbg{padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left)}.sheet{max-height:100%;height:100%;width:100%;max-width:100vw;min-width:0;border:0}.sheet .shd{position:sticky;top:0;z-index:2;background:#03060c;flex:none}.sheet .shd .x,.sheet .shd .shclose{min-width:44px;min-height:44px;justify-content:center}.sheet .shb{padding-bottom:calc(18px + env(safe-area-inset-bottom));overflow-x:hidden;min-width:0}.sheet .shb>*{min-width:0;max-width:100%}.sheet .tm{max-width:88%}.sheet .txt{max-height:none}}
+.sheet .shb,.sheet .tm,.sheet .tm a,.sheet .warnline,.sheet .hint{overflow-wrap:anywhere}
+.view .vh{padding-top:calc(10px + env(safe-area-inset-top));padding-left:calc(14px + env(safe-area-inset-left));padding-right:calc(14px + env(safe-area-inset-right))}
 </style>
 </head>
 <body>
@@ -1796,6 +1802,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     if (keepVal) field.value = keepVal; if (hadFocus) field.focus();
     setState(S.state); globeSync();
     [].forEach.call(document.querySelectorAll('.gl'), fitGlance);
+    badgeSync();
   }
   /* 19 Nov (P-8 step 8): driving mode. Four big buttons, the last few answers, every reply read aloud (Voice off is ignored here), and the
      mic opens again after a reply only if he turned that on. iPhone Safari: the voice is unlocked by his first tap (touchend/click), and the
@@ -3039,7 +3046,28 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     setState('idle'); pollDesk(); return tk;
   }
   function jdPut(th) { S.jd = S.jd || { ok: true, threads: [] }; S.jd.threads = [th].concat((S.jd.threads || []).filter(function (x) { return x.id !== th.id; })); }
-  function loadDesk() { return aget('jvdesk').then(function (r) { if (r.ok) { S.jd = r; deskNeeds(); } }, function () {}); }
+  function loadDesk() { return aget('jvdesk').then(function (r) { if (r.ok) { S.jd = r; deskNeeds(); badgeSync(); } }, function () {}); }
+  /* 24 Nov (Matthew: "My Jarvis on mobile has been showing a 1 on the icon for alerts for awhile now idk what to do to remove it"): the Home
+     Screen badge. sw.js put a 1 on it with every alert and only a tap on that alert took it off, so opening the app any other way left the 1
+     there for good. Now the page sets it each time it draws or comes back on screen: what still needs him and he has not opened yet, that is
+     his desk chats waiting on him (status matthew) and team requests passed to him, each until he opens that thread on this device (or it
+     changes again). None: the badge is cleared. */
+  function badgeKey(kind, id) { return kind + ':' + id; }
+  function badgeRead(key, upd) { var m = store('jarvis.badgeSeen') || {}; if ((m[key] || 0) >= (upd || 1)) return; m[key] = upd || 1;
+    var cut = Date.now() / 1000 - 30 * 86400, keep = {}; Object.keys(m).forEach(function (k) { if (m[k] > cut) keep[k] = m[k]; }); store('jarvis.badgeSeen', keep); badgeSync(true); }
+  function badgeItems() {
+    var m = store('jarvis.badgeSeen') || {}, out = [];
+    myDesk().forEach(function (th) { if (th.status === 'matthew' && (m[badgeKey('desk', th.id)] || 0) < (th.updated || 1)) out.push(badgeKey('desk', th.id)); });
+    teamNeedsMe().forEach(function (x) { var k = badgeKey(x.src.id, x.t.id); if ((m[k] || 0) < (x.t.updated || 1)) out.push(k); });
+    return out;
+  }
+  var badgeLast = -1;
+  function badgeSync(force) {
+    if (!S.jd || !S.jd.ok) return;   /* not until his desk chats have loaded: never clear on a guess */
+    var n = badgeItems().length; if (n === badgeLast && !force) return; badgeLast = n;
+    try { if ('setAppBadge' in navigator) { (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(function () {}); } } catch (e) {}
+    try { var c = navigator.serviceWorker && navigator.serviceWorker.controller; if (c) c.postMessage({ type: 'badge', n: n }); } catch (e) {}
+  }
   /* 23 Nov (Matthew: "If the virtual computer needs me message me here"): any desk reply that needs him (status matthew: a session on the
      cloud machine or the laptop, or jarvis-status.sh needs) also shows here in the chat, once per device, with Open the thread. Threads
      this page is already watching (S.pending) show their answers through pollDesk instead. */
@@ -3123,18 +3151,39 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       add(a, no, ok); c.appendChild(a); bg.appendChild(c); document.body.appendChild(bg); no.focus();
     });
   }
+  /* 24 Nov: on a phone a sheet is one step in the history, so the back gesture (or Android's Back) closes it the way Close does; Escape
+     already did. One step however many sheets replace each other; a sheet closed by its buttons takes its step back off. */
+  var SH = { cur: null, on: false, skip: 0, t: 0 };
+  function shPush(o) {
+    SH.cur = o; clearTimeout(SH.t); if (!phoneMq.matches) return;
+    if (!SH.on) { try { history.pushState({ jvSheet: 1 }, ''); SH.on = true; } catch (e) {} }
+  }
+  function shBack() {
+    clearTimeout(SH.t);
+    SH.t = setTimeout(function () { if (SH.cur || !SH.on) return; SH.on = false; if (history.state && history.state.jvSheet) { SH.skip++; try { history.back(); } catch (e) { SH.skip--; } } }, 0);
+  }
+  window.addEventListener('popstate', function () {
+    if (SH.skip) { SH.skip--; return; }
+    if (!SH.on) return; SH.on = false;
+    var c = SH.cur; if (!c || !document.body.contains(c.bg)) { SH.cur = null; return; }
+    if (document.getElementById('confirm')) { try { history.pushState({ jvSheet: 1 }, ''); SH.on = true; } catch (e) {} return; }
+    c.close();
+    /* kept open (it asked first and he said no): the step goes back on */
+    setTimeout(function () { if (SH.cur === c && document.body.contains(c.bg) && !SH.on) { try { history.pushState({ jvSheet: 1 }, ''); SH.on = true; } catch (e) {} } }, 0);
+  });
   function sheet(title, meta) {
     var bg = el('div', 'sheetbg'); bg.setAttribute('role', 'dialog'); bg.setAttribute('aria-modal', 'true'); bg.id = 'sheet';
     var sh = el('div', 'sheet pnl'), hd = el('div', 'shd'), x = btn(null, 'back', 'x'); x.setAttribute('aria-label', 'Back');
     var tt = el('div', 'sht'); add(tt, el('b', null, title), el('span', null, meta)); var cl = btn('Close', 'close', 'shclose'); cl.id = 'shclose'; add(hd, x, tt, cl);
     var body = el('div', 'shb'); add(sh, hd, body); bg.appendChild(sh);
     var guard = function () { return true; };   /* true, or a promise of a yes (the confirm) */
-    var force = function () { bg.remove(); document.removeEventListener('keydown', esc); };
+    var force = function () { bg.remove(); document.removeEventListener('keydown', esc); if (SH.cur && SH.cur.bg === bg) { SH.cur = null; shBack(); } };
     var close = function () { var g = guard(); if (g === true) force(); else if (g && g.then) g.then(function (y) { if (y) force(); }); };
     var esc = function (e) { if (e.key === 'Escape' && !e.defaultPrevented && !document.getElementById('confirm')) close(); };
     x.addEventListener('click', close); cl.addEventListener('click', close); bg.addEventListener('click', function (e) { if (e.target === bg) close(); }); document.addEventListener('keydown', esc);
     var old = document.getElementById('sheet'); if (old) old.remove();
     document.body.appendChild(bg);
+    shPush({ bg: bg, close: close });
     return { body: body, close: close, setGuard: function (g) { guard = g; }, force: force };
   }
   function gmailUrl(email, frag) { return 'https://accounts.google.com/AccountChooser?Email=' + encodeURIComponent(email) + '&continue=' + encodeURIComponent('https://mail.google.com/mail/?authuser=' + email + '#' + frag); }
@@ -3195,6 +3244,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   /* a team request: the conversation, and Matthew's reply into it (the desk on his laptop reads it) */
   function openThread(x) {
     var t = x.t, mineT = t.by === ME, b = STB[t.status] || ['mu', t.status];
+    badgeRead(badgeKey(x.src.id, t.id), t.updated);
     var sh = sheet((mineT ? 'Your desk chat' : t.by) + ' · ' + x.src.name, b[1] + ' · started ' + ago(t.at) + ' ago');
     var thr = el('div', 'thr');
     (t.msgs || []).forEach(function (m) {
@@ -3240,6 +3290,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     var seen = -1;
     function paint(t) {
       if (!t) { thr.textContent = ''; thr.appendChild(el('div', 'hint', 'Write what you need. The desk on your laptop answers here, usually in a few minutes.')); return; }
+      badgeRead(badgeKey('desk', t.id), t.updated);
       if ((t.msgs || []).length === seen) return; seen = (t.msgs || []).length; thr.textContent = '';
       if (t.moved) thr.appendChild(el('div', 'hint', 'This chat started in the Sixfold app and moved here on 19 Nov. It is yours alone now.'));
       (t.msgs || []).forEach(function (m) {
@@ -3506,7 +3557,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     ]));
     paintKeys();
   }
-  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open') openFromUrl(String(e.data.url || '')); });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open') openFromUrl(String(e.data.url || '')); if (e.data && e.data.type === 'badge-refresh') loadDesk().then(function () { badgeSync(true); }); });
   /* a tap on an alert, or a link: ?desk=<id> opens that desk chat */
   function openFromUrl(u) {
     if (/[?&]money=1\b/.test(u)) { if (u === location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} } moneySheet(); return; }   /* 21 Nov (P-15): a money alert opens the Money sheet */
@@ -3599,7 +3650,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   }
   var lastPhone = isPhone;
   window.addEventListener('resize', function () { clearTimeout(window.__rz); window.__rz = setTimeout(function () { if (phoneMq.matches !== lastPhone || !lastPhone) { lastPhone = phoneMq.matches; draw(); } }, 120); });
-  document.addEventListener('visibilitychange', function () { if (!document.hidden && S.home) { refresh(); if (Date.now() - S.wxAt > 25 * 60000) loadWx(); } });
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) badgeSync(true); if (!document.hidden && S.home) { refresh(); if (Date.now() - S.wxAt > 25 * 60000) loadWx(); } });
   start();
 })();
 </script>
