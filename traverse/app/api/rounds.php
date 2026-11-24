@@ -11163,6 +11163,8 @@ if ($action === 'clickuppoll') {
         if ($tgt === 'contacted' && $st === 'walk') $tgt = 'walk';
         /* Couldn't reach is set here, not in ClickUp (2026-10-21): it holds until her ClickUp status changes; a change brings the lead back */
         if ($st === 'unreached' && !$cusChanged && !$proof) $tgt = $st;
+        /* Removed from the leads here stays removed (2026-11-24, Jen: a removed lead still showed under Texted): the pull put it back to her old ClickUp status. Only a change in ClickUp brings it back. */
+        if ($st === 'lost' && !$cusChanged && !$proof) $tgt = $st;
         if ($st === 'unreached' && $tgt !== '' && $tgt !== $st) { $u['back'] = 'moved in Jen\'s ClickUp'; $u['recall'] = ''; $notes[] = 'Back from Couldn\'t reach.'; }
         if ($tgt !== '' && $tgt !== $st) { $u['status'] = $tgt; $notes[] = 'ClickUp: ' . ($t['status']['status'] ?? '') . '.'; $moved[] = (string) ($l['name'] ?? $name) . ' (' . $tgt . ')'; }
         $syncState[$id] = ['cst' => $cst, 'proof' => $proof, 'tgt' => $tgt, 'name' => (string) ($l['name'] ?? $name)];
