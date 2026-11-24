@@ -18,3 +18,4 @@ dated entry per ticket that taught something reusable, short, no customer contac
   which was stale (12:28) because the build step (sync-es, build-editions, minify-page; ~4 min) wasn't re-run after the edit. Always run the
   build before deploying and grep dist for the change; don't tell her it's her browser until dist is proven current.
 - 2026-11-24 · Jen: Pipeline filter "contacted once / twice / 3+": added a Times contacted dropdown beside Last contacted (pipeFindRow in the summit index.html; counts logged call/text/email tries). Same pattern as the 29 Oct search + Last contacted filter.
+- 2026-11-24 · Jen: a removed lead still showed under Texted: the ClickUp sync (rounds.php, "ClickUp decides the stage") put the lead back to her old ClickUp status on the next pull. Fixed: a removed (lost) lead stays removed unless her ClickUp status changes. Check leadst.log for a later by:ClickUp status line after the removal.
