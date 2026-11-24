@@ -181,6 +181,7 @@ vm_pull_repo() {
 vm_memsync() {
   local B="$CS/mem-base" T f sig up=() L; mkdir -p "$B"; T=$(mktemp -d)
   # 1. notes changed here since the last sync go up first, merged line by line on the VM (the VM's own lines kept)
+  #    MEMORY.md: the laptop can add index lines but never drop the VM's (24 Nov: index lines the VM had just added kept vanishing)
   for f in "$MEMDIR"/*.md; do
     L=$(basename "$f"); [[ " $MEM_EXCL " == *" $L "* ]] && continue
     if [ "$L" = MEMORY.md ]; then strip_local "$f" > "$T/$L.here"; else cp "$f" "$T/$L.here"; fi
@@ -188,7 +189,7 @@ vm_memsync() {
   done
   if [ "${#up[@]}" -gt 0 ]; then
     ( cd "$T" && for L in "${up[@]}"; do printf '%s\n%s\n' "$L.here" "$L.base"; done | tar -czf "$T/up.tgz" -T - ) || { rm -rf "$T"; return 1; }
-    v "set -e; D=\$(mktemp -d); tar -xzf - -C \$D; M=$VMMEM; mkdir -p \$M; for f in \$D/*.here; do n=\$(basename \$f .here); [[ \$n =~ ^[A-Za-z0-9._-]+\$ ]] || continue; [ -f \$M/\$n ] || : > \$M/\$n; git merge-file --union -q \$M/\$n \$D/\$n.base \$f || true; done; rm -rf \$D" < "$T/up.tgz" \
+    v "set -e; D=\$(mktemp -d); tar -xzf - -C \$D; M=$VMMEM; mkdir -p \$M; for f in \$D/*.here; do n=\$(basename \$f .here); [[ \$n =~ ^[A-Za-z0-9._-]+\$ ]] || continue; [ -f \$M/\$n ] || : > \$M/\$n; cp \$M/\$n \$D/\$n.vm; git merge-file --union -q \$M/\$n \$D/\$n.base \$f || true; [ \$n = MEMORY.md ] && { grep -Fvx -f \$M/\$n \$D/\$n.vm | grep -v \"^\\s*\$\" >> \$M/\$n || true; }; done; rm -rf \$D" < "$T/up.tgz" \
       && log "vm: memory: ${#up[@]} note(s) changed on the laptop merged into the VM's (${up[*]:0:5})" || { log "vm: memory upload failed"; rm -rf "$T"; return 1; }
   fi
   # 2. the VM's copy comes down when it changed (a signature first: no 600 KB download every 2 minutes)
