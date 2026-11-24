@@ -16,6 +16,11 @@
  *   done    on/off: pressed Done (the Done view keeps it)
  *   back    Back to To answer (2026-11-23): we replied but still owe them something
  *   hide    on/off: Remove, for one under Other (2026-11-23); a bounce's addresses and the cards they are on go with it (bounce)
+ *   answered on/off: Mark as answered (2026-11-24), for one answered outside the desk (Outlook, a phone, a call): it then sorts as if a desk
+ *           reply had gone at that moment (Waiting on them, the 14-day close, back to To answer when they write again); it cancels a back
+ *           row before it (by the log's order, as a reply does); claimed: it took the claim (nobody held one), so Undo releases it again.
+ * A claim carries over (2026-11-24): their newer email in the same thread counts as claimed by whoever holds the claim on the one before it,
+ * worked out when read (inStates; no claim row is written on arrival); a claim or unclaim row on the newer email itself overrides it.
  * Which of the four lists an email is on (To answer, Waiting on them, Done, Other) is worked out when the list is read: inStates.
  *   attach  put on a company's card (a touch, as a matched reply is)
  *   rmail   the words of a reply sent from the Inbox with no card; reply: each reply's result
@@ -34,7 +39,7 @@ declare(strict_types=1);
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
 
 const IN_LOG = 'inbox.log';
-const IN_V = '2';                   /* bump to rebuild the table from inbox.log after a change to how rows are read */
+const IN_V = '3';                   /* bump to rebuild the table from inbox.log after a change to how rows are read */
 const IN_FILE_MAX = 15 * 1048576;   /* attachments up to 15 MB download through the desk; bigger ones: open in Outlook */
 const AL_GAP = 600;                 /* an email alert at most once every 10 minutes per person */
 const AL_KEEP = 3 * 86400;          /* an alert not delivered in 3 days is dropped */
@@ -77,17 +82,21 @@ function inApply(?array $R, array $r): ?array {
     if ($t === 'in') { if ($R) return $R; unset($r['t']); return $r + ['claim' => null, 'done' => null, 'replies' => [], 'card' => ($r['id'] ?? '') !== '' ? ['w' => $r['w'], 'id' => $r['id'], 'by' => 'Peak email', 'at' => (int) $r['at']] : null, 'read' => 0, 'rmails' => []]; }
     if (!$R) return null;
     switch ($t) {
-        case 'claim': $R['claim'] = !empty($r['on']) ? ['by' => $by, 'at' => $at] : null; break;
+        case 'claim': $R['claim'] = !empty($r['on']) ? ['by' => $by, 'at' => $at] : null; $R['cx'] = 1; break;   /* cx: a claim row of its own (overrides a carried-over one) */
         case 'done': $R['done'] = !empty($r['on']) ? ['by' => $by, 'at' => $at] : null; break;
         case 'attach': $R['card'] = ['w' => (string) $r['w'], 'id' => (string) $r['id'], 'by' => $by, 'at' => $at]; break;
         case 'read': if (empty($R['read'])) $R['read'] = $at; break;
         case 'back': $R['back'] = ['by' => $by, 'at' => $at]; break;   /* Back to To answer (2026-11-23) */
+        case 'answered':   /* Mark as answered (2026-11-24): cancels a back row before it; Undo puts that back unless a newer one came since */
+            if (!empty($r['on'])) { $R['answered'] = ['by' => $by, 'at' => $at, 'claimed' => !empty($r['claimed']), 'back' => $R['back'] ?? null]; $R['back'] = null; }
+            elseif (!empty($R['answered'])) { $R['back'] = $R['back'] ?? ($R['answered']['back'] ?? null); $R['answered'] = null; }
+            break;
         case 'hide': $R['hide'] = !empty($r['on']) ? ['by' => $by, 'at' => $at, 'bounce' => (array) ($r['bounce'] ?? [])] : null; break;   /* Remove, from Other */
         case 'rmail': $x = $r; unset($x['t'], $x['iid']); $R['rmails'][(string) $r['ref']] = $x; break;
         case 'reply': {
             $x = ['ref' => (string) ($r['ref'] ?? ''), 'ok' => !empty($r['ok']), 'why' => (string) ($r['why'] ?? ''), 'to' => (string) ($r['to'] ?? ''), 'by' => $by, 'at' => $at];
             $R['replies'] = array_values(array_filter($R['replies'] ?? [], fn($y) => $y['ref'] !== $x['ref'])); $R['replies'][] = $x;
-            if ($x['ok']) $R['back'] = null;   /* a reply after Back to To answer: Waiting again (by the log's order, not the clock) */
+            if ($x['ok']) { $R['back'] = null; if (!empty($R['answered'])) $R['answered']['back'] = null; }   /* a reply after Back to To answer: Waiting again (by the log's order, not the clock) */
             break;
         }
     }
@@ -140,9 +149,34 @@ function inRow(array $row): void { if (!logAdd($row + ['at' => time()], IN_LOG))
 const IN_WAIT_DAYS = 14;
 function inSubj(string $s): string { return trim((string) preg_replace('/\s+/u', ' ', mb_strtolower((string) preg_replace('/^\s*((re|aw|fw|fwd|sv|antw|wg)\s*(\[\d+\])?\s*:\s*)+/iu', '', $s)))); }
 function inThread(array $R): string { $f = strtolower(trim((string) ($R['from'] ?? ''))); return $f === '' || ($R['cat'] ?? '') === 'other' ? '' : $f . '|' . inSubj((string) ($R['subject'] ?? '')); }
-function inReplyAt(array $R): int { $t = 0; foreach ($R['replies'] ?? [] as $x) if (!empty($x['ok'])) $t = max($t, (int) $x['at']); return $t; }
-/** iid => ['b' => open|wait|done|other|removed, 'how' => done|auto|newer|back|'' , 'at' => when it got there, 'newer' => iid] for every email */
+/** the last answer on our side: a desk reply that went, or Mark as answered (2026-11-24) */
+function inReplyAt(array $R): int { $t = (int) ($R['answered']['at'] ?? 0); foreach ($R['replies'] ?? [] as $x) if (!empty($x['ok'])) $t = max($t, (int) $x['at']); return $t; }
+/** who holds the claim on each email (2026-11-24): its own claim row, else the one carried over from the email before it in the same thread
+    (oldest first, so it carries along a chain). iid => [claim or null, the iid it came from or ''] */
+function inClaims(array $all): array {
+    $o = []; $T = [];
+    foreach ($all as $R) { $k = inThread($R); if ($k === '') $o[(string) $R['iid']] = [$R['claim'] ?? null, '']; else $T[$k][] = $R; }
+    foreach ($T as $L) {
+        usort($L, fn($a, $b) => [(int) $a['at'], (string) $a['iid']] <=> [(int) $b['at'], (string) $b['iid']]);
+        $prev = [null, '']; $pid = '';
+        foreach ($L as $R) {
+            $iid = (string) $R['iid'];
+            $o[$iid] = !empty($R['cx']) || !empty($R['claim']) ? [$R['claim'] ?? null, ''] : ($prev[0] ? [$prev[0], $prev[1] !== '' ? $prev[1] : $pid] : [null, '']);
+            $prev = $o[$iid]; $pid = $iid;
+        }
+    }
+    return $o;
+}
+/** the claim that counts for one email (its own, or carried over) */
+function inClaimOf(string $iid): ?array { return inClaims(inAll())[$iid][0] ?? null; }
+/** iid => ['b' => open|wait|done|other|removed, 'how' => done|auto|newer|back|'' , 'at' => when it got there, 'newer' => iid, 'claim' => who holds
+    it (its own or carried over), 'cfrom' => the earlier email a carried-over claim is on] for every email */
 function inStates(array $all, ?int $now = null): array {
+    $S = inStates1($all, $now); $K = inClaims($all);
+    foreach ($S as $iid => $x) { $S[$iid]['claim'] = $K[$iid][0] ?? null; if (($K[$iid][1] ?? '') !== '') $S[$iid]['cfrom'] = $K[$iid][1]; }
+    return $S;
+}
+function inStates1(array $all, ?int $now = null): array {
     $now ??= inNow(); $newest = []; $S = [];
     foreach ($all as $R) { $k = inThread($R); if ($k !== '' && (!isset($newest[$k]) || (int) $R['at'] > (int) $newest[$k]['at'])) $newest[$k] = $R; }
     foreach ($all as $R) {
@@ -171,11 +205,13 @@ function inNames(array $items): array {
 function inOut(array $R, array $names, bool $full, ?array $st = null): array {
     $o = ['iid' => (string) $R['iid'], 'at' => (int) $R['at'], 'from' => (string) $R['from'], 'name' => (string) $R['name'], 'subject' => (string) $R['subject'], 'cat' => (string) $R['cat'], 'why' => (string) ($R['why'] ?? ''),
         'files' => array_map(fn($a, $i) => ['n' => $a['n'], 'i' => $i, 'dl' => inFileOk($a), 'size' => (int) $a['size']], $R['att'] ?? [], array_keys($R['att'] ?? [])),
-        'claim' => $R['claim'] ?? null, 'done' => $R['done'] ?? null, 'read' => !empty($R['read']), 'stop' => !empty($R['stop']), 'auto' => !empty($R['auto']),
+        'claim' => null, 'done' => $R['done'] ?? null, 'read' => !empty($R['read']), 'stop' => !empty($R['stop']), 'auto' => !empty($R['auto']),
         'replies' => array_map(fn($x) => ['by' => $x['by'], 'at' => $x['at'], 'ok' => $x['ok'], 'why' => $x['why']], $R['replies'] ?? []), 'card' => null, 'rp' => (string) ($R['mid'] ?? '') !== '' || (string) ($R['imid'] ?? '') !== ''];
     if (!empty($R['card']['id'])) { $k = $R['card']['w'] . ':' . $R['card']['id']; $o['card'] = ['w' => (string) $R['card']['w'], 'id' => (string) $R['card']['id'], 'name' => (string) ($names[$k][0] ?? ''), 'off' => !empty($names[$k][1]), 'by' => (string) ($R['card']['by'] ?? '')]; }
     $st ??= inStates(inAll())[(string) $R['iid']] ?? ['b' => 'open', 'how' => '', 'at' => 0];
     $o['box'] = $st['b']; $o['how'] = $st['how']; $o['boxAt'] = (int) $st['at']; if (!empty($st['newer'])) $o['newer'] = $st['newer'];
+    $o['claim'] = array_key_exists('claim', $st) ? $st['claim'] : ($R['claim'] ?? null); if (!empty($st['cfrom'])) $o['claimFrom'] = $st['cfrom'];   /* carried over from their earlier email */
+    $o['answered'] = !empty($R['answered']) ? ['by' => (string) $R['answered']['by'], 'at' => (int) $R['answered']['at']] : null;
     $o['back'] = $R['back'] ?? null; $o['hide'] = isset($R['hide']) ? ['by' => $R['hide']['by'], 'at' => $R['hide']['at'], 'bounce' => $R['hide']['bounce'] ?? []] : null;
     $t = (string) $R['text'];
     if ($full) $o['text'] = $t; else $o['preview'] = mb_strlen($t) > 220 ? rtrim(mb_substr($t, 0, 220)) . '…' : $t;
@@ -226,14 +262,14 @@ function inLocked(?array $c, string $me): bool { return $c !== null && (string) 
     claimed (else null) */
 function inLockFor(string $to, string $me): ?array {
     $to = strtolower(trim($to)); if ($to === '') return null; $all = inAll(); $S = inStates($all);
-    foreach ($all as $R) if (in_array($S[$R['iid']]['b'], ['open', 'wait'], true) && strtolower(trim((string) $R['from'])) === $to) return inLocked($R['claim'] ?? null, $me) ? ['iid' => (string) $R['iid'], 'claim' => $R['claim']] : null;
+    foreach ($all as $R) if (in_array($S[$R['iid']]['b'], ['open', 'wait'], true) && strtolower(trim((string) $R['from'])) === $to) { $c = $S[$R['iid']]['claim'] ?? null; return inLocked($c, $me) ? ['iid' => (string) $R['iid'], 'claim' => $c] : null; }
     return null;
 }
 /** Claim / Unclaim: a claim someone else holds is theirs; an admin may release it, or take it over (take: true) */
 function inClaim(string $iid, bool $on, string $me, string $role = 'seller', bool $take = false): array {
     return withLock(function () use ($iid, $on, $me, $role, $take) {
         $R = inGet($iid); if (!$R) return ['ok' => false, 'error' => 'No such email.', 'code' => 404];
-        $c = $R['claim'] ?? null; $adm = $role === 'admin';
+        $c = inClaimOf($iid); $adm = $role === 'admin';   /* its own claim or one carried over (2026-11-24) */
         if (inLocked($c, $me) && (!$adm || ($on && !$take))) return ['ok' => false, 'error' => inLockMsg((string) $c['by']), 'code' => 409, 'claim' => $c];
         if ((bool) $c === $on && (!$c || $c['by'] === $me)) return ['ok' => true, 'same' => true];
         inRow(['t' => 'claim', 'iid' => $iid, 'on' => $on, 'by' => $me]); return ['ok' => true];
@@ -254,6 +290,27 @@ function inBack(string $iid, string $me): array {
         if (($R['cat'] ?? '') === 'other') return ['ok' => false, 'error' => 'This one is under Other: there is nothing to answer.', 'code' => 400];
         if (!empty($R['done'])) inRow(['t' => 'done', 'iid' => $iid, 'on' => false, 'by' => $me]);
         $all = inAll(); if ((inStates($all)[$iid]['b'] ?? '') !== 'open') inRow(['t' => 'back', 'iid' => $iid, 'by' => $me]);
+        return ['ok' => true];
+    });
+}
+/** Mark as answered (2026-11-24, Matthew): one answered outside the desk (Outlook, a phone, a call). From To answer it goes to Waiting on them,
+    as a desk reply would (an answered row); it cancels a Back to To answer before it. The claim lock holds: someone else's claim means only
+    they or an admin mark it. Nobody's claim: it claims it for the one who marks it (as a reply does), and Undo (on: false) releases that again. */
+function inAnswered(string $iid, bool $on, string $me, string $role = 'seller'): array {
+    return withLock(function () use ($iid, $on, $me, $role) {
+        $R = inGet($iid); if (!$R) return ['ok' => false, 'error' => 'No such email.', 'code' => 404];
+        if (($R['cat'] ?? '') === 'other') return ['ok' => false, 'error' => 'This one is under Other: there is nothing to answer.', 'code' => 400];
+        $st = inStates(inAll())[$iid] ?? ['b' => 'open', 'claim' => null]; $c = $st['claim'] ?? null;
+        if (inLocked($c, $me) && $role !== 'admin') return ['ok' => false, 'error' => inLockMsg((string) $c['by']), 'code' => 409, 'claim' => $c];
+        if (!$on) {
+            $A = $R['answered'] ?? null; if (!$A) return ['ok' => true, 'same' => true];
+            inRow(['t' => 'answered', 'iid' => $iid, 'on' => false, 'by' => $me]);
+            if (!empty($A['claimed']) && !empty($R['cx']) && (string) ($R['claim']['by'] ?? '') === (string) $A['by']) inRow(['t' => 'claim', 'iid' => $iid, 'on' => false, 'by' => $me]);
+            return ['ok' => true];
+        }
+        if ($st['b'] !== 'open') return $st['b'] === 'wait' && !empty($R['answered']) ? ['ok' => true, 'same' => true] : ['ok' => false, 'error' => 'Only an email under To answer can be marked answered.', 'code' => 400];
+        if (!$c) inRow(['t' => 'claim', 'iid' => $iid, 'on' => true, 'by' => $me]);
+        inRow(['t' => 'answered', 'iid' => $iid, 'on' => true, 'by' => $me] + (!$c ? ['claimed' => true] : []));
         return ['ok' => true];
     });
 }
@@ -312,7 +369,7 @@ function inAttach(string $iid, string $w, string $id, string $me): array {
 function inReply(string $iid, array $b, string $me, string $role = 'seller'): array {
     $R = inGet($iid); if (!$R) return ['ok' => false, 'error' => 'No such email.', 'code' => 404];
     if (!dmConf()['on']) return ['ok' => false, 'error' => 'Desk emails are off. They turn on once Matthew says go.', 'code' => 400];
-    $c = $R['claim'] ?? null; if (inLocked($c, $me) && !($role === 'admin' && !empty($b['take']))) return ['ok' => false, 'error' => inLockMsg((string) $c['by']), 'code' => 409, 'claim' => $c];
+    $c = inClaimOf($iid); if (inLocked($c, $me) && !($role === 'admin' && !empty($b['take']))) return ['ok' => false, 'error' => inLockMsg((string) $c['by']), 'code' => 409, 'claim' => $c];
     if ((string) ($R['mid'] ?? '') === '' && (string) ($R['imid'] ?? '') === '') return ['ok' => false, 'error' => 'This one can’t be answered from the desk.', 'code' => 400];
     $d = dmIn($b + ['to' => $R['from']]); if (isset($d['error'])) return ['ok' => false, 'error' => $d['error'], 'code' => 400];
     $mb = tmMailbox(); if (!$mb['ok']) return ['ok' => false, 'error' => 'It can\'t send right now: ' . $mb['why'] . '.', 'code' => 400];

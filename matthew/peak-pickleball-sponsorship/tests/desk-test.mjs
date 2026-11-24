@@ -994,7 +994,7 @@ try {
       const FB = inIn({ from: 'Sam@FourLists.com', name: 'Sam Four', subject: 'RE: Venue question', at: now - 40, text: 'Great, what about Saturday?', mid: 'AAMkFour2', mb: MB, imid: '<four2@fourlists.com>' });
       let D4 = await lst('done'), fa = D4.items.find((x) => x.iid === FA);
       ok(FB !== FA && await has('open', FB) && !(await has('wait', FA)) && fa && fa.how === 'newer' && fa.newer === FB, 'they write back (same sender, same subject without “RE:”): the new email is on To answer; the older one leaves Waiting (Done: they wrote again)');
-      ok(!(await lst('open')).items.find((x) => x.iid === FB).claim && (await lst('all')).items.filter((x) => [FA, FB].includes(x.iid)).length === 2, 'the new email is unclaimed, and nothing is listed twice');
+      ok((await lst('open')).items.find((x) => x.iid === FB).claim.by === 'Test Seller' && (await lst('all')).items.filter((x) => [FA, FB].includes(x.iid)).length === 2, 'the new email carries over the claim (24 Nov), and nothing is listed twice');
       const FC = inIn({ from: 'sam@fourlists.com', subject: 'A different thing', at: now - 30, mid: 'AAMkFour3', mb: MB, imid: '<four3@fourlists.com>' });
       ok(await has('open', FC) && await has('open', FB), 'another subject from the same sender is its own conversation');
       /* Back to To answer */
@@ -1029,6 +1029,48 @@ try {
       ok(h3.ok && h3.bounce[0].how === 'no card' && RM.items.some((x) => x.iid === B3 && x.hide.by === 'Test Seller' && x.hide.bounce[0].how === 'no card') && lines('inbox.log').some((l) => l.includes('"t":"in"') && l.includes(B3)), 'a bounce on no card: kept (the email stays in the log; Removed lists it, saying it is on no card)');
       ok((await b('inboxhide', { iid: B3, on: false })).ok && await has('other', B3) && !(await has('removed', B3)), 'Undo: back under Other');
       ok((await b('inboxhide', { iid: FB, on: true }))._status === 400 && (await cc('inboxhide', { iid: B3, on: true }))._status === 403, 'only an Other one can be removed; Claude Check removes nothing');
+      /* ---- a claim carries over to their newer email (2026-11-24) ---- */
+      console.log('The Inbox: a claim carries over; Mark as answered');
+      const thr = (n, subj, at) => inIn({ from: 'lee@carry.com', name: 'Lee Carry', subject: subj, at, text: 'Email ' + n, mid: 'AAMkCarry' + n, mb: MB, imid: '<carry' + n + '@carry.com>' });
+      const CA = thr(1, 'Sponsor pack', now - 95);
+      ok((await c2('inboxclaim', { iid: CA, on: true })).ok, 'the second seller claims Lee’s email');
+      const CB = thr(2, 'Re: Sponsor pack', now - 90);
+      let cb = (await lst('open')).items.find((x) => x.iid === CB), cbm = (await lst('open', c2)).items.find((x) => x.iid === CB);
+      ok(cb && cb.claim && cb.claim.by === 'Second Seller' && cb.claimFrom === CA && cbm.claim.by === 'Second Seller' && !lines('inbox.log').some((l) => l.includes('"t":"claim"') && l.includes(CB)), 'their newer email in the thread counts as the same person’s claim (worked out when read: no claim row written)');
+      g1 = GM.calls; lk = await b('inboxreply', { iid: CB, subject: 'RE: Sponsor pack', text: 'Here it is' }); lk2 = await b('dmsend', { world: 'sponsor', id: EA.id, to: 'lee@carry.com', subject: 'Hi', text: 'Hi Lee' });
+      ok(lk._status === 409 && lk.claim.by === 'Second Seller' && lk2._status === 409 && /Second Seller is answering this/.test(lk2.error) && GM.calls === g1, 'the carried-over claim locks: another seller’s reply and card send are refused (nothing sent)');
+      ok((await b('inboxclaim', { iid: CB, on: true }))._status === 409 && (await b('inboxclaim', { iid: CB, on: false }))._status === 409 && (await b('inboxanswered', { iid: CB, on: true }))._status === 409, 'and they can’t claim it, release it or mark it answered');
+      g1 = GM.calls; rq = await c2('inboxreply', { iid: CB, subject: 'RE: Sponsor pack', text: 'Pack attached.' });
+      ok(rq.ok && rq.state === 'sent' && GM.calls === g1 + 1 && (await lst('wait')).items.find((x) => x.iid === CB).claim.by === 'Second Seller', 'the claimer replies to the newer email: sent, Waiting on them, still theirs');
+      const CC = thr(3, 'RE: RE: Sponsor pack', now - 85);
+      ok((await lst('open')).items.find((x) => x.iid === CC).claim.by === 'Second Seller', 'a third email carries it along the chain');
+      ok((await a('inboxclaim', { iid: CC, on: false })).ok && !(await lst('open')).items.find((x) => x.iid === CC).claim && (await lst('done')).items.find((x) => x.iid === CB).claim.by === 'Second Seller', 'an admin releases the carried-over claim on the newer email (its own unclaim row wins); the older one keeps its claim');
+      ok((await b('inboxclaim', { iid: CC, on: true })).ok && (await lst('open')).items.find((x) => x.iid === CC).claim.by === 'Test Seller', 'then anyone may claim it');
+      /* ---- Mark as answered (2026-11-24): answered outside the desk ---- */
+      const ans = (n, subj, at, from = 'ann@answered.com') => inIn({ from, name: 'Ann Swered', subject: subj, at, text: 'Question ' + n, mid: 'AAMkAns' + n, mb: MB, imid: '<ans' + n + '@answered.com>' });
+      const MA = ans(1, 'Tour times', now - 80);
+      let g2 = GM.calls, m1 = await b('inboxanswered', { iid: MA, on: true }), wa = (await lst('wait')).items.find((x) => x.iid === MA);
+      ok(m1.ok && wa && wa.box === 'wait' && wa.answered.by === 'Test Seller' && wa.claim.by === 'Test Seller' && !(await has('open', MA)) && GM.calls === g2, 'Mark as answered: to Waiting on them as if a desk reply had gone, claimed for the one who marked it (nobody had); nothing sent');
+      ok((await b('inboxanswered', { iid: MA, on: true })).same && lines('inbox.log').filter((l) => l.includes('"t":"answered"') && l.includes(MA)).length === 1, 'pressed twice: one row');
+      const ma15 = JSON.parse(inject('$L = inList("all", "Test Seller"); echo json_encode(array_values(array_filter($L["items"], fn($x) => $x["iid"] === getenv("I")))[0]);', { I: MA, DESK_NOW: String(now + 15 * 86400) }));
+      ok(ma15.box === 'done' && ma15.how === 'auto', 'and closes after 14 days with no answer, like a reply');
+      ok((await b('inboxanswered', { iid: MA, on: false })).ok && await has('open', MA) && !(await lst('open')).items.find((x) => x.iid === MA).claim && !(await lst('open')).items.find((x) => x.iid === MA).answered, 'Undo: back on To answer, and the claim it took is released');
+      ok((await b('inboxanswered', { iid: MA, on: true })).ok && await has('wait', MA), 'marked again');
+      const MA2 = ans(2, 'RE: Tour times', now - 70);
+      ok(await has('open', MA2) && (await lst('done')).items.find((x) => x.iid === MA).how === 'newer' && (await lst('open')).items.find((x) => x.iid === MA2).claim.by === 'Test Seller', 'they write again: the new email is on To answer (Test Seller’s through the carried-over claim), the marked one is Done');
+      /* after a back row */
+      const MB1 = ans(3, 'Banner sizes', now - 60, 'bo@answered.com');
+      await b('inboxreply', { iid: MB1, subject: 'RE: Banner sizes', text: 'Sizes attached.' });
+      ok(await has('wait', MB1) && (await b('inboxback', { iid: MB1 })).ok && (await lst('open')).items.find((x) => x.iid === MB1).how === 'back', 'replied, then Back to To answer');
+      ok((await b('inboxanswered', { iid: MB1, on: true })).ok && (await lst('wait')).items.some((x) => x.iid === MB1 && x.how === '' && !x.back && x.answered.by === 'Test Seller'), 'Mark as answered after the back row cancels it: Waiting on them');
+      ok((await b('inboxanswered', { iid: MB1, on: false })).ok && (await lst('open')).items.find((x) => x.iid === MB1).how === 'back' && (await lst('open')).items.find((x) => x.iid === MB1).claim.by === 'Test Seller', 'Undo puts the back row back (To answer), and the claim from the reply stays');
+      ok((await b('inboxanswered', { iid: FC, on: false })).same && (await b('inboxanswered', { iid: B3, on: true }))._status === 400 && (await b('inboxanswered', { iid: MA, on: true }))._status === 400, 'Undo on one never marked: nothing; Other or Done ones can’t be marked');
+      /* the lock */
+      const ML = ans(4, 'Invoice', now - 50, 'cy@answered.com');
+      ok((await c2('inboxclaim', { iid: ML, on: true })).ok && (await b('inboxanswered', { iid: ML, on: true }))._status === 409 && /Second Seller is answering this/.test((await b('inboxanswered', { iid: ML, on: true })).error) && await has('open', ML), 'someone else’s claim: a seller can’t mark it answered');
+      ok((await a('inboxanswered', { iid: ML, on: true })).ok && (await lst('wait')).items.some((x) => x.iid === ML && x.claim.by === 'Second Seller' && x.answered.by === 'Test Admin'), 'an admin can (the claim stays the claimer’s)');
+      ok((await b('inboxanswered', { iid: ML, on: false }))._status === 409 && (await c2('inboxanswered', { iid: ML, on: false })).ok && await has('open', ML) && (await lst('open')).items.find((x) => x.iid === ML).claim.by === 'Second Seller', 'Undo: refused for another seller; the claimer undoes it and keeps the claim');
+      ok((await cc('inboxanswered', { iid: ML, on: true }))._status === 403, 'Claude Check marks nothing');
       /* the counts on each tab */
       const CT = await lst('open'), SUMS = {};
       for (const f of ['open', 'wait', 'done', 'other', 'removed']) SUMS[f] = (await lst(f)).items.length;
@@ -1134,7 +1176,7 @@ try {
       ['add', { world: 'sponsor', name: 'Research Added Co' }], ['add', { world: 'expo', name: 'Research Added Expo' }], ['todo', { id: K.id, text: 'x' }],
       ['dmsend', { world: 'sponsor', id: K.id, to: 0, subject: 'x', text: 'x' }], ['dmretry', { id: K.id, ref: 'x' }], ['dmpreview', { id: K.id, subject: 'x', text: 'x' }], ['tourmail', { tid: 'x' }], ['tourpreview', { id: K.id, date: later(5), time: '10:00' }],
       ['tourmailtest', { email: 'x@example.com' }], ['tourmailset', { on: true }], ['dmset', { on: true }], ['bookset', { on: true }], ['bookgeneric', {}], ['booklink', {}], ['settings', { on: false, to: [] }], ['templates', { world: 'sponsor', reset: true }], ['eodpreview', {}],
-      ['inbox', null], ['inboxone', null], ['inboxreply', { iid: 'x', text: 'x' }], ['inboxclaim', { iid: 'x', on: true }], ['inboxdone', { iid: 'x', on: true }], ['inboxback', { iid: 'x' }], ['inboxhide', { iid: 'x', on: true }], ['inboxattach', { iid: 'x', w: 'sponsor', id: K.id }],
+      ['inbox', null], ['inboxone', null], ['inboxreply', { iid: 'x', text: 'x' }], ['inboxclaim', { iid: 'x', on: true }], ['inboxdone', { iid: 'x', on: true }], ['inboxback', { iid: 'x' }], ['inboxhide', { iid: 'x', on: true }], ['inboxanswered', { iid: 'x', on: true }], ['inboxattach', { iid: 'x', w: 'sponsor', id: K.id }],
       ['emailed', { world: 'sponsor', id: K.id, to: 'x@example.com' }], ['emailreply', { world: 'sponsor', id: K.id, from: 'x@example.com' }], ['emailbounce', { world: 'sponsor', id: K.id, to: 'x@example.com' }],
       ['scan', { world: 'sponsor', id: K.id, hunter: true }], ['myset', { sig: 'x' }], ['callink', {}], ['pushkey', null], ['pushsub', { subscription: {} }], ['alertset', { inbox: true }], ['alerttest', {}],
       ['jvsend', { text: 'Please send an email to Kaiser for me' }], ['jvclose', { id: 'h00000000000000abcd' }]];
@@ -1607,6 +1649,19 @@ try {
     await js(`document.querySelector('.inrow .inhd').click()`); await waitFor(`!!document.querySelector('.inrow [data-act="inback"]')`, 'a Waiting one opened');
     ok(await js(`document.querySelector('.inrow [data-act="inback"]').textContent==='Back to To answer'&&!!document.querySelector('.inrow [data-act="indone"]')`), 'Waiting: Back to To answer, and Done');
     await shot('desk-inbox-wait.png');
+    /* a claim carried over, and Mark as answered (2026-11-24) */
+    await sub('open'); await waitFor(`!!document.querySelector('.inrow')`, 'To answer again');
+    const annRow = `[...document.querySelectorAll('.inrow')].find(r=>/RE: Tour times/.test(r.textContent))`;
+    ok(await jsUntil(`(()=>{const r=${annRow};return !!r&&/You are answering this/.test(r.textContent)})()`), 'their newer email shows the carried-over claim: You are answering this');
+    ok(await js(`[...document.querySelectorAll('.inrow')].some(r=>/Invoice/.test(r.textContent)&&/Second Seller is answering this/.test(r.textContent))`), 'and someone else’s: Second Seller is answering this');
+    await js(`${annRow}.querySelector('.inhd').click()`); await waitFor(`!!document.querySelector('.inrow [data-act="inanswered"]')`, 'Mark as answered');
+    await shot('desk-inbox-mark-answered.png');
+    await click('.inrow [data-act="inanswered"]', 700);
+    ok(await jsUntil(`!document.getElementById('toast').hidden&&/Marked as answered/.test(document.getElementById('toast').textContent)&&/Undo/.test(document.getElementById('toast').textContent)`), 'Mark as answered: it says so, with Undo');
+    await sub('wait'); await waitFor(`!!document.querySelector('.inrow')`, 'Waiting on them');
+    ok(await jsUntil(`(()=>{const r=${annRow};return !!r&&/Answered outside the desk by Test/.test(r.textContent)})()`), 'Waiting on them: "Answered outside the desk by Test"');
+    await js(`${annRow}.querySelector('.inhd').click()`); await waitFor(`!!document.querySelector('.inrow [data-act="inunanswered"]')`, 'Undo Mark as answered');
+    await shot('desk-inbox-answered.png');
     await sub('done'); await waitFor(`!!document.querySelector('.inrow')`, 'Done');
     ok(await jsUntil(`[...document.querySelectorAll('.inrow')].some(r=>/Done \\(Test/.test(r.textContent))`), 'Done: who pressed Done shows on it');
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);

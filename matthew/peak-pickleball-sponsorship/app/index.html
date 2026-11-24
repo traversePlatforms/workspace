@@ -578,12 +578,12 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       more: [['report', 'Report'], ['ref', 'Questions and venues'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['look', 'Look'], ['settings', 'Settings']] }
   };
   var DESC = {
-    sponsor: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. To answer: nobody here has replied yet, or they wrote again. Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
+    sponsor: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
       today: 'What to do now: follow-ups due, who to reach next, proposals waiting, tours coming up, and the week so far.',
       pipe: 'Every company by stage, from To contact to Signed. Pick a stage to work it.',
       list: 'Every company on the desk, by list: the researched new leads, Peak’s own sponsors, local businesses and the ones added on the desk.',
       deals: 'Tours at Peak, proposals sent and signed sponsors.', more: 'The report, profit and loss, packages, what Peak offers sponsors, your calendar link and the look.' },
-    expo: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. To answer: nobody here has replied yet, or they wrote again. Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
+    expo: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
       today: 'Expo leads to work now: follow-ups due, who to reach next, quotes waiting, tours coming up, and the week so far.',
       pipe: 'Every expo lead by stage, from To contact to Booked. Kept apart from the sponsors: nothing here counts there.',
       list: 'Organisations that run expos, shows and fairs and could rent Peak as their venue.', deals: 'Tours of Peak for organisers, quotes sent and events booked.',
@@ -2063,7 +2063,10 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
      "Re:", is its own row and the older one counts as Done), Waiting on them (we replied: it moves there by itself; Back to To answer if we
      still owe them something; 14 days with no answer counts as Done, "Closed: no reply in 14 days"), Done (pressed, or closed; Not done
      undoes it), Other (notices, bounces and auto-replies; Remove hides one, with Undo, and a bounce is checked onto its card first). A claim
-     shows on every row in every list. Their words are shown as text, never as HTML.
+     shows on every row in every list. A claim carries over (24 Nov): their newer email in the same thread is the claimer's too, until
+     someone claims or releases that one itself. Mark as answered (24 Nov, on To answer): for one answered outside the desk (Outlook, a
+     phone, a call); it moves to Waiting on them exactly as a desk reply would, claims it if nobody had, follows the same lock, and has an
+     Undo ("Answered outside the desk by Cai"). Their words are shown as text, never as HTML.
      Claude Check may look and never act. The Expo-only account has no Inbox. ---- */
   var inboxOn = function () { return !!(S.data && S.data.inbox); };
   var readOnly = function () { return !!(S.data && S.data.me.name === 'Claude Check'); };
@@ -2098,6 +2101,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     if (it.card) tg.appendChild(el('span', 'tag oncard', 'On the card: ' + (it.card.name || 'a company')));
     if (it.claim) tg.appendChild(el('span', 'tag claim', it.claim.by === me() ? 'You are answering this' : it.claim.by + ' is answering this'));
     var rp = (it.replies || []).filter(function (x) { return x.ok; }).slice(-1)[0]; if (rp) tg.appendChild(el('span', 'tag', 'Replied by ' + first(rp.by) + ', ' + when(rp.at)));
+    if (it.answered) tg.appendChild(el('span', 'tag', 'Answered outside the desk by ' + first(it.answered.by) + ', ' + when(it.answered.at)));   /* Mark as answered (24 Nov) */
     if (it.files && it.files.length) tg.appendChild(el('span', 'tag', plural(it.files.length, 'attachment')));
     if (it.cat === 'other') tg.appendChild(el('span', 'tag', it.why || 'Other'));
     if (it.box === 'wait') tg.appendChild(el('span', 'tag wait', 'Waiting on them · closes ' + new Date((it.boxAt + 14 * 86400) * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' if no reply'));
@@ -2137,6 +2141,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         cl.appendChild(cb); body.appendChild(cl);
       }
       (it.replies || []).forEach(function (x) { body.appendChild(el('div', x.ok ? 'tmline' : 'tmline bad', (x.ok ? 'Replied by ' : 'Reply not sent, by ') + x.by + ', ' + when(x.at) + (x.ok ? '' : ': ' + x.why))); });
+      if (it.answered) body.appendChild(el('div', 'tmline', 'Answered outside the desk by ' + it.answered.by + ', ' + when(it.answered.at)));
       if (readOnly()) { body.appendChild(el('div', 'fuhint', 'This account only looks: nothing can be answered or changed from it.')); return; }
       var acts = el('div', 'acts');
       var mk = function (t, act, cls) { var b = el('button', cls || 'btn small ghost', t); b.type = 'button'; b.setAttribute('data-act', act); acts.appendChild(b); return b; };
@@ -2149,6 +2154,10 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       /* the four lists (23 Nov): Other gets Remove (or Put back) and no Done; Waiting gets Back to To answer; a closed one's Not done is Back to To answer */
       var oth = it.cat === 'other', db = oth ? null : mk(it.box === 'done' ? 'Not done' : 'Done', 'indone');
       var bk = it.box === 'wait' ? mk('Back to To answer', 'inback') : null;
+      /* Mark as answered (24 Nov): on To answer, for the claimer, an admin, or anyone when nobody has it; Undo on one that was marked */
+      var mayAns = !theirs || isAdmin();
+      var ma = !oth && it.box === 'open' && mayAns ? mk('Mark as answered', 'inanswered') : null;
+      var mu = !oth && it.answered && it.box !== 'open' && mayAns ? mk('Undo Mark as answered', 'inunanswered') : null;
       var hb = oth ? mk(it.hide ? 'Put back' : 'Remove', 'inhide') : null;
       body.appendChild(acts);
       if (theirs) body.appendChild(el('div', 'fuhint inlock', it.claim.by + ' is answering this. ' + (isAdmin() ? 'Only they can answer it until it is released: Release it, or Take it over to answer it yourself.' : 'Ask ' + (/^matthew\b/i.test(it.claim.by) ? 'Matthew' : it.claim.by + ' or Matthew') + ' to release it.')));
@@ -2166,6 +2175,12 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         db.disabled = true; api('inboxdone', { iid: it.iid, on: !it.done }).then(function (x) { db.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after(it.done ? 'Not done: back on its list' : 'Done'); });
       });
       if (bk) bk.addEventListener('click', function () { back(bk); });
+      var answered = function (b, on) { b.disabled = true; return api('inboxanswered', { iid: it.iid, on: on }).then(function (x) {
+        b.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; }
+        if (on) { load(function () { draw(); }); toast('Marked as answered: it is under Waiting on them', 'Undo', function () { api('inboxanswered', { iid: it.iid, on: false }).then(function (y) { after(y.ok ? 'Undone: not marked as answered' : (y.error || 'Not saved.')); }); }); }
+        else after('Undone: not marked as answered'); }); };
+      if (ma) ma.addEventListener('click', function () { if (confirm('Mark this as answered? Use it when you answered them outside the desk (Outlook, your phone or a call). It moves to Waiting on them' + (it.claim ? '.' : ' and is claimed for you.'))) answered(ma, true); });
+      if (mu) mu.addEventListener('click', function () { answered(mu, false); });
       if (hb) hb.addEventListener('click', function () {
         var on = !it.hide; hb.disabled = true;
         api('inboxhide', { iid: it.iid, on: on }).then(function (x) {
