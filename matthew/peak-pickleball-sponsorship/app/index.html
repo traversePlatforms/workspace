@@ -308,6 +308,12 @@ button.kpi:hover{border-color:var(--c,var(--acc))}
 .tmline{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;font-size:12.5px;color:var(--soft);margin-top:3px}.tmline.bad{color:var(--warn);font-weight:650}.tmline .lnk{font-size:12.5px}
 .dmsec .tmline{margin:0 0 6px}.dmbox .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.dmbox .two[hidden]{display:none}.dmline small{color:var(--soft)}input.bookurl,input.bkgen{width:100%;font:13px ui-monospace,Consolas,monospace;padding:8px;border-radius:8px}
 /* the Inbox (2026-11-20) */
+.innote{margin-top:8px;padding:7px 10px;border-radius:8px;background:var(--bg);border-left:3px solid var(--acc);font-size:13.5px;overflow-wrap:anywhere}
+.myvia{font-size:13px;color:var(--soft);margin:2px 0 6px;overflow-wrap:anywhere}.myev{font-size:12.5px;color:var(--soft);margin-top:3px}
+.myout{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--bg)}.myout h4{margin:0 0 6px;font-size:13.5px}
+.myout .row3{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:8px;margin-top:6px}.myout input,.myout select,.myout textarea{width:100%}
+.myout .ocl{font-size:12.5px;color:var(--soft);margin-top:3px}.mysend select,.mysend textarea{width:100%}
+@media (max-width:640px){.myout .row3{grid-template-columns:1fr}}
 .inrow{border:1px solid var(--line);border-left:3px solid var(--line);border-radius:12px;background:var(--card);margin:0 0 8px;overflow:hidden}.inrow.unread{border-left-color:var(--acc)}
 .inhd{display:block;width:100%;text-align:left;background:none;border:0;padding:11px 14px;color:var(--ink);cursor:pointer;font:inherit}
 .inl1{display:flex;gap:4px 10px;align-items:baseline;flex-wrap:wrap}.inl1 .infrom{font-weight:700}.inrow.unread .infrom::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--acc);margin-right:7px;vertical-align:1px}
@@ -567,23 +573,25 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 
   /* ---- the bar: Sponsors or Expo leads, then the tabs ---- */
   var TABS = {
-    sponsor: [['today', 'Today'], ['inbox', 'Inbox'], ['pipe', 'Pipeline'], ['list', 'Companies'], ['deals', 'Tours & deals'], ['more', 'More']],
-    expo: [['today', 'Today'], ['inbox', 'Inbox'], ['pipe', 'Pipeline'], ['list', 'Organisations'], ['deals', 'Tours & quotes'], ['more', 'More']]
+    sponsor: [['today', 'Today'], ['inbox', 'Inbox'], ['myleads', 'My leads'], ['pipe', 'Pipeline'], ['list', 'Companies'], ['deals', 'Tours & deals'], ['more', 'More']],
+    expo: [['today', 'Today'], ['inbox', 'Inbox'], ['myleads', 'My leads'], ['pipe', 'Pipeline'], ['list', 'Organisations'], ['deals', 'Tours & quotes'], ['more', 'More']]
   };
+  var MYSUBS = [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['sent', 'Sent to the Inbox']];
+  var MYDESC = 'Replies to your own emails (the Peak email blasts and the desk emails you sent yourself), for you alone: nobody else on the desk sees them, here, in the Inbox or on a card. Each one says which email it answered and when that went. Reply goes from Peak Partnerships in the same thread. Outcome is your dated record of how it stands. Send to the Inbox hands one to the team (one person, or anyone), with a note; later emails in that thread go there too, and Bring back returns it while nobody has replied to it.';
   var SUBS = {
-    sponsor: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], list: [['all', 'All companies'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added on the desk'], ['removed', 'Removed']],
+    sponsor: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], myleads: MYSUBS, list: [['all', 'All companies'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added on the desk'], ['removed', 'Removed']],
       deals: [['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed']],
       more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['look', 'Look'], ['settings', 'Settings']] },
-    expo: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], list: [['all', 'All organisations'], ['removed', 'Removed']], deals: [['tours', 'Tours'], ['quotes', 'Quotes and bookings']],
+    expo: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], myleads: MYSUBS, list: [['all', 'All organisations'], ['removed', 'Removed']], deals: [['tours', 'Tours'], ['quotes', 'Quotes and bookings']],
       more: [['report', 'Report'], ['ref', 'Questions and venues'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['look', 'Look'], ['settings', 'Settings']] }
   };
   var DESC = {
-    sponsor: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
+    sponsor: { myleads: MYDESC, inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
       today: 'What to do now: follow-ups due, who to reach next, proposals waiting, tours coming up, and the week so far.',
       pipe: 'Every company by stage, from To contact to Signed. Pick a stage to work it.',
       list: 'Every company on the desk, by list: the researched new leads, Peak’s own sponsors, local businesses and the ones added on the desk.',
       deals: 'Tours at Peak, proposals sent and signed sponsors.', more: 'The report, profit and loss, packages, what Peak offers sponsors, your calendar link and the look.' },
-    expo: { inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
+    expo: { myleads: MYDESC, inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
       today: 'Expo leads to work now: follow-ups due, who to reach next, quotes waiting, tours coming up, and the week so far.',
       pipe: 'Every expo lead by stage, from To contact to Booked. Kept apart from the sponsors: nothing here counts there.',
       list: 'Organisations that run expos, shows and fairs and could rent Peak as their venue.', deals: 'Tours of Peak for organisers, quotes sent and events booked.',
@@ -608,6 +616,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   function tabCount(t) {
     if (t === 'today') { var n = recs().filter(function (r) { return isDue(r) && ownerOk(r); }).length; return n ? [n, 1] : null; }
     if (t === 'inbox') { var ni = inboxOn() ? +S.data.inbox.open || 0 : 0; return ni ? [ni, 1] : null; }
+    if (t === 'myleads') { var nm = myOn() ? +S.data.myleads.open || 0 : 0; return nm ? [nm, 1] : null; }
     if (t === 'pipe') return [recs().filter(function (r) { return r.stage !== 'new' && r.stage !== 'lost'; }).length];
     if (t === 'list') return [recs().length];
     return null;
@@ -626,8 +635,9 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var t = $('tabs'); t.textContent = '';
     TABS[S.world].forEach(function (x) {
       if (x[0] === 'inbox' && !inboxOn()) return;   /* sellers and admins only (2026-11-20) */
+      if (x[0] === 'myleads' && !myOn()) return;   /* Matthew's own login only (2026-11-24; the server sends nobody else its counts) */
       if (research() && !RESEARCH_TABS[x[0]]) return;
-      var b = el('button'); b.type = 'button'; b.setAttribute('data-tab', x[0]); b.appendChild(ic({ inbox: 'mail', today: 'home', pipe: 'board', list: 'list', deals: 'deal', more: 'more' }[x[0]])); b.appendChild(el('span', 'tl', x[1]));
+      var b = el('button'); b.type = 'button'; b.setAttribute('data-tab', x[0]); b.appendChild(ic({ inbox: 'mail', myleads: 'user', today: 'home', pipe: 'board', list: 'list', deals: 'deal', more: 'more' }[x[0]])); b.appendChild(el('span', 'tl', x[1]));
       var n = tabCount(x[0]); if (n) b.appendChild(el('b', 'tn' + (n[1] ? ' hot' : ''), String(n[0])));
       if (S.tab === x[0]) b.setAttribute('aria-current', 'page');
       b.addEventListener('click', function () { go(x[0]); }); t.appendChild(b);
@@ -639,16 +649,16 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     main.textContent = ''; document.documentElement.classList.remove('lock');
     if (S.print && S.print.kind === 'report' && !isAdmin()) S.print = null;   /* the report: admins only (2026-11-20) */
     if (S.print) return S.print.kind === 'proposal' ? printProposal(S.print.pid) : printReport();
-    if (!TABS[S.world].some(function (x) { return x[0] === S.tab; }) || (S.tab === 'inbox' && !inboxOn())) S.tab = 'today';
+    if (!TABS[S.world].some(function (x) { return x[0] === S.tab; }) || (S.tab === 'inbox' && !inboxOn()) || (S.tab === 'myleads' && !myOn())) S.tab = 'today';
     if (research() && !RESEARCH_TABS[S.tab]) S.tab = 'list';
     main.setAttribute('data-world', S.world); main.setAttribute('data-section', S.tab);
     head();
     var sub = subOf(S.tab);
-    ({ today: drawToday, inbox: drawInbox, pipe: drawPipe, list: drawList, deals: drawDeals, more: drawMore })[S.tab](sub);
+    ({ today: drawToday, inbox: drawInbox, myleads: drawMyLeads, pipe: drawPipe, list: drawList, deals: drawDeals, more: drawMore })[S.tab](sub);
   }
   function head() {
     var x = TABS[S.world].filter(function (s) { return s[0] === S.tab; })[0], h = el('div', 'shead'), top = el('div', 'shtop');
-    var h1 = el('h1'); if (!expoOnly() && S.tab !== 'inbox') h1.appendChild(document.createTextNode((isX() ? 'Expo leads' : 'Sponsors') + ' · ')); h1.appendChild(el('span', null, x[1])); top.appendChild(h1);
+    var h1 = el('h1'); if (!expoOnly() && S.tab !== 'inbox' && S.tab !== 'myleads') h1.appendChild(document.createTextNode((isX() ? 'Expo leads' : 'Sponsors') + ' · ')); h1.appendChild(el('span', null, x[1])); top.appendChild(h1);
     if ((S.tab === 'list' || S.tab === 'pipe') && !research()) { var add = el('button', 'btn ghost small', isX() ? '+ Add an expo lead' : '+ Add a company'); add.type = 'button'; add.addEventListener('click', isX() ? expoAddForm : addForm); top.appendChild(add); }
     var desc = S.tab === 'more' && !isAdmin() ? DESC_SELLER[S.world] : DESC[S.world][S.tab];
     if (research()) desc = S.tab === 'more' ? 'The look of the desk on this device.' : 'Open a ' + (isX() ? 'lead' : 'company') + ', look up its website, phone and general email from public sources, and note where each came from. This account never emails, texts or calls anyone.'; if (S.tab === 'more' && isAdmin()) desc = desc.replace(/ and the look\.$/, ', the look, and the settings (message templates, the end-of-day email).');
@@ -669,6 +679,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   }
   function subCount(t, k) {
     if (t === 'inbox') return inboxOn() && S.data.inbox[k] != null ? +S.data.inbox[k] : null;
+    if (t === 'myleads') return myOn() && S.data.myleads[k] != null ? +S.data.myleads[k] : null;
     var R = recs();
     if (t === 'list') return k === 'all' ? R.length : k === 'removed' ? W().removed.length : R.filter(function (r) { return secOf(r) === k; }).length;
     if (t === 'deals') return k === 'tours' ? upTours().length : k === 'props' ? (W().proposals || []).length : k === 'signed' ? R.filter(function (r) { return r.stage === 'signed'; }).length : k === 'quotes' ? R.filter(function (r) { return r.stage === 'quote' || r.stage === 'booked'; }).length : null;
@@ -2099,6 +2110,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     hd.appendChild(l1); hd.appendChild(el('div', 'insub', it.subject || '(no subject)')); if (it.preview) hd.appendChild(el('div', 'inpre', it.preview));
     var tg = el('div', 'intags');
     if (it.card) tg.appendChild(el('span', 'tag oncard', 'On the card: ' + (it.card.name || 'a company')));
+    if (it.sentIn) tg.appendChild(el('span', 'tag sentin', 'From ' + first(it.sentIn.by) + (it.sentIn.to ? ' for ' + (it.sentIn.to === me() ? 'you' : first(it.sentIn.to)) : '') + ', ' + when(it.sentIn.at) + (it.sentIn.note ? ': “' + it.sentIn.note + '”' : '')));   /* Send to the Inbox (24 Nov) */
     if (it.claim) tg.appendChild(el('span', 'tag claim', it.claim.by === me() ? 'You are answering this' : it.claim.by + ' is answering this'));
     var rp = (it.replies || []).filter(function (x) { return x.ok; }).slice(-1)[0]; if (rp) tg.appendChild(el('span', 'tag', 'Replied by ' + first(rp.by) + ', ' + when(rp.at)));
     if (it.answered) tg.appendChild(el('span', 'tag', 'Answered outside the desk by ' + first(it.answered.by) + ', ' + when(it.answered.at)));   /* Mark as answered (24 Nov) */
@@ -2140,6 +2152,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         cb.addEventListener('click', function () { var w = it.card.w; if (S.world !== w) { S.world = w; bar(); } var r = rec(it.card.id); if (r) openRec(r); else toast('That company is not on the desk now.'); });
         cl.appendChild(cb); body.appendChild(cl);
       }
+      if (it.sentIn) body.appendChild(el('div', 'innote', it.sentIn.by + ' sent this to ' + (it.sentIn.to ? (it.sentIn.to === me() ? 'you' : it.sentIn.to) : 'the Inbox') + ', ' + when(it.sentIn.at) + (it.sentIn.note ? ': “' + it.sentIn.note + '”' : '.')));
       (it.replies || []).forEach(function (x) { body.appendChild(el('div', x.ok ? 'tmline' : 'tmline bad', (x.ok ? 'Replied by ' : 'Reply not sent, by ') + x.by + ', ' + when(x.at) + (x.ok ? '' : ': ' + x.why))); });
       if (it.answered) body.appendChild(el('div', 'tmline', 'Answered outside the desk by ' + it.answered.by + ', ' + when(it.answered.at)));
       if (readOnly()) { body.appendChild(el('div', 'fuhint', 'This account only looks: nothing can be answered or changed from it.')); return; }
@@ -2247,6 +2260,143 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     });
     bd.focus();
   }
+  /* ---- My leads (2026-11-24, Matthew: "build the my leads section and just make sure responses that are from my emails come there and
+     everything else thats related to cai nneka brandon lance go to the inbox ... build in an option for me to send an email to the inbox
+     similiar to how i would send them to Jen in sixfold"). Matthew's own login only: the server sends nobody else the tab, its counts, its
+     emails or their words (desk-inbox.php explains the rule). Each one: who, the company, which of his emails it answered and when that
+     went, their words and files, Reply (the Inbox's), his Outcome line (dated, never changed), Send to the Inbox (one person or anyone, with
+     a note) and, once sent, Bring back. ---- */
+  var myOn = function () { return !!(S.data && S.data.myleads); };
+  var VIAK = { sent: 'the Peak email', deskmail: 'a desk email', tourmail: 'a tour confirmation' };
+  var viaText = function (v) {
+    if (!v || v.k === 'none') return 'Not an answer to anything Peak Partnerships sent them.';
+    var what = v.k === 'sent' ? 'your Peak email' + (v.l ? ' (' + (v.l === 'expo' ? 'expo list' : 'sponsor list') + ')' : '') : (v.k === 'deskmail' ? (v.by === me() ? 'your desk email' : 'a desk email from ' + v.by) : (v.by === me() ? 'your tour confirmation' : 'a tour confirmation from ' + v.by));
+    return 'Answers ' + what + (v.subject ? ' “' + v.subject + '”' : '') + ', sent ' + when(v.at) + (v.how === 'card' && v.to ? ' to ' + v.to + ' (the same company)' : '') + '.';
+  };
+  var ocText = function (o) { return o.st + (o.amount != null ? ', $' + Number(o.amount).toLocaleString('en-US') : '') + (o.note ? ': ' + o.note : '') + ' (' + when(o.at) + ')'; };
+  var evText = function (e) { return e.t === 'mback' ? 'Brought back to My leads, ' + when(e.at) : 'Sent to ' + (e.to ? e.to : 'the Inbox') + ', ' + when(e.at) + (e.note ? ', with note “' + e.note + '”' : ''); };
+  function drawMyLeads(sub) {
+    var box = el('div', 'inbox myleads'); main.appendChild(box);
+    box.appendChild(el('div', 'empty', 'Loading My leads…'));
+    api('myleads&f=' + encodeURIComponent(sub)).then(function (j) {
+      if (S.tab !== 'myleads' || !box.isConnected) return;
+      if (j._status === 401) return signin();
+      box.textContent = '';
+      if (!j.ok) { box.appendChild(el('div', 'empty', j.error || 'My leads did not load.')); return; }
+      S.data.myleads = j.counts; S.myPeople = j.people || []; S.myOutcomes = j.outcomes || []; bar();
+      [].forEach.call(document.querySelectorAll('.shead .subchips button'), function (b) { var k = b.getAttribute('data-sub'), t = b.querySelector('b'); if (t && j.counts[k] != null) t.textContent = String(j.counts[k]); });
+      if (!j.items.length) { box.appendChild(el('div', 'empty', sub === 'open' ? 'Nothing to answer. Replies to your own emails show here within about 5 minutes.' : sub === 'wait' ? 'Nobody to wait on.' : sub === 'done' ? 'Nothing done yet.' : 'Nothing sent to the Inbox.')); return; }
+      j.items.forEach(function (it) { box.appendChild(myRow(it)); });
+      if (S.inSel) { var want = S.inSel; S.inSel = null; [].forEach.call(box.querySelectorAll('.inrow'), function (d) { if (d.getAttribute('data-iid') === want && d._open) d._open(); }); }
+    }).catch(function () { box.textContent = ''; box.appendChild(el('div', 'empty', 'No connection. Try again when you have signal.')); });
+  }
+  function myRow(it) {
+    var d = el('div', 'inrow' + (it.read ? '' : ' unread')); d.setAttribute('data-iid', it.iid);
+    var hd = el('button', 'inhd'); hd.type = 'button';
+    var l1 = el('div', 'inl1'); l1.appendChild(el('b', 'infrom', it.name || it.from || 'Unknown sender')); if (it.name && it.from) l1.appendChild(el('span', 'inaddr', it.from)); l1.appendChild(el('span', 'inat', when(it.at)));
+    hd.appendChild(l1); hd.appendChild(el('div', 'insub', it.subject || '(no subject)'));
+    hd.appendChild(el('div', 'myvia', viaText(it.via)));
+    if (it.preview) hd.appendChild(el('div', 'inpre', it.preview));
+    var tg = el('div', 'intags');
+    if (it.card) tg.appendChild(el('span', 'tag oncard', it.card.name || 'a company'));
+    var oc = (it.outcomes || []).slice(-1)[0]; if (oc) tg.appendChild(el('span', 'tag claim', 'Outcome: ' + ocText(oc)));
+    var rp = (it.replies || []).filter(function (x) { return x.ok; }).slice(-1)[0]; if (rp) tg.appendChild(el('span', 'tag', 'Replied by ' + first(rp.by) + ', ' + when(rp.at)));
+    if (it.answered) tg.appendChild(el('span', 'tag', 'Answered outside the desk, ' + when(it.answered.at)));
+    if (it.files && it.files.length) tg.appendChild(el('span', 'tag', plural(it.files.length, 'attachment')));
+    if (it.box === 'wait' && it.mine === 'wait') tg.appendChild(el('span', 'tag wait', 'Waiting on them · closes ' + new Date((it.boxAt + 14 * 86400) * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' if no reply'));
+    if (it.how === 'auto') tg.appendChild(el('span', 'tag', 'Closed: no reply in 14 days'));
+    if (it.how === 'newer') tg.appendChild(el('span', 'tag', 'They wrote again ' + when(it.boxAt) + ': see their newer email'));
+    if (it.done) tg.appendChild(el('span', 'tag', 'Done (' + first(it.done.by) + ')'));
+    if (it.mine === 'sent' && it.sentIn) tg.appendChild(el('span', 'tag sentin', 'Sent to ' + (it.sentIn.to || 'the Inbox') + ', ' + when(it.sentIn.at) + (it.claim ? ' · ' + it.claim.by + ' is answering it' : '') + ' · ' + ({ open: 'to answer', wait: 'waiting on them', done: 'done', other: 'other' }[it.box] || it.box)));
+    hd.appendChild(tg); d.appendChild(hd);
+    var body = el('div', 'inbody'); body.hidden = true; d.appendChild(body);
+    hd.addEventListener('click', function () { if (!body.hidden) { body.hidden = true; return; } body.hidden = false; myOpen(it, body, d); });
+    d._open = function () { if (body.hidden) hd.click(); setTimeout(function () { d.scrollIntoView({ block: 'start' }); }, 50); };
+    return d;
+  }
+  function myOpen(it0, body, row) {
+    body.textContent = ''; body.appendChild(el('div', 'soft', 'Opening…'));
+    api('inboxone&iid=' + it0.iid).then(function (j) {
+      body.textContent = '';
+      if (!j.ok) { body.appendChild(el('div', 'warnline', j.error || 'It did not open.')); return; }
+      var it = j.item; row.classList.remove('unread'); var sent = it.mine === 'sent';
+      body.appendChild(el('div', 'inmeta', 'From ' + (it.name ? it.name + ' <' + it.from + '>' : it.from) + ' · replied ' + when(it.at)));
+      body.appendChild(el('div', 'myvia', viaText(it.via)));
+      body.appendChild(it.text ? linkify(it.text, el('div', 'mt intext')) : el('div', 'mt intext', '(no words: it may be a picture or a file only; it is in the mailbox)'));
+      if (it.files.length) {
+        var fl = el('div', 'infiles'); fl.appendChild(el('b', null, 'Attached: '));
+        it.files.forEach(function (f, i) { if (i) fl.appendChild(document.createTextNode(', ')); if (f.dl) { var a = el('a', null, f.n); a.href = API + '?action=inboxfile&iid=' + it.iid + '&n=' + f.i; a.setAttribute('download', ''); a.rel = 'noopener'; fl.appendChild(a); } else fl.appendChild(document.createTextNode(f.n + ' (open in Outlook)')); });
+        body.appendChild(fl);
+      }
+      if (it.card) {
+        var cl = el('div', 'incard'); cl.appendChild(document.createTextNode('Company: '));
+        var cb = el('button', 'lnk', (it.card.name || 'the company') + (it.card.off ? ' (removed)' : '') + ' ›'); cb.type = 'button'; cb.setAttribute('data-act', 'incard');
+        cb.addEventListener('click', function () { var w = it.card.w; if (S.world !== w) { S.world = w; bar(); } var r = rec(it.card.id); if (r) openRec(r); else toast('That company is not on the desk now.'); });
+        cl.appendChild(cb); body.appendChild(cl);
+      }
+      (it.replies || []).forEach(function (x) { body.appendChild(el('div', x.ok ? 'tmline' : 'tmline bad', (x.ok ? 'Replied by ' : 'Reply not sent, by ') + x.by + ', ' + when(x.at) + (x.ok ? '' : ': ' + x.why))); });
+      if (it.answered) body.appendChild(el('div', 'tmline', 'Answered outside the desk by ' + it.answered.by + ', ' + when(it.answered.at)));
+      (it.ev || []).forEach(function (e) { body.appendChild(el('div', 'myev', evText(e))); });
+      if (sent && it.claim) body.appendChild(el('div', 'myev', it.claim.by + ' is answering it.'));
+      var after = function (msg) { if (msg) toast(msg); load(function () { draw(); }); };
+      var acts = el('div', 'acts'), pane = el('div', 'inpane');
+      var mk = function (t, act, cls) { var b = el('button', cls || 'btn small ghost', t); b.type = 'button'; b.setAttribute('data-act', act); acts.appendChild(b); return b; };
+      if (sent) {
+        var bb = mk('Bring back to My leads', 'mybring', 'btn small');
+        bb.addEventListener('click', function () { if (!confirm('Bring this back to My leads? It leaves the Inbox' + (it.claim ? ' and ' + it.claim.by + ' stops answering it' : '') + '.')) return; bb.disabled = true; api('myback', { iid: it.iid }).then(function (x) { bb.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after('Back in My leads'); }); });
+        body.appendChild(acts); body.appendChild(el('div', 'fuhint', 'In the Inbox now: shown here read only. Bring back works while nobody else has replied to it.'));
+      } else {
+        var rb = it.rp && it.from ? mk('Reply', 'inreply', 'btn small') : null;
+        var db = mk(it.box === 'done' ? 'Not done' : 'Done', 'indone');
+        var bk = it.box === 'wait' ? mk('Back to To answer', 'inback') : null;
+        var ma = it.box === 'open' ? mk('Mark as answered', 'inanswered') : null;
+        var tb = mk('Send to the Inbox…', 'mytoin');
+        body.appendChild(acts);
+        var back = function (b) { b.disabled = true; api('inboxback', { iid: it.iid }).then(function (x) { b.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after('Back on To answer'); }); };
+        db.addEventListener('click', function () { if (it.box === 'done' && !it.done) return back(db); db.disabled = true; api('inboxdone', { iid: it.iid, on: !it.done }).then(function (x) { db.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after(it.done ? 'Not done: back on its list' : 'Done'); }); });
+        if (bk) bk.addEventListener('click', function () { back(bk); });
+        if (ma) ma.addEventListener('click', function () { if (!confirm('Mark this as answered? Use it when you answered them outside the desk. It moves to Waiting on them.')) return; ma.disabled = true; api('inboxanswered', { iid: it.iid, on: true }).then(function (x) { ma.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after('Marked as answered'); }); });
+        if (rb) rb.addEventListener('click', function () { inReplyPane(it, pane, after); });
+        tb.addEventListener('click', function () { mySendPane(it, pane, after); });
+      }
+      body.appendChild(pane);
+      body.appendChild(myOutcome(it, after));
+    }).catch(function () { body.textContent = ''; body.appendChild(el('div', 'warnline', 'No connection.')); });
+  }
+  /* Send to the Inbox: one person (claimed for them, they are alerted) or anyone, with a note */
+  function mySendPane(it, pane, after) {
+    pane.textContent = ''; var f = el('div', 'mysend'); pane.appendChild(f);
+    f.appendChild(el('label', 'lab', 'Send it to'));
+    var sel = el('select'); sel.className = 'mytowho'; sel.setAttribute('aria-label', 'Send it to');
+    var o0 = el('option', null, 'The Inbox (anyone can take it)'); o0.value = ''; sel.appendChild(o0);
+    (S.myPeople || []).forEach(function (n) { var o = el('option', null, n + ' (claimed for them)'); o.value = n; sel.appendChild(o); });
+    f.appendChild(sel);
+    f.appendChild(el('label', 'lab', 'A note to them (optional)'));
+    var nt = el('textarea'); nt.rows = 3; nt.className = 'mynote'; nt.setAttribute('aria-label', 'Note'); nt.placeholder = 'What they should know'; f.appendChild(nt);
+    f.appendChild(el('div', 'fuhint', 'It leaves My leads and shows in the Inbox with your note; their later emails in this thread go there too. You keep a line for it here, and can bring it back while nobody has replied.'));
+    var acts = el('div', 'acts'), go2 = el('button', 'btn small', 'Send'), x = el('button', 'lnk', 'Close'); go2.type = x.type = 'button'; go2.setAttribute('data-act', 'mytoingo'); acts.appendChild(go2); acts.appendChild(x); f.appendChild(acts);
+    x.addEventListener('click', function () { pane.textContent = ''; });
+    go2.addEventListener('click', function () {
+      var who = sel.value; if (!confirm('Send this to ' + (who || 'the Inbox') + '?')) return;
+      go2.disabled = true;
+      api('mytoin', { iid: it.iid, to: who, note: nt.value }).then(function (j) { go2.disabled = false; if (!j.ok) { toast(j.error || 'Not sent.'); return; } after('Sent to ' + (who || 'the Inbox')); });
+    });
+  }
+  /* his Outcome line: dated rows, never changed; the newest shows on the row */
+  function myOutcome(it, after) {
+    var c = el('div', 'myout'); c.appendChild(el('h4', null, 'Outcome'));
+    (it.outcomes || []).forEach(function (o) { c.appendChild(el('div', 'ocl', ocText(o) + (o.by !== me() ? ' by ' + o.by : ''))); });
+    if (!(it.outcomes || []).length) c.appendChild(el('div', 'ocl', 'Nothing yet.'));
+    var st = el('select'); st.className = 'myst'; st.setAttribute('aria-label', 'How it stands');
+    (S.myOutcomes && S.myOutcomes.length ? S.myOutcomes : ['Talking', 'Tour booked', 'Proposal sent', 'Signed', 'No']).forEach(function (k) { var o = el('option', null, k); o.value = k; st.appendChild(o); });
+    var last = (it.outcomes || []).slice(-1)[0]; if (last) st.value = last.st;
+    var am = el('input'); am.className = 'myamt'; am.inputMode = 'decimal'; am.placeholder = 'Amount ($)'; am.setAttribute('aria-label', 'Amount');
+    var r3 = el('div', 'row3'); r3.appendChild(st); r3.appendChild(am); c.appendChild(r3);
+    var nt = el('input'); nt.className = 'myocnote'; nt.placeholder = 'Note (optional)'; nt.setAttribute('aria-label', 'Outcome note'); nt.style.marginTop = '6px'; c.appendChild(nt);
+    var sv = el('button', 'btn small', 'Save outcome'); sv.type = 'button'; sv.setAttribute('data-act', 'myoutcome'); sv.style.marginTop = '8px'; c.appendChild(sv);
+    sv.addEventListener('click', function () { sv.disabled = true; api('myoutcome', { iid: it.iid, st: st.value, amount: am.value, note: nt.value }).then(function (j) { sv.disabled = false; if (!j.ok) { toast(j.error || 'Not saved.'); return; } after('Outcome saved: ' + st.value); }); });
+    return c;
+  }
   /* ---- alerts on this device (2026-11-20): Web Push from the desk's own server; an iPhone needs the desk on the Home Screen ---- */
   var isIos = function () { var ua = navigator.userAgent; return /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); };
   var standalone = function () { return !!((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone); };
@@ -2318,6 +2468,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var h = String(hash || '').replace(/^.*#/, '').split('/');
     if (h[0] === 'jarvis' && window.JVChat) { jvMount(); JVChat.open(/^h[0-9]{14}[0-9a-f]{4}$/.test(h[1] || '') ? h[1] : null); return false; }
     if (h[0] === 'inbox' && inboxOn()) { S.inSel = h[1] || null; go('inbox', 'open'); return true; }
+    if (h[0] === 'myleads' && myOn()) { S.inSel = h[1] || null; go('myleads', 'open'); return true; }
     if (h[0] === 'card' && (h[1] === 'sponsor' || h[1] === 'expo') && S.data && S.data[h[1]]) { if (S.world !== h[1]) S.world = h[1]; var r = rec(h[2] || ''); if (r) { bar(); openRec(r); return true; } }
     return false;
   }
@@ -2662,7 +2813,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   /* the address keeps the place: #sponsor/pipe, #expo/list/removed; the old desk's addresses land on Today */
   (function () {
     var h = (location.hash || '').slice(1).split('/');
-    if (h[0] === 'inbox' || h[0] === 'card' || h[0] === 'jarvis') S.route = location.hash;   /* an alert's tap (2026-11-20; + J.A.R.V.I.S. 2026-11-21): routed once the data is in */
+    if (h[0] === 'inbox' || h[0] === 'myleads' || h[0] === 'card' || h[0] === 'jarvis') S.route = location.hash;   /* an alert's tap (2026-11-20; + J.A.R.V.I.S. 2026-11-21): routed once the data is in */
     else if (h[0] === 'sponsor' || h[0] === 'expo') { S.world = h[0]; if (h[1] && TABS[h[0]].some(function (x) { return x[0] === h[1]; })) { S.tab = h[1]; if (h[2]) S.sub[h[0] + h[1]] = h[2]; } }
   })();
   load(S.route ? function () { var r = S.route; S.route = null; if (!route(r)) { remember(); draw(); } } : undefined);

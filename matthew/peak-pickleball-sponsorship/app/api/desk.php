@@ -55,7 +55,11 @@
  * alerts (Web Push to the desk app per device, an optional email heads-up), desk-inbox.php explains (actions inbox, inboxone, inboxfile,
  * inboxclaim, inboxdone, inboxattach, inboxreply, inboxback, inboxhide, inboxanswered, pushkey, pushsub, pushunsub, alertset, alerttest).
  *   php desk.php alerts      deliver the alerts that are due (the 5-minute and the hourly runs do this)
- *   php desk.php inboxcount  how many emails are To answer, Waiting on them, Done, Other and removed (counts only) */
+ *   php desk.php inboxcount  how many emails are To answer, Waiting on them, Done, Other and removed (counts only; and My leads' apart)
+ *
+ * 2026-11-24 (Matthew: "build the my leads section and just make sure responses that are from my emails come there"): My leads, for
+ * Matthew's own login only (actions myleads, mytoin = Send to the Inbox, myback = Bring back, myoutcome = his Outcome line). Every Inbox
+ * action answers 404 to anyone else for one of his emails, and no card shows them its words; desk-inbox.php explains. */
 declare(strict_types=1);
 define('DESK', 1);
 const BUILD = '2026-11-21.2';
@@ -116,7 +120,7 @@ if (PHP_SAPI === 'cli') {
         $json(scanAndSave($L, in_array('--hunter', $argv, true) ? 'hunter' : 'site')); exit(0);
     }
     if ($cmd === 'alerts') { $now = ctype_digit((string) getenv('DESK_NOW')) ? (int) getenv('DESK_NOW') : time(); $json(alertsFlush($now)); exit(0); }
-    if ($cmd === 'inboxcount') { $json(inCounts()); exit(0); }
+    if ($cmd === 'inboxcount') { $json(inCounts() + ['myleads' => inMyCounts()]); exit(0); }
     if ($cmd === 'rebuild') { foreach (['sponsor', 'expo'] as $w) echo "$w: rebuilt from the lists and " . rebuild($w) . " log rows\n"; exit(0); }
     /* the counts a migration or deploy is checked against */
     if ($cmd === 'check') {
@@ -173,7 +177,7 @@ if (PHP_SAPI === 'cli') {
         $body = json_decode((string) stream_get_contents(STDIN), true); $body = is_array($body) ? $body : [];
         if ($act === 'scan' && !empty($body['hunter'])) $refuse('paid look-ups (Hunter) stay with Matthew');
         if (in_array($act, ['tour', 'tourmove', 'tourdel'], true)) $body['mail'] = false;   /* never an email from here */
-        $read = in_array($act, ['data', 'inbox', 'inboxone', 'tourpreview', 'dmpreview', 'eodpreview'], true);
+        $read = in_array($act, ['data', 'inbox', 'inboxone', 'myleads', 'tourpreview', 'dmpreview', 'eodpreview'], true);
         if ($read) foreach ($body as $k => $v) if (is_scalar($v)) $_GET[$k] = (string) $v;
         define('DESK_VIA', 'J.A.R.V.I.S.');
         try { $r = handleIn($act, !$read, $body, (string) $who['name'], (string) $who['role']); $json($r); exit(empty($r['ok']) ? 1 : 0); }
@@ -271,6 +275,18 @@ function handleIn(string $action, bool $isPost, array $body, string $ME, string 
     /* the Inbox (2026-11-20): sellers and admins; Claude Check may look (it is never marked read for it) and never acts */
     $INBOX = ['inbox', 'inboxone', 'inboxfile', 'inboxclaim', 'inboxdone', 'inboxattach', 'inboxreply', 'inboxback', 'inboxhide', 'inboxanswered'];
     if (in_array($action, $INBOX, true) && !in_array($ROLE, ['admin', 'seller'], true)) fail('The Inbox is for the sellers and admins.', 403);
+    /* My leads (2026-11-24): an email there is Matthew's alone; to anyone else it does not exist */
+    if (in_array($action, $INBOX, true)) { $giid = (string) ($_GET['iid'] ?? ($body['iid'] ?? '')); if ($giid !== '' && !inSees($giid, $ME)) fail('No such email.', 404); }
+    $MY = ['myleads', 'mytoin', 'myback', 'myoutcome'];
+    if (in_array($action, $MY, true)) {
+        if (!inIsOwner($ME)) fail('My leads is Matthew’s own.', 403);
+        if ($action === 'myleads') return inMyList((string) ($_GET['f'] ?? 'open'), $ME);
+        if (!$isPost) fail('POST required', 405);
+        $iid = (string) ($body['iid'] ?? '');
+        $x = match ($action) { 'mytoin' => inToInbox($iid, clean($body['to'] ?? '', 60), (string) ($body['note'] ?? ''), $ME), 'myback' => inBringBack($iid, $ME), default => inOutcome($iid, $body, $ME) };
+        if (empty($x['ok'])) fail((string) $x['error'], (int) ($x['code'] ?? 400));
+        unset($x['code']); return $x;
+    }
     if ($action === 'inbox') return inList((string) ($_GET['f'] ?? 'open'), $ME);
     if ($action === 'inboxone') { $x = inOpen((string) ($_GET['iid'] ?? ''), $ME, $ME !== 'Claude Check'); if (empty($x['ok'])) fail($x['error'], (int) $x['code']); return $x; }
     if ($action === 'inboxfile') { inFile((string) ($_GET['iid'] ?? ''), (int) ($_GET['n'] ?? -1)); }
@@ -470,7 +486,8 @@ function people(string $w, array $R): array {
         'best' => false, 'src' => 'Hunter, ' . date('M j', (int) ($R['scan']['hunter']['at'] ?? time())), 'conf' => (int) ($c['conf'] ?? 0) . '%']);
     return $o;
 }
-function shape(string $w, array $R): array {
+function shape(string $w, array $R, ?array $P = null): array {
+    if ($P) $R = inCardHide($R, $P);   /* My leads (2026-11-24): Matthew's own replies and his answers to them, for his eyes only */
     $R['touches'] = array_values($R['touches'] ?? []); usort($R['touches'], fn($a, $b) => $a['when'] <=> $b['when']);
     /* their emails (2026-11-19): where the message is stays on the server; rp = it can be answered with Reply */
     foreach ($R['touches'] as &$t) if (is_array($t['mail'] ?? null)) { $t['mail']['rp'] = empty($t['mail']['auto']) && (($t['mail']['mid'] ?? '') !== '' || ($t['mail']['imid'] ?? '') !== '') ? 1 : 0; unset($t['mail']['mid'], $t['mail']['mb'], $t['mail']['imid']); }
@@ -481,10 +498,10 @@ function shape(string $w, array $R): array {
     unset($R['log']);
     return $R;
 }
-function worldOut(string $w): array {
+function worldOut(string $w, ?array $P = null): array {
     $all = recs($w); if ($w === 'sponsor') { $sc = jread('scans.json', []); foreach ($all as $id => &$r) if (isset($sc[$id])) $r['scan'] = $sc[$id]; unset($r); }
     $live = []; $removed = [];
-    foreach ($all as $R) { if (!empty($R['off'])) $removed[] = ['id' => $R['id'], 'name' => $R['name'], 'list' => $R['list'] ?? '', 'cat' => $R['cat'] ?? '', 'stage' => $R['stage'], 'at' => $R['off']['at'], 'by' => $R['off']['by']]; else $live[] = shape($w, $R); }
+    foreach ($all as $R) { if (!empty($R['off'])) $removed[] = ['id' => $R['id'], 'name' => $R['name'], 'list' => $R['list'] ?? '', 'cat' => $R['cat'] ?? '', 'stage' => $R['stage'], 'at' => $R['off']['at'], 'by' => $R['off']['by']]; else $live[] = shape($w, $R, $P); }
     $C = W($w); $st = []; foreach ($C['stages'] as $k => $v) $st[] = [$k, $v];
     return ['stages' => $st, 'path' => $C['path'], 'reach' => $C['reach'], 'recs' => $live, 'removed' => $removed, 'tours' => array_map(fn($t) => $t + ['tms' => tmState($t)], toursOf($w)), 'tmFailed' => tmFailed($w), 'owners' => owners($w),
         'week' => counts($w, weekStart()), 'weekFrom' => date('Y-m-d', weekStart()), 'month' => counts($w, monthStart()), 'monthFrom' => date('Y-m-d', monthStart()), 'team' => counts($w, 0), 'templates' => templatesOf($w), 'starters' => starterTemplates($w)];
@@ -497,13 +514,15 @@ function dataOut(string $ME, string $ROLE): array {
     $base['deskmail'] = dmOut($ROLE === 'admin', $ME); $base['book'] = bkOut($ROLE === 'admin', $ME);
     /* the Inbox's counts for the tab, and my alerts (2026-11-20) */
     if (in_array($ROLE, ['admin', 'seller'], true)) $base['inbox'] = inCounts();
+    /* My leads (2026-11-24): Matthew's own login only; everyone else's cards never show his My-leads emails */
+    $P = null; if (inIsOwner($ME)) $base['myleads'] = inMyCounts(); else $P = inPrivate();
     $base['alerts'] = alOut($ME);
     /* who Peak's emails go out as (2026-11-19): set in Outbox, shown here read only */
     $mb = tmMailbox(); $base['sendFrom'] = ['email' => $mb['email'] ?: TM_ORGANIZER, 'name' => $mb['name'] ?: TM_FROM_NAME, 'shared' => (bool) ($mb['shared'] ?? false), 'warn' => (string) ($mb['warn'] ?? ''), 'ready' => (bool) $mb['ok']];
-    $X = worldOut('expo'); $xs = jread('expo-seed.json', []);
+    $X = worldOut('expo', $P); $xs = jread('expo-seed.json', []);
     $X += ['questions' => $xs['questions'] ?? [], 'venues' => $xs['venues'] ?? [], 'venueNote' => $xs['venueNote'] ?? '', 'built' => $xs['built'] ?? '', 'from' => $xs['from'] ?? ''];
     if ($ROLE === 'expo') return $base + ['expo' => $X];   /* the expo account: the Expo leads and nothing of the sponsors' */
-    $S = worldOut('sponsor'); $sd = jread('seed.json', []);
+    $S = worldOut('sponsor', $P); $sd = jread('seed.json', []);
     /* the packages go to everyone: a seller's Make a proposal and Mark signed pick from them. Profit & loss, What Peak offers and What we could
        offer are admins only (2026-11-20, Matthew): a seller's page never gets them. The Report is worked out on the page from the cards. */
     $S += ['proposals' => propsOf('sponsor'), 'packages' => settingOf('sponsor', 'packages', []), 'hunterLeft' => hunterLeft()];
@@ -946,10 +965,10 @@ function eodText(int $now): array {
     if ($late['sponsor'] || $late['expo']) $L[] = 'Still late from before today: ' . ($late['sponsor'] + $late['expo']) . ' (sponsors ' . $late['sponsor'] . ', expo leads ' . $late['expo'] . ').';
     $L[] = '';
     $L[] = 'FROM THE PEAK EMAIL SENDER TODAY';
-    $sent = ['sponsor' => 0, 'expo' => 0]; $rep = []; $bounce = 0; $book = [];
+    $sent = ['sponsor' => 0, 'expo' => 0]; $rep = []; $bounce = 0; $book = []; $P = inPrivate();   /* never Matthew's My leads (2026-11-24) */
     foreach ($WN as $w => $wn) {
         $X = recs($w);
-        foreach ($X as $R) foreach ($R['touches'] ?? [] as $t) {
+        foreach ($X as $R) foreach (inCardHide($R, $P)['touches'] ?? [] as $t) {
             if (($t['by'] ?? '') !== 'Peak email' || (int) $t['when'] < $from) continue;
             if ($t['out'] === 'sent') $sent[$w]++; elseif ($t['out'] === 'replied') $rep[] = '  ' . $R['name'] . ($w === 'expo' ? ' (expo)' : '') . ': ' . $t['note']; elseif ($t['out'] === 'bounced') $bounce++;
         }

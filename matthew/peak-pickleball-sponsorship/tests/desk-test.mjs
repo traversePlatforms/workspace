@@ -1075,6 +1075,127 @@ try {
       const CT = await lst('open'), SUMS = {};
       for (const f of ['open', 'wait', 'done', 'other', 'removed']) SUMS[f] = (await lst(f)).items.length;
       ok(['open', 'wait', 'done', 'other', 'removed'].every((f) => CT.counts[f] === SUMS[f]) && (await b('data')).inbox.wait === SUMS.wait && JSON.parse(php(['inboxcount'])).wait === SUMS.wait, 'each tab’s count is the length of its list (' + JSON.stringify(SUMS) + '), in the data and in inboxcount');
+      /* ---- My leads (2026-11-24, Matthew: "build the my leads section and just make sure responses that are from my emails come there and
+         everything else thats related to cai nneka brandon lance go to the inbox ... build in an option for me to send an email to the inbox
+         similiar to how i would send them to Jen in sixfold"). The sends are rows in the Peak email sender's own log (the test's mail-data
+         folder); emails come in as the sender does it (deskInboxIn, with and without the sender's code loaded). Nothing is emailed. ---- */
+      {
+        console.log('My leads');
+        const MM = addAccount('Matthew Sharpe', 'admin'), mm = client(); ok((await mm('signin', { code: MM })).name === 'Matthew Sharpe', 'Matthew’s own login signs in');
+        const CAIC = addAccount('Cai Test', 'seller'), cai = client(); await cai('signin', { code: CAIC });
+        ok((await mm('pushsub', { subscription: dev('mm1').sub, device: 'iPhone app' })).ok && (await mm('alertset', { quiet: false })).ok && (await cai('pushsub', { subscription: dev('cai1').sub, device: 'Windows browser' })).ok, 'Matthew and Cai Test have alerts on');
+        const t0 = Math.floor(Date.now() / 1000);
+        const pmlog = (rows) => execFileSync('php', ['-r', 'require getenv("LIB"); foreach (json_decode(getenv("R"), true) as $r) pmLog($r); echo "ok";'], { encoding: 'utf8', env: { ...env, LIB: env.DESK_PEAK_MAIL_LIB, R: JSON.stringify(rows) } });
+        const injL = (code, extra) => execFileSync('php', ['-r', 'define("DATA_DIR", getenv("DESK_DATA")); require getenv("STORE"); require getenv("TM"); require getenv("BL"); tmLoad(); ' + code],
+          { encoding: 'utf8', env: { ...env, STORE: join(WEB, 'api/desk-store.php'), TM: join(WEB, 'api/tour-mail.php'), BL: join(WEB, 'api/book-lib.php'), ...extra } });
+        const inL = (m) => injL('echo deskInboxIn(json_decode(getenv("M"), true));', { M: JSON.stringify(m) }).trim();
+        const CD = LOC[131], CP = LOC[132];   /* Dana's card; a card whose general address got the blast */
+        pmlog([
+          { t: 'sent', l: 'sponsors', to: 'dana@mltest.com', from: MB, subject: 'Hosting your next event at Peak Pickleball', by: 'Matthew Sharpe', sid: 'pm-ml1', at: t0 - 5000, w: 'sponsor', org: CD.id, dref: 'pm-ml1' },
+          { t: 'deskmail', ref: 'dmml00000001', to: 'sam@mltest.com', from: MB, w: '', org: '', by: 'Test Seller', subject: 'Hello Sam', ok: true, at: t0 - 5000 },
+          { t: 'deskmail', ref: 'dmml00000002', to: 'mo@mltest.com', from: MB, w: '', org: '', by: 'Matthew Sharpe', subject: 'Hello Mo', ok: true, at: t0 - 5000 },
+          { t: 'deskmail', ref: 'dmml00000003', to: 'nope@mltest.com', from: MB, w: '', org: '', by: 'Matthew Sharpe', subject: 'Failed', ok: false, at: t0 - 5000 },
+          { t: 'sent', l: 'sponsors', to: 'info@cardml.com', from: MB, subject: 'Peak sponsors', by: 'Matthew Sharpe', sid: 'pm-ml2', at: t0 - 5000, w: 'sponsor', org: CP.id, dref: 'pm-ml2' },
+          { t: 'sent', l: 'sponsors', to: 'held@mltest.com', from: MB, subject: 'Peak sponsors', by: 'Matthew Sharpe', sid: 'pm-ml3', at: t0 - 5000 },
+          { t: 'sent', l: 'sponsors', to: 'late@mltest.com', from: MB, subject: 'Peak sponsors', by: 'Matthew Sharpe', sid: 'pm-ml4', at: t0 - 100 } ]);
+        inject('echo json_encode(deskEmailed("sponsor", getenv("ID"), "dana@mltest.com", "Hosting your next event at Peak Pickleball", "Peak email", "pm-ml1"));', { ID: CD.id });   /* the blast on her card, as the sender puts it */
+        /* in as the sender does it (its code loaded: the via is decided on arrival) */
+        const DANA = inL({ from: 'dana@mltest.com', name: 'Dana Test', subject: 'Re: Hosting your next event at Peak Pickleball', at: t0 - 4000, text: 'Yes please, ZZDANA words', mid: 'AAMkML1', mb: MB, imid: '<ml1@mltest.com>', w: 'sponsor', id: CD.id,
+          att: [{ name: 'floorplan.pdf', id: 'MLATT1', size: 1000, type: 'application/pdf', kind: '#microsoft.graph.fileAttachment' }] });
+        const MO = inL({ from: 'mo@mltest.com', name: 'Mo Test', subject: 'RE: Hello Mo', at: t0 - 4000, text: 'ZZMO interested', mid: 'AAMkML2', mb: MB, imid: '<ml2@mltest.com>' });
+        const SAM = inL({ from: 'sam@mltest.com', name: 'Sam Test', subject: 'RE: Hello Sam', at: t0 - 4000, text: 'ZZSAM hi', mid: 'AAMkML3', mb: MB, imid: '<ml3@mltest.com>' });
+        const NOPE = inL({ from: 'nope@mltest.com', subject: 'Hi', at: t0 - 4000, text: 'a failed send is no send', mid: 'AAMkML4', mb: MB, imid: '<ml4@mltest.com>' });
+        const PER = inL({ from: 'person@cardml.com', name: 'Per Son', subject: 'RE: Peak sponsors', at: t0 - 4000, text: 'ZZPER we are in', mid: 'AAMkML5', mb: MB, imid: '<ml5@mltest.com>', w: 'sponsor', id: CP.id });
+        const LATE = inL({ from: 'late@mltest.com', subject: 'Question', at: t0 - 200, text: 'came before the blast', mid: 'AAMkML6', mb: MB, imid: '<ml6@mltest.com>' });
+        /* and one without the sender's code (an email from before 24 Nov): its via is worked out when the desk first reads it */
+        const HELD = inIn({ from: 'held@mltest.com', name: 'Held Test', subject: 'RE: Peak sponsors', at: t0 - 4000, text: 'ZZHELD', mid: 'AAMkML7', mb: MB, imid: '<ml7@mltest.com>' });
+        const raw = lines('inbox.log').map((l) => JSON.parse(l));
+        ok(raw.find((r) => r.t === 'in' && r.iid === DANA).via.k === 'sent' && raw.find((r) => r.t === 'in' && r.iid === DANA).via.own === 'me' && raw.find((r) => r.t === 'in' && r.iid === SAM).via.own === 'inbox' && !raw.find((r) => r.t === 'in' && r.iid === HELD).via, 'the via is kept on the email’s own row when the sender puts it in (an older one has none yet)');
+        inject('logAdd(["t" => "claim", "iid" => getenv("I"), "on" => true, "by" => "Test Seller", "at" => time()], IN_LOG); echo "ok";', { I: HELD });   /* Test Seller had it claimed before My leads existed */
+        const ids = (L) => L.items.map((x) => x.iid);
+        let BI = await b('inbox'), MY = await mm('myleads');
+        ok(lines('inbox.log').map((l) => JSON.parse(l)).filter((r) => r.t === 'via' && r.iid === HELD).length === 1 && lines('inbox.log').map((l) => JSON.parse(l)).find((r) => r.t === 'via' && r.iid === HELD).via.own === 'me', 'the desk works out the older one’s via once and keeps it (a via row)');
+        ok(MY.ok && [DANA, MO, PER].every((i) => ids(MY).includes(i)) && MY.counts.open === 3 && ![SAM, NOPE, LATE, HELD].some((i) => ids(MY).includes(i)), 'My leads: the replies to his blast (Dana), to his own desk email (Mo) and to the blast to their company’s general address (the card) are his');
+        ok(![DANA, MO, PER].some((i) => ids(BI).includes(i)) && [SAM, NOPE, LATE, HELD].every((i) => ids(BI).includes(i)), 'the Inbox: a reply to Test Seller’s desk email, one whose send failed, one that came before the blast, and the one Test Seller already had claimed');
+        const MI = await mm('inbox'); ok(![DANA, MO, PER].some((i) => ids(MI).includes(i)) && ids(MI).includes(HELD), 'Matthew’s own Inbox shows the same (his leads are under My leads)');
+        const iD = MY.items.find((x) => x.iid === DANA), iP = MY.items.find((x) => x.iid === PER), iM = MY.items.find((x) => x.iid === MO);
+        ok(iD.via.k === 'sent' && iD.via.subject === 'Hosting your next event at Peak Pickleball' && iD.via.at === t0 - 5000 && iD.via.how === 'address' && iP.via.how === 'card' && iP.via.to === 'info@cardml.com' && iM.via.k === 'deskmail' && iM.via.by === 'Matthew Sharpe', 'each says which send it answered and when it went (by address, or the card’s)');
+        ok(iD.card && iD.card.id === CD.id && iD.files.length === 1 && iD.preview.includes('ZZDANA') && !/AAMk|MLATT|<ml\d/.test(JSON.stringify(MY)), 'with the company, the attachment and their words; never where it is in the mailbox');
+        /* only Matthew */
+        ok((await b('myleads'))._status === 403 && (await a('myleads'))._status === 403 && (await cc('myleads'))._status === 403 && (await ex('myleads'))._status === 403 && (await cai('myleads'))._status === 403, 'My leads: refused to a seller, another admin, Claude Check and the Expo account');
+        ok((await b('mytoin', { iid: DANA }))._status === 403 && (await a('myoutcome', { iid: DANA, st: 'Signed' }))._status === 403 && (await b('myback', { iid: DANA }))._status === 403, 'and its actions too');
+        const D404 = await Promise.all([b('inboxone&iid=' + DANA), cc('inboxone&iid=' + DANA), a('inboxone&iid=' + DANA), b('inboxclaim', { iid: DANA, on: true }), b('inboxreply', { iid: DANA, subject: 'x', text: 'y' }), b('inboxdone', { iid: DANA, on: true }), b('inboxattach', { iid: DANA, w: 'sponsor', id: EA.id }), b('inboxanswered', { iid: DANA, on: true })]);
+        ok(D404.every((x) => x._status === 404 && x.error === 'No such email.') && (await fetch(`${API}?action=inboxfile&iid=${DANA}&n=0`, { headers: { Cookie: b.cookie() } })).status === 404, 'to anyone else a My-leads email does not exist: open, claim, reply, done, attach, mark answered, download (404)');
+        let DB0 = await b('data'), DM0 = await mm('data');
+        ok(!('myleads' in DB0) && !('myleads' in (await a('data'))) && !('myleads' in (await cc('data'))) && DM0.myleads.open === 3 && DB0.inbox.open === BI.counts.open && !JSON.stringify(DB0.inbox).includes(DANA), 'the data: My leads counts for Matthew only; the Inbox counts leave his out');
+        /* on the card (as the sender puts a reply there): for his eyes only, no follow-up for the others, the alert to him alone */
+        const DMAIL = { from: 'dana@mltest.com', name: 'Dana Test', subject: 'Re: Hosting your next event at Peak Pickleball', at: t0 - 4000, text: 'Yes please, ZZDANA words', mid: 'AAMkML1', mb: MB, imid: '<ml1@mltest.com>' };
+        const nextB = (await b('data')).sponsor.recs.find((r) => r.id === CD.id).next;
+        const rpD = JSON.parse(injL('echo json_encode(deskReplied("sponsor", getenv("ID"), "Dana Test", "“Re: Hosting” ZZDANA", "Peak email", "reply:ml1", false, json_decode(getenv("MAIL"), true)));', { ID: CD.id, MAIL: JSON.stringify(DMAIL) }));
+        const q1 = queue().filter((x) => x.k === 'rp:reply:ml1');
+        ok(rpD.ok && q1.length === 1 && q1[0].who === 'Matthew Sharpe' && /My leads/.test(q1[0].text) && q1[0].url === './#myleads/' + DANA, 'the reply on the card alerts Matthew alone, and opens in My leads');
+        const cardOf = (D, id) => D.sponsor.recs.find((r) => r.id === id);
+        let cB = cardOf(await b('data'), CD.id), cM = cardOf(await mm('data'), CD.id);
+        ok(!JSON.stringify(cB).includes('ZZDANA') && JSON.stringify(cM).includes('ZZDANA') && JSON.stringify(cB.next) === JSON.stringify(nextB), 'the card: Matthew sees her words; a seller sees no trace of them, and no “answer them” follow-up was set');
+        ok(!JSON.stringify(cardOf(await cc('data'), CD.id)).includes('ZZDANA') && !JSON.stringify(cardOf(await a('data'), CD.id)).includes('ZZDANA'), 'nor Claude Check, nor another admin');
+        const eod = php(['eod', '--dry-run']); ok(!eod.includes('ZZDANA') && !eod.includes('Dana Test'), 'nor the end-of-day email');
+        const qM = queue().filter((x) => x.k === 'in:' + MO);
+        ok(qM.length === 1 && qM[0].who === 'Matthew Sharpe' && qM[0].url === './#myleads/' + MO && queue().filter((x) => x.k === 'in:' + SAM).length >= 2, 'a new My-leads email with no card alerts Matthew alone; an Inbox one alerts the Inbox watchers');
+        /* the claim lock: his lead's address is his from a card too */
+        let lk = await b('dmsend', { world: 'sponsor', id: CD.id, to: 'dana@mltest.com', subject: 'Hi', text: 'Hello Dana' });
+        ok(lk._status === 409 && lk.error === 'Matthew Sharpe is answering this. Ask Matthew to release it.', 'a seller’s Write an email to his lead’s address is refused (nothing sent)');
+        /* Reply from My leads: the Inbox's own mechanics, from Peak Partnerships in the same thread */
+        let g0 = GM.calls, rr = await mm('inboxreply', { iid: DANA, subject: 'RE: Hosting your next event at Peak Pickleball', text: 'ZZREPLY Great, Thursday?' });
+        ok(rr.ok && rr.state === 'sent' && GM.calls === g0 + 1 && rr.card.id === CD.id, 'Matthew replies from My leads (in the same thread, logged on the card)');
+        MY = await mm('myleads&f=wait'); ok(ids(MY).includes(DANA) && !ids(await b('inbox&f=wait')).includes(DANA), 'it moves to Waiting on them in My leads, and stays out of the Inbox');
+        cB = cardOf(await b('data'), CD.id); cM = cardOf(await mm('data'), CD.id);
+        ok(!JSON.stringify(cB).includes('ZZREPLY') && !JSON.stringify(cB.dmails || []).includes('Hosting') && (cM.dmails || []).some((d) => d.ref === rr.ref) && cM.touches.some((t) => t.ref === rr.ref), 'his desk reply and its touch are on the card for him; the others see neither');
+        rr = await mm('inboxreply', { iid: MO, subject: 'RE: Hello Mo', text: 'ZZMOREPLY' }); ok(rr.ok && rr.state === 'sent', 'and to one with no card (Mo)');
+        /* Outcome: dated rows, never changed */
+        ok((await mm('myoutcome', { iid: DANA, st: 'Maybe' }))._status === 400 && (await mm('myoutcome', { iid: SAM, st: 'Talking' }))._status === 400, 'Outcome: a status from the list, and only on his own leads');
+        ok((await mm('myoutcome', { iid: DANA, st: 'Talking', amount: '', note: 'Wants a March date' })).ok && (await mm('myoutcome', { iid: DANA, st: 'Tour booked', amount: '$2,400', note: '' })).ok, 'Talking, then Tour booked with an amount');
+        let oD = (await mm('inboxone&iid=' + DANA)).item;
+        ok(oD.outcomes.length === 2 && oD.outcomes[0].st === 'Talking' && oD.outcomes[0].amount === null && oD.outcomes[1].amount === 2400 && oD.outcomes[1].at >= t0 && lines('inbox.log').filter((l) => /"t":"outcome"/.test(l)).length === 2, 'both kept, dated, in order (the log has both rows)');
+        /* a later email in the thread follows it, even after someone else wrote to them */
+        pmlog([{ t: 'deskmail', ref: 'dmml00000009', to: 'dana@mltest.com', from: MB, w: 'sponsor', org: CD.id, by: 'Test Seller', subject: 'Something else', ok: true, at: t0 - 60 }]);
+        const DANA2 = inL({ from: 'dana@mltest.com', name: 'Dana Test', subject: 'RE: Hosting your next event at Peak Pickleball', at: t0 - 30, text: 'ZZDANA2 Thursday works', mid: 'AAMkML8', mb: MB, imid: '<ml8@mltest.com>', w: 'sponsor', id: CD.id });
+        MY = await mm('myleads');
+        ok(lines('inbox.log').map((l) => JSON.parse(l)).find((r) => r.t === 'in' && r.iid === DANA2).via.by === 'Test Seller' && ids(MY).includes(DANA2) && !ids(await b('inbox')).includes(DANA2), 'their newer email in the thread goes where the thread is (My leads), even though Test Seller emailed her since');
+        ok(ids(await mm('myleads&f=done')).includes(DANA) && oD.outcomes.length === 2 && (await mm('inboxone&iid=' + DANA2)).item.outcomes.length === 2, 'the older one counts as Done; the Outcome belongs to the thread');
+        /* Send to the Inbox: one person */
+        ok((await mm('mytoin', { iid: DANA2, to: 'Nobody Here' }))._status === 400 && (await mm('mytoin', { iid: SAM, to: '' }))._status === 400 && (await mm('mytoin', { iid: DANA2, to: 'Claude Check' }))._status === 400 && (await mm('mytoin', { iid: DANA2, to: 'Matthew Sharpe' }))._status === 400, 'Send to the Inbox: to someone on the desk (not Claude Check, not himself), and only one of his');
+        const qn = queue().length;
+        ok((await mm('mytoin', { iid: DANA2, to: 'Cai Test', note: 'Please book her a tour' })).ok, 'Matthew sends Dana’s thread to Cai Test with a note');
+        const qt = queue().slice(qn);
+        ok(qt.length === 1 && qt[0].who === 'Cai Test' && /sent you an email to answer/.test(qt[0].text) && qt[0].url === './#inbox/' + DANA2, 'Cai Test alone is alerted');
+        let CI2 = await cai('inbox'), it2 = CI2.items.find((x) => x.iid === DANA2);
+        ok(it2 && it2.claim.by === 'Cai Test' && it2.sentIn.by === 'Matthew Sharpe' && it2.sentIn.to === 'Cai Test' && it2.sentIn.note === 'Please book her a tour' && (await cai('inbox&f=done')).items.find((x) => x.iid === DANA).claim.by === 'Cai Test', 'it is in the Inbox, claimed for Cai Test, with Matthew’s note (the whole thread)');
+        ok((await b('inboxreply', { iid: DANA2, subject: 'x', text: 'y' }))._status === 409 && (await b('inboxone&iid=' + DANA2)).ok, 'others can open it now; the claim locks it to Cai Test');
+        ok(JSON.stringify(cardOf(await b('data'), CD.id)).includes('ZZDANA'), 'and her words are on the card for everyone now');
+        MY = await mm('myleads&f=sent'); const s2 = MY.items.find((x) => x.iid === DANA2);
+        ok(MY.counts.sent === 2 && s2 && s2.sentIn.to === 'Cai Test' && s2.ev.length === 1 && s2.ev[0].note === 'Please book her a tour' && !ids(await mm('myleads')).includes(DANA2), 'My leads keeps a line for it under Sent to the Inbox (read only there)');
+        /* a later email follows it to the Inbox, to Cai Test */
+        const DANA3 = inL({ from: 'dana@mltest.com', name: 'Dana Test', subject: 'Re: Hosting your next event at Peak Pickleball', at: t0 - 10, text: 'ZZDANA3 also Friday', mid: 'AAMkML9', mb: MB, imid: '<ml9@mltest.com>' });
+        CI2 = await cai('inbox'); ok(CI2.items.find((x) => x.iid === DANA3).claim.by === 'Cai Test' && ids(await mm('myleads&f=sent')).includes(DANA3), 'their next email follows: in the Inbox with Cai Test’s claim; Matthew still sees it, read only');
+        /* Bring back */
+        ok((await mm('myback', { iid: DANA3 })).ok, 'Bring back (nobody has replied since)');
+        CI2 = await cai('inbox'); ok([DANA2, DANA3].every((i) => !ids(CI2).includes(i)) && (await cai('inboxone&iid=' + DANA3))._status === 404 && ids(await mm('myleads')).includes(DANA3) && !(await mm('inboxone&iid=' + DANA3)).item.claim, 'back in My leads: gone from the Inbox, Cai Test’s claim let go');
+        ok(!JSON.stringify(cardOf(await b('data'), CD.id)).includes('ZZDANA') && (await mm('inboxone&iid=' + DANA3)).item.ev.map((e) => e.t).join() === 'toin,mback', 'hidden on the card again; his record keeps both lines');
+        /* Send to the Inbox generally: unclaimed, the usual alert to the watchers (not him); then someone replies and Bring back is refused */
+        const qn2 = queue().length;
+        ok((await mm('mytoin', { iid: MO, to: '' })).ok, 'Matthew sends Mo to the Inbox generally');
+        const qt2 = queue().slice(qn2), iMO = (await b('inbox&f=wait')).items.find((x) => x.iid === MO);
+        ok(iMO && !iMO.claim && iMO.sentIn.to === '' && qt2.length >= 2 && qt2.every((x) => x.who !== 'Matthew Sharpe' && x.text === 'New email in the Inbox'), 'it is in the Inbox unclaimed (his own claim from his reply let go), and the Inbox watchers are alerted');
+        ok((await b('inboxreply', { iid: MO, subject: 'RE: Hello Mo', text: 'Seller answers' })).ok, 'a seller answers it');
+        let br = await mm('myback', { iid: MO }); ok(br._status === 409 && /Test Seller has replied to it since/.test(br.error) && ids(await b('inbox&f=wait')).includes(MO), 'Bring back is refused once someone else has replied; it stays in the Inbox');
+        ok((await mm('myback', { iid: SAM }))._status === 400, 'Bring back only works on one he sent');
+        const IC = JSON.parse(php(['inboxcount']));
+        ok(IC.myleads && IC.myleads.open === (await mm('myleads')).counts.open && IC.open === (await b('inbox')).counts.open, 'php desk.php inboxcount: the Inbox’s counts and My leads’ apart');
+        /* the rebuild switch: the table read again from the log gives the same lists */
+        inject('metaSet("inbox:v", "0"); echo "ok";');
+        ok(JSON.stringify(ids(await mm('myleads'))) === JSON.stringify(ids(MY = await mm('myleads'))) && ids(MY).includes(DANA3) && ids(await b('inbox&f=wait')).includes(MO), 'rebuilt from inbox.log (IN_V): the same lists');
+        globalThis.__ML = { mm, MM, DANA3 };
+      }
     }
     /* left on for the screens; turned off at the end */
   }
@@ -1670,6 +1791,30 @@ try {
     await sub('wait'); await waitFor(`!!document.querySelector('.inrow')`, 'Waiting on a phone');
     ok(await js(fits), 'and Waiting on them'); await shot('desk-inbox-wait-phone.png');
     await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false }); await sleep(200);
+    /* My leads (2026-11-24): not on another admin's page; on Matthew's */
+    ok(await js(`![...document.querySelectorAll('#tabs [data-tab]')].some(b=>b.dataset.tab==='myleads')&&!document.querySelector('main').innerText.includes('ZZDANA')`), 'My leads: no tab on a seller’s page');
+    {
+      const signAs = async (code, what) => { await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
+        await js(`(()=>{const i=document.querySelector('.signin input');i.value='${code}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`); await waitFor(`!!document.querySelector('.shead')`, what); await sleep(300); };
+      await signAs(globalThis.__ML.MM, 'Matthew’s page');
+      ok(await jsUntil(`[...document.querySelectorAll('#tabs [data-tab]')].map(b=>b.dataset.tab).join().startsWith('today,inbox,myleads,')`), 'Matthew’s page: My leads beside the Inbox');
+      await tab('myleads'); await waitFor(`!!document.querySelector('.myleads .inrow')`, 'My leads');
+      ok(await js(`(()=>{const c=document.querySelector('.shead .subchips');return [...c.querySelectorAll('button')].map(b=>b.getAttribute('data-sub')).join()==='open,wait,done,sent'&&/nobody else on the desk sees them/.test(document.querySelector('.shead .sdesc').textContent)})()`), 'its lists: To answer, Waiting on them, Done, Sent to the Inbox');
+      ok(await jsUntil(`[...document.querySelectorAll('.myleads .inrow')].some(r=>/Dana Test/.test(r.textContent)&&/Answers your Peak email/.test(r.textContent)&&/Outcome: Tour booked, \\$2,400/.test(r.textContent))`), 'each row: who, which of his emails it answered, the newest Outcome');
+      await js(`[...document.querySelectorAll('.myleads .inrow')].find(r=>/Dana Test/.test(r.textContent)).querySelector('.inhd').click()`); await waitFor(`!!document.querySelector('.myleads [data-act="myoutcome"]')`, 'a lead opened');
+      ok(await js(`['inreply','indone','mytoin','myoutcome'].every(a=>!!document.querySelector('.myleads [data-act="'+a+'"]'))&&/Sent to Cai Test/.test(document.querySelector('.myleads .inbody').textContent)&&/Brought back to My leads/.test(document.querySelector('.myleads .inbody').textContent)`), 'opened: Reply, Done, Send to the Inbox, Outcome, and his record of the Send and the Bring back');
+      await click('.myleads [data-act="mytoin"]', 200);
+      ok(await jsUntil(`(()=>{const s=document.querySelector('.myleads .mytowho');return !!s&&[...s.options].map(o=>o.value).includes('Cai Test')&&s.options[0].value===''&&![...s.options].some(o=>/Claude Check|Matthew/.test(o.value))})()`), 'Send to the Inbox: the Inbox or one person (not Claude Check, not himself), and a note');
+      await shot('desk-myleads.png');
+      await sub('sent'); await waitFor(`!!document.querySelector('.myleads .inrow')`, 'Sent to the Inbox');
+      await js(`document.querySelector('.myleads .inrow .inhd').click()`); await waitFor(`!!document.querySelector('.myleads [data-act="mybring"]')`, 'a sent one opened');
+      ok(await js(`!document.querySelector('.myleads [data-act="inreply"]')&&!document.querySelector('.myleads [data-act="mytoin"]')`), 'Sent to the Inbox: read only, with Bring back');
+      await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
+      await sub('open'); await waitFor(`!!document.querySelector('.myleads .inrow')`, 'My leads on a phone');
+      ok(await js(fits), 'My leads fits a phone'); await shot('desk-myleads-phone.png');
+      await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false }); await sleep(200);
+      await signAs(SELLER, 'the seller’s page again');
+    }
     await sub('open'); await tab('more'); await sub('mine');
     ok(await js(`(()=>{const c=document.querySelector('[data-set="alerts"]');return !!c&&!!c.querySelector('[data-act="pushon"]')&&/Home Screen/.test(c.textContent)&&/iOS 16\\.4/.test(c.textContent)&&!!c.querySelector('[data-al="quiet"]')&&!!c.querySelector('[data-al="inbox"]')&&!!c.querySelector('[data-al="mine"]')&&!!c.querySelector('[data-al="email"]')})()`), 'More › My email & booking link: Alerts (turn on per device, the iPhone Home Screen note, who gets what, quiet hours)');
     await js(`document.querySelector('[data-set="alerts"]').scrollIntoView()`); await sleep(200); await shot('desk-alerts.png');

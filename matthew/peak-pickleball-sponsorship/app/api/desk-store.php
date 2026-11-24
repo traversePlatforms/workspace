@@ -652,16 +652,18 @@ function deskReplied(string $w, string $id, string $from, string $note = '', str
         $touch = ['m' => 'email', 'out' => 'replied', 'note' => $txt, 'when' => $now, 'auto' => 1]; if ($ref !== '') $touch['ref'] = $ref;
         if ($mail) { $touch['mail'] = $mail; if (!empty($mail['at']) && $mail['at'] <= $now) $touch['when'] = (int) $mail['at']; }
         $rows = [rowTouch($w, $id, $k, $touch, $by, $now)];
+        /* one of Matthew's My leads (2026-11-24): no follow-up for the others to see, and only he is alerted */
+        $priv = $mail && !$stop && function_exists('inMailPrivate') && inMailPrivate($mail);
         $nd = (string) ($R['next']['date'] ?? ''); $open = in_array((string) $R['owner'], ['', $by], true);
         $r = stageRank($w, (string) $R['stage']); $reaching = $r >= 0 && $r < $C['reach'];
         if ($stop && $open && $reaching) {
             $back = date('Y-m-d', strtotime('+' . STOP_BACK_DAYS . ' days', $now)); $why = 'Asked not to be emailed again';
             $rows[] = rowStage($w, $id, 'notnow', $by, $now, ['back' => $back, 'why' => $why, 'tk' => $k]);
             $rows[] = rowNext($w, $id, ['date' => $back, 'what' => 'Come back to them: ' . $why . ' (no more emails)'], $by, $now);
-        } elseif (!in_array($R['stage'], $C['done'], true) && ($nd === '' || $nd > date('Y-m-d')) && (!$stop || !$open))
+        } elseif (!$priv && !in_array($R['stage'], $C['done'], true) && ($nd === '' || $nd > date('Y-m-d')) && (!$stop || !$open))
             $rows[] = rowNext($w, $id, ['date' => date('Y-m-d'), 'what' => $stop ? 'They asked not to be emailed again: no more emails' : 'They replied to the email: answer them'], $by, $now);
         commit($w, $rows);
-        if ($alert && !$stop && function_exists('deskAlertReply')) deskAlertReply($w, $R, $ref !== '' ? $ref : $k);
+        if ($alert && !$stop && function_exists('deskAlertReply')) deskAlertReply($w, $R, $ref !== '' ? $ref : $k, $priv ? inIid((string) ($mail['imid'] ?? ''), (string) ($mail['mid'] ?? '')) : '');
         return ['ok' => true, 'k' => $k, 'stage' => recs($w)[$id]['stage']];
     });
 }
