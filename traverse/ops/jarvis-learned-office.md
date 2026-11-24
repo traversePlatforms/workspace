@@ -17,3 +17,4 @@ dated entry per ticket that taught something reusable, short, no customer contac
 - 2026-11-18 · Jen: "Another service" button missing on Deposit and form page though source had it: deploy-app.sh ships app/dist (minified),
   which was stale (12:28) because the build step (sync-es, build-editions, minify-page; ~4 min) wasn't re-run after the edit. Always run the
   build before deploying and grep dist for the change; don't tell her it's her browser until dist is proven current.
+- 2026-11-24 · Jen: Pipeline filter "contacted once / twice / 3+": added a Times contacted dropdown beside Last contacted (pipeFindRow in the summit index.html; counts logged call/text/email tries). Same pattern as the 29 Oct search + Last contacted filter.
