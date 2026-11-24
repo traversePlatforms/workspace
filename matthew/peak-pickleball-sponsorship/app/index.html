@@ -737,7 +737,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     if (S.sel && rec(S.sel)) { split.appendChild(card(rec(S.sel))); if (isPhone()) document.documentElement.classList.add('lock'); }
   }
   var searchBox = function (into, key, ph, redraw) { var q = el('input', 'search'); q.type = 'search'; q.placeholder = ph; q.value = S.qs[key] || ''; q.addEventListener('input', function () { S.qs[key] = q.value; redraw(); }); into.appendChild(q); return q; };
-  var hay = function (r) { return [r.name, r.kind, r.cat, r.events, r.venue, r.why, r.owner].concat((r.people || []).map(function (c) { return (c.name || '') + ' ' + (c.role || '') + ' ' + (c.email || ''); })).join(' ').toLowerCase(); };
+  var hay = function (r) { return [r.name, r.kind, r.cat, r.events, r.venue, r.why, r.about, r.owner].concat((r.people || []).map(function (c) { return (c.name || '') + ' ' + (c.role || '') + ' ' + (c.email || ''); })).join(' ').toLowerCase(); };
   var LC = [['', 'Last contacted: any time'], ['today', 'Contacted today'], ['7', 'In the last 7 days'], ['30', '8 to 30 days ago'], ['old', 'Over 30 days ago'], ['never', 'Never contacted']];
   var lcOk = function (r, f) { if (!f) return true; var t = r.last; if (f === 'never') return !t; if (!t) return false; var n = daysSince(t.when); return f === 'today' ? relDay(t.when) === 'today' : f === '7' ? n < 7 : f === '30' ? n >= 7 && n <= 30 : n > 30; };
 
@@ -1031,6 +1031,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     d.appendChild(el('h2', null, r.name));
     d.appendChild(el('div', 'sub', (X ? ['Priority ' + r.pri, r.cat, r.mine ? 'added on the desk by ' + r.by : ''] : [LISTNAME[r.list], r.kind, r.score != null ? 'score ' + r.score + (r.list === 'local' ? '' : '/9') : '', milesOf(r) != null ? milesOf(r) + ' mi from Peak' : '']).filter(Boolean).join(' · ')));
     if (r.why) { var w = el('div'); w.style.fontSize = '14px'; if (X) w.appendChild(el('b', null, 'Why Peak: ')); w.appendChild(document.createTextNode(r.why)); d.appendChild(w); }
+    if (r.about) { var ab = el('div', 'aboutline'); ab.style.fontSize = '14px'; ab.appendChild(el('b', null, 'What they do: ')); ab.appendChild(document.createTextNode(r.about)); ab.appendChild(el('small', null, ' · from their website')); d.appendChild(ab); }   /* the look-up after adding (2026-11-24) */
     d.appendChild(strip(r));
     var peT = (r.touches || []).filter(function (t) { return t.by === PE && t.m === 'email' && t.out === 'sent'; }).sort(function (a, b) { return b.when - a.when; })[0];
     if (peT) { var pn = el('div', 'fuhint penote'); pn.setAttribute('data-pe', '1'); var sm = String(peT.note || '').match(/"([^"]+)"/);
@@ -1599,7 +1600,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       if (!B.on) { ins.disabled = true; ins.title = 'Booking links are off for now'; }
       ins.addEventListener('click', function () { var a = bd.selectionStart != null ? bd.selectionStart : bd.value.length, v = bd.value, add = (a && !/\s$/.test(v.slice(0, a)) ? '\n\n' : '') + 'Pick a time that suits you: {book}' + (v.slice(a).trim() ? '\n\n' : ''); bd.value = v.slice(0, a) + add + v.slice(a); bd.focus(); links(); });
       row1.appendChild(ins); box.appendChild(row1);
-      box.appendChild(el('div', 'fuhint', B.on ? '{book} turns into your own booking link when it sends: they pick a time on the desk’s shared hours (' + B.hours + ') and it lands on this card with you as host.' : 'Booking links turn on once Matthew says go.'));
+      box.appendChild(el('div', 'fuhint', B.on ? '{book} turns into your own booking link when it sends: they pick a time on the ' + (isX() ? 'expo tour hours (' + B.xhours : 'sponsor tour hours (' + B.hours) + ') and it lands on this card with you as host.' : 'Booking links turn on once Matthew says go.'));
       var mine = C.mine || {};
       box.appendChild(el('div', 'fuhint', 'Signed: ' + String(mine.sig || me()).split('\n').join(' · ') + (mine.replyto ? ' · replies go to ' + mine.replyto : ' · replies come to ' + FROMN() + ' and show on this card') + '. Change it in More, My email & booking link.'));
       if (r.owner && r.owner !== me()) box.appendChild(el('div', 'fuhint', r.owner + ' owns ' + r.name + '. What you send is logged under your name.'));
@@ -1790,6 +1791,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       if (s.srcCheck) { var ok = s.srcCheck.ok; sec.appendChild(el('div', ok === false ? 'it warnline' : 'it', ok === true ? 'The phone above is still on the page it came from.' : ok === false ? 'The phone above is no longer on the page it came from. Check it before calling.' : 'The phone’s source page could not be read (' + s.srcCheck.err + ').')); }
       if (s.changes && s.changes.length) { sec.appendChild(el('h4', null, 'What changed')); s.changes.slice().reverse().slice(0, 5).forEach(function (c) { var d = el('div', 'it', c.what); d.appendChild(el('small', null, ' · ' + ago(c.at))); sec.appendChild(d); }); }
     } else if (site || src) sec.appendChild(el('div', 'it', 'Not looked up yet.'));
+    /* the look-up after adding (2026-11-24): when it ran and whether it found their website */
+    if (s && s.auto && s.auto.at) sec.appendChild(el('div', 'it autoline', 'Looked up automatically ' + ago(s.auto.at) + (s.auto.found === false ? ': website not found (nothing showed the name with this phone or a Springs-area address, so none was saved)' : s.auto.found ? ': website found, ' + (s.auto.how || 'checked against the card') : '') + '. What it found is in the Activity.'));
     if (s && s.hunter) sec.appendChild(el('small', null, 'Hunter, ' + ago(s.hunter.at) + ': ' + (s.hunter.people.length ? plural(s.hunter.people.length, 'person') + ' at ' + s.hunter.domain + ', listed under How to reach them' : 'nobody found at ' + s.hunter.domain)));
     var rg = s && s.reg;
     if (rg && rg.at) {
@@ -1799,6 +1802,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         if (rg.id) { rd.appendChild(document.createTextNode(' ')); var ra = el('a', null, 'State record ›'); ra.href = 'https://www.coloradosos.gov/biz/BusinessEntityDetail.do?masterFileId=' + encodeURIComponent(rg.id); ra.target = '_blank'; ra.rel = 'noopener'; rd.appendChild(ra); }
         sec.appendChild(rd);
       }
+      if (rg.addr) sec.appendChild(el('div', 'it', 'Principal office on the filing: ' + rg.addr + (milesOf(l) != null && !(s.addr) ? ' · ' + milesOf(l) + ' mi from Peak' : '')));
       if (rg.agent) sec.appendChild(el('div', 'it', 'Registered agent: ' + rg.agent + '. At a small business this is often the owner; worth asking for by name.'));
       (rg.trade || []).forEach(function (p) { sec.appendChild(el('div', 'it', 'Trade name filed by ' + p + '.')); });
       if (rg.many) sec.appendChild(el('div', 'it', rg.many + ' active filings share this name and none is in the Springs area, so none is matched.'));
@@ -2615,7 +2619,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   function drawMine() {
     var C = DMC(), B = BKC(), mine = C.mine || {}, g = el('div', 'setgrid'); main.appendChild(g);
     var c = el('div', 'card info'); c.setAttribute('data-set', 'mybook'); g.appendChild(c); c.appendChild(el('h3', null, 'My booking link'));
-    c.appendChild(el('p', 'soft', 'Send this link to anyone and they can pick a time on the desk’s shared hours: ' + (B.hours || '') + ' (Mountain time), ' + (B.mins || 30) + ' minutes, at least ' + (B.notice || 24) + ' hours ahead, up to ' + (B.ahead || 14) + ' days out. A time booked by anyone, from any link or typed on the desk, is gone for everyone. A booking from your link makes you the host, puts it on Today for you, and goes on the right card (a new lead “Booked from link” when they are not on the desk yet). In a desk email, Insert my booking link does the same for that email.'));
+    c.appendChild(el('p', 'soft', 'Send this link to anyone: they say whether it is about sponsoring or an event, then pick a time on that schedule (sponsor and membership tours ' + (B.hours || '') + '; expo tours ' + (B.xhours || '') + '; Mountain time), ' + (B.mins || 30) + ' minutes, at least ' + (B.notice || 24) + ' hours ahead, up to ' + (B.ahead || 14) + ' days out. A time booked by anyone, from any link or typed on the desk, is gone for everyone. A booking from your link makes you the host, puts it on Today for you, and goes on the right card (a new lead “Booked from link” when they are not on the desk yet). In a desk email, Insert my booking link does the same for that email.'));
     c.appendChild(el('p', B.on ? 'soft' : 'warnline', B.on ? 'Booking links are on. ' + plural(B.open || 0, 'time') + ' open now. Your link: ' + plural(B.views || 0, 'visit') + ', ' + plural(B.booked || 0, 'booking') + '.' : 'Booking links are off for now: the link answers “Not taking bookings right now” until Matthew says go.'));
     var out = el('div', 'form'); c.appendChild(out);
     var show = function (j) {
@@ -2660,14 +2664,18 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   function setBooking(g) {
     var B = BKC(), c = el('div', 'card info'); c.setAttribute('data-set', 'booking'); g.appendChild(c);
     c.appendChild(el('h3', null, 'Booking links'));
-    c.appendChild(el('p', 'soft', 'One schedule for the whole desk. Each person has their own link (More, My email & booking link), a desk email can carry one, and the Peak email’s {book} uses it too; whoever’s link it was becomes the host. One booking per time across the desk: a tour booked from any link, or typed on the desk, takes the time away for everyone. A booking puts the tour on the right card, alerts the host on Today and emails Matthew a heads-up; the tour confirmation email goes too when that is on. While Off every link answers “Not taking bookings right now”.'));
+    c.appendChild(el('p', 'soft', 'Two schedules, Sponsor and membership tours and Expo tours, with the rest shared. Each person has their own link (More, My email & booking link), a desk email can carry one, and the Peak email’s {book} uses it too; whoever’s link it was becomes the host. One booking per time across the desk: a tour booked from any link, or typed on the desk, takes the time away for everyone. A booking puts the tour on the right card, alerts the host on Today and emails Matthew a heads-up; the tour confirmation email goes too when that is on. While Off every link answers “Not taking bookings right now”.'));
     var st = { on: !!B.on }, seg = el('div', 'seg'); [['off', 'Off'], ['on', 'On']].forEach(function (o) { var b = el('button', null, o[1]); b.type = 'button'; b.setAttribute('data-bkset', o[0]); b.addEventListener('click', function () { st.on = o[0] === 'on'; paint(); }); seg.appendChild(b); });
     var paint = function () { [].forEach.call(seg.children, function (b) { b.setAttribute('aria-pressed', String((b.getAttribute('data-bkset') === 'on') === st.on)); }); };
     c.appendChild(seg); paint();
-    c.appendChild(el('small', null, (B.on ? 'On. ' : 'Off. ') + 'Now: ' + (B.hours || '') + '; ' + plural(B.open || 0, 'time') + ' open.' + (B.by ? ' Last changed by ' + B.by + (B.at ? ', ' + ago(B.at) : '') + '.' : '')));
+    c.appendChild(el('small', null, (B.on ? 'On. ' : 'Off. ') + 'Sponsor and membership tours: ' + (B.hours || '') + ' (' + plural(B.open || 0, 'time') + ' open). Expo tours: ' + (B.xhours || '') + ' (' + plural(B.xopen || 0, 'time') + ' open).' + (B.by ? ' Last changed by ' + B.by + (B.at ? ', ' + ago(B.at) : '') + '.' : '')));
     var f = el('div', 'form'); f.style.marginTop = '10px'; c.appendChild(f);
-    f.appendChild(el('label', 'lab', 'Hours, Mountain time: one day a line (24-hour clock), more than one range with a comma'));
+    /* two schedules (2026-11-24): an expo link shows the expo hours, a sponsor one the sponsor hours; one booking per time across both */
+    f.appendChild(el('label', 'lab', 'Sponsor and membership tours: hours, Mountain time, one day a line (24-hour clock), more than one range with a comma'));
     var wk = el('textarea'); wk.rows = 5; wk.className = 'bkweek'; wk.value = B.week || ''; f.appendChild(wk);
+    f.appendChild(el('label', 'lab', 'Expo tours: hours, the same way'));
+    var xw = el('textarea'); xw.rows = 5; xw.className = 'bkxweek'; xw.value = B.xweek || ''; f.appendChild(xw);
+    f.appendChild(el('small', null, 'A link from an expo card or an expo email shows the expo hours; a sponsor one the sponsor hours; a personal or general link asks the visitor which first. A tour on either list takes that time on both.'));
     var two = el('div', 'two'), ln = el('select'), nt = el('input'), ah = el('input'); ln.className = 'bkmins'; nt.className = 'bknotice'; ah.className = 'bkahead'; nt.type = ah.type = 'number'; nt.min = 0; nt.max = 336; ah.min = 1; ah.max = 60;
     (B.lens || [30]).forEach(function (m) { var o = el('option', null, m + ' minutes'); o.value = m; ln.appendChild(o); }); ln.value = String(B.mins || 30); nt.value = B.notice; ah.value = B.ahead;
     var lab = function (t, e) { var d = el('div'); d.appendChild(el('label', 'lab', t)); d.appendChild(e); return d; };
@@ -2680,8 +2688,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var bl = el('textarea'); bl.rows = 3; bl.className = 'bkblocked'; bl.value = (B.blocked || []).join('\n'); f.appendChild(bl);
     f.appendChild(el('small', null, 'Holidays are not blocked unless they are listed here (Thanksgiving, Christmas and New Year’s Day included).'));
     var row = el('div', 'seg'), sv = el('button', 'btn small', 'Save'), rs = el('button', 'lnk', 'Go back to the first hours'); sv.type = rs.type = 'button'; sv.setAttribute('data-act', 'bksave');
-    sv.addEventListener('click', function () { if (st.on && !B.on && !confirm('Turn on booking links? From now on anyone with a link can book a time on these hours.')) return; save('bookset', { on: st.on, week: wk.value, mins: +ln.value, notice: +nt.value, ahead: +ah.value, blocked: bl.value, meet: mt.value }, st.on ? 'Booking links are on' : 'Saved (booking links are off)'); });
-    rs.addEventListener('click', function () { var D = B.defaults || {}; wk.value = D.week || ''; ln.value = String(D.mins || 30); nt.value = D.notice || 24; ah.value = D.ahead || 14; toast('The first hours are filled in: press Save to keep them.'); });
+    sv.addEventListener('click', function () { if (st.on && !B.on && !confirm('Turn on booking links? From now on anyone with a link can book a time on these hours.')) return; save('bookset', { on: st.on, week: wk.value, xweek: xw.value, mins: +ln.value, notice: +nt.value, ahead: +ah.value, blocked: bl.value, meet: mt.value }, st.on ? 'Booking links are on' : 'Saved (booking links are off)'); });
+    rs.addEventListener('click', function () { var D = B.defaults || {}; wk.value = D.week || ''; xw.value = D.xweek || ''; ln.value = String(D.mins || 30); nt.value = D.notice || 24; ah.value = D.ahead || 14; toast('The first hours are filled in: press Save to keep them.'); });
     row.appendChild(sv); row.appendChild(rs); f.appendChild(row);
     var gl = el('div', 'form'); gl.style.marginTop = '12px'; c.appendChild(gl);
     gl.appendChild(el('label', 'lab', 'The general link (no host: a booking from it alerts Matthew, and someone picks it up on the desk)'));

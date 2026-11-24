@@ -86,7 +86,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     bkLog(['t' => 'view', 'src' => $ctx['src'], 'host' => $ctx['host'], 'ref' => $ctx['ref'], 'bot' => bkBot($ua, (int) ($ctx['sentAt'] ?? 0)) ? 1 : 0]);
 }
 
-$slots = bkSlots(400, $c);
+/* which schedule (2026-11-24): the link's own list, else the visitor picks first (a personal or the general link) */
+$lw = in_array($ctx['w'], ['sponsor', 'expo'], true) ? $ctx['w'] : (in_array($val['topic'] ?: (string) ($q['t'] ?? ''), ['sponsor', 'expo'], true) ? ($val['topic'] ?: (string) $q['t']) : '');
+if ($lw === '') {
+    $qs = fn(string $t) => '?' . $h(http_build_query(array_intersect_key($q, array_flip(['p', 'g', 'm', 'o'])) + ['t' => $t]));
+    $bt = 'display:block;margin:10px 0 0;background:#1f5b46;color:#fff;text-decoration:none;font-weight:700;border-radius:10px;padding:12px 18px';
+    $page('Book a time with Peak Pickleball', '<p style="margin:0">What would you like to talk about?</p><a data-topic="sponsor" href="' . $qs('sponsor') . '" style="' . $bt . '">Sponsoring at Peak</a><a data-topic="expo" href="' . $qs('expo') . '" style="' . $bt . '">Holding an event or expo at Peak</a>' . $where . $phone);
+}
+$val['topic'] = $lw;
+$slots = bkSlots(400, $c, $lw);
 if (!$slots) $page('No open times just now', '<p style="margin:0">Every time in the next ' . (int) $c['ahead'] . ' days is taken. Reply to the email this link came in, and we will find a time with you.</p>' . $phone);
 $known = $ctx['id'] !== '' && empty($ctx['off']);
 $in = 'width:100%;box-sizing:border-box;font:inherit;padding:8px;border:1px solid #c3d3ca;border-radius:8px';
@@ -104,9 +112,7 @@ $f .= $lab('Your name', 'bkn') . '<input id="bkn" name="name" maxlength="80" req
     . $lab('Your email', 'bke') . '<input id="bke" name="email" type="email" maxlength="160" required autocomplete="email" value="' . $h($val['email']) . '" style="' . $in . '">';
 if (!$known) {
     $f .= $lab('Company or organisation', 'bkc') . '<input id="bkc" name="company" maxlength="100" required autocomplete="organization" value="' . $h($val['company']) . '" style="' . $in . '">';
-    if ($ctx['w'] === '') $f .= '<fieldset style="border:0;margin:14px 0 0;padding:0"><legend style="font-weight:600;padding:0;margin-bottom:4px">What would you like to talk about?</legend>'
-        . '<label style="display:block"><input type="radio" name="topic" value="sponsor"' . ($val['topic'] !== 'expo' ? ' checked' : '') . '> Sponsoring at Peak</label>'
-        . '<label style="display:block"><input type="radio" name="topic" value="expo"' . ($val['topic'] === 'expo' ? ' checked' : '') . '> Holding an event or expo at Peak</label></fieldset>';
+    if ($ctx['w'] === '') $f .= '<input type="hidden" name="topic" value="' . $h($lw) . '">';
 }
 $f .= $lab('Anything we should know (optional)', 'bkt') . '<textarea id="bkt" name="note" maxlength="400" rows="3" style="' . $in . '">' . $h($val['note']) . '</textarea>'
     . '<div style="position:absolute;left:-9999px" aria-hidden="true"><label>Leave this empty <input name="website" tabindex="-1" autocomplete="off"></label></div>'

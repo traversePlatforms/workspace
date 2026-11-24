@@ -15,10 +15,32 @@ const UA = 'Mozilla/5.0 (compatible; PeakSponsorDesk/1.0; +https://traverseplatf
 const PEAK = [38.9475, -104.7956];   /* Chapel Hills Mall */
 const FREE_MAIL = '/@(gmail|yahoo|outlook|hotmail|aol|icloud|me|msn|live|comcast|protonmail)\.(com|net)$/';
 
+/* The tests' stand-in for the web (2026-11-24): DESK_FAKE_WEB names a JSON file {"pages": {url: html}, "json": {url prefix: answer},
+   "pass": [hosts read for real]}; every address asked for is written to <file>.log. Never set on the server. */
+function scanFakeHit(string $url, string $kind): ?array {
+    $p = (string) getenv('DESK_FAKE_WEB'); if ($p === '') return null;
+    $F = json_decode((string) @file_get_contents($p), true) ?: [];
+    @file_put_contents($p . '.log', $kind . ' ' . preg_replace('/api_key=[^&]+/', 'api_key=KEY', $url) . "\n", FILE_APPEND | LOCK_EX);
+    $host = scanHost($url);
+    foreach ((array) ($F['pass'] ?? []) as $h) if ($host === $h || str_ends_with($host, '.' . $h)) return null;
+    if ($kind === 'pages') { $u = rtrim($url, '/'); foreach ((array) ($F['pages'] ?? []) as $k => $v) if (rtrim((string) $k, '/') === $u) return ['hit' => true, 'v' => $v]; return ['hit' => false]; }
+    $best = null; $bl = -1;
+    foreach ((array) ($F['json'] ?? []) as $k => $v) if (str_starts_with($url, (string) $k) && strlen((string) $k) > $bl) { $best = $v; $bl = strlen((string) $k); }
+    return ['hit' => $best !== null, 'v' => $best];
+}
+function scanFakeHosts(): ?array {
+    $p = (string) getenv('DESK_FAKE_WEB'); if ($p === '') return null;
+    $F = json_decode((string) @file_get_contents($p), true) ?: []; $o = [];
+    foreach (array_keys((array) ($F['pages'] ?? [])) as $k) $o[scanHost((string) $k)] = 1;
+    foreach ((array) ($F['pass'] ?? []) as $h) $o[$h] = 1;
+    return $o;
+}
+
 /* GET a public web page. Every hop is checked: http(s) on the normal ports, a name that resolves to a public address only, and the
    connection pinned to the address that was checked. */
 function scanFetch(string $url, int $max = 1500000): array {
     for ($hop = 0; $hop < 5; $hop++) {
+        if ($fk = scanFakeHit($url, 'pages')) return $fk['hit'] ? ['ok' => true, 'url' => $url, 'body' => (string) $fk['v']] : ['ok' => false, 'err' => 'the site was not found'];
         $p = parse_url($url);
         $sch = strtolower((string) ($p['scheme'] ?? ''));
         if (!$p || !in_array($sch, ['http', 'https'], true) || empty($p['host'])) return ['ok' => false, 'err' => 'not a web address'];
@@ -43,6 +65,7 @@ function scanFetch(string $url, int $max = 1500000): array {
 }
 /* a JSON API at a fixed address (Hunter, the Census geocoder) */
 function scanJson(string $url): ?array {
+    if ($fk = scanFakeHit($url, 'json')) return $fk['hit'] && is_array($fk['v']) ? $fk['v'] : null;
     $ch = curl_init($url);
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 15, CURLOPT_CONNECTTIMEOUT => 6, CURLOPT_USERAGENT => UA, CURLOPT_PROTOCOLS => CURLPROTO_HTTPS]);
     $s = curl_exec($ch); unset($ch);
@@ -84,6 +107,7 @@ function scanLd($d, array &$o): void {
     foreach ($d as $k => $v) {
         if ($k === 'telephone' && is_string($v)) $o['phones'][] = $v;
         elseif ($k === 'email' && is_string($v)) $o['emails'][] = preg_replace('/^mailto:/i', '', $v);
+        elseif ($k === '@type' && is_string($v)) $o['types'][] = $v;
         elseif ($k === 'sameAs') foreach ((array) $v as $u) { if (is_string($u)) $o['social'][] = $u; }
         elseif ($k === 'address' && is_array($v) && !empty($v['streetAddress']) && !$o['addr']) $o['addr'] = trim(implode(', ', array_filter([$v['streetAddress'] ?? '', $v['addressLocality'] ?? '', trim(($v['addressRegion'] ?? '') . ' ' . ($v['postalCode'] ?? ''))])));
         elseif (is_array($v)) scanLd($v, $o);
@@ -91,7 +115,7 @@ function scanLd($d, array &$o): void {
 }
 
 function scanParse(string $html, string $base): array {
-    $o = ['phones' => [], 'emails' => [], 'addr' => '', 'social' => [], 'links' => [], 'title' => ''];
+    $o = ['phones' => [], 'emails' => [], 'addr' => '', 'social' => [], 'links' => [], 'title' => '', 'types' => [], 'desc' => '', 'text' => ''];
     if (preg_match_all('/data-cfemail="([0-9a-f]{4,})"/i', $html, $m)) foreach ($m[1] as $h) {   /* Cloudflare hides emails this way */
         $k = hexdec(substr($h, 0, 2)); $e = ''; for ($i = 2; $i + 1 < strlen($h); $i += 2) $e .= chr(hexdec(substr($h, $i, 2)) ^ $k); $o['emails'][] = $e;
     }
@@ -113,6 +137,10 @@ function scanParse(string $html, string $base): array {
     if (preg_match_all('/(?<![\d-])(?:\+?1[ .-]?)?(?:\((\d{3})\)\s?|(\d{3})[ .-])(\d{3})[ .-](\d{4})(?![\d-])/', $t, $m, PREG_SET_ORDER)) foreach ($m as $x) $o['phones'][] = ($x[1] ?: $x[2]) . $x[3] . $x[4];
     if (preg_match_all('/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/', $t, $m)) foreach ($m[0] as $e) $o['emails'][] = $e;
     if (!$o['addr'] && preg_match('/\b\d{2,6}\s+(?:[NSEW]\.?\s+)?[A-Za-z0-9.\' -]{2,40}?\b(?:Street|St|Avenue|Ave|Boulevard|Blvd|Road|Rd|Drive|Dr|Lane|Ln|Way|Parkway|Pkwy|Court|Ct|Circle|Cir|Place|Pl|Highway|Hwy|Loop|Point|Pt|Trail|Trl|Grove|Heights|Hts)\b\.?(?:,?\s*(?:Suite|Ste|Unit|#)\.?\s*[\w-]+)?[,\s]+[A-Za-z .]{3,30},?\s+(?:CO|Colorado)\s+8\d{4}\b/', $t, $m)) $o['addr'] = trim(preg_replace('/\s+/', ' ', $m[0]));
+    /* what they say they do (2026-11-24): the page's own description, for the card's "What they do" */
+    if (preg_match('#<meta\b[^>]*(?:name|property)\s*=\s*["\'](?:description|og:description)["\'][^>]*>#i', $html, $m) && preg_match('#content\s*=\s*"([^"]*)"|content\s*=\s*\'([^\']*)\'#i', $m[0], $c))
+        $o['desc'] = mb_substr(trim(preg_replace('/\s+/', ' ', html_entity_decode(strip_tags(($c[1] ?? '') !== '' ? $c[1] : ($c[2] ?? '')), ENT_QUOTES | ENT_HTML5))), 0, 300);
+    $o['text'] = mb_substr($t, 0, 200000);
     if (preg_match('#<title[^>]*>(.*?)</title>#is', $html, $m)) $o['title'] = mb_substr(trim(html_entity_decode(strip_tags($m[1]), ENT_QUOTES | ENT_HTML5)), 0, 120);
     return $o;
 }
@@ -166,7 +194,7 @@ function scanSite(array $L, ?array $prev): array {
             else {
                 $host = scanHost($home['url']); $all = [[scanParse($home['body'], $home['url']), 'home page']];
                 /* pick the contact, sponsorship/community and about pages from the home page's links (same site only) */
-                $want = ['contact' => '/contact|reach-us|get-in-touch|locations?\b/i', 'sponsor' => '/sponsor|community|giving|give-back|donat|charit|outreach|partners?hip/i', 'about' => '/about|our-team|\bteam\b|staff|leadership|our-story/i'];
+                $want = ['contact' => '/contact|reach-us|get-in-touch|locations?\b/i', 'sponsor' => '/sponsor|community|giving|give-back|donat|charit|outreach|partners?hip/i', 'about' => '/about|our-team|\bteam\b|staff|leadership|our-story/i', 'events' => '/\bevents?\b|\bexpos?\b|trade-?shows?|\bcalendar\b/i'];
                 $pick = [];
                 foreach ($all[0][0]['links'] as [$u, $txt]) {
                     if (scanHost($u) !== $host || preg_match('/\.(pdf|jpe?g|png|zip|docx?)(\?|$)/i', $u)) continue;
@@ -176,7 +204,7 @@ function scanSite(array $L, ?array $prev): array {
                 foreach ($pick as $k => $u) {
                     if (!scanAllowed($rules, $u)) continue;
                     $pg = scanFetch($u); if (!$pg['ok']) continue;
-                    $all[] = [scanParse($pg['body'], $pg['url']), $k === 'contact' ? 'contact page' : ($k === 'sponsor' ? 'community page' : 'about page')];
+                    $all[] = [scanParse($pg['body'], $pg['url']), ['contact' => 'contact page', 'sponsor' => 'community page', 'about' => 'about page', 'events' => 'events page'][$k]];
                     if ($k !== 'about') $r['pages'][$k] = $pg['url'];
                 }
                 $seenP = []; $seenE = []; $soc = [];
@@ -187,6 +215,7 @@ function scanSite(array $L, ?array $prev): array {
                     foreach ($o['social'] as $u) { if (!preg_match('#^https?://([a-z]+\.)?(facebook|instagram|linkedin|x|twitter|youtube|tiktok)\.com/#i', $u, $sm)) continue; $k = strtolower($sm[2]); if (!isset($soc[$k])) $soc[$k] = $u; }
                 }
                 $r['social'] = array_values(array_slice($soc, 0, 6)); $r['title'] = $all[0][0]['title']; $r['ok'] = true;
+                $r['desc'] = lkDesc($all[0][0]['desc']); $r['types'] = array_values(array_unique(array_merge(...array_map(fn($x) => $x[0]['types'], $all))));
             }
         }
     }
@@ -262,25 +291,30 @@ function regNorm(string $s): string {
     $s = preg_replace('/[^A-Z0-9 ]+/', ' ', $s); $s = preg_replace('/\b(THE|LLC|L L C|INC|INCORPORATED|CORP|CORPORATION|CO|COMPANY|LTD|PC|P C|PLLC|LLP|LP|DBA)\b/', ' ', $s);
     return trim(preg_replace('/\s+/', ' ', $s));
 }
+/* sign / signs, banner / banners: Brandon typed "Designer sign and banners", the state has DESIGNER SIGNS & BANNERS (2026-11-24) */
+function regKey(string $n): string { return implode(' ', array_map(fn($w) => strlen($w) > 3 ? preg_replace('/S$/', '', $w) : $w, explode(' ', $n))); }
+const LOCAL_RE = '/colorado springs|monument|fountain|peyton|falcon|manitou|woodland park|security|widefield|black forest/i';
 function regTitle(string $s): string { return ucwords(strtolower(trim(preg_replace('/\s+/', ' ', $s)))); }
 function regFind(array $L): array {
     $out = ['at' => time()]; $n = regNorm(preg_replace('/\s*\(.*?\)\s*/', ' ', (string) $L['name']));
     if (strlen($n) < 4) return $out + ['none' => true];
-    $first = str_replace("'", "''", implode(' ', array_slice(explode(' ', $n), 0, 2)));
+    $first = str_replace("'", "''", regKey(implode(' ', array_slice(explode(' ', $n), 0, 2)))); $nk = regKey($n);
     $q = fn(string $ds, string $where, string $sel) => scanJson("https://data.colorado.gov/resource/$ds.json?" . http_build_query(['$where' => $where, '$select' => $sel, '$limit' => '50']));
-    $E = $q('4ykn-tg5h', "upper(entityname) like '$first%'", 'entityname,entitystatus,entityid,principalcity,entityformdate,agentfirstname,agentlastname,agentorganizationname');
+    $E = $q('4ykn-tg5h', "upper(entityname) like '$first%'", 'entityname,entitystatus,entityid,principaladdress1,principalcity,principalzipcode,entityformdate,agentfirstname,agentlastname,agentorganizationname');
     $T = $q('u7sb-g482', "upper(tradenamedescription) like '$first%'", 'tradenamedescription,entitystatus,entityid,registrantorganization,firstname,lastname,city');
     if ($E === null || $T === null) return ['at' => 0, 'err' => 'the state data did not answer'];   /* tried again next run */
-    $local = '/colorado springs|monument|fountain|peyton|falcon|manitou|woodland park|security|widefield|black forest/i';
+    $local = LOCAL_RE;
     $good = fn($x) => (bool) preg_match('/good|exists|active/i', (string) ($x['entitystatus'] ?? ''));
-    $e = array_values(array_filter($E, fn($x) => regNorm((string) ($x['entityname'] ?? '')) === $n && $good($x)));
-    $t = array_values(array_filter($T, fn($x) => regNorm((string) ($x['tradenamedescription'] ?? '')) === $n && $good($x)));
+    $e = array_values(array_filter($E, fn($x) => regKey(regNorm((string) ($x['entityname'] ?? ''))) === $nk && $good($x)));
+    $t = array_values(array_filter($T, fn($x) => regKey(regNorm((string) ($x['tradenamedescription'] ?? ''))) === $nk && $good($x)));
     $ent = count($e) === 1 ? $e[0] : null;
     if (!$ent && count($e) > 1) { $loc = array_values(array_filter($e, fn($x) => preg_match($local, (string) ($x['principalcity'] ?? '')))); if (count($loc) === 1) $ent = $loc[0]; else $out['many'] = count($e); }
     if ($ent) {
         $out += ['legal' => preg_replace('/,?\s*(Delinquent|Dissolved).*$/i', '', (string) $ent['entityname']), 'status' => (string) $ent['entitystatus'], 'id' => (string) $ent['entityid'], 'city' => regTitle((string) ($ent['principalcity'] ?? '')), 'formed' => substr((string) ($ent['entityformdate'] ?? ''), 0, 10)];
+        $st = trim((string) ($ent['principaladdress1'] ?? ''));
+        if ($st !== '') $out['addr'] = trim(regTitle($st) . ', ' . regTitle((string) ($ent['principalcity'] ?? '')) . ' ' . substr((string) ($ent['principalzipcode'] ?? ''), 0, 5));   /* the principal office on the filing */
         $local2 = preg_match($local, (string) ($ent['principalcity'] ?? ''));
-        if (!empty($ent['agentlastname']) && ($L['list'] !== 'new' || $local2)) $out['agent'] = regTitle(($ent['agentfirstname'] ?? '') . ' ' . $ent['agentlastname']);   /* a big company's agent sits at head office: no use to Brandon */
+        if (!empty($ent['agentlastname']) && (($L['list'] ?? '') !== 'new' || $local2)) $out['agent'] = regTitle(($ent['agentfirstname'] ?? '') . ' ' . $ent['agentlastname']);   /* a big company's agent sits at head office: no use to Brandon */
         elseif (!empty($ent['agentorganizationname'])) $out['agentOrg'] = true;
     }
     foreach ($t as $x) if (!empty($x['lastname']) && (empty($x['city']) || preg_match($local, (string) $x['city']))) $out['trade'][] = regTitle(($x['firstname'] ?? '') . ' ' . $x['lastname']);
@@ -290,16 +324,23 @@ function regFind(array $L): array {
 function regDue(?array $cur): bool { return empty($cur['reg']['at']) || $cur['reg']['at'] < time() - 30 * 86400; }
 
 /* one look-up, merged into scans.json under a lock (the hourly job and a tap can meet); the state filing rides along once a month */
-function scanAndSave(array $L, string $what = 'site'): array {
+/* $what 'auto' (2026-11-24, the look-up after a company is added): $pre carries the website read, the state filing and what the look-up did */
+function scanAndSave(array $L, string $what = 'site', array $pre = []): array {
     $id = (string) $L['id']; $prev = jread('scans.json', [])[$id] ?? null;
-    $new = $what === 'hunter' || (siteOf($L) === '' && srcUrl($L) === '') ? null : scanSite($L, $prev);
+    $auto = $what === 'auto';
+    $new = $auto ? ($pre['site'] ?? null) : ($what === 'hunter' || (siteOf($L) === '' && srcUrl($L) === '') ? null : scanSite($L, $prev));
     $hun = $what === 'hunter' ? hunterFind(hunterDomain($L)) : null;
-    $reg = $what !== 'hunter' && regDue($prev) ? regFind($L) : null;
+    $reg = $auto ? ($pre['reg'] ?? null) : ($what !== 'hunter' && regDue($prev) ? regFind($L) : null);
     $fh = fopen(DATA_DIR . '/scans.lock', 'c'); flock($fh, LOCK_EX);
     $all = jread('scans.json', []); $cur = $all[$id] ?? null;
-    if ($new) { $new['changes'] = scanChanges($cur, $new); foreach (['hunter', 'reg'] as $k) if (isset($cur[$k])) $new[$k] = $cur[$k]; $new['firstAt'] = !empty($cur['firstAt']) ? $cur['firstAt'] : $new['at']; $cur = $new; }
+    if ($new) {
+        $new['changes'] = scanChanges($cur, $new); foreach (['hunter', 'reg', 'auto'] as $k) if (isset($cur[$k])) $new[$k] = $cur[$k];
+        if (!isset($new['miles']) && ($new['addr'] ?? '') === '' && isset($cur['miles'])) $new['miles'] = $cur['miles'];   /* from the filing's address */
+        $new['firstAt'] = !empty($cur['firstAt']) ? $cur['firstAt'] : $new['at']; $cur = $new;
+    }
     if ($hun) { $cur = ($cur ?? ['at' => 0]); $cur['hunter'] = $hun; }
     if ($reg) { $cur = ($cur ?? ['at' => 0]); $cur['reg'] = $reg; }
+    if ($auto) { $cur = ($cur ?? ['at' => 0]); $cur['auto'] = $pre['auto'] ?? ['at' => time()]; if (isset($pre['miles']) && !isset($cur['miles'])) $cur['miles'] = $pre['miles']; }
     $all[$id] = $cur; jwrite('scans.json', $all);
     flock($fh, LOCK_UN); fclose($fh);
     return $cur;

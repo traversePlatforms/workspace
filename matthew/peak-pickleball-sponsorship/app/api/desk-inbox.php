@@ -843,6 +843,7 @@ function alertsFlush(?int $now = null): array {
             return $A;
         });
     } finally { flock($run, LOCK_UN); fclose($run); }
+    try { if (function_exists('lkKick') && lkKick()) $out['lookups'] = 1; } catch (Throwable $e) { error_log('peak desk look-up kick: ' . $e->getMessage()); }   /* companies just added (2026-11-24) */
     if ($out['push'] || $out['mail']) @file_put_contents(DATA_DIR . '/alerts.log', date('Y-m-d H:i', $now) . ' push ' . $out['push'] . ', email ' . $out['mail'] . ($out['held'] ? ', held ' . $out['held'] : '') . "\n", FILE_APPEND | LOCK_EX);
     return $out;
 }

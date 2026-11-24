@@ -52,17 +52,24 @@ function bkLinkBase(): string {
 function bkBase(): string { $p = bkLinkBase(); if ($p !== '') return $p; $e = bkTest() ? (string) getenv('DESK_BOOK_BASE') : ''; return $e !== '' ? $e : BK_BASE; }
 function bkNow(): int { $e = bkTest() ? (string) getenv('DESK_NOW') : ''; return ctype_digit($e) ? (int) $e : time(); }
 
-/* ---- the shared schedule ---- */
+/* ---- the shared schedule ----
+   Two weekly schedules since 2026-11-24 (Matthew gave the tour hours): "week" for Sponsor and membership tours (Mon, Wed, Fri 2:30-4:00 pm;
+   Tue, Thu 8:30 am-4:00 pm) and "xweek" for Expo tours (Mon, Tue 1:00-4:00 pm; Wed, Thu, Fri 8:30 am-4:00 pm). A link made for the Expo
+   leads (an expo card's desk email, the sender's {book} on an expo list) shows the expo hours; a sponsor one the sponsor hours; a personal
+   or general link asks the visitor which first (?t=sponsor|expo). The length, notice, how far ahead and the blocked dates are shared, and
+   one booking per slot stays desk-wide: any tour on either list takes the time on both schedules. */
 function bkDefaults(): array {
-    return ['on' => false, 'week' => [1 => ['14:00-16:00'], 2 => ['08:00-16:00'], 3 => ['14:00-16:00'], 4 => ['08:00-16:00'], 5 => ['14:00-16:00']],
+    return ['on' => false, 'week' => [1 => ['14:30-16:00'], 2 => ['08:30-16:00'], 3 => ['14:30-16:00'], 4 => ['08:30-16:00'], 5 => ['14:30-16:00']],
+        'xweek' => [1 => ['13:00-16:00'], 2 => ['13:00-16:00'], 3 => ['08:30-16:00'], 4 => ['08:30-16:00'], 5 => ['08:30-16:00']],
         'mins' => 30, 'notice' => 24, 'ahead' => 14, 'blocked' => [], 'meet' => ''];
 }
+function bkWeekOf(array $c, string $w): array { return $w === 'expo' ? $c['xweek'] : $c['week']; }
 function bkConf(): array {
     $s = jread('desk-settings.json', [])['book'] ?? []; $d = bkDefaults(); $o = [];
     foreach ($d as $k => $v) $o[$k] = array_key_exists($k, $s) && $s[$k] !== null ? $s[$k] : $v;
     $o['on'] = !empty($o['on']); $o['mins'] = in_array((int) $o['mins'], BK_MINS, true) ? (int) $o['mins'] : 30;
     $o['notice'] = max(0, min(336, (int) $o['notice'])); $o['ahead'] = max(1, min(60, (int) $o['ahead']));
-    $w = []; foreach ((array) $o['week'] as $k => $v) if (isset(BK_DAYS[(int) $k])) $w[(int) $k] = array_values((array) $v); ksort($w); $o['week'] = $w;
+    foreach (['week', 'xweek'] as $wk) { $w = []; foreach ((array) $o[$wk] as $k => $v) if (isset(BK_DAYS[(int) $k])) $w[(int) $k] = array_values((array) $v); ksort($w); $o[$wk] = $w; }
     $o['blocked'] = array_values(array_filter((array) $o['blocked'], fn($x) => okDay((string) $x)));
     $o['meet'] = is_string($o['meet']) ? clean($o['meet'], BK_MEET_MAX) : '';
     return $o + ['by' => (string) ($s['by'] ?? ''), 'at' => (int) ($s['at'] ?? 0)];
@@ -91,7 +98,7 @@ function bkHoursText(array $week): string {
 /** the settings as typed in Settings: the cleaned schedule, or the reason it can't be saved */
 function bkConfIn(array $in, array $cur): array {
     $o = $cur;
-    if (array_key_exists('week', $in)) { $w = bkWeekParse((string) $in['week']); if ($w === null) return ['error' => 'The hours do not read right. One day a line, like "Tue 08:00-16:00" or "Mon 14:00-16:00, 17:00-18:00".']; if (!$w) return ['error' => 'Give at least one day with hours.']; $o['week'] = $w; }
+    foreach (['week' => '', 'xweek' => 'Expo tours: '] as $wk => $lb) if (array_key_exists($wk, $in)) { $w = bkWeekParse((string) $in[$wk]); if ($w === null) return ['error' => $lb . 'The hours do not read right. One day a line, like "Tue 08:00-16:00" or "Mon 14:00-16:00, 17:00-18:00".']; if (!$w) return ['error' => $lb . 'Give at least one day with hours.']; $o[$wk] = $w; }
     if (array_key_exists('mins', $in)) { if (!in_array((int) $in['mins'], BK_MINS, true)) return ['error' => 'Pick a meeting length.']; $o['mins'] = (int) $in['mins']; }
     if (array_key_exists('notice', $in)) { $n = (int) $in['notice']; if ($n < 0 || $n > 336) return ['error' => 'Notice is 0 to 336 hours.']; $o['notice'] = $n; }
     if (array_key_exists('ahead', $in)) { $n = (int) $in['ahead']; if ($n < 1 || $n > 60) return ['error' => 'How far ahead is 1 to 60 days.']; $o['ahead'] = $n; }
@@ -101,7 +108,7 @@ function bkConfIn(array $in, array $cur): array {
         foreach (preg_split('/[\s,;]+/', trim(is_array($in['blocked']) ? implode(' ', $in['blocked']) : (string) $in['blocked'])) ?: [] as $d) { if ($d === '') continue; if (!okDay($d)) return ['error' => '“' . $d . '” is not a date: write it as 2026-11-26.']; $b[$d] = 1; }
         $b = array_keys($b); sort($b); $o['blocked'] = $b;
     }
-    foreach ($o['week'] as $d => $rs) foreach ($rs as $r) { [$a, $z] = explode('-', $r); if ((int) strtotime('2026-01-01 ' . $z) - (int) strtotime('2026-01-01 ' . $a) < $o['mins'] * 60) return ['error' => BK_DAYS[$d] . ' ' . $r . ' is shorter than one meeting.']; }
+    foreach (['week' => '', 'xweek' => 'Expo tours: '] as $wk => $lb) foreach ($o[$wk] as $d => $rs) foreach ($rs as $r) { [$a, $z] = explode('-', $r); if ((int) strtotime('2026-01-01 ' . $z) - (int) strtotime('2026-01-01 ' . $a) < $o['mins'] * 60) return ['error' => $lb . BK_DAYS[$d] . ' ' . $r . ' is shorter than one meeting.']; }
     return $o;
 }
 
@@ -115,13 +122,13 @@ function bkBusy(): array {
     }
     return $o;
 }
-/** the open times, soonest first, at most $max: [["2026-11-24", "14:00"], ...] */
-function bkSlots(int $max = 500, ?array $c = null): array {
+/** the open times on one list's schedule ($w: sponsor|expo), soonest first, at most $max: [["2026-11-24", "14:00"], ...] */
+function bkSlots(int $max = 500, ?array $c = null, string $w = 'sponsor'): array {
     $c ??= bkConf(); $mins = (int) $c['mins']; $busy = bkBusy(); $o = [];
     $now = bkNow(); $earliest = $now + $c['notice'] * 3600; $day0 = (int) strtotime(date('Y-m-d', $now) . ' 00:00'); $blocked = array_flip($c['blocked']);
     for ($i = 0; $i <= $c['ahead']; $i++) {
         $d = (int) strtotime('+' . $i . ' days', $day0); $ds = date('Y-m-d', $d); if (isset($blocked[$ds])) continue;
-        foreach ((array) ($c['week'][(int) date('N', $d)] ?? []) as $r) {
+        foreach ((array) (bkWeekOf($c, $w)[(int) date('N', $d)] ?? []) as $r) {
             [$f, $t] = explode('-', $r); $a = (int) strtotime($ds . ' ' . $f); $z = (int) strtotime($ds . ' ' . $t);
             for ($s = $a; $s + $mins * 60 <= $z; $s += $mins * 60) {
                 if ($s < $earliest) continue;
@@ -237,9 +244,9 @@ function bkStats(): array {
 /** what the desk page gets */
 function bkOut(bool $admin, string $me): array {
     $c = bkConf(); $s = bkStats()['host'][$me] ?? [];
-    $o = ['on' => $c['on'], 'hours' => bkHoursText($c['week']), 'mins' => $c['mins'], 'notice' => $c['notice'], 'ahead' => $c['ahead'], 'blocked' => $c['blocked'], 'meet' => $c['meet'], 'open' => count(bkSlots(1000, $c)),
+    $o = ['on' => $c['on'], 'hours' => bkHoursText($c['week']), 'xhours' => bkHoursText($c['xweek']), 'xopen' => count(bkSlots(1000, $c, 'expo')), 'mins' => $c['mins'], 'notice' => $c['notice'], 'ahead' => $c['ahead'], 'blocked' => $c['blocked'], 'meet' => $c['meet'], 'open' => count(bkSlots(1000, $c)),
         'views' => (int) ($s['views'] ?? 0), 'booked' => (int) ($s['booked'] ?? 0), 'canHost' => in_array($me, bkHosts(), true)];
-    if ($admin) $o += ['week' => bkWeekText($c['week']), 'by' => $c['by'], 'at' => $c['at'], 'lens' => BK_MINS, 'defaults' => ['week' => bkWeekText(bkDefaults()['week']), 'mins' => 30, 'notice' => 24, 'ahead' => 14]];
+    if ($admin) $o += ['week' => bkWeekText($c['week']), 'xweek' => bkWeekText($c['xweek']), 'by' => $c['by'], 'at' => $c['at'], 'lens' => BK_MINS, 'defaults' => ['week' => bkWeekText(bkDefaults()['week']), 'xweek' => bkWeekText(bkDefaults()['xweek']), 'mins' => 30, 'notice' => 24, 'ahead' => 14]];
     return $o;
 }
 
@@ -271,7 +278,7 @@ function bkBook(array $ctx, array $in): array {
             if (($t['src'] ?? '') === 'link' && strtolower((string) ($t['email'] ?? '')) === $email && (string) $t['date'] >= date('Y-m-d', bkNow()))
                 return ['ok' => false, 'code' => 'mine', 'why' => 'You already have a time: ' . date('l, F j', (int) strtotime($t['date'])) . ' at ' . date('g:i a', (int) strtotime($t['date'] . ' ' . $t['time'])) . '.', 'date' => $t['date'], 'time' => $t['time']];
         }
-        if (!in_array([$sm[1], $sm[2]], bkSlots(2000, $c), true)) return ['ok' => false, 'code' => 'taken', 'why' => 'That time was just taken. Pick another one.'];
+        if (!in_array([$sm[1], $sm[2]], bkSlots(2000, $c, $w), true)) return ['ok' => false, 'code' => 'taken', 'why' => 'That time was just taken. Pick another one.'];
         $T = W($w)['T']; $now = time(); $rows = []; $C = W($w); $X = recs($w);
         $R = $known ? ($X[$ctx['id']] ?? null) : bkFind($w, $email, $company);
         if (!$R) {

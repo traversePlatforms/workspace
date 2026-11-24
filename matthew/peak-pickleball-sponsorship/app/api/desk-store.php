@@ -184,7 +184,7 @@ function apply(array &$M, string $w, array $r): void {
     $C = W($w); $t = (string) ($r['t'] ?? ''); $op = array_search($t, $C['T'], true); $op = $op === false ? $t : $op;
     $id = (string) ($r['id'] ?? ''); $at = (int) ($r['at'] ?? 0); $by = (string) ($r['by'] ?? '');
     $has = $id !== '' && isset($M['recs'][$id]);
-    $act = function (string $kind, string $cid, int $when, string $k = '') use (&$M, $by) { if ($by !== '') $M['act'][] = [$when, $by, $kind, $cid, $k]; };
+    $act = function (string $kind, string $cid, int $when, string $k = '') use (&$M, $by) { if ($by !== '' && $by !== AUTO_BY) $M['act'][] = [$when, $by, $kind, $cid, $k]; };
     $dirty = function (string $cid) use (&$M) { $M['dirty'][$cid] = 1; };
     switch ($op) {
         case 'add': {
@@ -264,6 +264,18 @@ function apply(array &$M, string $w, array $r): void {
             unset($d); $dirty($id); return;
         }
         /* sponsors only */
+        /* the look-up's fill (2026-11-24): only fields that are still blank, so nothing a person typed is replaced */
+        case 'fill': if (!$has || !is_array($r['f'] ?? null)) return; foreach ($r['f'] as $k => $v) if (in_array($k, ['about', 'kind', 'cat'], true) && trim((string) ($M['recs'][$id][$k] ?? '')) === '') $M['recs'][$id][$k] = clean($v, 300); $dirty($id); return;
+        /* the company's own line corrected (2026-11-24, Cheyenne Mountain Resort: a directory typo rang a Baymont Inn): the new number and
+           the source line when given. The wrong number is not kept on the card or shown on the Activity (Matthew); the edit says only that
+           the main line was corrected (php desk.php phonefix) */
+        case 'phonefix': {
+            if (!$has) return; $nw = clean($r['phone'] ?? '', 40); if ($nw === '') return;
+            $M['recs'][$id]['phone'] = $nw; if (clean($r['src'] ?? '', 600) !== '') $M['recs'][$id]['callSrc'] = clean($r['src'], 600);
+            $M['recs'][$id]['phoneNote'] = '';
+            $M['recs'][$id]['cedits'][] = ['do' => 'edit', 'at' => $at, 'by' => $by, 'name' => 'Main line' . (clean($r['why'] ?? '', 300) !== '' ? ' (' . clean($r['why'], 300) . ')' : ''), 'chg' => [['phone', 'the wrong number, removed', $nw]]];
+            $dirty($id); return;
+        }
         case 'site': if (!$has) return; $M['recs'][$id]['site'] = (string) ($r['site'] ?? ''); $dirty($id); return;
         case 'signed': if (!$has || !is_array($r['signed'] ?? null)) return; $M['recs'][$id]['signed'] = $r['signed'] + ['by' => $by, 'at' => $at]; $dirty($id); return;
         case 'todo': if (!$has) return; $M['recs'][$id]['todos'][] = ['k' => (string) $r['k'], 'text' => (string) $r['text'], 'done' => false, 'by' => $by, 'at' => $at]; $dirty($id); return;
@@ -714,6 +726,33 @@ function deskBounced(string $w, string $id, string $to, string $note = '', strin
         commit($w, [rowTouch($w, $id, $k, $touch, $by, $now)]);
         return ['ok' => true, 'k' => $k, 'stage' => recs($w)[$id]['stage']];
     });
+}
+/* the look-up after a company is added (2026-11-24; lookup.php explains): the queue, and the 5-minute run's kick */
+const AUTO_BY = 'Looked up automatically';   /* who the card shows for what the look-up wrote; never counted as a person's work */
+function lkQueue(string $w, string $id, string $why = 'added'): void {
+    $fh = @fopen(DATA_DIR . '/lookup-queue.lock', 'c'); if (!$fh) return; flock($fh, LOCK_EX);
+    try { $q = jread('lookup-queue.json', []); $k = $w . ':' . $id; $q[$k] = ['w' => $w, 'id' => $id, 'at' => time(), 'why' => $why, 'tries' => (int) ($q[$k]['tries'] ?? 0)]; jwrite('lookup-queue.json', $q); }
+    finally { flock($fh, LOCK_UN); fclose($fh); }
+}
+/* done: off the queue (unless it was queued again while it ran); not done: one more try */
+function lkUnqueue(string $k, int $at, bool $drop): void {
+    $fh = @fopen(DATA_DIR . '/lookup-queue.lock', 'c'); if (!$fh) return; flock($fh, LOCK_EX);
+    try {
+        $q = jread('lookup-queue.json', []); if (!isset($q[$k])) return;
+        if ((int) ($q[$k]['at'] ?? 0) !== $at) return;
+        if ($drop) unset($q[$k]); else $q[$k]['tries'] = (int) ($q[$k]['tries'] ?? 0) + 1;
+        jwrite('lookup-queue.json', $q);
+    } finally { flock($fh, LOCK_UN); fclose($fh); }
+}
+/* the 5-minute run (alertsFlush): something queued and no look-up running, so start `php desk.php lookups` in the background */
+function lkKick(): bool {
+    if (!jread('lookup-queue.json', []) || getenv('DESK_LOOKUP_NOKICK')) return false;
+    $lk = @fopen(DATA_DIR . '/lookup-run.lock', 'c'); if (!$lk) return false;
+    if (!flock($lk, LOCK_EX | LOCK_NB)) { fclose($lk); return false; }
+    flock($lk, LOCK_UN); fclose($lk);
+    $desk = __DIR__ . '/desk.php'; if (!is_file($desk) || !function_exists('exec')) return false;
+    @exec('DESK_DATA=' . escapeshellarg((string) DATA_DIR) . ' ' . escapeshellarg(deskPhp()) . ' ' . escapeshellarg($desk) . ' lookups 10 --quiet >> ' . escapeshellarg(DATA_DIR . '/lookup.log') . ' 2>&1 &');
+    return true;
 }
 /* the Inbox and reply alerts (2026-11-20): the Peak email sender records Peak Partnerships' Inbox here; desk-inbox.php explains */
 require_once __DIR__ . '/desk-inbox.php';

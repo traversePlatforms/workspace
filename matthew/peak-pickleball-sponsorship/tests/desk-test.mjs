@@ -80,6 +80,10 @@ env.DESK_UID_SINCE = '0';
 env.DESK_OUTREACH_ANYTIME = '1'; env.DESK_OUTREACH_CAP = '2'; env.DESK_JV_TOOL = join(LD, 'jvfake.php');
 writeFileSync(join(LD, 'jvfake.php'), '<?php $t = stream_get_contents(STDIN); file_put_contents(getenv("DESK_DATA") . "/jv-out.jsonl", json_encode(["argv" => array_slice($argv, 1), "text" => $t]) . "\n", FILE_APPEND); exit(0);');
 env.DESK_PUSH_ALLOW_HTTP = '1';   /* the Inbox alerts (2026-11-20): the test push service is a plain listener on 127.0.0.1 */   /* X-16: every tour made in the test carries the new @peakpickleball.us invite UID (the line itself is tested below) */
+/* the look-up after adding (2026-11-24): a stand-in for the web (scan.php scanFakeHit) so no look-up in a run reaches anyone; ABC Family's own
+   site is still read for real (the old look-up check below). The 5-minute kick is off except where it is tested. */
+const FAKEWEB = join(LD, 'fakeweb.json'); writeFileSync(FAKEWEB, JSON.stringify({ pass: ['abcfamilychiropractic.com'], pages: {}, json: { 'https://data.colorado.gov/': [], 'https://geocoding.geo.census.gov/': { result: { addressMatches: [] } } } }));
+env.DESK_FAKE_WEB = FAKEWEB; env.DESK_LOOKUP_NOKICK = '1';
 function client(extra = {}) { let ck = ''; const f = async (action, body, hdr = true) => { const r = await fetch(`${API}?action=${action}`, { method: body ? 'POST' : 'GET', headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(body && hdr ? { 'X-Desk': '1' } : {}), ...(ck ? { Cookie: ck } : {}), ...extra }, body: body ? JSON.stringify(body) : undefined }); const sc = r.headers.get('set-cookie'); if (sc) ck = sc.split(';')[0]; const j = await r.json().catch(() => ({})); j._status = r.status; return j; }; f.cookie = () => ck; return f; }
 const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const today = () => iso(new Date());
@@ -619,8 +623,8 @@ try {
     const book = async (q, form) => { const p = await page(q); const r = await fetch(BKP + q, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'Mozilla/5.0' }, body: new URLSearchParams({ ft: ftOf(p.text), ...form }).toString() }); return r.text(); };
     const heads = () => lines('notify-out.jsonl').map((l) => JSON.parse(l)).filter((m) => m.to === '@notify');
     D = await b('data');
-    ok(D.deskmail && D.deskmail.on === false && D.book && D.book.on === false && D.book.hours === 'Mon, Wed, Fri 2:00-4:00 pm · Tue, Thu 8:00 am-4:00 pm' && D.book.mins === 30 && D.book.notice === 24 && D.book.ahead === 14 && !D.book.blocked.length, 'both off by default; one shared schedule: Mon, Wed, Fri 2:00-4:00 pm · Tue, Thu 8:00 am-4:00 pm, 30 minutes, 24 hours notice, 14 days');
-    ok(!('pixel' in D.deskmail) && D.deskmail.mine.sig === 'Test Seller\nPeak Pickleball' && (await a('data')).book.week === 'Mon 14:00-16:00\nTue 08:00-16:00\nWed 14:00-16:00\nThu 08:00-16:00\nFri 14:00-16:00', 'a seller’s signature starts as their desk name and Peak Pickleball; admins see the hours to edit');
+    ok(D.deskmail && D.deskmail.on === false && D.book && D.book.on === false && D.book.hours === 'Mon, Wed, Fri 2:30-4:00 pm · Tue, Thu 8:30 am-4:00 pm' && D.book.xhours === 'Mon, Tue 1:00-4:00 pm · Wed, Thu, Fri 8:30 am-4:00 pm' && D.book.mins === 30 && D.book.notice === 24 && D.book.ahead === 14 && !D.book.blocked.length, 'both off by default; two schedules: sponsor Mon, Wed, Fri 2:30-4:00 pm · Tue, Thu 8:30 am-4:00 pm, expo Mon, Tue 1:00-4:00 pm · Wed, Thu, Fri 8:30 am-4:00 pm; 30 minutes, 24 hours notice, 14 days');
+    ok(!('pixel' in D.deskmail) && D.deskmail.mine.sig === 'Test Seller\nPeak Pickleball' && (await a('data')).book.week === 'Mon 14:30-16:00\nTue 08:30-16:00\nWed 14:30-16:00\nThu 08:30-16:00\nFri 14:30-16:00', 'a seller’s signature starts as their desk name and Peak Pickleball; admins see the hours to edit');
     ok((await b('contact', { world: 'sponsor', id: E1.id, name: 'Robin Field', email: 'robin@example.com' })).ok && (await b('contact', { world: 'sponsor', id: E2.id, name: 'Avery Stone', email: 'avery@example.com' })).ok && (await b('contact', { world: 'expo', id: XE.id, name: 'Lee Show', email: 'lee@example.com' })).ok, 'contacts with emails (for below)');
     const msg = { world: 'sponsor', id: E1.id, to: 'robin@example.com', name: 'Robin Field', subject: 'Following up from today', text: 'Hi Robin,\n\nGood to talk today. Pick a time that suits you: {book}\n\nThanks,' };
     let n0 = GM.calls;
@@ -629,11 +633,13 @@ try {
     let r = await b('dmsend', msg);
     ok(r._status === 400 && /Desk emails are off/.test(r.error) && GM.calls === n0, 'while off, Send is refused and nothing goes');
     ok((await b('dmset', { on: true }))._status === 403 && (await cc('dmset', { on: true }))._status === 403 && (await b('bookset', { on: true }))._status === 403 && (await cc('bookset', { on: true }))._status === 403, 'only an admin turns either on (not a seller, not Claude Check)');
-    const G = await a('bookgeneric', {}), gq = new URL(G.url).search, PL = await b('booklink', {}), pq = new URL(PL.url).search;
+    const G = await a('bookgeneric', {}), gq0 = new URL(G.url).search, PL = await b('booklink', {}), pq0 = new URL(PL.url).search;
+    /* two schedules (2026-11-24): a personal or general link asks first; &t=sponsor / &t=expo is the visitor's pick */
+    const gq = gq0 + '&t=sponsor', pq = pq0 + '&t=sponsor', gqx = gq0 + '&t=expo';
     ok(/\/api\/book\.php\?g=[0-9a-f]{16}$/.test(G.url) && /\/api\/book\.php\?p=[0-9a-f]{12}-[0-9a-f]{16}$/.test(PL.url) && (await b('bookgeneric', {}))._status === 403 && (await cc('booklink', {}))._status === 403, 'a personal link for each desk person, one general link (admins); unguessable');
     let pg = await page(pq);
     ok(pg.status === 200 && /Not taking bookings right now/.test(pg.text) && !slotsOf(pg.text).length && /\(719\) 377-4725/.test(pg.text), 'while off, every link answers "Not taking bookings right now"');
-    ok(/That link did not work/.test((await page('?g=0000000000000000')).text) && /That link did not work/.test((await page(pq.replace(/.$/, (c) => (c === '0' ? '1' : '0')))).text) && /That link did not work/.test((await page('')).text), 'a made-up or changed link does not work, and the bare page shows nothing');
+    ok(/That link did not work/.test((await page('?g=0000000000000000')).text) && /That link did not work/.test((await page(pq0.replace(/.$/, (c) => (c === '0' ? '1' : '0')))).text) && /That link did not work/.test((await page('')).text), 'a made-up or changed link does not work, and the bare page shows nothing');
     ok(/do not read right/.test((await a('bookset', { week: 'Tue 8-4' })).error) && /shorter than one meeting/.test((await a('bookset', { week: 'Mon 14:00-14:15' })).error) && /is not a date/.test((await a('bookset', { blocked: 'tomorrow' })).error) && /meeting length/.test((await a('bookset', { mins: 7 })).error), 'hours that don’t read right, a range shorter than a meeting, a bad date or length are refused');
     msConnect('reconnect'); ok(/can.t go on yet: the Microsoft sign-in for Peak email needs connecting again/.test((await a('dmset', { on: true })).error), 'desk emails will not go on while the Microsoft sign-in needs connecting again'); msConnect();
     r = await a('dmset', { on: true }); ok(r.ok && r.deskmail.on && (await b('data')).deskmail.on, 'the admin turns desk emails on (the test does it here; live it stays off for Matthew)');
@@ -641,11 +647,26 @@ try {
     r = await a('bookset', { on: true }); ok(r.ok && r.book.on && r.book.open > 20, 'the admin turns booking links on: ' + r.book.open + ' times open');
     /* the page: only the shared hours, Mountain time, nothing of the desk */
     pg = await page(pq); let SL = slotsOf(pg.text);
-    const inHours = (v) => { const [d, t] = v.split(' '), dow = new Date(d + 'T12:00:00').getDay(), hm = +t.slice(0, 2) * 60 + +t.slice(3); return (t.endsWith(':00') || t.endsWith(':30')) && ([1, 3, 5].includes(dow) ? hm >= 840 && hm <= 930 : [2, 4].includes(dow) ? hm >= 480 && hm <= 930 : false); };
+    const inHours = (v) => { const [d, t] = v.split(' '), dow = new Date(d + 'T12:00:00').getDay(), hm = +t.slice(0, 2) * 60 + +t.slice(3); return (t.endsWith(':00') || t.endsWith(':30')) && ([1, 3, 5].includes(dow) ? hm >= 870 && hm <= 930 : [2, 4].includes(dow) ? hm >= 510 && hm <= 930 : false); };   /* 24 Nov: 2:30-4:00 and 8:30-4:00 */
     const minAhead = (v) => (new Date(v.replace(' ', 'T') + ':00').getTime() - Date.now()) / 3600000;
     D = await b('data'); const busy = D.sponsor.tours.concat(D.expo.tours).map((t) => t.date + ' ' + t.time);
     ok(pg.status === 200 && SL.length > 20 && SL.every(inHours) && SL.every((v) => minAhead(v) >= 23.9) && SL.every((v) => minAhead(v) <= 15 * 24) && !SL.some((v) => busy.includes(v)), `the page shows only open times in the shared hours, 24 hours ahead or more, within 14 days, none already toured (${SL.length}; first ${SL[0]})`);
-    ok(pg.text.includes('A 30-minute visit to Peak Pickleball. Pick a time below. Times are Mountain time.') && !/Test Seller/.test(pg.text) && /Mountain time/.test(pg.text) && /1730 Briargate Blvd/.test(pg.text) && /Jamboree Drive/.test(pg.text) && /Company or organisation/.test(pg.text) && /Sponsoring at Peak/.test(pg.text) && !/Kaiser|Robin|Test Seller|peak-desk|desk\.php/.test(pg.text) && /noindex/.test(pg.text), 'Peak-branded: "A 30-minute visit to Peak Pickleball. Pick a time below." (a personal link, nobody set to meet visitors: no name, never the seller), Mountain time, the address and entrance; no desk data');
+    ok(pg.text.includes('A 30-minute visit to Peak Pickleball. Pick a time below. Times are Mountain time.') && !/Test Seller/.test(pg.text) && /Mountain time/.test(pg.text) && /1730 Briargate Blvd/.test(pg.text) && /Jamboree Drive/.test(pg.text) && /Company or organisation/.test(pg.text) && /name="topic" value="sponsor"/.test(pg.text) && !/Kaiser|Robin|Test Seller|peak-desk|desk\.php/.test(pg.text) && /noindex/.test(pg.text), 'Peak-branded: "A 30-minute visit to Peak Pickleball. Pick a time below." (a personal link, nobody set to meet visitors: no name, never the seller), Mountain time, the address and entrance; no desk data');
+    /* the two schedules (2026-11-24, Matthew: sponsor tours Mon, Wed, Fri 2:30-4:00 pm and Tue, Thu 8:30 am-4:00 pm; expo tours Mon, Tue
+       1:00-4:00 pm and Wed, Thu, Fri 8:30 am-4:00 pm) */
+    {
+      const ch = await page(pq0), dowOf = (v) => new Date(v.split(' ')[0] + 'T12:00:00').getDay(), tm = (v) => v.split(' ')[1];
+      ok(!slotsOf(ch.text).length && /What would you like to talk about\?/.test(ch.text) && /data-topic="sponsor"[^>]*>Sponsoring at Peak/.test(ch.text.replace(/href="[^"]*" /g, '')) && /data-topic="expo"/.test(ch.text) && !/Test Seller/.test(ch.text), 'a personal link asks first: Sponsoring at Peak, or Holding an event or expo (no times yet, no seller named)');
+      const SX = slotsOf((await page(gqx)).text), SS = slotsOf((await page(gq)).text);
+      ok(SX.some((v) => dowOf(v) === 1 && tm(v) === '13:00') && !SS.some((v) => dowOf(v) === 1 && tm(v) === '13:00'), 'the expo schedule has Monday 1:00 pm; the sponsor one does not');
+      ok(!SS.some((v) => (tm(v) === '14:00' && [1, 3, 5].includes(dowOf(v))) || tm(v) === '08:00') && SS.some((v) => tm(v) === '14:30') && SS.some((v) => tm(v) === '08:30'), 'the sponsor schedule has no Mon/Wed/Fri 2:00 pm and no 8:00 am time; it starts at 2:30 pm and 8:30 am ' + JSON.stringify(SS.filter((v) => tm(v) === '14:00' || tm(v) === '08:00' || tm(v) === '14:30' || tm(v) === '08:30').slice(0, 6)));
+      ok(SX.every((v) => [1, 2].includes(dowOf(v)) ? tm(v) >= '13:00' && tm(v) <= '15:30' : [3, 4, 5].includes(dowOf(v)) ? tm(v) >= '08:30' && tm(v) <= '15:30' : false), 'the expo schedule is Mon, Tue 1:00-4:00 pm and Wed, Thu, Fri 8:30 am-4:00 pm');
+      const both = SS.filter((v) => SX.includes(v)).pop();   /* the last shared time: the bookings below take the first ones */
+      const XB = (await b('data')).expo.recs.find((x) => !x.off && x.stage === 'new');
+      ok(both && (await b('tour', { world: 'expo', id: XB.id, date: both.split(' ')[0], time: tm(both), who: 'Overlap Test', mail: false })).ok && !slotsOf((await page(gq)).text).includes(both) && !slotsOf((await page(gqx)).text).includes(both), 'a tour on the Expo leads still takes that time off the sponsor schedule too (one booking per time across the desk) ' + both);
+      const DA = await a('data');
+      ok(DA.book.xhours === 'Mon, Tue 1:00-4:00 pm · Wed, Thu, Fri 8:30 am-4:00 pm' && DA.book.hours === 'Mon, Wed, Fri 2:30-4:00 pm · Tue, Thu 8:30 am-4:00 pm' && /Thu 08:30-16:00/.test(DA.book.xweek) && /shorter than one meeting/.test((await a('bookset', { xweek: 'Mon 13:00-13:10' })).error), 'Settings has both schedules; a bad expo range is refused with its own label');
+    }
     /* a booking from a personal link: someone new */
     const S1 = SL[0]; n0 = GM.calls; const h0 = heads().length;
     let out = await book(pq, { slot: S1, name: 'Jordan New', email: 'Jordan@NewCo.example', company: 'Brand New Co', topic: 'sponsor', note: 'Bring the sponsor sheet' });
@@ -665,7 +686,7 @@ try {
     /* Who meets visitors (2026-11-20): one desk-wide setting; the visitor sees it, never the seller; the seller still owns the tour */
     ok((await b('bookset', { meet: 'Tyler' }))._status === 403 && /under 60 characters/.test((await a('bookset', { meet: 'x'.repeat(61) })).error) && /plain words/.test((await a('bookset', { meet: 'Tyler {me}' })).error) && (await a('data')).book.meet === '' && (await b('data')).book.meet === '', 'Who meets visitors: admins only, up to 60 characters, plain words; empty to start');
     r = await a('bookset', { meet: '  Tyler at Peak ' });
-    ok(r.ok && r.book.meet === 'Tyler at Peak' && r.book.on === true && r.book.hours === 'Mon, Wed, Fri 2:00-4:00 pm · Tue, Thu 8:00 am-4:00 pm' && (await b('data')).book.meet === 'Tyler at Peak' && JSON.parse(lines('book-settings.log').slice(-1)[0]).meet === 'Tyler at Peak', 'set through the booking settings (trimmed, logged); booking links stay on and the hours unchanged');
+    ok(r.ok && r.book.meet === 'Tyler at Peak' && r.book.on === true && r.book.hours === 'Mon, Wed, Fri 2:30-4:00 pm · Tue, Thu 8:30 am-4:00 pm' && (await b('data')).book.meet === 'Tyler at Peak' && JSON.parse(lines('book-settings.log').slice(-1)[0]).meet === 'Tyler at Peak', 'set through the booking settings (trimmed, logged); booking links stay on and the hours unchanged');
     pg = await page(pq);
     ok(pg.text.includes('A 30-minute visit to Peak Pickleball with Tyler at Peak. Pick a time below. Times are Mountain time.') && !/Test Seller/.test(pg.text), 'the page: "A 30-minute visit to Peak Pickleball with Tyler at Peak." (the seller’s own link, still not the seller)');
     n0 = GM.calls; const h1 = heads().length, S4 = slotsOf(pg.text)[0];
@@ -695,9 +716,9 @@ try {
     const S3 = SL[3]; ok((await b('tour', { world: 'expo', id: XE.id, date: S3.split(' ')[0], time: S3.split(' ')[1], who: 'Lee Show' })).ok && !slotsOf((await page(gq)).text).includes(S3), 'a tour typed on the desk (even on the Expo leads) takes that time away from every link');
     const dB = SL[SL.length - 1].split(' ')[0];
     ok((await a('bookset', { blocked: dB })).book.blocked.join() === dB && !slotsOf((await page(gq)).text).some((v) => v.startsWith(dB)) && (await a('bookset', { blocked: '' })).book.blocked.length === 0, 'a blocked date has no times (and comes back when unblocked)');
-    ok((await a('bookset', { week: 'Tue 08:00-09:00', mins: 60 })).book.hours === 'Tue 8:00-9:00 am' && slotsOf((await page(gq)).text).every((v) => new Date(v.split(' ')[0] + 'T12:00:00').getDay() === 2 && v.endsWith('08:00')) && (await a('bookset', { week: D.book.week || 'Mon 14:00-16:00\nTue 08:00-16:00\nWed 14:00-16:00\nThu 08:00-16:00\nFri 14:00-16:00', mins: 30 })).book.hours === 'Mon, Wed, Fri 2:00-4:00 pm · Tue, Thu 8:00 am-4:00 pm', 'the admin changes the hours and the length; the page follows; and back');
+    ok((await a('bookset', { week: 'Tue 08:00-09:00', mins: 60 })).book.hours === 'Tue 8:00-9:00 am' && slotsOf((await page(gq)).text).every((v) => new Date(v.split(' ')[0] + 'T12:00:00').getDay() === 2 && v.endsWith('08:00')) && (await a('bookset', { week: D.book.week || 'Mon 14:30-16:00\nTue 08:30-16:00\nWed 14:30-16:00\nThu 08:30-16:00\nFri 14:30-16:00', mins: 30 })).book.hours === 'Mon, Wed, Fri 2:30-4:00 pm · Tue, Thu 8:30 am-4:00 pm', 'the admin changes the hours and the length; the page follows; and back');
     /* an expo organiser from the general link who is already on the Expo leads lands on that card */
-    SL = slotsOf((await page(gq)).text); out = await book(gq, { slot: SL[0], name: 'Pat Organiser', email: 'pat-org@example.com', company: XE.name, topic: 'expo' });
+    SL = slotsOf((await page(gqx)).text); out = await book(gqx, { slot: SL[0], name: 'Pat Organiser', email: 'pat-org@example.com', company: XE.name, topic: 'expo' });
     D = await b('data'); const XR = find('expo', XE.id);
     ok(/You are booked/.test(out) && D.expo.tours.some((t) => t.lead === XE.id && t.src === 'link' && t.email === 'pat-org@example.com') && XR.stage === 'tour' && !D.expo.recs.some((x) => x.id !== XE.id && x.name === XE.name), 'someone already on the Expo leads (same name) lands on that card at Tour booked, no double made');
 
@@ -809,7 +830,7 @@ try {
     ok(/You are booked/.test(out) && D.sponsor.tours.some((t) => t.lead === E3.id && t.from === 'o' && t.host === '') && find('sponsor', E3.id).stage === 'meeting' && mev.some((x) => x.t === 'booked' && x.to === 'casey3@example.com' && x.desk === 1 && x.org === E3.id) && mev.some((x) => x.t === 'desk' && x.op === 'booked' && x.ok), 'booked: on that company’s card; the sender logs it as booked (its rates stay right) and does not push it to the desk again');
     ok(/the Peak email \(\{book\}\)/.test(heads().slice(-1)[0].body), 'Matthew’s heads-up says it came from the Peak email');
     /* at most 10 tries an hour from one address (this test has used 8: one more since the Who meets visitors booking, 2026-11-20) */
-    { const tq = new URL(PL.url).search, f0 = ftOf((await page(tq)).text); const outs = []; for (let i = 0; i < 3; i++) outs.push(await (await fetch(BKP + tq, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ ft: f0, slot: '2020-01-01 10:00', name: 'x', email: 'x@example.com', company: 'x' }).toString() })).text());
+    { const tq = new URL(PL.url).search + '&t=sponsor', f0 = ftOf((await page(tq)).text); const outs = []; for (let i = 0; i < 3; i++) outs.push(await (await fetch(BKP + tq, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ ft: f0, slot: '2020-01-01 10:00', name: 'x', email: 'x@example.com', company: 'x' }).toString() })).text());
       ok(outs.slice(0, 2).every((x) => /That time was just taken/.test(x)) && /Too many tries/.test(outs[2]), 'the page takes at most 10 tries an hour from one address'); }
     /* the log is the record */
     const before = JSON.stringify([find('sponsor', E1.id).dmails, find('sponsor', E2.id).touches.length, D.sponsor.tours.filter((t) => t.src === 'link').length]);
@@ -825,7 +846,7 @@ try {
         { encoding: 'utf8', env: { ...env, STORE: join(WEB, 'api/desk-store.php'), TM: join(WEB, 'api/tour-mail.php'), BL: join(WEB, 'api/book-lib.php'), ...extra } });
       writeFileSync(LF, JSON.stringify({ base: 'https://links.peakpickleball.us', by: 'test' }));
       const G2 = await a('bookgeneric', {}), P2 = await b('booklink', {});
-      ok(G2.url === PB + gq && P2.url === PB + pq, 'on: the general and personal links are links.peakpickleball.us/book/ with the same codes: ' + G2.url.slice(0, 50));
+      ok(G2.url === PB + gq0 && P2.url === PB + pq0, 'on: the general and personal links are links.peakpickleball.us/book/ with the same codes: ' + G2.url.slice(0, 50));
       pg = await page(new URL(G2.url).search);
       ok(pg.status === 200 && /Book a time with Peak Pickleball/.test(pg.text) && !/traverseplatforms/i.test(pg.text), 'the page answers those codes, and says nothing of Traverse');
       pv = await cc('dmpreview', msg);
@@ -1525,6 +1546,77 @@ try {
   ok(sc.ok && sc.scan && (sc.scan.ok ? sc.scan.phones.length > 0 : true), 'looking up still works' + (sc.scan && !sc.scan.ok ? ' (site unreadable today: ' + sc.scan.err + ')' : ''));
   ok((await b('scan', { id: K.id, hunter: true })).error === 'Hunter is not set up here.', 'Hunter is off without its key');
 
+  /* ---- the look-up after adding (2026-11-24, lookup.php) ---- */
+  console.log('Look-up after adding (Matthew: "Anytime a company gets added we should automatically pull data on them")');
+  {
+    const fakeLog = () => (existsSync(FAKEWEB + '.log') ? readFileSync(FAKEWEB + '.log', 'utf8') : '');
+    const W0 = JSON.parse(readFileSync(FAKEWEB, 'utf8'));
+    const page = (title, body, extra = '') => `<html><head><title>${title}</title>${extra}</head><body>${body}</body></html>`;
+    W0.pages = {
+      /* 1: the name and the card's phone: saved */
+      'https://lookupballoon.com/': page('Lookup Balloon Co | Colorado Springs', 'Balloon arches. Call 719-444-1234. <a href="/contact-us">Contact</a> <a href="mailto:hello@lookupballoon.com">email</a>', '<meta name="description" content="Balloon arches and party decor for Springs events."><script type="application/ld+json">{"@type":"PartySupplyStore"}</script>'),
+      'https://lookupballoon.com/contact-us': page('Contact', 'Lookup Balloon Co, 100 N Tejon St, Colorado Springs, CO 80903'),
+      /* 2 (expo): the name and a Springs address, no phone: saved; its JSON-LD type must not replace the category typed */
+      'https://lookupexposhows.com/': page('Lookup Expo Shows', 'Home and garden shows. 20 N Cascade Ave, Colorado Springs, CO 80903. <a href="/events">Our events</a> <a href="mailto:info@lookupexposhows.com">info</a>', '<meta name="description" content="Consumer shows in southern Colorado."><script type="application/ld+json">{"@type":"ExhibitionCenter"}</script>'),
+      'https://lookupexposhows.com/events': page('Events', 'Spring Home Show'),
+      /* 3: the name only (another phone, a Denver address): never saved */
+      'https://lookuponlynamesigns.com/': page('Lookup Onlyname Signs', 'Signs in Denver, 1 Main St, Denver, CO 80202. Call 303-555-0199.'),
+      /* 4: a website typed on the card is read; the kind typed stays */
+      'https://lookuptypedco.com/': page('Lookup Typed Co', 'We do typed things. 719-777-1212', '<meta name="description" content="Typed things since 1999."><script type="application/ld+json">{"@type":"HomeAndConstructionBusiness"}</script>'),
+    };
+    W0.json['https://api.hunter.io/v2/account'] = { data: { requests: { searches: { available: 25, used: 5 } } } };
+    W0.json['https://api.hunter.io/v2/domain-search'] = { data: { domain: '' } };
+    writeFileSync(FAKEWEB, JSON.stringify(W0)); writeFileSync(join(LD, 'hunter.json'), JSON.stringify({ api_key: 'test-not-a-key' }));
+    writeFileSync(join(LD, 'lookup-queue.json'), '{}');   /* only this block's companies (the adds above queued theirs too) */
+    const log0 = fakeLog().length, t0 = Date.now();
+    const a1 = await b('add', { world: 'sponsor', name: 'Lookup Balloon Co', phone: '(719) 444-1234' });
+    const a2 = await b('add', { world: 'expo', name: 'Lookup Expo Shows', cat: 'Home shows typed', phone: '719-333-2222' });
+    const a4 = await b('add', { world: 'sponsor', name: 'Lookup Typed Co', kind: 'Typed kind', site: 'lookuptypedco.com' });
+    const Q = json('lookup-queue.json');
+    ok(a1.ok && a2.ok && a4.ok && Q['sponsor:' + a1.id] && Q['expo:' + a2.id] && Q['sponsor:' + a4.id], 'adding a company queues a look-up, sponsor and expo lists both');
+    ok(fakeLog().length === log0 && Date.now() - t0 < 5000, 'the add itself looks nothing up (no web address asked for during the adds)');
+    /* the 5-minute run (alerts) starts the look-ups in the background */
+    execFileSync('php', [join(WEB, 'api/desk.php'), 'alerts'], { encoding: 'utf8', env: { ...env, DESK_LOOKUP_NOKICK: '' } });
+    let empty = false; for (let i = 0; i < 100 && !empty; i++) { await sleep(200); empty = Object.keys(json('lookup-queue.json')).length === 0 && !/lookups: one is already/.test(existsSync(join(LD, 'lookup.log')) ? readFileSync(join(LD, 'lookup.log'), 'utf8') : ''); }
+    await sleep(300);
+    ok(empty && /website found/.test(readFileSync(join(LD, 'lookup.log'), 'utf8')), 'the 5-minute run (php desk.php alerts) starts the queued look-ups and empties the queue');
+    ok(!/domain-search/.test(fakeLog()), 'Hunter is not asked when the free route found the website');
+    let D = await b('data'); const r1 = D.sponsor.recs.find((r) => r.id === a1.id), r2 = D.expo.recs.find((r) => r.id === a2.id), r4 = D.sponsor.recs.find((r) => r.id === a4.id);
+    ok(r1.site === 'https://lookupballoon.com/' && r1.about === 'Balloon arches and party decor for Springs events.' && r1.kind === 'Party supply store' && r1.scan && r1.scan.ok && r1.scan.auto && r1.scan.auto.found === true, 'sponsor: the website (name + phone matched), what they do, the kind, and the usual website read filled ' + JSON.stringify([r1.site, r1.about, r1.kind]));
+    const p1 = r1.people.find((p) => p.email === 'hello@lookupballoon.com');
+    ok(p1 && /^Their website \(home page\), looked up automatically/.test(p1.src), 'sponsor: the general email added as a contact, marked with where it came from');
+    const n1 = r1.notes.find((n) => n.by === 'Looked up automatically');
+    ok(n1 && /^Looked up automatically: Website found: https:\/\/lookupballoon\.com\/ \(the name and this phone are on it\)/.test(n1.note) && /Contact page/.test(n1.note), 'sponsor: the Activity note says what was found and where');
+    ok(r2.site === 'https://lookupexposhows.com/' && r2.cat === 'Home shows typed' && r2.about === 'Consumer shows in southern Colorado.' && r2.people.some((p) => p.email === 'info@lookupexposhows.com' && /looked up automatically/.test(p.src)), 'expo: the website (name + Springs address), what they do and a general email filled; the category typed is kept');
+    ok(r2.people.some((p) => p.phone === '719-333-2222') && !r2.people.some((p) => /looked up automatically/.test(p.src) && p.phone), 'expo: the phone typed stays and no second phone is added');
+    ok(r2.notes.some((n) => n.by === 'Looked up automatically' && /Events page: https:\/\/lookupexposhows\.com\/events/.test(n.note)), 'expo: the note names their events page');
+    ok(r4.site === 'lookuptypedco.com' && r4.kind === 'Typed kind' && r4.about === 'Typed things since 1999.' && r4.scan.auto.found === null, 'a website and kind typed on the card are kept; the blank what-they-do is filled from their site');
+    ok(!JSON.stringify(D.sponsor.team).includes('Looked up automatically') && !JSON.stringify(D.sponsor.week).includes('Looked up automatically'), 'the look-up is not counted as anyone’s work');
+    /* no website without a second matching fact; Hunter only after the free route, and only with searches to spare */
+    const a3 = await b('add', { world: 'sponsor', name: 'Lookup Onlyname Signs', phone: '719-111-2222' });
+    const L3 = php(['lookups']);
+    D = await b('data'); const r3 = D.sponsor.recs.find((r) => r.id === a3.id);
+    ok(r3 && !r3.site && r3.scan && r3.scan.auto && r3.scan.auto.found === false && r3.notes.some((n) => /^Looked up automatically: Website not found/.test(n.note)), 'a site with the name but not the phone or a Springs address is not saved: "Website not found" ' + L3.slice(0, 200));
+    ok(/domain-search\?company=Lookup\+Onlyname\+Signs/.test(fakeLog()) && !/api_key=test/.test(fakeLog()), 'Hunter’s company search is tried only after the free route found nothing');
+    W0.json['https://api.hunter.io/v2/account'] = { data: { requests: { searches: { available: 25, used: 21 } } } }; writeFileSync(FAKEWEB, JSON.stringify(W0));
+    const before = (fakeLog().match(/domain-search/g) || []).length;
+    const a5 = await b('add', { world: 'sponsor', name: 'Lookup Spare Searches', phone: '719-111-3333' }); php(['lookups']);
+    ok((fakeLog().match(/domain-search/g) || []).length === before, 'with 5 or fewer Hunter searches left, the look-up leaves them for the sellers');
+    /* the backfill: hand-added companies with no automatic look-up yet */
+    const bf = php(['lookups', '--backfill', '--dry-run']), SC = json('scans.json'), HA = (await b('data')).sponsor.recs.find((r) => r.list === 'added' && !(SC[r.id] || {}).auto);
+    ok(/backfill: \d+ queued/.test(bf) && HA && bf.includes(' ' + HA.id + ' ') && !/Lookup Balloon Co/.test(bf) && !/Lookup Spare Searches/.test(bf), 'backfill --dry-run lists the hand-added companies never looked up, and not the ones already done');
+    for (const f of ['hunter.json', 'hunter-state.json', 'lookup-queue.json']) rmSync(join(LD, f), { force: true });
+    void a5;
+  }
+  /* a company's own phone corrected (2026-11-24, Cheyenne Mountain Resort's directory typo) */
+  {
+    let D = await b('data'); const PF = D.sponsor.recs.find((r) => r.phone && r.callSrc && !r.off && !JSON.stringify({ ...r, phone: '' }).includes(r.phone)), was = PF.phone;
+    const pf = JSON.parse(php(['phonefix', 'sponsor', PF.id, '(719) 538-4000', '--why', 'wrong number in directories', '--src', 'Main line from two listings', '--note', 'Phone corrected: test', '--by', 'Test Admin']));
+    D = await b('data'); const P2 = D.sponsor.recs.find((r) => r.id === PF.id), ce = (P2.cedits || []).slice(-1)[0];
+    ok(pf.ok && P2.phone === '(719) 538-4000' && P2.callSrc === 'Main line from two listings' && ce && ce.chg[0][1] === 'the wrong number, removed' && ce.chg[0][2] === '(719) 538-4000' && /wrong number/.test(ce.name) && P2.notes.some((n) => n.note === 'Phone corrected: test') && !JSON.stringify(P2).includes(was.replace(/\D/g, '').slice(-7, -4) + '-' + was.replace(/\D/g, '').slice(-4)) && !JSON.stringify(P2).includes(was), 'phonefix: the new main line and its source on the card; the old number shows nowhere on it (the Activity says only that the main line was corrected); the note');
+    php(['rebuild']); ok((await b('data')).sponsor.recs.find((r) => r.id === PF.id).phone === '(719) 538-4000', 'and it survives a rebuild from the log');
+  }
+
   /* ---- the screens ---- */
   console.log('The screens');
   const CPORT = 9300 + Math.floor(Math.random() * 300);
@@ -2031,10 +2123,10 @@ try {
     ok(await jsUntil(`[...document.querySelectorAll('main .card')].some(c=>/Brand New Co/.test(c.textContent)&&/Booked from Test Seller’s link/.test(c.textContent))`), 'Tours: the tour says it was booked from the seller’s link');
     await tab('more'); await sub('mine'); await click('[data-act="booklink"]', 800);
     ok(await jsUntil(`/Your emails go out as Peak Partnerships \\(partnerships@peakpickleball.us\\)/.test(document.querySelector('[data-set="mysig"]').textContent)&&/replies come to Peak Partnerships \\(partnerships@peakpickleball.us\\)/.test(document.querySelector('[data-set="mysig"]').textContent)`), 'My email: who it goes out as (read only) and where replies come');
-    ok(await js(`/book\\.php\\?p=[0-9a-f]{12}-[0-9a-f]{16}$/.test(document.querySelector('.bookurl').value)&&document.querySelector('.mysig').value.endsWith('(719) 555-0100')&&document.querySelector('.myreply').value==='seller@example.com'&&/Mon, Wed, Fri 2:00-4:00 pm/.test(document.querySelector('main').textContent)`), 'More › My email & booking link: the link, the shared hours, my signature and reply address');
+    ok(await js(`/book\\.php\\?p=[0-9a-f]{12}-[0-9a-f]{16}$/.test(document.querySelector('.bookurl').value)&&document.querySelector('.mysig').value.endsWith('(719) 555-0100')&&document.querySelector('.myreply').value==='seller@example.com'&&/Mon, Wed, Fri 2:30-4:00 pm/.test(document.querySelector('main').textContent)&&/Mon, Tue 1:00-4:00 pm/.test(document.querySelector('main').textContent)`), 'More › My email & booking link: the link, the shared hours, my signature and reply address');
     await shot('desk-my-email-booking.png');
     const BL = await js(`document.querySelector('.bookurl').value`);
-    await send('Page.navigate', { url: BL }); await waitFor(`!!document.querySelector('form [name="slot"]')`, 'booking page'); await sleep(200);
+    await send('Page.navigate', { url: BL + '&t=sponsor' }); await waitFor(`!!document.querySelector('form [name="slot"]')`, 'booking page'); await sleep(200);
     ok(await jsUntil(`/Book a time with Peak Pickleball/.test(document.body.textContent)&&!/Test Seller/.test(document.body.textContent)`), 'the booking page, as a visitor sees it');
     await shot('booking-page.png');
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true }); await sleep(300);
@@ -2105,7 +2197,7 @@ try {
   ok(await jsUntil(`/the cancellation/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)&&/BEGIN:VCALENDAR/.test(document.querySelector('[data-set="tourmail"] pre.eodpre').textContent)`), 'its Preview: the confirmation, the cancellation and the invite (nothing sent)');
   await js(`document.querySelector('[data-set="tourmail"]').scrollIntoView()`); await sleep(200); await shot('tour-mail-settings.png');
   ok((await a('data')).tourmail.on === false, 'the switch is left Off for Matthew');
-  ok(await js(`(()=>{const d=document.querySelector('[data-set="deskmail"]'),k=document.querySelector('[data-set="booking"]');return !!d&&!!k&&d.querySelector('[data-dmset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('[data-bkset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('.bkweek').value==='Mon 14:00-16:00\\nTue 08:00-16:00\\nWed 14:00-16:00\\nThu 08:00-16:00\\nFri 14:00-16:00'&&k.querySelector('.bkmins').value==='30'&&k.querySelector('.bkmeet').value===''&&/Who meets visitors/.test(k.textContent)&&/Nothing|Off/.test(d.textContent)})()`), 'More › Settings: Desk emails Off and Booking links Off, with the shared hours (Mon, Wed, Fri 2-4 pm; Tue, Thu 8 am-4 pm) to edit');
+  ok(await js(`(()=>{const d=document.querySelector('[data-set="deskmail"]'),k=document.querySelector('[data-set="booking"]');return !!d&&!!k&&d.querySelector('[data-dmset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('[data-bkset="off"]').getAttribute('aria-pressed')==='true'&&k.querySelector('.bkweek').value==='Mon 14:30-16:00\\nTue 08:30-16:00\\nWed 14:30-16:00\\nThu 08:30-16:00\\nFri 14:30-16:00'&&k.querySelector('.bkxweek').value==='Mon 13:00-16:00\\nTue 13:00-16:00\\nWed 08:30-16:00\\nThu 08:30-16:00\\nFri 08:30-16:00'&&/Sponsor and membership tours/.test(k.textContent)&&/Expo tours/.test(k.textContent)&&k.querySelector('.bkmins').value==='30'&&k.querySelector('.bkmeet').value===''&&/Who meets visitors/.test(k.textContent)&&/Nothing|Off/.test(d.textContent)})()`), 'More › Settings: Desk emails Off and Booking links Off, with both schedules to edit: Sponsor and membership tours (Mon, Wed, Fri 2:30-4 pm; Tue, Thu 8:30 am-4 pm) and Expo tours (Mon, Tue 1-4 pm; Wed-Fri 8:30 am-4 pm)');
   await js(`document.querySelector('[data-set="deskmail"]').scrollIntoView()`); await sleep(200); await shot('desk-email-settings.png');
   await clickText('[data-set="booking"] button', '/Show the general link/', 700); ok(await jsUntil(`/book\\.php\\?g=[0-9a-f]{16}$/.test(document.querySelector('.bkgen').value)`), 'and the general link (no host)');
   { const DA = await a('data'); ok(!DA.deskmail.on && !DA.book.on && !DA.tourmail.on, 'desk emails, booking links and tour confirmations are all left Off for Matthew'); }

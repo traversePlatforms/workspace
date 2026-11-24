@@ -22,6 +22,7 @@
  * (OUTREACH_OK; desk-outreach.php explains).
  *   php desk.php newcode "Name"                          (a lost code: a new one, same role)
  * Look-ups (2026-10-24): php desk.php rescan [15] (hourly, from the morning-email cron) | scan <lead id> [--hunter]
+ *   and after adding (2026-11-24, lookup.php): php desk.php lookups [n] | lookups --backfill [--dry-run]   (the 5-minute run starts it)
  * The records: php desk.php rebuild | check
  * The Peak email sender (2026-11-17): php desk.php servicekey "Peak email" (prints its key once) | emailed sponsor|expo <id> <to> [subject]
  *   | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note]   (HTTP: actions emailed / emailreply / emailbounce
@@ -65,7 +66,7 @@
  * action answers 404 to anyone else for one of his emails, and no card shows them its words; desk-inbox.php explains. */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-24.2';
+const BUILD = '2026-11-24.3';   /* + two tour schedules, sponsor and expo (book-lib.php) */
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 /* what the research account may do (2026-11-21, handleIn explains) */
@@ -74,6 +75,7 @@ $LOCAL = PHP_SAPI === 'cli-server' || PHP_SAPI === 'cli';
 require __DIR__ . '/desk-store.php';
 if (!is_dir(DATA_DIR)) { if ($LOCAL) @mkdir(DATA_DIR, 0770, true); else { http_response_code(500); exit('{"ok":false,"error":"No data folder."}'); } }
 require __DIR__ . '/scan.php';
+require __DIR__ . '/lookup.php';      /* the look-up after a company is added (2026-11-24) */
 require __DIR__ . '/tour-mail.php';   /* tour confirmation emails (2026-11-19) */
 require __DIR__ . '/book-lib.php';    /* booking links on one shared schedule (2026-11-19) */
 require __DIR__ . '/desk-email.php';  /* Write an email on a card (2026-11-19) */
@@ -131,6 +133,28 @@ if (PHP_SAPI === 'cli') {
     if ($cmd === 'scan' && $name !== '') {
         $L = recs('sponsor')[$name] ?? null; if (!$L) { fwrite(STDERR, "No such lead.\n"); exit(1); }
         $json(scanAndSave($L, in_array('--hunter', $argv, true) ? 'hunter' : 'site')); exit(0);
+    }
+    /* the look-ups after adding (2026-11-24, lookup.php): the queue; --backfill queues the hand-added companies never looked up first */
+    if ($cmd === 'lookups') {
+        if (in_array('--backfill', $argv, true)) { $b = lkBackfill(in_array('--dry-run', $argv, true)); echo date('c') . ' backfill: ' . count($b) . " queued\n"; foreach ($b as $x) echo "  {$x['w']} {$x['id']} {$x['name']} (added by {$x['by']})\n"; if (in_array('--dry-run', $argv, true)) exit(0); }
+        $r = lkRun(max(1, min(50, (int) (ctype_digit($name) ? $name : 10)))); if (!in_array('--quiet', $argv, true)) $json($r); exit(0);
+    }
+    /* a company's own phone corrected (2026-11-24): php desk.php phonefix sponsor|expo <id> "<new phone>" --why "..." [--src "..."] [--note "..."] [--by "Name"] [--dry-run]
+       One phonefix row and, with --note, a note. The wrong number is gone from the card (Matthew: it must not show anywhere); the log
+       keeps the rows before it, as it keeps everything. */
+    if ($cmd === 'phonefix' && in_array($name, ['sponsor', 'expo'], true) && ($argv[3] ?? '') !== '' && ($argv[4] ?? '') !== '') {
+        $opt = function (string $k, int $n) use ($argv) { $i = array_search($k, $argv, true); return $i !== false ? clean($argv[$i + 1] ?? '', $n) : ''; };
+        $by = $opt('--by', 60) ?: 'Desk admin'; [$cid, $ph] = [(string) $argv[3], clean($argv[4], 40)];
+        if (digits10($ph) === '') { fwrite(STDERR, "That phone does not look right.\n"); exit(1); }
+        $res = withLock(function () use ($name, $cid, $ph, $by, $opt, $argv) {
+            sync($name, true); $R = recs($name)[$cid] ?? null; if (!$R) return ['ok' => false, 'error' => 'No such lead.'];
+            if (digits10((string) ($R['phone'] ?? '')) === digits10($ph)) return ['ok' => true, 'same' => true];
+            $now = time(); $rows = [['t' => 'phonefix', 'id' => $cid, 'phone' => $ph, 'why' => $opt('--why', 300), 'src' => $opt('--src', 600), 'by' => $by, 'at' => $now]];
+            if ($opt('--note', 1000) !== '') $rows[] = ['t' => W($name)['T']['note'], 'id' => $cid, 'note' => $opt('--note', 1000), 'by' => $by, 'at' => $now];
+            if (in_array('--dry-run', $argv, true)) return ['ok' => true, 'dry' => true, 'rows' => $rows];
+            commit($name, $rows); return ['ok' => true, 'rows' => $rows];
+        });
+        $json($res); exit($res['ok'] ? 0 : 1);
     }
     if ($cmd === 'alerts') { $now = ctype_digit((string) getenv('DESK_NOW')) ? (int) getenv('DESK_NOW') : time(); $json(alertsFlush($now)); exit(0); }
     if ($cmd === 'inboxcount') { $json(inCounts() + ['myleads' => inMyCounts()]); exit(0); }
@@ -196,7 +220,7 @@ if (PHP_SAPI === 'cli') {
         try { $r = handleIn($act, !$read, $body, (string) $who['name'], (string) $who['role']); $json($r); exit(empty($r['ok']) ? 1 : 0); }
         catch (DeskFail $e) { $json(['ok' => false, 'error' => $e->getMessage(), 'code' => $e->getCode()]); exit(1); }
     }
-    fwrite(STDERR, "usage: php desk.php as \"Name\" <action> < body.json | addaccount \"Name\" admin|seller|expo|research|outreach | setrole \"Name\" <role> | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note] | contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by \"Name\"]\n");
+    fwrite(STDERR, "usage: php desk.php as \"Name\" <action> < body.json | addaccount \"Name\" admin|seller|expo|research|outreach | setrole \"Name\" <role> | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | lookups [n] [--backfill [--dry-run]] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note] | contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by \"Name\"]\n");
     exit(1);
 }
 
@@ -362,7 +386,7 @@ function handleIn(string $action, bool $isPost, array $body, string $ME, string 
     if ($action === 'dmset' || $action === 'bookset') {
         if ($ROLE !== 'admin') fail('Only an admin changes the settings.', 403);
         $key = $action === 'dmset' ? 'deskmail' : 'book'; $s = jread('desk-settings.json', []); $cur = is_array($s[$key] ?? null) ? $s[$key] : []; $now = time();
-        if ($action === 'bookset') { $c = bkConfIn($body, bkConf()); if (isset($c['error'])) fail($c['error']); foreach (['week', 'mins', 'notice', 'ahead', 'blocked', 'meet'] as $k) $cur[$k] = $c[$k]; }
+        if ($action === 'bookset') { $c = bkConfIn($body, bkConf()); if (isset($c['error'])) fail($c['error']); foreach (['week', 'xweek', 'mins', 'notice', 'ahead', 'blocked', 'meet'] as $k) $cur[$k] = $c[$k]; }
         if ($action === 'dmset' && array_key_exists('pixel', $body)) $cur['pixel'] = !empty($body['pixel']);
         if (array_key_exists('on', $body)) {
             $on = !empty($body['on']);
@@ -487,7 +511,7 @@ function people(string $w, array $R): array {
     foreach (($R['added'] ?? []) as $c) {
         if (!empty($c['of'])) { $more[] = $c; continue; }   /* "add the new details to" someone already on the card (the duplicate check) */
         $o[] = $mk($c, ['name' => (string) ($c['name'] ?? ''), 'role' => (string) ($c['role'] ?? $c['pos'] ?? ''), 'email' => (string) ($c['email'] ?? ''), 'phone' => (string) ($c['phone'] ?? ''),
-            'best' => false, 'src' => 'Added on the desk by ' . ($c['by'] ?? 'someone') . (!empty($c['at']) ? ', ' . date('M j', (int) $c['at']) : ''), 'conf' => '', 'notes' => (string) ($c['notes'] ?? ''), 'added' => true]);
+            'best' => false, 'src' => (string) ($c['src'] ?? '') !== '' ? (string) $c['src'] : 'Added on the desk by ' . ($c['by'] ?? 'someone') . (!empty($c['at']) ? ', ' . date('M j', (int) $c['at']) : ''), 'conf' => '', 'notes' => (string) ($c['notes'] ?? ''), 'added' => true]);
     }
     foreach ($more as $c) {
         $hit = false;
@@ -793,7 +817,9 @@ function act(string $op, string $w, array $body, string $ME, bool $legacy): arra
                 $site = okSite((string) ($body['site'] ?? '')); if ($site !== '' && (string) ($R['site'] ?? '') === '') $rows[] = ['t' => 'site', 'id' => $mid, 'site' => $site, 'by' => $ME, 'at' => $now];
                 $said = array_filter([clean($body['why'] ?? '', 300), clean($body['kind'] ?? $body['cat'] ?? '', 60), clean($body['events'] ?? '', 200)]);
                 $rows[] = ['t' => $T['note'], 'id' => $mid, 'note' => 'Added again as “' . clean($body['name'] ?? '', 100) . '” and merged into this one' . ($said ? ': ' . implode(' · ', $said) : '.'), 'by' => $ME, 'at' => $now];
-                commit($w, $rows); return ['ok' => true, 'id' => $mid, 'merged' => true];
+                commit($w, $rows);
+                if (array_filter($rows, fn($r) => $r['t'] === 'site')) lkQueue($w, $mid, 'merged with a website');   /* looked up within about 5 minutes */
+                return ['ok' => true, 'id' => $mid, 'merged' => true];
             }
             $dupe = function (string $n, string $ph, string $site, string $em) use ($X, $body) {
                 if (!empty($body['keep'])) return null; $d = dupesOf($X, $n, $ph, $site, $em); if (!$d) return null;
@@ -804,7 +830,8 @@ function act(string $op, string $w, array $body, string $ME, bool $legacy): arra
                 if ($d = $dupe(clean($body['name'] ?? '', 100), clean($body['phone'] ?? '', 40), (string) ($body['site'] ?? ''), '')) return $d;
                 $lead = $newLead(); $rows = [['t' => 'lead', 'id' => $lead['id'], 'lead' => $lead, 'by' => $ME, 'at' => $now]];
                 if ($canOwn) $rows[] = rowOwner($w, $lead['id'], $ME, $ME, $now);
-                commit($w, $rows); return ['ok' => true, 'id' => $lead['id']];
+                commit($w, $rows); lkQueue($w, $lead['id']);   /* looked up within about 5 minutes (2026-11-24), never in this request */
+                return ['ok' => true, 'id' => $lead['id']];
             }
             /* an expo lead added by hand: it lives in the Expo leads only */
             $n = clean($body['name'] ?? '', 100); $sameName($n);
@@ -818,7 +845,8 @@ function act(string $op, string $w, array $body, string $ME, bool $legacy): arra
             $rows = [['t' => 'xlead', 'id' => $nid, 'org' => $org, 'by' => $ME, 'at' => $now]];
             if ($c['name'] !== '' || $c['email'] !== '' || $c['phone'] !== '') $rows[] = ['t' => 'xcontact', 'id' => $nid, 'contact' => $c, 'by' => $ME, 'at' => $now];
             if ($canOwn) $rows[] = rowOwner($w, $nid, $ME, $ME, $now);
-            commit($w, $rows); return ['ok' => true, 'id' => $nid];
+            commit($w, $rows); lkQueue($w, $nid);
+            return ['ok' => true, 'id' => $nid];
         }
         /* take a company off the desk (2026-10-24); everything stays in the log, and it can come back */
         case 'del': { needRec($X, $w, $id); commit($w, [['t' => $T['del'], 'id' => $id, 'by' => $ME, 'at' => $now]]); return ['ok' => true]; }
