@@ -19418,6 +19418,10 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      across every stage (a stage tapped after that narrows it). Last contacted = the newest call try, note or status change on the lead by a
      person (Square, Facebook and Messenger lines are the machines', not a contact); a door booking counts its last mark. */
   var PIPE_LC = [['', 'Last contacted: any time'], ['today', 'Contacted today'], ['7', 'Contacted in the last 7 days'], ['30', 'Last contacted 8 to 30 days ago'], ['old', 'Last contacted over 30 days ago'], ['never', 'Never contacted']];
+  /* Times contacted (2026-11-24, Jen: "Contacted once, twice, 3+ times"): the number of calls, texts and emails logged on the lead. */
+  var PIPE_CT = [['', 'Times contacted: any'], ['0', 'Not contacted yet'], ['1', 'Contacted once'], ['2', 'Contacted twice'], ['3', 'Contacted 3+ times']];
+  function pipeCtN(it) { return it.kind === 'door' ? 0 : (it.x.tries || []).length; }
+  function pipeCtHit(it, k) { if (!k) return true; var n = pipeCtN(it); return k === '3' ? n >= 3 : n === +k; }
   var PIPE_SYS = { Square: 1, Facebook: 1, Messenger: 1 };
   function pipeContactAt(it) {
     var x = it.x, t = 0;
@@ -19443,17 +19447,20 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
     return k === 'today' ? t * 1000 >= mid.getTime() : k === '7' ? days <= 7 : k === '30' ? days > 7 && days <= 30 : days > 30;
   }
   function pipeFindRow() {
-    var row = q('div', 'pipefind'), si = q('input'), sel = q('select'), note = q('div', 'pfn');
+    var row = q('div', 'pipefind'), si = q('input'), sel = q('select'), sel2 = q('select'), note = q('div', 'pfn');
     si.type = 'search'; si.placeholder = 'Search a name, phone, email or street'; si.setAttribute('aria-label', 'Search the Pipeline'); si.value = S.pipeQ || ''; si.autocomplete = 'off';
     sel.setAttribute('aria-label', 'Last contacted');
     PIPE_LC.forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; if (o[0] === (S.pipeLc || '')) op.selected = true; sel.appendChild(op); });
+    sel2.setAttribute('aria-label', 'Times contacted');
+    PIPE_CT.forEach(function (o) { var op = q('option', null, o[1]); op.value = o[0]; if (o[0] === (S.pipeCt || '')) op.selected = true; sel2.appendChild(op); });
+    sel2.addEventListener('change', function () { S.pipeCt = sel2.value; S.pipeStage = null; drawPipe(); });
     si.addEventListener('input', function () { S.pipeQ = si.value; S.pipeStage = null; drawPipe(); });
     sel.addEventListener('change', function () { S.pipeLc = sel.value; S.pipeStage = null; drawPipe(); });
-    row.appendChild(si); row.appendChild(sel); row.appendChild(note); note.hidden = true;
+    row.appendChild(si); row.appendChild(sel); row.appendChild(sel2); row.appendChild(note); note.hidden = true;
     S.pipeFindNote = note;
     return row;
   }
-  function pipeOpen() { S.pipeStage = null; S.pipeSel = null; S.pipeFocus = null; S.pipeQ = ''; S.pipeLc = ''; S.tryPick = {}; S.pipeWork = null; pipelineView(); }   /* + the search starts empty (2026-10-29) */
+  function pipeOpen() { S.pipeStage = null; S.pipeSel = null; S.pipeFocus = null; S.pipeQ = ''; S.pipeLc = ''; S.pipeCt = ''; S.tryPick = {}; S.pipeWork = null; pipelineView(); }   /* + the search starts empty (2026-10-29) */
   /* follow the card (2026-11-12, Matthew: "when an action moves a customer card to another section like after clicking texted them. It puts you
      on a new card, it should instead follow that card into the texted them section"): the lead someone was working (a tap inside its card,
      S.pipeWork) has moved out of the stage on screen, so the stage it is in now opens, with that lead open (computer) or scrolled to (phone).
@@ -19600,7 +19607,7 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
      redraw as before. */
   function drawPipe(fromData) {
     var holder = S.qholder; if (!holder) return;
-    var sig = JSON.stringify([S.qlist, S.pleads, S.custLinks, S.leadPeople, S.cucheck, S.handTo, S.pipeStage, S.pipeStageM, S.pipeSrc, S.pipeQ, S.pipeLc]);
+    var sig = JSON.stringify([S.qlist, S.pleads, S.custLinks, S.leadPeople, S.cucheck, S.handTo, S.pipeStage, S.pipeStageM, S.pipeSrc, S.pipeQ, S.pipeLc, S.pipeCt]);
     if (fromData && sig === S.pipeSig && holder.isConnected && holder.firstChild && !holder.querySelector('.skel')) return;
     /* never under a pressed pointer: a load landing between press and release replaced the button, so the release met a new one and no click
        happened (found 12 Nov in Chrome: mousedown and mouseup on Left voicemail, no click). It waits until the press ends, then draws. */
@@ -19619,9 +19626,9 @@ try { paintCompany(JSON.parse(localStorage.getItem('doorapp.company') || 'null')
       .concat((S.pleads || []).map(function (l) { return { kind: 'lead', x: l, at: l.at }; }))
       .sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
     if (asOffice()) items = items.filter(function (it) { return it.kind === 'lead'; });   /* the office works the leads, not the crews' door bookings */
-    var fq = String(S.pipeQ || '').trim(), flc = S.pipeLc || '', finding = !!(fq || flc), allN = items.length;   /* search and Last contacted (2026-10-29) */
+    var fq = String(S.pipeQ || '').trim(), flc = S.pipeLc || '', fct = S.pipeCt || '', finding = !!(fq || flc || fct), allN = items.length;   /* search and Last contacted (2026-10-29) */
     if (finding) {
-      items = items.filter(function (it) { return pipeHit(it, fq) && pipeLcHit(it, flc); });
+      items = items.filter(function (it) { return pipeHit(it, fq) && pipeLcHit(it, flc) && pipeCtHit(it, fct); });
       if (flc) items.sort(function (a, b) { return flc === 'never' ? (a.at || 0) - (b.at || 0) : pipeContactAt(b) - pipeContactAt(a); });
     }
     if (S.pipeFindNote) { S.pipeFindNote.hidden = !finding; S.pipeFindNote.textContent = finding ? (items.length ? items.length + (items.length === 1 ? ' match' : ' matches') + ' of ' + allN + '. Tap a stage to narrow it.' : 'Nobody matches. Check the spelling, or try part of the phone number.') : ''; }
