@@ -1138,6 +1138,8 @@ try {
         let cB = cardOf(await b('data'), CD.id), cM = cardOf(await mm('data'), CD.id);
         ok(!JSON.stringify(cB).includes('ZZDANA') && JSON.stringify(cM).includes('ZZDANA') && JSON.stringify(cB.next) === JSON.stringify(nextB), 'the card: Matthew sees her words; a seller sees no trace of them, and no “answer them” follow-up was set');
         ok(!JSON.stringify(cardOf(await cc('data'), CD.id)).includes('ZZDANA') && !JSON.stringify(cardOf(await a('data'), CD.id)).includes('ZZDANA'), 'nor Claude Check, nor another admin');
+        inject('commit("sponsor", [rowNext("sponsor", getenv("ID"), ["date" => date("Y-m-d"), "what" => "They replied to the email: answer them"], "Peak email", time())]); echo "ok";', { ID: CD.id });   /* as the sender set it before My leads began */
+        ok(cardOf(await b('data'), CD.id).next === null && /They replied/.test(cardOf(await mm('data'), CD.id).next.what), 'the sender’s older “They replied: answer them” follow-up goes with the hidden reply (Matthew still sees it)');
         const eod = php(['eod', '--dry-run']); ok(!eod.includes('ZZDANA') && !eod.includes('Dana Test'), 'nor the end-of-day email');
         const qM = queue().filter((x) => x.k === 'in:' + MO);
         ok(qM.length === 1 && qM[0].who === 'Matthew Sharpe' && qM[0].url === './#myleads/' + MO && queue().filter((x) => x.k === 'in:' + SAM).length >= 2, 'a new My-leads email with no card alerts Matthew alone; an Inbox one alerts the Inbox watchers');

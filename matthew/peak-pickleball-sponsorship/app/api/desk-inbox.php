@@ -195,7 +195,14 @@ function inCardHide(array $R, array $P): array {
     if (!$P['m'] && !$P['i'] && !$P['r']) return $R;
     $refs = [];
     foreach ($R['dmails'] ?? [] as $ref => $d) if (inPrivHit(is_array($d['re'] ?? null) ? $d['re'] : null, $P)) { $refs[(string) $ref] = 1; unset($R['dmails'][$ref]); }
+    $n0 = count($R['touches'] ?? []);
     if (isset($R['touches'])) $R['touches'] = array_filter($R['touches'], fn($t) => !inPrivHit(is_array($t['mail'] ?? null) ? $t['mail'] : null, $P) && !isset($P['r'][(string) ($t['ref'] ?? '')]) && !isset($refs[(string) ($t['ref'] ?? '')]));
+    /* the sender's "They replied to the email: answer them" follow-up (set before My leads began) goes with the reply it was for, unless a
+       reply the others can see is left on the card */
+    if (count($R['touches'] ?? []) < $n0 && (string) ($R['next']['by'] ?? '') === 'Peak email' && str_starts_with((string) ($R['next']['what'] ?? ''), 'They replied to the email')) {
+        $vis = false; foreach ($R['touches'] as $t) if (($t['out'] ?? '') === 'replied') $vis = true;
+        if (!$vis) $R['next'] = null;
+    }
     return $R;
 }
 /** the desk users an email can be sent to: the sellers and admins, not Matthew, not the read-only Claude Check */
