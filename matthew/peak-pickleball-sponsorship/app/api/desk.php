@@ -18,7 +18,7 @@
  *   php desk.php setrole "Name" research|outreach|seller|expo|admin   (the same code; their sign-ins take the new role at once)
  * research (2026-11-21, Claire; Matthew: "start her on ... the peak lead research"): looks companies up and writes down what she finds,
  * and nothing else (RESEARCH_OK below, enforced here for the page and for php desk.php as).
- * outreach (2026-11-24, Claire; Matthew: "she contacts on my behalf"): research and a little more, all of it counted as Matthew's
+ * outreach (2026-11-24, Claire, then Bria; Matthew: "she contacts on my behalf"): research and a little more, all of it Matthew's
  * (OUTREACH_OK; desk-outreach.php explains).
  *   php desk.php newcode "Name"                          (a lost code: a new one, same role)
  * Look-ups (2026-10-24): php desk.php rescan [15] (hourly, from the morning-email cron) | scan <lead id> [--hunter]
@@ -65,7 +65,7 @@
  * action answers 404 to anyone else for one of his emails, and no card shows them its words; desk-inbox.php explains. */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-24.1';
+const BUILD = '2026-11-24.2';
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 /* what the research account may do (2026-11-21, handleIn explains) */
@@ -77,7 +77,7 @@ require __DIR__ . '/scan.php';
 require __DIR__ . '/tour-mail.php';   /* tour confirmation emails (2026-11-19) */
 require __DIR__ . '/book-lib.php';    /* booking links on one shared schedule (2026-11-19) */
 require __DIR__ . '/desk-email.php';  /* Write an email on a card (2026-11-19) */
-require __DIR__ . '/desk-outreach.php';  /* Claire reaches out for Matthew (2026-11-24) */
+require __DIR__ . '/desk-outreach.php';  /* the outreach accounts (Claire, Bria) reach out for Matthew (2026-11-24) */
 
 function codeHash(string $c): string { return hash('sha256', 'peakdesk|' . $c); }
 function keyHash(string $c): string { return hash('sha256', 'peakdesk-service|' . $c); }
@@ -266,14 +266,14 @@ function handleIn(string $action, bool $isPost, array $body, string $ME, string 
         if (!in_array($action, RESEARCH_OK, true)) fail('This account looks companies up and notes what it finds. ' . ($action === '' ? '' : 'That is for the sellers.'), 403);
         if ($action === 'scan' && !empty($body['hunter'])) fail('Paid look-ups (Hunter) are not part of this account.', 403);
     }
-    /* the outreach account (2026-11-24, Claire for Matthew): the research actions, plus logging touches, follow-ups, Don't contact, a warm
+    /* the outreach account (2026-11-24, Claire and Bria, for Matthew): the research actions, plus logging touches, follow-ups, Don't contact, a warm
        reply and desk emails from Matthew's approved templates (desk-outreach.php). Everything else is refused, as for research. */
     if ($ROLE === 'outreach') {
         if (!in_array($action, OUTREACH_OK, true)) fail('This account looks companies up and reaches out for Matthew. ' . ($action === '' ? '' : 'That is for the sellers.'), 403);
         if ($action === 'scan' && !empty($body['hunter'])) fail('Paid look-ups (Hunter) are not part of this account.', 403);
         if (in_array($action, OT_OWN, true)) return otAct($action, $isPost, $body, $ME);
     }
-    /* Claire's templates (2026-11-24): Matthew approves them, on his own login, on the page (not through the chat) */
+    /* the outreach templates (2026-11-24, Claire and Bria): Matthew approves them, on his own login, on the page (not through the chat) */
     if ($action === 'otplset') {
         if (!inIsOwner($ME) || defined('DESK_VIA')) fail('Only Matthew approves these, on his own desk login.', 403);
         if (!$isPost) fail('POST required', 405);
@@ -533,7 +533,7 @@ function worldOut(string $w, ?array $P = null): array {
         'week' => counts($w, weekStart()), 'weekFrom' => date('Y-m-d', weekStart()), 'month' => counts($w, monthStart()), 'monthFrom' => date('Y-m-d', monthStart()),
         /* the emails' numbers for the same two periods (2026-11-24): sent, opened, clicked, replied, booked (dmNums, desk-email.php) */
         'mail' => ['week' => dmNums($w, weekStart()), 'month' => dmNums($w, monthStart())], 'team' => counts($w, 0), 'templates' => templatesOf($w), 'starters' => starterTemplates($w),
-        /* the outreach accounts (Claire, 2026-11-24): a row in "by person" and the report from the start, like the sellers */
+        /* the outreach accounts (Claire, Bria, 2026-11-24): a row in "by person" and the report from the start, like the sellers */
         'helpers' => otHelpers()];
 }
 function dataOut(string $ME, string $ROLE): array {
@@ -558,8 +558,8 @@ function dataOut(string $ME, string $ROLE): array {
     $S += ['proposals' => propsOf('sponsor'), 'packages' => settingOf('sponsor', 'packages', []), 'hunterLeft' => hunterLeft()];
     if ($ROLE === 'admin') $S += ['pl' => settingOf('sponsor', 'pl', null), 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? []];
     if ($ROLE === 'research' || $ROLE === 'outreach') { $S = researchView($S); $X = researchView($X); $S['proposals'] = []; $S['packages'] = []; $S['hunterLeft'] = null; }
-    if ($ROLE === 'outreach') { $S = otView('sponsor', $S); $X = otView('expo', $X); $base['outreach'] = otOut($ME); }
-    if (inIsOwner($ME)) $base['otpl'] = otList(true);   /* Claire's templates and Matthew's approve switch: his login only */
+    if ($ROLE === 'outreach') { $S = otView('sponsor', $S, $ME); $X = otView('expo', $X, $ME); $base['outreach'] = otOut($ME); }
+    if (inIsOwner($ME)) $base['otpl'] = otList(true);   /* the outreach scripts and Matthew's approve switch: his login only */
     return $base + ['sponsor' => $S, 'expo' => $X];
 }
 /* the research account's view of a list (2026-11-21): the cards, without what only the sellers work with: tours (visitors' names and

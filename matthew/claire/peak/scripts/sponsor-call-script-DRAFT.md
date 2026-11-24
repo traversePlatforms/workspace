@@ -1,14 +1,16 @@
-# Sponsor call script (Claire, for Peak, on Matthew's behalf)
+# Sponsor call script (outreach: Claire, Bria; for Peak, on Matthew's behalf)
 
-**DRAFT: waiting for Matthew's OK.** Not approved. Matthew approves it on the Peak desk (More, Claire's scripts); until then the desk shows it as a draft. Claire fills in only the company name.
+**DRAFT: waiting for Matthew's OK.** Not approved. Matthew approves it on the Peak desk (More, Outreach scripts); until then the desk shows it as a draft. The caller fills in only the company name.
 
-The block below is the exact text the desk shows Claire. The desk checks it matches this file.
+{me} is filled in by the desk with the caller's first name: whoever is signed in on an outreach account (Claire, Bria). One set of words, one approval, for all of them.
+
+The block below is the exact text the desk shows the caller. The desk checks it matches this file.
 
 ## On the desk (exact text)
 
 ```text
 Ask for the right person:
-"Hi, this is Claire with Peak Pickleball at Chapel Hills Mall. Could I speak with whoever looks after sponsorships or community partnerships for {company}?"
+"Hi, this is {me} with Peak Pickleball at Chapel Hills Mall. Could I speak with whoever looks after sponsorships or community partnerships for {company}?"
 
 When you reach them:
 "I work with Matthew Sharpe on Peak's local sponsors. Peak is the indoor pickleball center at Chapel Hills Mall in Colorado Springs: 24 courts on two levels, and players come in every day for open play, leagues, lessons and tournaments. We're growing our group of local sponsors and I thought {company} could be a good fit. Would you be open to a short call with Matthew, or a walk-through of the building, with no commitment?"
@@ -31,14 +33,14 @@ If they ask not to be contacted again:
 
 ## Lines cut, and why
 
-- "We're the largest indoor pickleball facility in Colorado Springs": it is in the loaded sponsor email, but it invites "how big is the next one?" and Claire can't answer it. Matthew can add it back.
+- "We're the largest indoor pickleball facility in Colorado Springs": it is in the loaded sponsor email, but it invites "how big is the next one?" and the caller can't answer it. Matthew can add it back.
 - Member numbers, daily players, sign-ups: never said. Peak hasn't published them, and Tyler hasn't OK'd sharing them.
 - "Your name on a court, a presence at our events, memberships for your team": kept out of the call. They are proposed shapes, not Peak's confirmed packages, and saying them aloud invites a price question. They stay in the follow-up email, which is the approved wording.
-- Booking a tour time on the call: cut. Claire can't book tours on the desk; Matthew sets the time.
+- Booking a tour time on the call: cut. Outreach callers can't book tours on the desk; Matthew sets the time.
 
 ## For Matthew to decide
 
-- Whether Claire says "with Peak Pickleball" (as above) or "calling for Matthew Sharpe, who works with Peak Pickleball". Speaking in Peak's name may need Tyler's OK, as the emails did.
+- Whether the caller says "with Peak Pickleball" (as above) or "calling for Matthew Sharpe, who works with Peak Pickleball". Speaking in Peak's name may need Tyler's OK, as the emails did.
 - Whether "Matthew will be in touch" is right, or Brandon (sponsorships are Brandon's to sell).
 
 ## Fact-check log
@@ -50,5 +52,5 @@ If they ask not to be contacted again:
 | Players come in every day for open play, leagues, lessons and tournaments | drafts-2026-11-17.md (loaded sponsor email, 20 Nov; CourtReserve programmes) | Verified |
 | "We're growing our group of local sponsors" | drafts-2026-11-17.md (Peak's sponsor tracker, 44 current sponsors, 18 Nov) | Verified |
 | Walk-through of the building, no commitment | Loaded sponsor email, 20 Nov ("a quick walk-through of the building ... with no commitment") | Approved wording |
-| "I work with Matthew Sharpe on Peak's local sponsors" | Matthew's decision, 24 Nov: Claire contacts on his behalf | Matthew to confirm the wording |
+| "I work with Matthew Sharpe on Peak's local sponsors" | Matthew's decision, 24 Nov: Claire (and Bria) contact on his behalf | Matthew to confirm the wording |
 | Unresolved | Who follows up with a warm lead (Matthew or Brandon); speaking in Peak's name | Open for Matthew |

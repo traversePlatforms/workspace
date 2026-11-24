@@ -1,6 +1,8 @@
-# Warm reply: hand it to Matthew (Claire, Peak)
+# Warm reply: hand it to Matthew (outreach: Claire, Bria; Peak)
 
-**DRAFT: waiting for Matthew's OK.** Not approved. This is the note the desk shows Claire beside the Warm reply button.
+**DRAFT: waiting for Matthew's OK.** Not approved. This is the note the desk shows the caller beside the Warm reply button.
+
+{me} is filled in by the desk with the caller's first name: whoever is signed in on an outreach account (Claire, Bria). One set of words, one approval, for all of them.
 
 ## On the desk (exact text)
 
@@ -17,7 +19,7 @@ If they replied by email, you won't see it: replies to your emails go to Matthew
 
 ## Why it works this way
 
-- Anything Claire starts counts as Matthew's (his decision, 24 Nov). The tour, the price and the deal are his (or Brandon's) to handle.
+- Anything an outreach caller (Claire, Bria) starts counts as Matthew's (his decision, 24 Nov). The tour, the price and the deal are his (or Brandon's) to handle.
 - The Warm reply button writes a note on the card ("Warm reply, for Matthew: ..."), sets Matthew as owner if nobody owns it, puts a follow-up for today on his desk, and sends him a J.A.R.V.I.S. message and a desk alert.
 
 ## Fact-check log
@@ -25,4 +27,4 @@ If they replied by email, you won't see it: replies to your emails go to Matthew
 | Claim | Source | Status |
 |---|---|---|
 | Matthew gets a J.A.R.V.I.S. alert | The desk's Warm reply action (desk-outreach.php), the same path as her Traverse role (jvdesk.php reply, his main thread) | Built 24 Nov |
-| Replies to her emails go to Matthew's My leads | desk-inbox.php inViaOf: a desk email Claire sent for Matthew counts as his | Built 24 Nov |
+| Replies to her emails go to Matthew's My leads | desk-inbox.php inViaOf: a desk email Claire or Bria sent for Matthew counts as his | Built 24 Nov |

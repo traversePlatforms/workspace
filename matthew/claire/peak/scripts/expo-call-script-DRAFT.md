@@ -1,14 +1,16 @@
-# Expo call script (Claire, for Peak, on Matthew's behalf)
+# Expo call script (outreach: Claire, Bria; for Peak, on Matthew's behalf)
 
-**DRAFT: waiting for Matthew's OK.** Not approved. Matthew approves it on the Peak desk (More, Claire's scripts); until then the desk shows it as a draft. Claire fills in only the organisation's name.
+**DRAFT: waiting for Matthew's OK.** Not approved. Matthew approves it on the Peak desk (More, Outreach scripts); until then the desk shows it as a draft. The caller fills in only the organisation's name.
 
-The block below is the exact text the desk shows Claire. The desk checks it matches this file.
+{me} is filled in by the desk with the caller's first name: whoever is signed in on an outreach account (Claire, Bria). One set of words, one approval, for all of them.
+
+The block below is the exact text the desk shows the caller. The desk checks it matches this file.
 
 ## On the desk (exact text)
 
 ```text
 Ask for the right person:
-"Hi, this is Claire with Peak Pickleball at Chapel Hills Mall. Could I speak with whoever plans the venues for {company}'s events?"
+"Hi, this is {me} with Peak Pickleball at Chapel Hills Mall. Could I speak with whoever plans the venues for {company}'s events?"
 
 When you reach them:
 "I work with Matthew Sharpe on events at Peak. Along with our 24 indoor courts, Peak rents the building for expos, markets and community events. It's about 80,000 square feet over two levels, and in April 2026 it hosted the Senior Lifestyle Expo with more than 100 vendors. If {company} is looking at venues for an upcoming show, would a short call with Matthew or a tour of the space be useful?"
@@ -34,7 +36,7 @@ If they ask not to be contacted again:
 
 ## Lines cut, and why
 
-- Parking, floor layout, load-in, power, capacity: never answered by Claire. Only the Gazette (May 2024) mentions free mall parking, and the venue research hasn't settled the floor questions (drafts-2026-11-17.md, "Lines left out").
+- Parking, floor layout, load-in, power, capacity: never answered by the caller. Only the Gazette (May 2024) mentions free mall parking, and the venue research hasn't settled the floor questions (drafts-2026-11-17.md, "Lines left out").
 - "One open floor" or exhibit-hall wording: cut. The building is two levels and the courts take much of the floor.
 - Rates: venue pricing is still the open question in the venue research.
 

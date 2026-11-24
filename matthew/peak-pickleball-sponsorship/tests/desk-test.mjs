@@ -1357,8 +1357,8 @@ try {
     /* the source files: each template's words are the words in its DRAFT.md */
     const SDIR = join(ROOT, '..', 'claire', 'peak', 'scripts'), blocks = (f) => [...readFileSync(join(SDIR, f), 'utf8').replace(/\r/g, '').matchAll(/```text\n([\s\S]*?)\n```/g)].map((m) => m[1]);
     const SRC = { spcall: ['sponsor-call-script-DRAFT.md', 0], xcall: ['expo-call-script-DRAFT.md', 0], spvm: ['voicemails-DRAFT.md', 0], xvm: ['voicemails-DRAFT.md', 1], spmail: ['sponsor-follow-up-email-DRAFT.md', 0], xmail: ['expo-follow-up-email-DRAFT.md', 0], warm: ['warm-reply-handoff-DRAFT.md', 0] };
-    const mism = T7.filter((t) => { const s = SRC[t.k]; if (!s) return true; const md = blocks(s[0])[s[1]] || ''; return md !== (t.subject ? 'Subject: ' + t.subject + '\n\n' : '') + t.text; }).map((t) => t.k);
-    ok(!mism.length, 'outreach: every template on the desk is word for word its DRAFT.md in matthew/claire/peak/scripts' + (mism.length ? ' (differs: ' + mism.join(', ') + ')' : ''));
+    const mism = T7.filter((t) => { const s = SRC[t.k]; if (!s) return true; const md = blocks(s[0])[s[1]] || ''; return md.replaceAll('{me}', 'Test') !== (t.subject ? 'Subject: ' + t.subject + '\n\n' : '') + t.text; }).map((t) => t.k);
+    ok(!mism.length, 'outreach: every template on the desk is word for word its DRAFT.md in matthew/claire/peak/scripts, with {me} as her first name' + (mism.length ? ' (differs: ' + mism.join(', ') + ')' : ''));
     ok(!T7.some((t) => /\$\s?\d|\bprice[ds]? (is|are|start)|per (month|year|hour)|members\b/i.test(t.subject + ' ' + t.text)), 'outreach: no price or member number in any template');
     /* cards: free ones, one the team has */
     const free = (w, n) => CD[w].recs.filter((r) => r.stage === 'new' && !r.owner && !r.olock && (r.people || []).some((p) => p.email && !p.dnc && /^[^@]+@[^@]+$/.test(p.email))).slice(0, n);
@@ -1461,6 +1461,39 @@ try {
     ok(wk.calls >= 2 && wk.vms >= 1 && wk.emails === 2 && mo.calls === wk.calls && mo.emails === wk.emails && xw.other === 1 && (AD.sponsor.team['Test Claire'] || {}).last > 0, `by person: her row counts her own calls (${wk.calls}, ${wk.vms} voicemail), emails (${wk.emails} companies) and the expo Other, this week and this month`);
     ok(!wk.replied && !('replies' in wk), 'by person counts no replies per person (a reply to her email is Matthew’s, in My leads only)');
     const eod = (await a('eodpreview')).text || ''; ok(/Test Claire \(for Matthew\): \d+ call/.test(eod), 'the end-of-day email lists her, for Matthew');
+    /* a second outreach account (2026-11-24, Bria; Matthew: "add bria to the peak desk and expo desk"): her own name in the scripts, her own
+       daily cap, one approval for both, and a card one of them has reached is not the other's */
+    {
+      const BRC = addAccount('Bria Test', 'outreach'), br = client(); globalThis.__BR = BRC;
+      ok((await br('signin', { code: BRC })).role === 'outreach', 'two outreach accounts: Bria Test signs in as outreach too');
+      const BD = await br('data'), BT = BD.outreach.templates, CT = (await cl('data')).outreach.templates, MT = (await mt('data')).otpl;
+      const sp = (L) => (L.find((t) => t.k === 'spcall') || {}).text || '', vm = (L) => (L.find((t) => t.k === 'xvm') || {}).text || '';
+      ok(sp(BT).includes('this is Bria with Peak Pickleball') && vm(BT).includes('this is Bria with Peak') && sp(CT).includes('this is Test with Peak Pickleball') && !BT.concat(CT).some((t) => /\{me\}|Claire/.test(t.text)), 'two outreach accounts: the scripts say each caller’s own first name (Bria, Test), never "Claire" or {me}');
+      ok(sp(MT).includes('this is {me} with Peak Pickleball') && MT.filter((t) => /\{me\}/.test(t.text)).length === 4, 'Matthew’s approve list shows the words as written, with {me} (both call scripts and both voicemails)');
+      ok(BT.filter((t) => t.ok).map((t) => t.k).join() === 'spmail' && CT.filter((t) => t.ok).map((t) => t.k).join() === 'spmail', 'one approval covers both: Matthew’s OK on the sponsor email shows approved for Bria and for Claire');
+      ok(JSON.stringify(BD.sponsor.helpers) === JSON.stringify(['Bria Test', 'Test Claire']) && JSON.stringify(BD.expo.helpers) === JSON.stringify(['Bria Test', 'Test Claire']) && !BD.sponsor.owners.includes('Bria Test'), 'both are helpers on both lists, neither an owner');
+      /* the cross-lock: Claire's cards are not Bria's */
+      const B1 = BD.sponsor.recs.find((x) => x.id === F1.id), BX = BD.expo.recs.find((x) => x.id === XF.id);
+      ok(B1.olock === 'Someone on the team is working this one.' && B1.owner === '' && BX.olock === 'Someone on the team is working this one.', 'cross-lock: a card Claire reached (now Matthew’s) and her expo card say "Someone on the team is working this one" to Bria, owner not shown');
+      r = await br('touch', { world: 'sponsor', id: F1.id, m: 'call', out: 'talked' });
+      ok(r._status === 409 && r.error === 'Someone on the team is working this one.' && (await br('osend', { world: 'sponsor', id: F4.id, tpl: 'spmail', to: mailOf(F4) }))._status === 409 && (await br('owarm', { world: 'sponsor', id: F2.id, note: 'x' }))._status === 409 && (await br('next', { world: 'sponsor', id: F2.id, date: later(2), what: 'x' }))._status === 409, 'cross-lock: Bria’s touch, email, warm reply and follow-up on Claire’s cards are refused, with no name');
+      ok((await cl('data')).sponsor.recs.find((x) => x.id === F4.id).olock === '', 'Claire’s own card stays open to her');
+      /* the cap is per person: Claire has used hers today (2 here), Bria has her own */
+      const USED = new Set([F1, F2, F3, F4, F5, F6].map((x) => x.id)), BF = BD.sponsor.recs.filter((r) => !USED.has(r.id) && r.stage === 'new' && !r.owner && !r.olock && (r.people || []).some((p) => p.email && !p.dnc && /^[^@]+@[^@]+$/.test(p.email))).slice(0, 3);
+      const nB = GM.sent.length;
+      r = await br('osend', { world: 'sponsor', id: BF[0].id, tpl: 'spmail', to: mailOf(BF[0]) });
+      ok(r.ok && r.state === 'sent' && r.sentToday === 1 && GM.sent.length === nB + 1 && /Bria Test/.test(mimeParts(GM.sent[GM.sent.length - 1]).text), 'per-person cap: with Claire at her cap, Bria’s first email today goes (1 of 2 here; 25 each live), signed with her name');
+      ok((await cl('osend', { world: 'sponsor', id: F6.id, tpl: 'spmail', to: mailOf(F6) }))._status >= 400 && (await cl('data')).outreach.sent === 2 && (await br('data')).outreach.sent === 1, 'each counts their own: Claire still at 2, Bria at 1');
+      ok((await br('osend', { world: 'sponsor', id: BF[1].id, tpl: 'spmail', to: mailOf(BF[1]) })).sentToday === 2 && (await br('osend', { world: 'sponsor', id: BF[2].id, tpl: 'spmail', to: mailOf(BF[2]) }))._status === 429, 'Bria’s own cap: her second goes, her third is refused');
+      /* and the other way round: Bria's card is not Claire's */
+      const BC = (await cl('data')).sponsor.recs.find((x) => x.id === BF[0].id);
+      ok(BC.olock === 'Someone on the team is working this one.' && BC.owner === '' && (await cl('touch', { world: 'sponsor', id: BF[0].id, m: 'call', out: 'noanswer' }))._status === 409, 'cross-lock the other way: the card Bria emailed is locked for Claire, same words, no name');
+      ok((await br('data')).sponsor.recs.find((x) => x.id === BF[0].id).olock === '', 'Bria’s own card stays open to her');
+      /* by person: two rows, each for Matthew */
+      const AB = await a('data'), bw = AB.sponsor.week['Bria Test'] || {};
+      ok(bw.emails === 2 && (AB.sponsor.week['Test Claire'] || {}).emails === 2, `by person: Bria’s own row (${bw.emails} emails) beside Claire’s`);
+      const eodB = (await a('eodpreview')).text || ''; ok(/Bria Test \(for Matthew\): /.test(eodB) && /Test Claire \(for Matthew\): /.test(eodB), 'the end-of-day email lists both, each for Matthew');
+    }
     /* setrole: the same code, the open sign-in takes the new role at once */
     const rs2 = client(); await rs2('signin', { code: globalThis.__RES }); const sr = php(['setrole', 'Test Research', 'outreach']);
     ok(/research -> outreach/.test(sr) && !/\d{6}/.test(sr) && (await rs2('data')).me.role === 'outreach', 'php desk.php setrole: research to outreach, no code printed, the sign-in has the new role');
@@ -2117,14 +2150,17 @@ try {
     await openCard(X.team, X.teamName);
     ok(await jsUntil(`(()=>{const d=document.querySelector('.detail');return !!d&&/Someone on the team is working this one/.test(d.querySelector('.outreachsec').textContent)&&!d.querySelector('.outreachsec [data-m]')&&!/Test Seller/.test(d.querySelector('.ownerpick')?d.querySelector('.ownerpick').value:'')})()`), 'outreach card the team has: "Someone on the team is working this one", nothing to press, no owner shown');
     await js(`location.hash='#sponsor/more/scripts'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
-    ok(await jsUntil(`!!document.querySelector('.oscripts')&&document.querySelectorAll('.oscripts details').length===7&&!document.querySelector('[data-approve]')`), 'outreach: More, Claire’s scripts lists all seven, with no approve switch');
+    ok(await jsUntil(`!!document.querySelector('.oscripts')&&document.querySelectorAll('.oscripts details').length===7&&!document.querySelector('[data-approve]')`), 'outreach: More, Outreach scripts lists all seven, with no approve switch');
+    ok(await js(`/this is Test with Peak/.test(document.querySelector('.oscripts').textContent)&&!/\\{me\\}/.test(document.querySelector('.oscripts').textContent)`), 'her scripts page: the words say her first name, not {me}');
     await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
     await js(`(()=>{const i=document.querySelector('.signin input');i.value='${X.mm}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`); await waitFor(`!!document.querySelector('.shead')`, 'Matthew’s page'); await sleep(300);
     await js(`location.hash='#sponsor/more/scripts'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
-    ok(await jsUntil(`document.querySelectorAll('.oscripts [data-approve]').length===7&&[...document.querySelectorAll('.oscripts .obadge')].every(b=>/Draft/.test(b.textContent))`), 'Matthew’s page: More, Claire’s scripts, an Approve button on each, all drafts');
+    ok(await jsUntil(`document.querySelectorAll('.oscripts [data-approve]').length===7&&[...document.querySelectorAll('.oscripts .obadge')].every(b=>/Draft/.test(b.textContent))`), 'Matthew’s page: More, Outreach scripts, an Approve button on each, all drafts');
+    ok(await js(`(()=>{const c=document.querySelector('.oscripts');return /Outreach scripts and emails/.test(c.textContent)&&/Bria Test, Test Claire/.test(c.textContent)&&/\\{me\\} is the caller/.test(c.textContent)&&!/Claire’s scripts/.test(document.body.textContent)})()`), 'Matthew’s scripts page names both callers and says {me} is each caller’s first name');
     await shot('outreach-scripts-matthew.png');
     await js(`location.hash='#sponsor/today'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
     ok(await jsUntil(`[...document.querySelectorAll('tr[data-helper]')].some(t=>/Test Claire \\(for Matthew\\)/.test(t.textContent))`), 'Today, by person: Test Claire has her own row, marked for Matthew');
+    ok(await jsUntil(`(()=>{const R=[...document.querySelectorAll('tr[data-helper]')].map(t=>t.textContent);return R.some(t=>/Bria Test \\(for Matthew\\)/.test(t))&&R.some(t=>/Test Claire \\(for Matthew\\)/.test(t))})()`), 'Today, by person: two outreach rows, Bria Test and Test Claire, each marked for Matthew');
     if (!(await js(`!!document.querySelector('tr[data-helper]')`))) { await shot('outreach-today-debug.png'); console.log('    today: ' + (await js(`[...document.querySelectorAll('.tb tr')].map(t=>t.textContent).join(' | ').slice(0,600)`))); }
   }
   ok(!errors.length, 'no page errors' + (errors.length ? ': ' + errors[0] : ''));

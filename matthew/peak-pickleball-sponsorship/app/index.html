@@ -394,7 +394,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-24.1';
+  var BUILD = '2026-11-24.2';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -585,9 +585,9 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   var SUBS = {
     sponsor: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], myleads: MYSUBS, list: [['all', 'All companies'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added on the desk'], ['removed', 'Removed']],
       deals: [['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed']],
-      more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['scripts', 'Claire’s scripts'], ['look', 'Look'], ['settings', 'Settings']] },
+      more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['scripts', 'Outreach scripts'], ['look', 'Look'], ['settings', 'Settings']] },
     expo: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], myleads: MYSUBS, list: [['all', 'All organisations'], ['removed', 'Removed']], deals: [['tours', 'Tours'], ['quotes', 'Quotes and bookings']],
-      more: [['report', 'Report'], ['ref', 'Questions and venues'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['scripts', 'Claire’s scripts'], ['look', 'Look'], ['settings', 'Settings']] }
+      more: [['report', 'Report'], ['ref', 'Questions and venues'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['scripts', 'Outreach scripts'], ['look', 'Look'], ['settings', 'Settings']] }
   };
   var DESC = {
     sponsor: { myleads: MYDESC, inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
@@ -616,7 +616,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   var subList = function (t) {
     var L = SUBS[S.world][t];
     if (L && research()) return L.filter(function (x) { return t === 'more' ? x[0] === 'look' || (x[0] === 'scripts' && outreach()) : x[0] !== 'removed'; });
-    if (L && t === 'more') L = L.filter(function (x) { return x[0] !== 'scripts' || !!(S.data && S.data.otpl); });   /* Claire's scripts: Matthew's login only */
+    if (L && t === 'more') L = L.filter(function (x) { return x[0] !== 'scripts' || !!(S.data && S.data.otpl); });   /* Outreach scripts: Matthew's login only */
     return L && S.data && !isAdmin() ? L.filter(function (x) { return !(t === 'more' ? ADMIN_SUBS[x[0]] : x[0] === 'settings'); }) : L;
   };
   var subOf = function (t) { var L = subList(t); return L ? (S.sub[S.world + t] && L.some(function (x) { return x[0] === S.sub[S.world + t]; }) ? S.sub[S.world + t] : L[0][0]) : ''; };
@@ -865,7 +865,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   }
   function teamTable(T, week) {
     T = peFold(T);
-    var names = W().owners.slice(); (W().helpers || []).forEach(function (n) { if (names.indexOf(n) < 0) names.push(n); });   /* Claire (2026-11-24) */
+    var names = W().owners.slice(); (W().helpers || []).forEach(function (n) { if (names.indexOf(n) < 0) names.push(n); });   /* the outreach accounts (Claire, Bria; 2026-11-24) */
     Object.keys(T || {}).forEach(function (n) { if (names.indexOf(n) < 0 && n !== 'Claude Check') names.push(n); });
     var t = el('table', 'tb'), h = el('tr'), cols = ['Person', 'Calls', 'Emails', 'Texts', 'Other', 'Tours', isX() ? 'Quotes' : 'Proposals', isX() ? 'Booked' : 'Signed'];
     if (!week) cols.push('Last on'); cols.forEach(function (x, i) { h.appendChild(el('th', i ? 'n' : null, x)); }); t.appendChild(h);
@@ -1110,11 +1110,11 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     wb.appendChild(wgo); s.appendChild(wb);
     return s;
   }
-  /* Claire's scripts (2026-11-24): for her, every one with where it stands; for Matthew (his login only), the approve switch */
+  /* the outreach scripts (2026-11-24, Claire and Bria): for each of them, every one with where it stands; for Matthew (his login only), the approve switch */
   function drawScripts() {
     var mine = !!S.data.otpl, L = mine ? S.data.otpl : (S.data.outreach && S.data.outreach.templates) || [];
-    var c = el('div', 'card info oscripts'); c.appendChild(el('h3', null, mine ? 'Claire’s scripts and emails' : 'My scripts and emails'));
-    c.appendChild(el('p', 'soft', mine ? 'What Claire says on calls and voicemails, and the two emails she can send from the desk for you. Each is a draft until you approve it here; a draft email can’t be sent. Change the words in its file first: the approval goes with these exact words.' : 'Each is a draft until Matthew approves it. A draft email can’t be sent. Read them before your calls.'));
+    var c = el('div', 'card info oscripts'); c.appendChild(el('h3', null, mine ? 'Outreach scripts and emails' : 'My scripts and emails'));
+    c.appendChild(el('p', 'soft', mine ? 'What your outreach callers (' + (((S.data.sponsor || {}).helpers || []).join(', ') || 'none yet') + ') say on calls and voicemails, and the two emails they can send from the desk for you. {me} is the caller’s first name, filled in for each of them. Each is a draft until you approve it here, once for all of them; a draft email can’t be sent. Change the words in its file first: the approval goes with these exact words.' : 'Each is a draft until Matthew approves it. A draft email can’t be sent. Read them before your calls.'));
     L.forEach(function (t) {
       var d = oScript(t, ''); d.open = mine; c.appendChild(d);
       if (mine) {

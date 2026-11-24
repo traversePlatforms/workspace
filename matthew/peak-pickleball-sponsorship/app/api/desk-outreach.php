@@ -1,21 +1,25 @@
 <?php
-/* Claire reaches out for Matthew (2026-11-24, Matthew: "she contacts on my behalf"). The outreach role is the research role and a little more:
+/* Claire reaches out for Matthew (2026-11-24, Matthew: "she contacts on my behalf"), and Bria too (2026-11-24, Matthew: "I need to add bria to
+ * the peak desk and expo desk. So that way she can start doing some outreach as well"). The outreach role, one account per person, is the
+ * research role and a little more:
  * she logs calls, voicemails, emails and other touches and notes on sponsor and expo cards, sets a follow-up, marks a person Don't contact,
  * flags a warm reply for Matthew, and sends desk emails from Peak Partnerships ONLY from the templates below once Matthew has approved them.
  * Whatever she starts is Matthew's: her touches carry for: Matthew Sharpe; a card nobody owns becomes his; a reply to an email she sent goes
  * to his My leads (inViaOf, desk-inbox.php, reads outreach.log for the send's 'for'). Her own name stays on everything she did, so the team
- * sees "Claire" on the card's Activity and in "by person", and Matthew's record shows who made the contact.
+ * sees "Claire" or "Bria" on the card's Activity and in "by person", and Matthew's record shows who made the contact. The scripts say
+ * "this is {me}": the desk fills in the caller's first name, so one set of words (and one approval) covers every outreach account.
  *
  * The lock: a card someone else on the team owns (Brandon, Cai, Nneka, Lance, anyone but Matthew), one whose address has an Inbox email
- * claimed or in Matthew's My leads, or one past first contact (a tour, a proposal, signed, Not now, Lost) is not hers to contact. She sees
+ * claimed or in Matthew's My leads, one past first contact (a tour, a proposal, signed, Not now, Lost), or one another outreach account has
+ * already reached (a touch or a warm reply: Claire's card is not Bria's, and the other way round) is not hers to contact. She sees
  * "Someone on the team is working this one" and nothing about who.
  *
- * Her emails: at most OT_CAP a day, Monday to Friday 9 am to 4 pm Colorado time (the Peak email sender's window), only to an address already
+ * Her emails: at most OT_CAP a day each (counted per outreach account), Monday to Friday 9 am to 4 pm Colorado time (the Peak email sender's window), only to an address already
  * on the card, never to Don't contact or the do-not-email list (dmSend's own checks), only while desk emails are on. She picks the template
  * and the person; the words are the template's, with {first} and {company} filled in here. She never edits them.
  *
  * The templates' source is matthew/claire/peak/scripts/*-DRAFT.md (the desk test checks each text matches its file). Approval is Matthew's
- * alone, on his own login in the page (More, Claire's scripts): desk-settings.json otpl, kept with a hash of the words, so a change to the
+ * alone, on his own login in the page (More, Outreach scripts): desk-settings.json otpl, kept with a hash of the words, so a change to the
  * words needs his OK again. outreach.log keeps every send, approval and warm reply. */
 declare(strict_types=1);
 if (realpath((string) ($_SERVER['SCRIPT_FILENAME'] ?? '')) === realpath(__FILE__)) { http_response_code(404); exit; }
@@ -33,7 +37,7 @@ function otTemplates(): array {
     return [
         ['k' => 'spcall', 'name' => 'Sponsor call script', 'kind' => 'call', 'world' => 'sponsor', 'file' => 'sponsor-call-script-DRAFT.md', 'subject' => '', 'text' =>
 "Ask for the right person:
-\"Hi, this is Claire with Peak Pickleball at Chapel Hills Mall. Could I speak with whoever looks after sponsorships or community partnerships for {company}?\"
+\"Hi, this is {me} with Peak Pickleball at Chapel Hills Mall. Could I speak with whoever looks after sponsorships or community partnerships for {company}?\"
 
 When you reach them:
 \"I work with Matthew Sharpe on Peak's local sponsors. Peak is the indoor pickleball center at Chapel Hills Mall in Colorado Springs: 24 courts on two levels, and players come in every day for open play, leagues, lessons and tournaments. We're growing our group of local sponsors and I thought {company} could be a good fit. Would you be open to a short call with Matthew, or a walk-through of the building, with no commitment?\"
@@ -54,7 +58,7 @@ If they ask not to be contacted again:
 \"Will do.\" Tap Don't contact on that person."],
         ['k' => 'xcall', 'name' => 'Expo call script', 'kind' => 'call', 'world' => 'expo', 'file' => 'expo-call-script-DRAFT.md', 'subject' => '', 'text' =>
 "Ask for the right person:
-\"Hi, this is Claire with Peak Pickleball at Chapel Hills Mall. Could I speak with whoever plans the venues for {company}'s events?\"
+\"Hi, this is {me} with Peak Pickleball at Chapel Hills Mall. Could I speak with whoever plans the venues for {company}'s events?\"
 
 When you reach them:
 \"I work with Matthew Sharpe on events at Peak. Along with our 24 indoor courts, Peak rents the building for expos, markets and community events. It's about 80,000 square feet over two levels, and in April 2026 it hosted the Senior Lifestyle Expo with more than 100 vendors. If {company} is looking at venues for an upcoming show, would a short call with Matthew or a tour of the space be useful?\"
@@ -77,11 +81,11 @@ If they say no:
 If they ask not to be contacted again:
 \"Will do.\" Tap Don't contact on that person."],
         ['k' => 'spvm', 'name' => 'Sponsor voicemail', 'kind' => 'vm', 'world' => 'sponsor', 'file' => 'voicemails-DRAFT.md', 'subject' => '', 'text' =>
-"\"Hi, this is Claire with Peak Pickleball, the indoor pickleball center at Chapel Hills Mall in Colorado Springs. I'm calling about {company} partnering with Peak as one of our local sponsors. I'll send a short email too. You can reach us at partnerships@peakpickleball.us, or call me back at [CALLBACK NUMBER: Matthew to give]. Thanks.\"
+"\"Hi, this is {me} with Peak Pickleball, the indoor pickleball center at Chapel Hills Mall in Colorado Springs. I'm calling about {company} partnering with Peak as one of our local sponsors. I'll send a short email too. You can reach us at partnerships@peakpickleball.us, or call me back at [CALLBACK NUMBER: Matthew to give]. Thanks.\"
 
 Then log it as Voicemail, and send the sponsor follow-up email if the card has an email."],
         ['k' => 'xvm', 'name' => 'Expo voicemail', 'kind' => 'vm', 'world' => 'expo', 'file' => 'voicemails-DRAFT.md', 'subject' => '', 'text' =>
-"\"Hi, this is Claire with Peak Pickleball at Chapel Hills Mall in Colorado Springs. I'm calling about Peak as a venue for {company}'s events: we host expos, markets and community events. I'll send a short email too. You can reach us at partnerships@peakpickleball.us, or call me back at [CALLBACK NUMBER: Matthew to give]. Thanks.\"
+"\"Hi, this is {me} with Peak Pickleball at Chapel Hills Mall in Colorado Springs. I'm calling about Peak as a venue for {company}'s events: we host expos, markets and community events. I'll send a short email too. You can reach us at partnerships@peakpickleball.us, or call me back at [CALLBACK NUMBER: Matthew to give]. Thanks.\"
 
 Then log it as Voicemail, and send the expo follow-up email if the card has an email."],
         ['k' => 'spmail', 'name' => 'Sponsor follow-up email', 'kind' => 'email', 'world' => 'sponsor', 'file' => 'sponsor-follow-up-email-DRAFT.md', 'subject' => 'Peak Pickleball and {company}', 'text' =>
@@ -117,11 +121,12 @@ function otHash(array $t): string { return substr(sha1($t['subject'] . "\n" . $t
 function otTpl(string $k): ?array { foreach (otTemplates() as $t) if ($t['k'] === $k) return $t; return null; }
 /** approved: Matthew's switch is on, for these exact words */
 function otOk(array $t): bool { $a = jread('desk-settings.json', [])['otpl'][$t['k']] ?? null; return is_array($a) && !empty($a['on']) && ($a['h'] ?? '') === otHash($t); }
-/** the templates for the page: each with ok (approved) and, for Matthew, who switched it and when */
-function otList(bool $owner): array {
+/** the templates for the page: each with ok (approved) and, for Matthew, who switched it and when. Matthew sees {me} as written (it is
+    what he approves); an outreach account ($me) sees its own first name in its place */
+function otList(bool $owner, string $me = ''): array {
     $A = jread('desk-settings.json', [])['otpl'] ?? []; $o = [];
     foreach (otTemplates() as $t) {
-        $x = ['k' => $t['k'], 'name' => $t['name'], 'kind' => $t['kind'], 'world' => $t['world'], 'subject' => $t['subject'], 'text' => $t['text'], 'ok' => otOk($t)];
+        $x = ['k' => $t['k'], 'name' => $t['name'], 'kind' => $t['kind'], 'world' => $t['world'], 'subject' => $t['subject'], 'text' => $owner ? $t['text'] : otMe($t['text'], $me), 'ok' => otOk($t)];
         if ($owner) { $a = $A[$t['k']] ?? null; $x['file'] = 'matthew/claire/peak/scripts/' . $t['file']; $x['set'] = is_array($a) ? ['on' => !empty($a['on']), 'by' => (string) ($a['by'] ?? ''), 'at' => (int) ($a['at'] ?? 0), 'stale' => !empty($a['on']) && ($a['h'] ?? '') !== otHash($t)] : null; }
         $o[] = $x;
     }
@@ -136,8 +141,8 @@ function otSet(string $k, bool $on, string $me): array {
     logAdd(['t' => 'approve', 'k' => $k, 'on' => $on, 'h' => otHash($t), 'by' => $me, 'at' => $now], OT_LOG);
     return ['ok' => true, 'otpl' => otList(true)];
 }
-/** the outreach accounts (Claire), for "by person" */
-function otHelpers(): array { $o = []; foreach (jread('accounts.json', ['codes' => []])['codes'] as $a) if (($a['role'] ?? '') === 'outreach' && (string) ($a['name'] ?? '') !== '') $o[(string) $a['name']] = 1; $o = array_keys($o); sort($o); return $o; }
+/** the outreach accounts (Claire, Bria), for "by person" and the lock */
+function otHelpers(): array { static $c = null; if ($c !== null) return $c; $o = []; foreach (jread('accounts.json', ['codes' => []])['codes'] as $a) if (($a['role'] ?? '') === 'outreach' && (string) ($a['name'] ?? '') !== '') $o[(string) $a['name']] = 1; $o = array_keys($o); sort($o); return $c = $o; }
 function otCap(): int { $e = inTestEnv('DESK_OUTREACH_CAP'); return ctype_digit($e) ? (int) $e : OT_CAP; }
 /** the sending window: Monday to Friday, 9 am to 4 pm Colorado time */
 function otInWindow(int $t): bool { $d = (int) date('N', $t); $h = (int) date('G', $t); return $d <= 5 && $h >= 9 && $h < 16; }
@@ -153,23 +158,30 @@ function otClaimed(): array {
     foreach ($all as $R) { $x = $S[$R['iid']] ?? null; if (!$x || !in_array($x['b'], ['open', 'wait'], true)) continue; if (!empty($x['claim']) || ($x['lane'] ?? '') === 'me') $o[strtolower(trim((string) $R['from']))] = 1; }
     return $o;
 }
-/** '' when Claire may contact this card, else what she is told (never who) */
-function otLockWhy(string $w, array $R, ?array $claimed = null): string {
+/** '' when this outreach account ($me) may contact this card, else what it is told (never who) */
+function otLockWhy(string $w, array $R, string $me, ?array $claimed = null): string {
     $own = (string) ($R['owner'] ?? ''); if ($own !== '' && !inIsOwner($own)) return OT_TEAM;
+    /* another outreach account reached them first (a touch, an email, a warm reply): theirs, even though the card is Matthew's */
+    $H = array_values(array_filter(otHelpers(), fn($n) => strcasecmp($n, $me) !== 0));
+    if ($H) { $other = fn($by) => in_array(strtolower((string) $by), array_map('strtolower', $H), true);
+        foreach ($R['touches'] ?? [] as $t) if ($other($t['by'] ?? '')) return OT_TEAM;
+        foreach ($R['notes'] ?? [] as $n) if ($other($n['by'] ?? '') && str_starts_with((string) ($n['note'] ?? ''), 'Warm reply, for Matthew:')) return OT_TEAM; }
     $claimed ??= otClaimed(); foreach (recEmails($R) as $e) if (isset($claimed[$e])) return OT_TEAM;
     $rk = stageRank($w, (string) $R['stage']); if ($rk < 0 || $rk >= (int) W($w)['reach']) return OT_ALONG;
     return '';
 }
 /** the outreach account's view of a list: the research view, each card with its lock; a card the team has keeps its owner to itself */
-function otView(string $w, array $V): array {
+function otView(string $w, array $V, string $me): array {
     $C = otClaimed(); $X = recs($w);
-    foreach ($V['recs'] as &$r) { $R = $X[$r['id']] ?? null; $why = $R ? otLockWhy($w, $R, $C) : OT_TEAM; $r['olock'] = $why; if ($why === OT_TEAM) $r['owner'] = ''; }
+    foreach ($V['recs'] as &$r) { $R = $X[$r['id']] ?? null; $why = $R ? otLockWhy($w, $R, $me, $C) : OT_TEAM; $r['olock'] = $why; if ($why === OT_TEAM) $r['owner'] = ''; }
     unset($r); return $V;
 }
 /** what the page needs to know: the templates (with ok), today's count and the cap, the window, whether desk emails are on */
 function otOut(string $me): array {
-    return ['templates' => otList(false), 'sent' => otSentToday($me), 'cap' => otCap(), 'window' => otWindowOpen(), 'windowText' => 'Monday to Friday, 9 am to 4 pm Colorado time', 'mailOn' => dmConf()['on'], 'for' => IN_OWNER];
+    return ['templates' => otList(false, $me), 'sent' => otSentToday($me), 'cap' => otCap(), 'window' => otWindowOpen(), 'windowText' => 'Monday to Friday, 9 am to 4 pm Colorado time', 'mailOn' => dmConf()['on'], 'for' => IN_OWNER];
 }
+/** fill {me}: the caller's first name (the outreach account signed in) */
+function otMe(string $s, string $me): string { return str_replace('{me}', first_name(trim($me)) ?: 'me', $s); }
 /** fill {first} and {company} */
 function otFill(string $s, string $first, string $company): string { return str_replace(['{first}', '{company}'], [$first, $company], $s); }
 function otFirst(string $name): string { $f = trim((string) strtok(trim($name), ' ')); return $f === '' || !preg_match('/^\p{L}[\p{L}\'.-]*$/u', $f) ? 'there' : $f; }
@@ -189,7 +201,7 @@ function otAct(string $action, bool $isPost, array $body, string $ME): array {
     if (!$isPost) fail('POST required', 405);
     $w = ($body['world'] ?? '') === 'expo' ? 'expo' : 'sponsor'; $id = (string) ($body['id'] ?? '');
     $R = needRec(recs($w), $w, $id);
-    $lock = function (array $R) use ($w) { $why = otLockWhy($w, $R); if ($why !== '') fail($why, 409); };
+    $lock = function (array $R) use ($w, $ME) { $why = otLockWhy($w, $R, $ME); if ($why !== '') fail($why, 409); };
     $mattOwns = in_array(IN_OWNER, owners($w), true);
     switch ($action) {
         case 'touch': {
@@ -228,7 +240,7 @@ function otAct(string $action, bool $isPost, array $body, string $ME): array {
             foreach ($P as $x) if ($to !== '' && strtolower((string) ($x['email'] ?? '')) === $to) { $p = $x; break; }
             if (!$p) fail('Pick who it goes to from the people on the card.');
             $first = otFirst((string) ($p['name'] ?? '')); $company = trim((string) $R['name']);
-            $subject = otFill($t['subject'], $first, $company); $text = otFill($t['text'], $first, $company);
+            $subject = otFill(otMe($t['subject'], $ME), $first, $company); $text = otFill(otMe($t['text'], $ME), $first, $company);
             if ($action === 'opreview') return ['ok' => true, 'to' => $to, 'name' => (string) ($p['name'] ?? ''), 'subject' => $subject, 'text' => $text, 'sig' => dmMine($ME)['sig'], 'footer' => DM_FOOTER, 'approved' => otOk($t)];
             if (!otOk($t)) fail('Draft: waiting for Matthew’s OK. It can’t be sent until he approves it.', 403);
             if (!dmConf()['on']) fail('Desk emails are off. They turn on once Matthew says go.', 409);
@@ -251,7 +263,7 @@ function otAct(string $action, bool $isPost, array $body, string $ME): array {
         }
         case 'owarm': {
             $n = clean($body['note'] ?? '', 600); if ($n === '') fail('Say what they said, and the best number or email, so Matthew knows where it stands.');
-            if (otLockWhy($w, $R) === OT_TEAM) fail(OT_TEAM, 409);
+            if (otLockWhy($w, $R, $ME) === OT_TEAM) fail(OT_TEAM, 409);
             $res = withLock(function () use ($w, $id, $n, $ME, $mattOwns) {
                 sync($w, true); $R = recs($w)[$id]; $now = time(); $T = W($w)['T'];
                 $rows = [['t' => $T['note'], 'id' => $id, 'note' => 'Warm reply, for Matthew: ' . $n, 'by' => $ME, 'at' => $now],

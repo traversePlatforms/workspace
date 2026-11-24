@@ -1,8 +1,10 @@
-# Sponsor follow-up email (Claire, from the Peak desk, for Matthew)
+# Sponsor follow-up email (outreach: Claire, Bria; from the Peak desk, for Matthew)
 
-**DRAFT: waiting for Matthew's OK.** Not approved. The desk will not send it until Matthew turns it on (More, Claire's scripts, Approve). Claire picks who it goes to; the desk fills in {first} (their first name, or "there" when the card has only a general address) and {company}. She can't change the words.
+**DRAFT: waiting for Matthew's OK.** Not approved. The desk will not send it until Matthew turns it on (More, Outreach scripts, Approve). The caller picks who it goes to; the desk fills in {first} (their first name, or "there" when the card has only a general address) and {company}. They can't change the words.
 
-It goes from Peak Partnerships (partnerships@peakpickleball.us), signed "Claire / Peak Pickleball", with the desk's own footer (Peak's address and "If you'd rather not get emails from Peak, reply and let me know."). Replies come into the desk and go to Matthew's My leads.
+{me} is filled in by the desk with the caller's first name: whoever is signed in on an outreach account (Claire, Bria). One set of words, one approval, for all of them.
+
+It goes from Peak Partnerships (partnerships@peakpickleball.us), signed with the caller's name ("Claire / Peak Pickleball", "Bria / Peak Pickleball"), with the desk's own footer (Peak's address and "If you'd rather not get emails from Peak, reply and let me know."). Replies come into the desk and go to Matthew's My leads.
 
 ## On the desk (exact text)
 
@@ -27,7 +29,7 @@ Thanks,
 ## Lines cut, and why
 
 - "We're the largest indoor pickleball facility in Colorado Springs": in the loaded email, cut here for length. Fine to add back.
-- Any price, package name or date: never in Claire's emails.
+- Any price, package name or date: never in the outreach emails.
 - "I tried to call you": cut, so the same email works after a call, a voicemail or none.
 
 ## Fact-check log
@@ -40,4 +42,4 @@ Thanks,
 | Name on a court, presence at events and tournaments, memberships for your team | Loaded sponsor email, 20 Nov | **Proposed, not yet Peak's confirmed packages** (drafts-2026-11-17.md log). Brandon/Tyler to confirm. |
 | Walk-through with no commitment | Loaded sponsor email, 20 Nov | Approved wording |
 | https://www.peakpickleball.us/ | Live check 17 Nov 2026; Peak's own listing (24 Nov) | Verified |
-| Unresolved | Package shapes; Claire emailing in Peak's name (Tyler's OK) | Open for Matthew |
+| Unresolved | Package shapes; outreach callers emailing in Peak's name (Tyler's OK) | Open for Matthew |

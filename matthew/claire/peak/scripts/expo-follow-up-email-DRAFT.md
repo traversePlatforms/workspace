@@ -1,8 +1,10 @@
-# Expo follow-up email (Claire, from the Peak desk, for Matthew)
+# Expo follow-up email (outreach: Claire, Bria; from the Peak desk, for Matthew)
 
-**DRAFT: waiting for Matthew's OK.** Not approved. The desk will not send it until Matthew turns it on (More, Claire's scripts, Approve). Claire picks who it goes to; the desk fills in {first} (their first name, or "there") and {company}. She can't change the words.
+**DRAFT: waiting for Matthew's OK.** Not approved. The desk will not send it until Matthew turns it on (More, Outreach scripts, Approve). The caller picks who it goes to; the desk fills in {first} (their first name, or "there") and {company}. They can't change the words.
 
-It goes from Peak Partnerships, signed "Claire / Peak Pickleball", with the desk's own footer. Replies come into the desk and go to Matthew's My leads.
+{me} is filled in by the desk with the caller's first name: whoever is signed in on an outreach account (Claire, Bria). One set of words, one approval, for all of them.
+
+It goes from Peak Partnerships, signed with the caller's name ("Claire / Peak Pickleball", "Bria / Peak Pickleball"), with the desk's own footer. Replies come into the desk and go to Matthew's My leads.
 
 ## On the desk (exact text)
 
@@ -24,7 +26,7 @@ Thanks,
 
 ## Lines cut, and why
 
-- Rates, dates, parking, floor layout: never in Claire's emails (see the expo call script).
+- Rates, dates, parking, floor layout: never in the outreach emails (see the expo call script).
 - "We proudly hosted": the plainer "it hosted" from the 17 Nov draft.
 
 ## Fact-check log
