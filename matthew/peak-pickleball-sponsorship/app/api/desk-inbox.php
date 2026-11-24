@@ -133,7 +133,19 @@ function inViaOf(array $R, array $S): array {
     if (!$best && $cid !== '') { $how = 'card'; foreach ($S as $x) if ($x['w'] === $cw && $x['org'] === $cid && $x['at'] < $t && (!$best || $x['at'] >= $best['at'])) $best = $x; }
     if (!$best) return ['k' => 'none', 'own' => 'inbox', 'how' => '', 'by' => '', 'at' => 0, 'subject' => '', 'l' => '', 'to' => '', 'set' => inNow()];
     $by = $best['k'] === 'sent' ? ($best['by'] !== '' ? $best['by'] : IN_OWNER) : $best['by'];
-    return ['k' => $best['k'], 'own' => $best['k'] === 'sent' || inIsOwner($best['by']) ? 'me' : 'inbox', 'how' => $how, 'by' => $by, 'at' => $best['at'], 'subject' => $best['subject'], 'l' => $best['l'], 'to' => $best['to'], 'set' => inNow()];
+    /* a desk email Claire sent for Matthew (2026-11-24, desk-outreach.php) is his: for, from outreach.log by the send's ref */
+    $for = $best['k'] === 'deskmail' && !inIsOwner($best['by']) ? otForRef((string) ($best['ref'] ?? '')) : '';
+    return ['k' => $best['k'], 'own' => $best['k'] === 'sent' || inIsOwner($best['by']) || inIsOwner($for) ? 'me' : 'inbox', 'how' => $how, 'by' => $by, 'at' => $best['at'], 'subject' => $best['subject'], 'l' => $best['l'], 'to' => $best['to'], 'set' => inNow()]
+        + ($for !== '' ? ['for' => $for] : []);
+}
+/** who a desk email was sent for (2026-11-24): '' unless the outreach account (Claire) sent it on Matthew's behalf; outreach.log, read here
+    without the desk's lock (the Peak email sender calls deskInboxIn) */
+const OT_LOG = 'outreach.log';
+function otForRef(string $ref): string {
+    if ($ref === '') return '';
+    static $m = null, $sz = -2; $f = DATA_DIR . '/' . OT_LOG; clearstatcache(true, $f); $n = is_file($f) ? (int) filesize($f) : -1;
+    if ($m === null || $n !== $sz) { $m = []; foreach (logRows(OT_LOG) as $r) if (($r['t'] ?? '') === 'osend' && (string) ($r['ref'] ?? '') !== '') $m[(string) $r['ref']] = (string) ($r['for'] ?? ''); $sz = $n; }
+    return $m[$ref] ?? '';
 }
 /** every email straight from inbox.log, without the table (for the sender's door, which takes no desk lock) */
 function inAllRaw(): array {
@@ -439,7 +451,7 @@ function inOut(array $R, array $names, bool $full, ?array $st = null, bool $owne
     if ($owner) {
         $all ??= inAll(); $L = inLanes($all)[(string) $R['iid']] ?? null; $v = $L['via'] ?? null;
         $o['lane'] = (string) ($st['lane'] ?? 'inbox'); $o['laneWhy'] = (string) ($L['why'] ?? ''); if (!empty($L['held'])) $o['held'] = (string) $L['held'];
-        $o['via'] = $v ? ['k' => (string) $v['k'], 'by' => (string) $v['by'], 'at' => (int) $v['at'], 'subject' => (string) $v['subject'], 'l' => (string) $v['l'], 'how' => (string) $v['how'], 'to' => (string) ($v['to'] ?? '')] : null;
+        $o['via'] = $v ? ['k' => (string) $v['k'], 'by' => (string) $v['by'], 'at' => (int) $v['at'], 'subject' => (string) $v['subject'], 'l' => (string) $v['l'], 'how' => (string) $v['how'], 'to' => (string) ($v['to'] ?? '')] + (!empty($v['for']) ? ['for' => (string) $v['for']] : []) : null;
         $o['mine'] = inMyBox($st ?? []);
         $o['ev'] = array_map(fn($e) => ['t' => $e['t'], 'to' => (string) ($e['to'] ?? ''), 'note' => (string) ($e['note'] ?? ''), 'by' => (string) $e['by'], 'at' => (int) $e['at']], $L['ev'] ?? []);
         $oc = []; foreach ($all as $Y) if (in_array((string) $Y['iid'], $L['thread'] ?? [(string) $R['iid']], true)) foreach ($Y['outcomes'] ?? [] as $x) $oc[] = $x;

@@ -149,7 +149,8 @@ function dmPreview(string $w, array $R, array $b, string $me): array {
         'can' => dmMayGet($R, $d['to']), 'on' => $c['on'], 'book' => $d['book'] ? (bkConf()['on'] ? 'on' : 'off') : '', 're' => $re ? ['subject' => $re['subject'], 'from' => $re['from']] : null];
 }
 /** write it down, then send it */
-function dmSend(string $w, array $R, array $b, string $me): array {
+/** $extra (2026-11-24): kept on the dmail row as it is, e.g. for: Matthew Sharpe when Claire sends one for him (desk-outreach.php) */
+function dmSend(string $w, array $R, array $b, string $me, array $extra = []): array {
     $c = dmConf(); if (!$c['on']) return ['ok' => false, 'error' => 'Desk emails are off. They turn on once Matthew says go.'];
     $d = dmIn($b); if (isset($d['error'])) return ['ok' => false, 'error' => $d['error']];
     $no = dmMayGet($R, $d['to']); if ($no !== '') return ['ok' => false, 'error' => 'Not sent: ' . $no . '.'];
@@ -158,7 +159,7 @@ function dmSend(string $w, array $R, array $b, string $me): array {
     $re = null; if ($d['re'] !== '') { $re = dmReOf($R, $d['re']); if (!$re) return ['ok' => false, 'error' => 'That email of theirs is no longer on the card, so this can\'t go as a reply. Close it and write a new email instead.']; }
     $d['re'] = $re ?? '';
     $mine = dmMine($me); $ref = 'dm' . bin2hex(random_bytes(5)); $id = (string) $R['id'];
-    withLock(fn() => commit($w, [['t' => W($w)['T']['dmail'], 'id' => $id, 'ref' => $ref, 'sig' => $mine['sig'], 'replyto' => $mine['replyto'], 'by' => $me, 'at' => time()] + $d]));
+    withLock(fn() => commit($w, [['t' => W($w)['T']['dmail'], 'id' => $id, 'ref' => $ref, 'sig' => $mine['sig'], 'replyto' => $mine['replyto'], 'by' => $me, 'at' => time()] + $d + array_intersect_key($extra, ['for' => 1, 'otpl' => 1, 'oh' => 1])]));
     return ['ok' => true, 'ref' => $ref] + dmDeliver($w, $id, $ref, $me);
 }
 /** send (or send again) the email kept on the card under $ref; the touch once it went. Never throws. */
@@ -182,6 +183,7 @@ function dmDeliver(string $w, string $id, string $ref, string $me): array {
                 $fu = (string) ($d['fu'] ?? ''); if ($fu !== '' && $fu < date('Y-m-d')) $fu = '';
                 $touch = ['m' => 'email', 'out' => 'sent', 'note' => (is_array($d['re'] ?? null) ? 'Replied “' : 'Emailed “') . $d['subject'] . '” to ' . ((string) ($d['name'] ?? '') !== '' ? $d['name'] . ' (' . $d['to'] . ')' : $d['to']) . ' from the desk' . (is_array($d['re'] ?? null) ? ', answering their email' : ''), 'when' => $now, 'to' => (string) $d['to'], 'ref' => $ref, 'dm' => $ref];
                 if (!empty($d['tpl'])) $touch['tpl'] = (string) $d['tpl'];
+                if (!empty($d['for'])) $touch['for'] = (string) $d['for'];   /* sent by Claire for Matthew (2026-11-24) */
                 $rows = array_merge($rows, touchRows($w, $R, newKey(), $touch, $by, in_array($by, owners($w), true), $fu, (string) ($d['fuWhat'] ?? ''), $now));
             }
             commit($w, $rows); return (string) recs($w)[$id]['stage'];

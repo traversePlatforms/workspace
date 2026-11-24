@@ -1,7 +1,7 @@
 /* Print each Claire page to PDF with headless Chrome and report the page count (2026-11-21).
      node render-pdfs.cjs <dir> <name> [<name> ...]     (names without .html) */
 const { execFileSync } = require('child_process'), fs = require('fs'), path = require('path');
-const CH = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find((p) => fs.existsSync(p));
+const CH = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
 const [, , DIR, ...names] = process.argv;
 for (const n of names) {
   const html = path.resolve(DIR, n + '.html'), pdf = path.resolve(DIR, n + '.pdf');

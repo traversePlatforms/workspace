@@ -150,6 +150,9 @@ html.lock,html.lock body{overflow:hidden;overscroll-behavior:none}
 .fu button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 11px;font-size:12.5px;font-weight:600}.fu button[aria-pressed="true"]{background:var(--btnBg);border-color:var(--btnBg);color:var(--btnInk)}
 .fu input{padding:4px 6px;border-radius:8px;background:var(--card)}
 .fuhint{font-size:12.5px;color:var(--soft);margin-top:6px}
+.obadge{font-size:12px;font-weight:700;padding:1px 7px;border-radius:9px;border:1px solid var(--line)}.obadge.odraft{color:var(--warn)}.obadge.ook{color:var(--ok)}
+.oscript{margin:8px 0}.oscript summary{cursor:pointer}.outreachsec .seg{margin-top:6px}.outreachsec textarea,.outreachsec select,.outreachsec input{width:100%;margin-top:6px}.oemail,.owarm{margin-top:12px}
+.olock{font-size:14px;font-weight:600;color:var(--ink)}
 .tnote{width:100%;padding:10px 12px;border-radius:10px;background:var(--card)}
 .tprompt{background:var(--card);border:2px solid var(--acc);border-radius:10px;padding:8px 10px;margin-bottom:8px;font-size:14px}
 .tprompt .seg{margin-top:6px}
@@ -391,7 +394,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-21.2';
+  var BUILD = '2026-11-24.1';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -557,7 +560,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       if (j._status === 401) return signin();
       if (!j.ok) { main.textContent = ''; main.appendChild(el('div', 'empty', j.error || 'Could not load.')); return; }
       S.data = j; $('bar').hidden = false; $('ubar').hidden = !j.build || j.build === BUILD;
-      $('whoName').textContent = j.me.name + (j.me.role === 'admin' ? ' (admin)' : j.me.role === 'research' ? ' (look-ups)' : '');
+      $('whoName').textContent = j.me.name + (j.me.role === 'admin' ? ' (admin)' : j.me.role === 'research' ? ' (look-ups)' : j.me.role === 'outreach' ? ' (for Matthew)' : '');
       $('whoAv').textContent = ''; $('whoAv').appendChild(avatar(j.me.name, 'lg'));
       if (expoOnly()) S.world = 'expo';
       $('brandSub').textContent = expoOnly() ? 'Peak Pickleball · expo leads' : 'Peak Pickleball · sponsors and expo leads';
@@ -582,9 +585,9 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   var SUBS = {
     sponsor: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], myleads: MYSUBS, list: [['all', 'All companies'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added on the desk'], ['removed', 'Removed']],
       deals: [['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed']],
-      more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['look', 'Look'], ['settings', 'Settings']] },
+      more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['scripts', 'Claire’s scripts'], ['look', 'Look'], ['settings', 'Settings']] },
     expo: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], myleads: MYSUBS, list: [['all', 'All organisations'], ['removed', 'Removed']], deals: [['tours', 'Tours'], ['quotes', 'Quotes and bookings']],
-      more: [['report', 'Report'], ['ref', 'Questions and venues'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['look', 'Look'], ['settings', 'Settings']] }
+      more: [['report', 'Report'], ['ref', 'Questions and venues'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['scripts', 'Claire’s scripts'], ['look', 'Look'], ['settings', 'Settings']] }
   };
   var DESC = {
     sponsor: { myleads: MYDESC, inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
@@ -606,11 +609,14 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   var DESC_SELLER = { sponsor: 'Your email and booking link, your alerts (a notice on your phone or computer when an email comes in), your calendar link and the look.', expo: 'The questions for Peak and the competing venues, your email and booking link, your alerts, your calendar link and the look.' };
   /* the research account (2026-11-21, Claire): Companies (or Organisations) and Look only; on a card, what she found and where (the server
      refuses everything else, desk.php RESEARCH_OK) */
-  var research = function () { return !!(S.data && S.data.me.role === 'research'); };
+  var research = function () { return !!(S.data && (S.data.me.role === 'research' || S.data.me.role === 'outreach')); };
+  /* the outreach account (2026-11-24, Claire for Matthew): research, plus touches, follow-ups and emails from Matthew's approved templates */
+  var outreach = function () { return !!(S.data && S.data.me.role === 'outreach'); };
   var RESEARCH_TABS = { list: 1, more: 1 };
   var subList = function (t) {
     var L = SUBS[S.world][t];
-    if (L && research()) return L.filter(function (x) { return t === 'more' ? x[0] === 'look' : x[0] !== 'removed'; });
+    if (L && research()) return L.filter(function (x) { return t === 'more' ? x[0] === 'look' || (x[0] === 'scripts' && outreach()) : x[0] !== 'removed'; });
+    if (L && t === 'more') L = L.filter(function (x) { return x[0] !== 'scripts' || !!(S.data && S.data.otpl); });   /* Claire's scripts: Matthew's login only */
     return L && S.data && !isAdmin() ? L.filter(function (x) { return !(t === 'more' ? ADMIN_SUBS[x[0]] : x[0] === 'settings'); }) : L;
   };
   var subOf = function (t) { var L = subList(t); return L ? (S.sub[S.world + t] && L.some(function (x) { return x[0] === S.sub[S.world + t]; }) ? S.sub[S.world + t] : L[0][0]) : ''; };
@@ -662,7 +668,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var h1 = el('h1'); if (!expoOnly() && S.tab !== 'inbox' && S.tab !== 'myleads') h1.appendChild(document.createTextNode((isX() ? 'Expo leads' : 'Sponsors') + ' · ')); h1.appendChild(el('span', null, x[1])); top.appendChild(h1);
     if ((S.tab === 'list' || S.tab === 'pipe') && !research()) { var add = el('button', 'btn ghost small', isX() ? '+ Add an expo lead' : '+ Add a company'); add.type = 'button'; add.addEventListener('click', isX() ? expoAddForm : addForm); top.appendChild(add); }
     var desc = S.tab === 'more' && !isAdmin() ? DESC_SELLER[S.world] : DESC[S.world][S.tab];
-    if (research()) desc = S.tab === 'more' ? 'The look of the desk on this device.' : 'Open a ' + (isX() ? 'lead' : 'company') + ', look up its website, phone and general email from public sources, and note where each came from. This account never emails, texts or calls anyone.'; if (S.tab === 'more' && isAdmin()) desc = desc.replace(/ and the look\.$/, ', the look, and the settings (message templates, the end-of-day email).');
+    if (research()) desc = S.tab === 'more' ? 'The look of the desk on this device.' : 'Open a ' + (isX() ? 'lead' : 'company') + ', look up its website, phone and general email from public sources, and note where each came from. This account never emails, texts or calls anyone.';
+    if (outreach()) desc = S.tab === 'more' ? 'Your scripts and emails (drafts until Matthew approves them), and the look of the desk on this device.' : 'Open a ' + (isX() ? 'lead' : 'company') + ' to look it up, or to reach out for Matthew: log a call or voicemail, send an approved email, hand a warm reply to Matthew. Everything you do here counts as his.'; if (S.tab === 'more' && isAdmin()) desc = desc.replace(/ and the look\.$/, ', the look, and the settings (message templates, the end-of-day email).');
     h.appendChild(top); h.appendChild(el('p', 'sdesc', desc));
     var L = subList(S.tab);
     if (L) {
@@ -858,14 +865,15 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   }
   function teamTable(T, week) {
     T = peFold(T);
-    var names = W().owners.slice(); Object.keys(T || {}).forEach(function (n) { if (names.indexOf(n) < 0 && n !== 'Claude Check') names.push(n); });
+    var names = W().owners.slice(); (W().helpers || []).forEach(function (n) { if (names.indexOf(n) < 0) names.push(n); });   /* Claire (2026-11-24) */
+    Object.keys(T || {}).forEach(function (n) { if (names.indexOf(n) < 0 && n !== 'Claude Check') names.push(n); });
     var t = el('table', 'tb'), h = el('tr'), cols = ['Person', 'Calls', 'Emails', 'Texts', 'Other', 'Tours', isX() ? 'Quotes' : 'Proposals', isX() ? 'Booked' : 'Signed'];
     if (!week) cols.push('Last on'); cols.forEach(function (x, i) { h.appendChild(el('th', i ? 'n' : null, x)); }); t.appendChild(h);
     var tot = [0, 0, 0, 0, 0, 0, 0];
     names.forEach(function (n) {
       var a = (T || {})[n] || {}, v = [a.calls || 0, a.emails || 0, a.texts || 0, a.other || 0, a.tours || 0, a.proposals || 0, a.signed || 0], r = el('tr');
       v.forEach(function (x, i) { tot[i] += x; });
-      r.appendChild(el('td', null, n === me() ? n + ' (you)' : n)); v.forEach(function (x) { r.appendChild(el('td', 'n', x ? String(x) : '–')); });
+      var hl = (W().helpers || []).indexOf(n) >= 0; r.appendChild(el('td', null, (n === me() ? n + ' (you)' : n) + (hl ? ' (for Matthew)' : ''))); if (hl) r.setAttribute('data-helper', n); v.forEach(function (x) { r.appendChild(el('td', 'n', x ? String(x) : '–')); });
       if (!week) r.appendChild(el('td', 'n', a.last ? ago(a.last) : 'not yet')); t.appendChild(r);
     });
     var tr = el('tr'); tr.style.fontWeight = '800'; tr.appendChild(el('td', null, 'Everyone')); tot.forEach(function (x) { tr.appendChild(el('td', 'n', String(x))); }); if (!week) tr.appendChild(el('td')); t.appendChild(tr);
@@ -1031,6 +1039,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     if (X) d.appendChild(eventsSec(r));
     if (research()) {   /* the research account (2026-11-21): who to reach, the look-up, what she found and where; nothing that reaches anyone */
       d.appendChild(contactsSec(r));
+      if (outreach()) { d.appendChild(outreachSec(r)); if (!r.olock) d.appendChild(followSec(r)); }
       if (!X) d.appendChild(scanSec(r));
       d.appendChild(lookedSec(r));
       d.appendChild(activitySec(r));
@@ -1050,6 +1059,72 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var rmv = el('button', 'lnk', X ? 'Remove this lead from the Expo leads' : 'Remove this company from the desk'); rmv.type = 'button'; rmv.style.cssText = 'color:var(--warn);margin-top:14px;display:block';
     rmv.addEventListener('click', function () { removeRec(r); }); d.appendChild(rmv);
     return d;
+  }
+  /* Reach out for Matthew (2026-11-24, the outreach account, Claire): her scripts, a touch, a desk email from an approved template, a warm
+     reply handed to Matthew. Everything here counts as Matthew's; the server checks every rule again (desk-outreach.php). */
+  var DRAFT_TXT = 'Draft: waiting for Matthew’s OK';
+  var oTpls = function (w) { return ((S.data.outreach && S.data.outreach.templates) || S.data.otpl || []).filter(function (t) { return t.world === w || t.world === 'both'; }); };
+  var oBadge = function (t) { var b = el('span', 'obadge ' + (t.ok ? 'ook' : 'odraft'), t.ok ? 'Approved by Matthew' : DRAFT_TXT); b.setAttribute('data-ok', t.ok ? '1' : '0'); return b; };
+  function oScript(t, company) {
+    var d = el('details', 'oscript'); d.setAttribute('data-otpl', t.k); var sm = el('summary'); sm.appendChild(el('b', null, t.name + ' ')); sm.appendChild(oBadge(t)); d.appendChild(sm);
+    var fill = function (x) { return company ? x.split('{company}').join(company) : x; };
+    var pr = el('pre', 'eodpre otext'); pr.textContent = (t.subject ? 'Subject: ' + fill(t.subject) + '\n\n' : '') + fill(t.text); d.appendChild(pr); return d;
+  }
+  function outreachSec(r) {
+    var O = S.data.outreach || {}, s = el('div', 'sec outreachsec'); s.appendChild(el('h3', null, 'Reach out for Matthew'));
+    if (r.olock) { var lk = el('div', 'fuhint olock', r.olock); lk.setAttribute('data-olock', '1'); s.appendChild(lk); return s; }
+    s.appendChild(el('div', 'fuhint', 'What you log or send here counts as Matthew’s. Replies to your emails go to his My leads, not to you. Never give a price, a package or a date.'));
+    var T = oTpls(S.world);
+    T.filter(function (t) { return t.kind !== 'email'; }).forEach(function (t) { s.appendChild(oScript(t, r.name)); });
+    /* a touch */
+    var f = el('div', 'form'), note = el('textarea'); note.rows = 2; note.placeholder = 'What happened, who you spoke to (a note for the card)'; note.setAttribute('aria-label', 'Note for the touch'); f.appendChild(note);
+    var fu = el('input'); fu.type = 'date'; fu.setAttribute('aria-label', 'Follow-up day (optional)'); fu.title = 'Follow-up day (optional)'; f.appendChild(fu);
+    var seg = el('div', 'seg otouch');
+    [['call', 'noanswer', 'Call: no answer'], ['call', 'talked', 'Call: talked'], ['call', 'wrong', 'Wrong number'], ['voicemail', 'left', 'Left a voicemail'], ['email', 'sent', 'Emailed (not from the desk)'], ['other', 'contacted', 'Other']].forEach(function (x) {
+      var b = el('button', null, x[2]); b.type = 'button'; b.setAttribute('data-m', x[0]); b.setAttribute('data-out', x[1]);
+      b.addEventListener('click', function () { save('touch', { id: r.id, m: x[0], out: x[1], note: note.value, fu: fu.value }, 'Logged for Matthew'); });
+      seg.appendChild(b);
+    });
+    f.appendChild(seg); s.appendChild(f);
+    /* a desk email, from an approved template only */
+    var E = T.filter(function (t) { return t.kind === 'email'; })[0], P = (r.people || []).filter(function (p) { return p.email && !p.dnc; });
+    if (E) {
+      var eb = el('div', 'oemail'); eb.appendChild(el('h3', null, 'Send the follow-up email')); eb.appendChild(oScript(E, r.name));
+      var why = !E.ok ? DRAFT_TXT + '. It can’t be sent until he approves it.' : !O.mailOn ? 'Desk emails are off.' : !O.window ? 'Your emails go ' + O.windowText + '.' : O.sent >= O.cap ? 'That is ' + O.cap + ' emails today, the most in a day.' : !P.length ? 'Nobody on the card has an email.' : '';
+      var sel = el('select'); sel.setAttribute('aria-label', 'Who it goes to'); P.forEach(function (p) { var o = el('option', null, (p.name ? p.name + ' · ' : '') + p.email); o.value = p.email; sel.appendChild(o); });
+      if (P.length) eb.appendChild(sel);
+      var row = el('div', 'seg'), pv = el('button', 'btn small ghost', 'Preview'), sd = el('button', 'btn small', 'Send from Peak Partnerships'); pv.type = sd.type = 'button'; sd.setAttribute('data-act', 'osend');
+      var out = el('pre', 'eodpre opreview'); out.hidden = true;
+      pv.disabled = !P.length; sd.disabled = !!why;
+      pv.addEventListener('click', function () { api('opreview', { world: S.world, id: r.id, tpl: E.k, to: sel.value }).then(function (j) { if (!j.ok) return toast(j.error || 'No preview.'); out.hidden = false; out.textContent = 'To: ' + j.to + '\nSubject: ' + j.subject + '\n\n' + j.text + '\n' + j.sig + '\n\n' + j.footer; }); });
+      sd.addEventListener('click', function () { if (confirm('Send “' + E.name + '” to ' + sel.value + ' from Peak Partnerships, for Matthew?')) save('osend', { id: r.id, tpl: E.k, to: sel.value, fu: fu.value }).then(function (j) { if (j && j.ok) toast(j.state === 'sent' || j.state === 'dup' ? 'Sent for Matthew (' + j.sentToday + ' of ' + j.cap + ' today)' : 'Not sent: ' + (j.why || j.state)); }); });
+      row.appendChild(pv); row.appendChild(sd); eb.appendChild(row);
+      eb.appendChild(el('div', 'fuhint osendwhy', why || (O.sent || 0) + ' of ' + O.cap + ' sent today. ' + O.windowText + '.'));
+      eb.appendChild(out); s.appendChild(eb);
+    }
+    /* a warm reply: hand it to Matthew */
+    var wb = el('div', 'owarm'); wb.appendChild(el('h3', null, 'Warm reply: hand it to Matthew'));
+    var wt = el('textarea'); wt.rows = 3; wt.placeholder = 'What they said, their name, and the best number or email'; wt.setAttribute('aria-label', 'What they said'); wb.appendChild(wt);
+    var wgo = el('button', 'btn small', 'Hand it to Matthew'); wgo.type = 'button'; wgo.setAttribute('data-act', 'owarm');
+    wgo.addEventListener('click', function () { if (!wt.value.trim()) return toast('Say what they said first.'); save('owarm', { id: r.id, note: wt.value }).then(function (j) { if (j && j.ok) toast(j.alerted ? 'Matthew has it (J.A.R.V.I.S. told him)' : 'Saved for Matthew (the J.A.R.V.I.S. message did not go: tell him)'); }); });
+    wb.appendChild(wgo); s.appendChild(wb);
+    return s;
+  }
+  /* Claire's scripts (2026-11-24): for her, every one with where it stands; for Matthew (his login only), the approve switch */
+  function drawScripts() {
+    var mine = !!S.data.otpl, L = mine ? S.data.otpl : (S.data.outreach && S.data.outreach.templates) || [];
+    var c = el('div', 'card info oscripts'); c.appendChild(el('h3', null, mine ? 'Claire’s scripts and emails' : 'My scripts and emails'));
+    c.appendChild(el('p', 'soft', mine ? 'What Claire says on calls and voicemails, and the two emails she can send from the desk for you. Each is a draft until you approve it here; a draft email can’t be sent. Change the words in its file first: the approval goes with these exact words.' : 'Each is a draft until Matthew approves it. A draft email can’t be sent. Read them before your calls.'));
+    L.forEach(function (t) {
+      var d = oScript(t, ''); d.open = mine; c.appendChild(d);
+      if (mine) {
+        var row = el('div', 'seg'), b = el('button', t.ok ? 'btn small ghost' : 'btn small', t.ok ? 'Take the approval off' : 'Approve'); b.type = 'button'; b.setAttribute('data-approve', t.k);
+        b.addEventListener('click', function () { if (t.ok || confirm('Approve “' + t.name + '” as written?')) save('otplset', { k: t.k, on: !t.ok }, t.ok ? 'Back to draft' : 'Approved'); });
+        row.appendChild(b); c.appendChild(row);
+        c.appendChild(el('div', 'fuhint', (t.file ? 'Source: ' + t.file + '. ' : '') + (t.set ? (t.set.stale ? 'The words changed since you approved them, so it is a draft again. ' : '') + (t.set.on ? 'Approved' : 'Approval taken off') + ' by ' + t.set.by + ', ' + when(t.set.at) + '.' : 'Not approved yet.')));
+      }
+    });
+    main.appendChild(c);
   }
   /* Looked up (2026-11-21, the research account): a note that starts "Looked up:", with what was found and where */
   var LOOKED = /^Looked up:/;
@@ -1252,7 +1327,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       ct.appendChild(el('small', null, 'From: ' + p.src + (p.more ? ' · ' + p.more : '')));
       srcLinks(p.srcs, ct);
       var cb = p.ed ? contactActs(r, p, nm, ct) : null;
-      if (p.key && !research()) dncLink(r, p, nm, ct, cb);
+      if (p.key && (!research() || (outreach() && !p.dnc && !r.olock))) dncLink(r, p, nm, ct, cb);   /* Claire marks Don't contact, never takes it off (2026-11-24) */
       (more || s).appendChild(ct);
     });
     if (!P.length && !r.route && !r.callHow && !r.phone) s.appendChild(el('div', null, 'No contact yet.'));
@@ -1642,8 +1717,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
           if (dmx.clicks) dd.appendChild(el('small', null, ' · links clicked ' + (dmx.clicks === 1 ? 'once' : dmx.clicks + ' times')));   /* 2026-11-24 */
           body.appendChild(dd); body.appendChild(pr);
         }
-        var sm = el('small', null, x.t.by + ', ' + when(x.t.when) + (x.t.fu ? ' · follow-up set for ' + fmtDay(x.t.fu) : '') + ' · ');
-        var u = el('button', 'lnk', 'Remove'); u.type = 'button'; u.style.fontSize = '12px'; u.addEventListener('click', function () { if (confirm('Remove this ' + touchName(x.t).toLowerCase() + ' from the card? The record keeps it.')) save('touchdel', { id: r.id, k: x.t.k }, 'Removed'); }); if (!research()) sm.appendChild(u); body.appendChild(sm);
+        var sm = el('small', null, x.t.by + (x.t.for && x.t.for !== x.t.by ? ' for ' + first(x.t.for) : '') + ', ' + when(x.t.when) + (x.t.fu ? ' · follow-up set for ' + fmtDay(x.t.fu) : '') + ' · ');
+        var u = el('button', 'lnk', 'Remove'); u.type = 'button'; u.style.fontSize = '12px'; u.addEventListener('click', function () { if (confirm('Remove this ' + touchName(x.t).toLowerCase() + ' from the card? The record keeps it.')) save('touchdel', { id: r.id, k: x.t.k }, 'Removed'); }); if (!research() || (outreach() && x.t.by === me())) sm.appendChild(u); body.appendChild(sm);
       } else if (x.k === 'n') {
         body.appendChild(el('div', null, x.n.note));
         var sm2 = el('small', null, 'Note · ' + x.n.by + ', ' + when(x.n.at) + ' · '), rm = el('button', 'lnk', 'Remove'); rm.type = 'button'; rm.style.fontSize = '12px'; rm.addEventListener('click', function () { if (confirm('Remove this note?')) save('notedel', { id: r.id, nk: x.n.k }, 'Note removed'); }); if (!research()) sm2.appendChild(rm); body.appendChild(sm2);
@@ -2291,7 +2366,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   var VIAK = { sent: 'the Peak email', deskmail: 'a desk email', tourmail: 'a tour confirmation' };
   var viaText = function (v) {
     if (!v || v.k === 'none') return 'Not an answer to anything Peak Partnerships sent them.';
-    var what = v.k === 'sent' ? 'your Peak email' + (v.l ? ' (' + (v.l === 'expo' ? 'expo list' : 'sponsor list') + ')' : '') : (v.k === 'deskmail' ? (v.by === me() ? 'your desk email' : 'a desk email from ' + v.by) : (v.by === me() ? 'your tour confirmation' : 'a tour confirmation from ' + v.by));
+    var what = v.k === 'sent' ? 'your Peak email' + (v.l ? ' (' + (v.l === 'expo' ? 'expo list' : 'sponsor list') + ')' : '') : (v.k === 'deskmail' ? (v.by === me() ? 'your desk email' : v.for && v.for === me() ? 'the desk email ' + v.by + ' sent for you' : 'a desk email from ' + v.by) : (v.by === me() ? 'your tour confirmation' : 'a tour confirmation from ' + v.by));
     return 'Answers ' + what + (v.subject ? ' “' + v.subject + '”' : '') + ', sent ' + when(v.at) + (v.how === 'card' && v.to ? ' to ' + v.to + ' (the same company)' : '') + '.';
   };
   var ocText = function (o) { return o.st + (o.amount != null ? ', $' + Number(o.amount).toLocaleString('en-US') : '') + (o.note ? ': ' + o.note : '') + ' (' + when(o.at) + ')'; };
@@ -2498,7 +2573,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   /* ---- More ---- */
   function drawMore(sub) {
     if (ADMIN_SUBS[sub] && !isAdmin()) return;   /* never drawn for a seller (subOf already keeps them off it) */
-    ({ report: drawReport, pl: drawPl, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.sponsor.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.sponsor.better); }, look: drawLook, ref: drawExpoRef, cal: drawCal, mine: drawMine, settings: drawSettings })[sub]();
+    ({ report: drawReport, pl: drawPl, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.sponsor.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.sponsor.better); }, look: drawLook, ref: drawExpoRef, cal: drawCal, mine: drawMine, scripts: drawScripts, settings: drawSettings })[sub]();
   }
   /* the look (2026-11-18): Dark is the default; Light is the Clubhouse look; or match this device. Kept on this device only. */
   function drawLook() {

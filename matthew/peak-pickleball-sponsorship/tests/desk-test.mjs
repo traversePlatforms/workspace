@@ -75,6 +75,10 @@ let pass = 0, failN = 0; const ok = (c, m) => { if (c) { pass++; console.log('  
 const PORT = 8790 + Math.floor(Math.random() * 400), ORIGIN = `http://127.0.0.1:${PORT}`, API = ORIGIN + '/api/desk.php';
 env.DESK_BOOK_BASE = ORIGIN + '/api/book.php';   /* the booking page (2026-11-19) on the test's own server */
 env.DESK_UID_SINCE = '0';
+/* Claire's outreach (2026-11-24): any hour here (the window itself is checked below), a cap of 2 instead of 25, and a stand-in for
+   J.A.R.V.I.S.'s jvdesk.php that only writes down what it is given */
+env.DESK_OUTREACH_ANYTIME = '1'; env.DESK_OUTREACH_CAP = '2'; env.DESK_JV_TOOL = join(LD, 'jvfake.php');
+writeFileSync(join(LD, 'jvfake.php'), '<?php $t = stream_get_contents(STDIN); file_put_contents(getenv("DESK_DATA") . "/jv-out.jsonl", json_encode(["argv" => array_slice($argv, 1), "text" => $t]) . "\n", FILE_APPEND); exit(0);');
 env.DESK_PUSH_ALLOW_HTTP = '1';   /* the Inbox alerts (2026-11-20): the test push service is a plain listener on 127.0.0.1 */   /* X-16: every tour made in the test carries the new @peakpickleball.us invite UID (the line itself is tested below) */
 function client(extra = {}) { let ck = ''; const f = async (action, body, hdr = true) => { const r = await fetch(`${API}?action=${action}`, { method: body ? 'POST' : 'GET', headers: { ...(body ? { 'Content-Type': 'application/json' } : {}), ...(body && hdr ? { 'X-Desk': '1' } : {}), ...(ck ? { Cookie: ck } : {}), ...extra }, body: body ? JSON.stringify(body) : undefined }); const sc = r.headers.get('set-cookie'); if (sc) ck = sc.split(';')[0]; const j = await r.json().catch(() => ({})); j._status = r.status; return j; }; f.cookie = () => ck; return f; }
 const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -1336,6 +1340,137 @@ try {
     globalThis.__RES = RES;
   }
 
+  console.log('The outreach account (2026-11-24, Claire reaches out for Matthew: touches, approved emails, warm replies; all of it his)');
+  {
+    msConnect(); GM.fail = null;
+    const CLC = addAccount('Test Claire', 'outreach'), cl = client(); globalThis.__CL = CLC;
+    ok((await cl('signin', { code: CLC })).role === 'outreach', 'outreach: the account signs in');
+    const MMC = addAccount('Matthew Sharpe', 'admin'), mt = client(); await mt('signin', { code: MMC });
+    const asC = (who, act, body = {}, extra = {}) => new Promise((r) => { const p = execFile('php', [join(WEB, 'api/desk.php'), 'as', who, act], { env: { ...env, ...extra } }, (e, so) => { let j = null; try { j = JSON.parse(so); } catch {} r({ code: e ? e.code : 0, out: so, j }); }); p.stdin.end(JSON.stringify(body)); });
+    const dm0 = (await a('data')).deskmail.on; if (!dm0) await a('dmset', { on: true });
+    let CD = await cl('data');
+    const T7 = (CD.outreach && CD.outreach.templates) || [];
+    ok(CD.ok && T7.length === 7 && T7.every((t) => t.ok === false) && CD.outreach.cap === 2 && CD.outreach.for === 'Matthew Sharpe', 'outreach: its data has the 7 templates, every one a draft, its cap and who it works for');
+    ok(!CD.inbox && !('myleads' in CD) && !('otpl' in CD) && CD.sponsor.templates.length === 0 && CD.sponsor.proposals.length === 0 && CD.sponsor.packages.length === 0 && CD.sponsor.tours.length === 0 && !JSON.stringify(CD).includes('"dmails"'),
+      'outreach: no Inbox, My leads, approve switch, team templates, proposals, packages, tours or desk email words in its data');
+    ok(!CD.sponsor.owners.includes('Test Claire') && CD.sponsor.helpers.includes('Test Claire') && CD.expo.helpers.includes('Test Claire'), 'outreach: never an owner; listed as a helper on both lists (for "by person")');
+    /* the source files: each template's words are the words in its DRAFT.md */
+    const SDIR = join(ROOT, '..', 'claire', 'peak', 'scripts'), blocks = (f) => [...readFileSync(join(SDIR, f), 'utf8').replace(/\r/g, '').matchAll(/```text\n([\s\S]*?)\n```/g)].map((m) => m[1]);
+    const SRC = { spcall: ['sponsor-call-script-DRAFT.md', 0], xcall: ['expo-call-script-DRAFT.md', 0], spvm: ['voicemails-DRAFT.md', 0], xvm: ['voicemails-DRAFT.md', 1], spmail: ['sponsor-follow-up-email-DRAFT.md', 0], xmail: ['expo-follow-up-email-DRAFT.md', 0], warm: ['warm-reply-handoff-DRAFT.md', 0] };
+    const mism = T7.filter((t) => { const s = SRC[t.k]; if (!s) return true; const md = blocks(s[0])[s[1]] || ''; return md !== (t.subject ? 'Subject: ' + t.subject + '\n\n' : '') + t.text; }).map((t) => t.k);
+    ok(!mism.length, 'outreach: every template on the desk is word for word its DRAFT.md in matthew/claire/peak/scripts' + (mism.length ? ' (differs: ' + mism.join(', ') + ')' : ''));
+    ok(!T7.some((t) => /\$\s?\d|\bprice[ds]? (is|are|start)|per (month|year|hour)|members\b/i.test(t.subject + ' ' + t.text)), 'outreach: no price or member number in any template');
+    /* cards: free ones, one the team has */
+    const free = (w, n) => CD[w].recs.filter((r) => r.stage === 'new' && !r.owner && !r.olock && (r.people || []).some((p) => p.email && !p.dnc && /^[^@]+@[^@]+$/.test(p.email))).slice(0, n);
+    const [F1, F2, F3, F4, F5, F6] = free('sponsor', 6), [XF] = free('expo', 1);
+    const mailOf = (r) => r.people.find((p) => p.email && !p.dnc).email;
+    const SD = await b('data'), TEAM = SD.sponsor.recs.find((r) => r.owner === 'Test Seller' && r.stage !== 'lost');
+    const TEAMc = CD.sponsor.recs.find((r) => r.id === TEAM.id), ALONG = CD.sponsor.recs.find((r) => !r.owner && ['meeting', 'proposal', 'signed', 'lost', 'notnow'].includes(r.stage));
+    ok(F1 && F2 && F3 && F4 && F5 && F6 && XF && TEAMc && TEAMc.olock === 'Someone on the team is working this one.' && TEAMc.owner === '', 'the lock: a card Test Seller owns says "Someone on the team is working this one", and its owner is not shown');
+    ok(!ALONG || /past first contact/.test(ALONG.olock), 'the lock: a card past first contact is not hers either');
+    /* templates are drafts: they can't be sent */
+    let r = await cl('opreview', { world: 'sponsor', id: F1.id, tpl: 'spmail', to: mailOf(F1) });
+    ok(r.ok && r.approved === false && r.subject === 'Peak Pickleball and ' + F1.name.trim() && !/\{(first|company)\}/.test(r.subject + r.text) && /Test\nPeak Pickleball|Test Claire\nPeak Pickleball/.test(r.sig), 'Preview fills in the company and first name (or "there"); signed with her name');
+    r = await cl('osend', { world: 'sponsor', id: F1.id, tpl: 'spmail', to: mailOf(F1) });
+    ok(r._status === 403 && /Draft: waiting for Matthew/.test(r.error) && GM.sent.length >= 0, 'a draft template can’t be sent (403, "Draft: waiting for Matthew’s OK")');
+    /* only Matthew's own login approves, on the page */
+    ok((await b('otplset', { k: 'spmail', on: true }))._status === 403 && (await a('otplset', { k: 'spmail', on: true }))._status === 403 && (await cl('otplset', { k: 'spmail', on: true }))._status === 403, 'approve: refused to a seller, another admin and Claire');
+    let z = await asC('Matthew Sharpe', 'otplset', { k: 'spmail', on: true }); ok(z.code === 1 && z.j && z.j.code === 403, 'approve: refused through J.A.R.V.I.S. (php desk.php as Matthew), so only his own tap approves');
+    ok(!('otpl' in (await a('data'))) && !('otpl' in (await b('data'))) && (await mt('data')).otpl.length === 7, 'the approve switch is in Matthew’s data alone');
+    r = await mt('otplset', { k: 'spmail', on: true }); ok(r.ok && r.otpl.find((t) => t.k === 'spmail').ok && r.otpl.find((t) => t.k === 'spmail').set.by === 'Matthew Sharpe', 'Matthew approves the sponsor follow-up email (the test does it; live they stay drafts for him)');
+    ok((await cl('data')).outreach.templates.filter((t) => t.ok).map((t) => t.k).join() === 'spmail', 'her data shows that one approved, the rest drafts');
+    /* a touch counts as Matthew's: by Claire, for Matthew; an unowned card becomes his */
+    const n0 = GM.sent.length;
+    r = await cl('touch', { world: 'sponsor', id: F1.id, m: 'call', out: 'talked', note: 'Spoke to the front desk' });
+    ok(r.ok && r.owner === 'Matthew Sharpe' && r.stage === 'called', 'a call she logs moves the card to Called and makes Matthew its owner (it had none)');
+    const ev = lines('events.log').map((l) => JSON.parse(l)).filter((x) => x.id === F1.id && x.by === 'Test Claire');
+    ok(ev.some((x) => x.t === 'touch' && x.touch.for === 'Matthew Sharpe' && x.touch.m === 'call') && ev.some((x) => x.t === 'owner' && x.owner === 'Matthew Sharpe'), 'the log: the touch by Test Claire for Matthew Sharpe, and the owner row');
+    const F1b = (await b('data')).sponsor.recs.find((x) => x.id === F1.id);
+    ok(F1b.touches.some((t) => t.by === 'Test Claire' && t.for === 'Matthew Sharpe' && t.note === 'Spoke to the front desk') && F1b.owner === 'Matthew Sharpe', 'the team sees it on the card: Test Claire, for Matthew');
+    ok((await cl('touch', { world: 'sponsor', id: F2.id, m: 'voicemail', out: 'left', fu: later(3) })).ok && (await cl('touch', { world: 'expo', id: XF.id, m: 'other', out: 'contacted', note: 'Website form' })).ok, 'a voicemail with a follow-up; an expo card, Other');
+    ok((await cl('touch', { world: 'sponsor', id: F3.id, m: 'text', out: 'sent' }))._status === 400 && (await cl('touch', { world: 'sponsor', id: F3.id, m: 'inperson', out: 'met' }))._status === 400, 'only a call, a voicemail, an email or other (no texts, no in person)');
+    r = await cl('touch', { world: 'sponsor', id: TEAM.id, m: 'call', out: 'talked' });
+    ok(r._status === 409 && r.error === 'Someone on the team is working this one.', 'the lock: a touch on Test Seller’s card is refused, with no name');
+    ok((await cl('next', { world: 'sponsor', id: TEAM.id, date: later(2), what: 'x' }))._status === 409 && (await cl('owarm', { world: 'sponsor', id: TEAM.id, note: 'x' }))._status === 409 && (await cl('osend', { world: 'sponsor', id: TEAM.id, tpl: 'spmail', to: ((SD.sponsor.recs.find((x) => x.id === TEAM.id).people || []).find((p) => p.email) || {}).email || 'x@example.com' }))._status >= 400, 'the lock: a follow-up, a warm reply and an email on it are refused too');
+    ok((await cl('next', { world: 'sponsor', id: F2.id, date: later(4), what: 'Call back Thursday' })).ok, 'she sets a follow-up on a card that is free');
+    const myT = (await cl('data')).sponsor.recs.find((x) => x.id === F2.id).touches.find((t) => t.by === 'Test Claire'), seT = F1b.touches.find((t) => t.by !== 'Test Claire');
+    ok((await cl('touchdel', { world: 'sponsor', id: F2.id, k: 'nope' }))._status === 404 && (!seT || (await cl('touchdel', { world: 'sponsor', id: F1.id, k: seT.k }))._status === 403), 'Undo: only her own touches');
+    /* an approved email: sent from Peak Partnerships, signed by her, for Matthew */
+    r = await cl('osend', { world: 'sponsor', id: F1.id, tpl: 'spmail', to: mailOf(F1) });
+    ok(r.ok && r.state === 'sent' && r.sentToday === 1 && GM.sent.length === n0 + 1, 'the approved email goes (1 of 2 today here; 25 live)');
+    const mail1 = mimeParts(GM.sent[GM.sent.length - 1]);
+    ok(mail1.subject === 'Peak Pickleball and ' + F1.name.trim() && /partnering with Peak Pickleball/.test(mail1.text) && /Test Claire/.test(mail1.text) && /rather not get emails/.test(mail1.text), 'the email: the template’s words, her name, the desk’s footer');
+    const ol = lines('outreach.log').map((l) => JSON.parse(l)), os1 = ol.find((x) => x.t === 'osend' && x.id === F1.id);
+    const pmEv = readFileSync(join(MAILD, 'events.log'), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)).find((x) => x.t === 'deskmail' && x.ref === (os1 || {}).ref);
+    ok(os1 && os1.for === 'Matthew Sharpe' && os1.by === 'Test Claire' && os1.ok && pmEv && pmEv.by === 'Test Claire', 'recorded: outreach.log keeps the send for Matthew Sharpe by Test Claire; the sender’s log has the desk email by Test Claire');
+    const F1c = (await mt('data')).sponsor.recs.find((x) => x.id === F1.id), dmT = F1c.touches.find((t) => t.dm === os1.ref), dmR = (F1c.dmails || []).find((d) => d.ref === os1.ref);
+    ok(dmT && dmT.by === 'Test Claire' && dmT.for === 'Matthew Sharpe' && dmR && dmR.for === 'Matthew Sharpe' && dmR.otpl === 'spmail', 'the card: the Emailed touch is Test Claire’s for Matthew; the email itself is kept with the template it came from');
+    ok(/for the expo leads/.test((await cl('osend', { world: 'sponsor', id: F1.id, tpl: 'xmail', to: mailOf(F1) })).error || '') && (await cl('osend', { world: 'expo', id: XF.id, tpl: 'xmail', to: mailOf(XF) }))._status === 403 && (await cl('osend', { world: 'sponsor', id: F3.id, tpl: 'spmail', to: 'someone-else@example.com' }))._status === 400, 'only an approved template, for its own list, to someone already on the card');
+    /* Don't contact: she marks it, never takes it off; a marked person can't be emailed */
+    const P3 = (await cl('data')).sponsor.recs.find((x) => x.id === F3.id).people.find((p) => p.email && !p.dnc);
+    ok((await cl('dnc', { world: 'sponsor', id: F3.id, key: P3.key, on: true, why: 'Asked not to be contacted' })).ok && (await cl('dnc', { world: 'sponsor', id: F3.id, key: P3.key, on: false }))._status === 403, 'Don’t contact: she marks it (they asked); taking it off is refused');
+    ok((await cl('osend', { world: 'sponsor', id: F3.id, tpl: 'spmail', to: P3.email }))._status === 400 && GM.sent.length === n0 + 1, 'a Don’t contact person gets no email (not offered, and refused)');
+    /* someone Matthew's Peak email list reached in the last two weeks: call instead */
+    execFileSync('php', ['-r', 'require getenv("LIB"); pmLog(json_decode(getenv("R"), true)); echo "ok";'], { encoding: 'utf8', env: { ...env, LIB: env.DESK_PEAK_MAIL_LIB, R: JSON.stringify({ t: 'sent', l: 'sponsors', to: mailOf(F5), from: 'partnerships@peakpickleball.us', subject: 'Partnering with Peak Pickleball', by: 'Matthew Sharpe', sid: 'pm-cl1', at: Math.floor(Date.now() / 1000) - 86400 }) } });
+    r = await cl('osend', { world: 'sponsor', id: F5.id, tpl: 'spmail', to: mailOf(F5) }); ok(r._status === 409 && /Peak email list/.test(r.error), 'someone the Peak email list reached in the last two weeks gets no email from her (call instead)');
+    /* the daily cap */
+    r = await cl('osend', { world: 'sponsor', id: F4.id, tpl: 'spmail', to: mailOf(F4) }); ok(r.ok && r.sentToday === 2, 'the second email today goes');
+    r = await cl('osend', { world: 'sponsor', id: F5.id, tpl: 'spmail', to: mailOf(F5) }); ok(r._status === 429 && /most in a day/.test(r.error) && GM.sent.length === n0 + 2, 'the cap: the third is refused (25 a day live)');
+    /* the window: Monday to Friday, 9 am to 4 pm Colorado time */
+    const win = execFileSync('php', ['-r', 'date_default_timezone_set("America/Denver"); require getenv("O"); foreach (["2026-11-23 09:00", "2026-11-23 15:59", "2026-11-23 08:59", "2026-11-23 16:00", "2026-11-28 11:00", "2026-11-29 11:00", "2026-11-27 12:00"] as $t) echo otInWindow(strtotime($t)) ? 1 : 0;'], { encoding: 'utf8', env: { ...env, O: join(WEB, 'api/desk-outreach.php') } });
+    ok(win === '1100001', 'the window: Monday 9:00 and 3:59 pm yes; 8:59 am, 4 pm, Saturday and Sunday no; Friday noon yes (' + win + ')');
+    z = await asC('Test Claire', 'osend', { world: 'sponsor', id: F5.id, tpl: 'spmail', to: mailOf(F5) }, { DESK_OUTREACH_ANYTIME: '', DESK_NOW: String(Math.floor(new Date('2026-11-28T18:00:00Z').getTime() / 1000)) });
+    ok(z.code === 1 && z.j && z.j.code === 409 && /Monday to Friday/.test(z.j.error), 'outside the window (a Saturday) her email is refused');
+    /* attribution: a reply to her email is Matthew's, in My leads, hidden from everyone else, her included */
+    const inj = (code, extra) => execFileSync('php', ['-r', 'define("DATA_DIR", getenv("DESK_DATA")); require getenv("STORE"); require getenv("TM"); require getenv("BL"); tmLoad(); ' + code],
+      { encoding: 'utf8', env: { ...env, STORE: join(WEB, 'api/desk-store.php'), TM: join(WEB, 'api/tour-mail.php'), BL: join(WEB, 'api/book-lib.php'), ...extra } });
+    const now0 = Math.floor(Date.now() / 1000), MBX = 'partnerships@peakpickleball.us', to1 = mailOf(F1);
+    const RIID = inj('echo deskInboxIn(json_decode(getenv("M"), true));', { M: JSON.stringify({ from: to1, name: 'Reply Person', subject: 'Re: Peak Pickleball and ' + F1.name.trim(), at: now0 + 5, text: 'ZZCLAIREREPLY yes, a tour please', mid: 'AAMkCL1', mb: MBX, imid: '<cl1@claire.test>', w: 'sponsor', id: F1.id }) }).trim();
+    inj('echo json_encode(deskReplied("sponsor", getenv("ID"), getenv("F"), "", "Peak email", "cl-r1", false, ["mid" => "AAMkCL1", "mb" => getenv("MB"), "imid" => "<cl1@claire.test>", "from" => getenv("F"), "subject" => "Re: x", "text" => "ZZCLAIREREPLY yes, a tour please"]));', { ID: F1.id, F: to1, MB: MBX });
+    const vrow = lines('inbox.log').map((l) => JSON.parse(l)).find((x) => x.t === 'in' && x.iid === RIID);
+    ok(vrow && vrow.via && vrow.via.k === 'deskmail' && vrow.via.own === 'me' && vrow.via.by === 'Test Claire' && vrow.via.for === 'Matthew Sharpe', 'the reply’s via: her desk email, by Test Claire, for Matthew Sharpe, so it is his (own: me)');
+    const ML = await mt('myleads'), ML1 = (ML.items || []).find((x) => x.iid === RIID);
+    ok(ML1 && ML1.via && ML1.via.for === 'Matthew Sharpe' && ML1.via.by === 'Test Claire', 'Matthew’s My leads has it, saying Test Claire sent the email it answers, for him');
+    ok(!(await b('inbox')).items.some((x) => x.iid === RIID) && (await b('inboxone&iid=' + RIID))._status === 404 && (await a('inboxone&iid=' + RIID))._status === 404 && (await cl('inboxone&iid=' + RIID))._status === 403 && (await cl('myleads'))._status === 403, 'hidden from the team (not in the Inbox, 404 by id, to another admin too) and from her (403)');
+    const hasWords = (D2) => JSON.stringify(D2.sponsor.recs.find((x) => x.id === F1.id)).includes('ZZCLAIREREPLY');
+    ok(!hasWords(await cl('data')) && !hasWords(await b('data')) && hasWords(await mt('data')), 'the reply’s words are on the card for Matthew alone (not for her, not for the seller)');
+    /* a warm reply: a note, a follow-up today on Matthew's desk, a J.A.R.V.I.S. message */
+    r = await cl('owarm', { world: 'sponsor', id: F2.id, note: 'Office manager wants a tour, call 719-555-0100' });
+    const JV = existsSync(join(LD, 'jv-out.jsonl')) ? lines('jv-out.jsonl').map((l) => JSON.parse(l)) : [], F2m = (await mt('data')).sponsor.recs.find((x) => x.id === F2.id);
+    ok(r.ok && r.alerted === true && JV.length === 1 && JV[0].argv.join(' ') === 'reply h202611181123486ccb answered' && /Warm reply on the Peak desk, from Test Claire/.test(JV[0].text) && /wants a tour/.test(JV[0].text), 'Warm reply: J.A.R.V.I.S. tells Matthew on his main thread, with what they said');
+    ok(F2m.notes.some((n) => n.by === 'Test Claire' && /^Warm reply, for Matthew: Office manager/.test(n.note)) && F2m.next && F2m.next.date === today() && F2m.owner === 'Matthew Sharpe', 'Warm reply: a note on the card, a follow-up today, and the card is Matthew’s');
+    ok((await cl('owarm', { world: 'sponsor', id: F2.id, note: '' }))._status === 400, 'Warm reply needs what they said');
+    /* the lock follows an Inbox claim */
+    const to5 = mailOf(F6), CIID = inj('echo deskInboxIn(json_decode(getenv("M"), true));', { M: JSON.stringify({ from: to5, name: 'Claimed Person', subject: 'A question', at: now0 + 6, text: 'hello', mid: 'AAMkCL2', mb: MBX, imid: '<cl2@claire.test>', w: 'sponsor', id: F6.id }) }).trim();
+    ok((await b('inboxclaim', { iid: CIID, on: true })).ok && (await cl('data')).sponsor.recs.find((x) => x.id === F6.id).olock === 'Someone on the team is working this one.' && (await cl('touch', { world: 'sponsor', id: F6.id, m: 'call', out: 'noanswer' }))._status === 409, 'the lock: once Test Seller claims an email from that card’s address, it is not hers');
+    /* everything else is refused */
+    const ONO = [['stage', { world: 'sponsor', id: F1.id, stage: 'lost', why: 'x' }], ['owner', { world: 'sponsor', id: F1.id, owner: 'Test Seller' }], ['tour', { world: 'sponsor', id: F1.id, date: later(5), time: '10:00' }],
+      ['proposal', { id: F1.id, lines: [{ name: 'Court', price: 12000 }] }], ['signed', { id: F1.id, start: today(), months: 12 }], ['del', { world: 'sponsor', id: F1.id }], ['add', { world: 'sponsor', name: 'Claire Added Co' }], ['notedel', { world: 'sponsor', id: F1.id, nk: 'x' }],
+      ['contactdel', { world: 'sponsor', id: F1.id, key: 'x', n: 0 }], ['dmsend', { world: 'sponsor', id: F1.id, to: mailOf(F1), subject: 'x', text: 'my own words' }], ['dmretry', { id: F1.id, ref: 'x' }], ['dmpreview', { id: F1.id, subject: 'x', text: 'x' }],
+      ['tourmail', { tid: 'x' }], ['templates', { world: 'sponsor', reset: true }], ['packages', { packages: [] }], ['settings', { on: false, to: [] }], ['dmset', { on: false }], ['eodpreview', {}], ['inbox', null], ['inboxreply', { iid: RIID, text: 'x' }],
+      ['inboxclaim', { iid: CIID, on: true }], ['myleads', null], ['mytoin', { iid: RIID }], ['myoutcome', { iid: RIID, st: 'Signed' }], ['myset', { sig: 'x' }], ['booklink', {}], ['callink', {}], ['pushsub', { subscription: {} }], ['alertset', { inbox: true }],
+      ['emailed', { world: 'sponsor', id: F1.id, to: 'x@example.com' }], ['scan', { world: 'sponsor', id: F1.id, hunter: true }], ['jvsend', { text: 'email Kaiser for me' }], ['otplset', { k: 'xmail', on: true }]];
+    let on = 0; const obad = [];
+    for (const [act, body] of ONO) { const y = await cl(act, body); if (y._status === 403) on++; else obad.push(act + ':' + y._status); }
+    ok(on === ONO.length, `outreach: the server refuses the rest (403 on ${on} of ${ONO.length}: stages, owners, tours, proposals, prices, removing, adding, its own email words, the Inbox, My leads, templates, settings, alerts, Hunter, the chat, approving)` + (obad.length ? ' ' + obad.join(' ') : ''));
+    z = await asC('Test Claire', 'stage', { id: F1.id, stage: 'lost', why: 'x' }); ok(z.code === 1 && z.j && z.j.code === 403, 'outreach via J.A.R.V.I.S.: the same limits');
+    const OT = ['touch', 'xtouch', 'next', 'xnext', 'note', 'xnote', 'owner', 'xowner', 'status', 'xstage', 'dnc', 'dmail', 'dmailres', 'contact', 'xcontact', 'site'];
+    ok(lines('events.log').concat(lines('expo-events.log')).map((l) => JSON.parse(l)).filter((x) => x.by === 'Test Claire').every((x) => OT.includes(x.t) && (!['owner', 'xowner'].includes(x.t) || x.owner === 'Matthew Sharpe') && (!['status', 'xstage'].includes(x.t) || x.tk)), 'and nothing else was written: an owner row only ever makes Matthew the owner; a stage only moves with a touch');
+    /* by person: her own row, the week and the month, for everyone who sees those blocks */
+    const AD = await a('data'), wk = AD.sponsor.week['Test Claire'] || {}, mo = AD.sponsor.month['Test Claire'] || {}, xw = AD.expo.week['Test Claire'] || {};
+    ok(wk.calls >= 2 && wk.vms >= 1 && wk.emails === 2 && mo.calls === wk.calls && mo.emails === wk.emails && xw.other === 1 && (AD.sponsor.team['Test Claire'] || {}).last > 0, `by person: her row counts her own calls (${wk.calls}, ${wk.vms} voicemail), emails (${wk.emails} companies) and the expo Other, this week and this month`);
+    ok(!wk.replied && !('replies' in wk), 'by person counts no replies per person (a reply to her email is Matthew’s, in My leads only)');
+    const eod = (await a('eodpreview')).text || ''; ok(/Test Claire \(for Matthew\): \d+ call/.test(eod), 'the end-of-day email lists her, for Matthew');
+    /* setrole: the same code, the open sign-in takes the new role at once */
+    const rs2 = client(); await rs2('signin', { code: globalThis.__RES }); const sr = php(['setrole', 'Test Research', 'outreach']);
+    ok(/research -> outreach/.test(sr) && !/\d{6}/.test(sr) && (await rs2('data')).me.role === 'outreach', 'php desk.php setrole: research to outreach, no code printed, the sign-in has the new role');
+    php(['setrole', 'Test Research', 'research']); ok((await rs2('data')).me.role === 'research', 'and back to research');
+    /* leave it as it was: drafts, desk emails as before */
+    globalThis.__CLX = { free: F4.id, freeName: F4.name, team: TEAM.id, teamName: TEAM.name, mm: MMC };
+    ok((await mt('otplset', { k: 'spmail', on: false })).ok && (await cl('data')).outreach.templates.every((t) => !t.ok), 'the approval taken off again: every template a draft');
+    if (!dm0) await a('dmset', { on: false });
+  }
+
   console.log('Several people at once');
   D = await b('data'); const ids = NEW.filter((l) => find('sponsor', l.id).stage === 'new').slice(0, 12).map((l) => l.id);   /* companies nobody has touched yet */
   const conc = await Promise.all(ids.map((id, i) => new Promise((res) => execFile('php', [join(WEB, 'api/desk.php'), 'emailed', 'sponsor', id, `p${i}@example.com`], { env }, (e, so, se) => res(e ? 'cli err ' + (se || so || e.message).slice(0, 200) : 'ok')))).concat(
@@ -1840,7 +1975,7 @@ try {
       ok(await js(`(()=>{const c=document.querySelector('.shead .subchips');return [...c.querySelectorAll('button')].map(b=>b.getAttribute('data-sub')).join()==='open,wait,done,sent'&&/nobody else on the desk sees them/.test(document.querySelector('.shead .sdesc').textContent)})()`), 'its lists: To answer, Waiting on them, Done, Sent to the Inbox');
       ok(await jsUntil(`[...document.querySelectorAll('.myleads .inrow')].some(r=>/Dana Test/.test(r.textContent)&&/Answers your Peak email/.test(r.textContent)&&/Outcome: Tour booked, \\$2,400/.test(r.textContent))`), 'each row: who, which of his emails it answered, the newest Outcome');
       await js(`[...document.querySelectorAll('.myleads .inrow')].find(r=>/Dana Test/.test(r.textContent)).querySelector('.inhd').click()`); await waitFor(`!!document.querySelector('.myleads [data-act="myoutcome"]')`, 'a lead opened');
-      ok(await js(`['inreply','indone','mytoin','myoutcome'].every(a=>!!document.querySelector('.myleads [data-act="'+a+'"]'))&&/Sent to Cai Test/.test(document.querySelector('.myleads .inbody').textContent)&&/Brought back to My leads/.test(document.querySelector('.myleads .inbody').textContent)`), 'opened: Reply, Done, Send to the Inbox, Outcome, and his record of the Send and the Bring back');
+      ok(await js(`['inreply','indone','mytoin','myoutcome'].every(a=>!!document.querySelector('.myleads [data-act="'+a+'"]'))&&/Sent to Cai Test/.test(document.querySelector('.myleads .inbody:not([hidden])').textContent)&&/Brought back to My leads/.test(document.querySelector('.myleads .inbody:not([hidden])').textContent)`), 'opened: Reply, Done, Send to the Inbox, Outcome, and his record of the Send and the Bring back');
       await click('.myleads [data-act="mytoin"]', 200);
       ok(await jsUntil(`(()=>{const s=document.querySelector('.myleads .mytowho');return !!s&&[...s.options].map(o=>o.value).includes('Cai Test')&&s.options[0].value===''&&![...s.options].some(o=>/Claude Check|Matthew/.test(o.value))})()`), 'Send to the Inbox: the Inbox or one person (not Claude Check, not himself), and a note');
       await shot('desk-myleads.png');
@@ -1962,6 +2097,36 @@ try {
   ok(await jsUntil(`/Looked up by Test Research/.test((document.querySelector('.detail .lookedsec')||{}).textContent||'')`), 'research card: Mark looked up saves a note and shows who looked it up');
   ok(await jsUntil(`!document.body.classList.contains('jvchat-on')`), 'research in the browser: no J.A.R.V.I.S. button');
   await shot('research-card.png');
+  /* the outreach account in the browser (2026-11-24, Claire for Matthew) */
+  if (globalThis.__CLX) {
+    const X = globalThis.__CLX, openCard = async (id, name) => {
+      await js(`(()=>{const q=document.querySelector('input.search');q.value=${JSON.stringify(name.slice(0, 30))};q.dispatchEvent(new Event('input'));return 1})()`); await sleep(500);
+      await js(`(()=>{const r=[...document.querySelectorAll('.row[data-id]')].find(x=>x.dataset.id===${JSON.stringify(id)});r&&r.click();return !!r})()`); await sleep(700);
+    };
+    await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
+    await js(`(()=>{const i=document.querySelector('.signin input');i.value='${globalThis.__CL}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
+    await waitFor(`!!document.querySelector('.shead')`, 'the outreach account’s page'); await sleep(400);
+    await js(`location.hash='#sponsor/list'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload'); await sleep(300);
+    const ov = await js(`({tabs:[...document.querySelectorAll('#tabs [data-tab]')].map(b=>b.dataset.tab).join(),who:document.getElementById('whoName').textContent})`);
+    ok(ov.tabs === 'list,more' && /for Matthew/.test(ov.who), 'outreach in the browser: Companies and More only, "(for Matthew)" by her name ' + JSON.stringify(ov));
+    await openCard(X.free, X.freeName);
+    const oc = await js(`(()=>{const d=document.querySelector('.detail');if(!d)return null;const s=d.querySelector('.outreachsec');return {sec:!!s,touch:s?s.querySelectorAll('.otouch [data-m]').length:0,draft:s?[...s.querySelectorAll('.obadge')].every(b=>/Draft: waiting for Matthew/.test(b.textContent)):false,send:s?s.querySelector('[data-act="osend"]').disabled:null,why:s?s.querySelector('.osendwhy').textContent:'',warm:!!(s&&s.querySelector('[data-act="owarm"]')),stage:!!d.querySelector('.stagesec'),dm:!!d.querySelector('.dmsec'),tel:d.querySelectorAll('a[href^="tel:"],a[href^="mailto:"]').length,forM:/Test Claire for Matthew/.test(d.textContent)}})()`);
+    ok(oc && oc.sec && oc.touch === 6 && oc.draft && oc.send === true && /Draft: waiting for Matthew’s OK/.test(oc.why) && oc.warm && !oc.stage && !oc.dm && oc.tel === 0 && oc.forM, 'outreach card: Reach out for Matthew (six touch buttons, scripts and the email marked Draft, Send greyed out with why, Warm reply); no stage or free-text email; her touches show "for Matthew" ' + JSON.stringify(oc));
+    await shot('outreach-card.png');
+    await js(`document.querySelector('.detail .close').click()`); await sleep(300);
+    await openCard(X.team, X.teamName);
+    ok(await jsUntil(`(()=>{const d=document.querySelector('.detail');return !!d&&/Someone on the team is working this one/.test(d.querySelector('.outreachsec').textContent)&&!d.querySelector('.outreachsec [data-m]')&&!/Test Seller/.test(d.querySelector('.ownerpick')?d.querySelector('.ownerpick').value:'')})()`), 'outreach card the team has: "Someone on the team is working this one", nothing to press, no owner shown');
+    await js(`location.hash='#sponsor/more/scripts'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+    ok(await jsUntil(`!!document.querySelector('.oscripts')&&document.querySelectorAll('.oscripts details').length===7&&!document.querySelector('[data-approve]')`), 'outreach: More, Claire’s scripts lists all seven, with no approve switch');
+    await js(`document.getElementById('signout').click()`); await waitFor(`!!document.querySelector('.signin input')`, 'signed out');
+    await js(`(()=>{const i=document.querySelector('.signin input');i.value='${X.mm}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`); await waitFor(`!!document.querySelector('.shead')`, 'Matthew’s page'); await sleep(300);
+    await js(`location.hash='#sponsor/more/scripts'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+    ok(await jsUntil(`document.querySelectorAll('.oscripts [data-approve]').length===7&&[...document.querySelectorAll('.oscripts .obadge')].every(b=>/Draft/.test(b.textContent))`), 'Matthew’s page: More, Claire’s scripts, an Approve button on each, all drafts');
+    await shot('outreach-scripts-matthew.png');
+    await js(`location.hash='#sponsor/today'`); await send('Page.reload'); await waitFor(`!!document.querySelector('.shead')`, 'reload');
+    ok(await jsUntil(`[...document.querySelectorAll('tr[data-helper]')].some(t=>/Test Claire \\(for Matthew\\)/.test(t.textContent))`), 'Today, by person: Test Claire has her own row, marked for Matthew');
+    if (!(await js(`!!document.querySelector('tr[data-helper]')`))) { await shot('outreach-today-debug.png'); console.log('    today: ' + (await js(`[...document.querySelectorAll('.tb tr')].map(t=>t.textContent).join(' | ').slice(0,600)`))); }
+  }
   ok(!errors.length, 'no page errors' + (errors.length ? ': ' + errors[0] : ''));
 } catch (e) { failN++; console.log('  FAIL threw: ' + e.stack); }
 finally {

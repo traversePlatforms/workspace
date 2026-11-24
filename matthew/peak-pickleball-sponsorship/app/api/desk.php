@@ -14,9 +14,12 @@
  *
  * Sign-in: a 6-digit code per person, kept hashed. admin = Matthew; seller = Brandon, Nneka, Lance, Cai: the same screens and powers; expo =
  * the Expo leads only, enforced here; Claude Check reads and saves nothing. Who can sign in is changed on the server only:
- *   php desk.php addaccount "Name" admin|seller|expo|research   (prints the code once)
+ *   php desk.php addaccount "Name" admin|seller|expo|research|outreach   (prints the code once)
+ *   php desk.php setrole "Name" research|outreach|seller|expo|admin   (the same code; their sign-ins take the new role at once)
  * research (2026-11-21, Claire; Matthew: "start her on ... the peak lead research"): looks companies up and writes down what she finds,
  * and nothing else (RESEARCH_OK below, enforced here for the page and for php desk.php as).
+ * outreach (2026-11-24, Claire; Matthew: "she contacts on my behalf"): research and a little more, all of it counted as Matthew's
+ * (OUTREACH_OK; desk-outreach.php explains).
  *   php desk.php newcode "Name"                          (a lost code: a new one, same role)
  * Look-ups (2026-10-24): php desk.php rescan [15] (hourly, from the morning-email cron) | scan <lead id> [--hunter]
  * The records: php desk.php rebuild | check
@@ -62,7 +65,7 @@
  * action answers 404 to anyone else for one of his emails, and no card shows them its words; desk-inbox.php explains. */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-21.2';
+const BUILD = '2026-11-24.1';
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 /* what the research account may do (2026-11-21, handleIn explains) */
@@ -74,6 +77,7 @@ require __DIR__ . '/scan.php';
 require __DIR__ . '/tour-mail.php';   /* tour confirmation emails (2026-11-19) */
 require __DIR__ . '/book-lib.php';    /* booking links on one shared schedule (2026-11-19) */
 require __DIR__ . '/desk-email.php';  /* Write an email on a card (2026-11-19) */
+require __DIR__ . '/desk-outreach.php';  /* Claire reaches out for Matthew (2026-11-24) */
 
 function codeHash(string $c): string { return hash('sha256', 'peakdesk|' . $c); }
 function keyHash(string $c): string { return hash('sha256', 'peakdesk-service|' . $c); }
@@ -86,7 +90,7 @@ function sesCookie(string $tok, string $name, int $now): void {
 if (PHP_SAPI === 'cli') {
     [$cmd, $name, $role] = [$argv[1] ?? '', $argv[2] ?? '', $argv[3] ?? 'seller'];
     $json = fn($v) => print(json_encode($v, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n");
-    if ($cmd === 'addaccount' && $name !== '' && in_array($role, ['admin', 'seller', 'expo', 'research'], true)) {
+    if ($cmd === 'addaccount' && $name !== '' && in_array($role, ['admin', 'seller', 'expo', 'research', 'outreach'], true)) {
         $acc = jread('accounts.json', ['codes' => []]);
         do { $code = (string) random_int(100000, 999999); } while (isset($acc['codes'][codeHash($code)]));
         $acc['codes'][codeHash($code)] = ['name' => clean($name, 40), 'role' => $role, 'at' => time()];
@@ -100,6 +104,15 @@ if (PHP_SAPI === 'cli') {
         do { $code = (string) random_int(100000, 999999); } while (isset($acc['codes'][codeHash($code)]));
         $acc['codes'][codeHash($code)] = ['name' => $old['name'], 'role' => $old['role'], 'at' => time()];
         jwrite('accounts.json', $acc); echo "New code for {$old['name']} ({$old['role']}): $code\n"; exit(0);
+    }
+    /* a new role for someone, same code (2026-11-24, Claire research -> outreach): accounts.json and their open sign-ins; prints no code */
+    if ($cmd === 'setrole' && $name !== '' && in_array($role, ['admin', 'seller', 'expo', 'research', 'outreach'], true)) {
+        $acc = jread('accounts.json', ['codes' => []]); $n = 0; $was = [];
+        foreach ($acc['codes'] as $h => $a) if (strcasecmp((string) $a['name'], $name) === 0) { $was[] = (string) $a['role']; $acc['codes'][$h]['role'] = $role; $n++; }
+        if (!$n) { fwrite(STDERR, "No account named $name.\n"); exit(1); }
+        $ses = jread('sessions.json', []); $s = 0; foreach ($ses as $h => $x) if (strcasecmp((string) ($x['name'] ?? ''), $name) === 0) { $ses[$h]['role'] = $role; $s++; }
+        if (!jwrite('accounts.json', $acc) || ($s && !jwrite('sessions.json', $ses))) { fwrite(STDERR, "Not saved.\n"); exit(1); }
+        echo "$name: " . implode(', ', array_unique($was)) . " -> $role ($n code" . ($n === 1 ? '' : 's') . ", $s sign-in" . ($s === 1 ? '' : 's') . ")\n"; exit(0);
     }
     /* a key for a program on this server that writes to the desk (the Peak email sender); kept hashed, printed once */
     if ($cmd === 'servicekey' && $name !== '') {
@@ -183,7 +196,7 @@ if (PHP_SAPI === 'cli') {
         try { $r = handleIn($act, !$read, $body, (string) $who['name'], (string) $who['role']); $json($r); exit(empty($r['ok']) ? 1 : 0); }
         catch (DeskFail $e) { $json(['ok' => false, 'error' => $e->getMessage(), 'code' => $e->getCode()]); exit(1); }
     }
-    fwrite(STDERR, "usage: php desk.php as \"Name\" <action> < body.json | addaccount \"Name\" admin|seller|expo|research | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note] | contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by \"Name\"]\n");
+    fwrite(STDERR, "usage: php desk.php as \"Name\" <action> < body.json | addaccount \"Name\" admin|seller|expo|research|outreach | setrole \"Name\" <role> | newcode \"Name\" | servicekey \"Name\" | rescan [n] | scan <lead id> [--hunter] | rebuild | check | emailed sponsor|expo <id> <to> [subject] | replied sponsor|expo <id> <from> [note] | bounced sponsor|expo <id> <to> [note] | contactdel sponsor|expo <id> <person key> [--dnc-off] [--dry-run] [--by \"Name\"]\n");
     exit(1);
 }
 
@@ -252,6 +265,19 @@ function handleIn(string $action, bool $isPost, array $body, string $ME, string 
     if ($ROLE === 'research') {
         if (!in_array($action, RESEARCH_OK, true)) fail('This account looks companies up and notes what it finds. ' . ($action === '' ? '' : 'That is for the sellers.'), 403);
         if ($action === 'scan' && !empty($body['hunter'])) fail('Paid look-ups (Hunter) are not part of this account.', 403);
+    }
+    /* the outreach account (2026-11-24, Claire for Matthew): the research actions, plus logging touches, follow-ups, Don't contact, a warm
+       reply and desk emails from Matthew's approved templates (desk-outreach.php). Everything else is refused, as for research. */
+    if ($ROLE === 'outreach') {
+        if (!in_array($action, OUTREACH_OK, true)) fail('This account looks companies up and reaches out for Matthew. ' . ($action === '' ? '' : 'That is for the sellers.'), 403);
+        if ($action === 'scan' && !empty($body['hunter'])) fail('Paid look-ups (Hunter) are not part of this account.', 403);
+        if (in_array($action, OT_OWN, true)) return otAct($action, $isPost, $body, $ME);
+    }
+    /* Claire's templates (2026-11-24): Matthew approves them, on his own login, on the page (not through the chat) */
+    if ($action === 'otplset') {
+        if (!inIsOwner($ME) || defined('DESK_VIA')) fail('Only Matthew approves these, on his own desk login.', 403);
+        if (!$isPost) fail('POST required', 405);
+        return otSet(clean($body['k'] ?? '', 20), !empty($body['on']), $ME);
     }
     /* J.A.R.V.I.S. (2026-11-21, Matthew: "I need cai brandon and nneka to be able to make changes to the peak application"): the chat. Your
        own conversations; an admin sees everyone's. Every account with a desk sign-in may use it (Claude Check only looks). */
@@ -506,7 +532,9 @@ function worldOut(string $w, ?array $P = null): array {
     return ['stages' => $st, 'path' => $C['path'], 'reach' => $C['reach'], 'recs' => $live, 'removed' => $removed, 'tours' => array_map(fn($t) => $t + ['tms' => tmState($t)], toursOf($w)), 'tmFailed' => tmFailed($w), 'owners' => owners($w),
         'week' => counts($w, weekStart()), 'weekFrom' => date('Y-m-d', weekStart()), 'month' => counts($w, monthStart()), 'monthFrom' => date('Y-m-d', monthStart()),
         /* the emails' numbers for the same two periods (2026-11-24): sent, opened, clicked, replied, booked (dmNums, desk-email.php) */
-        'mail' => ['week' => dmNums($w, weekStart()), 'month' => dmNums($w, monthStart())], 'team' => counts($w, 0), 'templates' => templatesOf($w), 'starters' => starterTemplates($w)];
+        'mail' => ['week' => dmNums($w, weekStart()), 'month' => dmNums($w, monthStart())], 'team' => counts($w, 0), 'templates' => templatesOf($w), 'starters' => starterTemplates($w),
+        /* the outreach accounts (Claire, 2026-11-24): a row in "by person" and the report from the start, like the sellers */
+        'helpers' => otHelpers()];
 }
 function dataOut(string $ME, string $ROLE): array {
     $base = ['ok' => true, 'build' => BUILD, 'me' => ['name' => $ME, 'role' => $ROLE], 'methods' => METHODS, 'outs' => OUTS, 'mouts' => MOUTS, 'today' => date('Y-m-d'),
@@ -529,7 +557,9 @@ function dataOut(string $ME, string $ROLE): array {
        offer are admins only (2026-11-20, Matthew): a seller's page never gets them. The Report is worked out on the page from the cards. */
     $S += ['proposals' => propsOf('sponsor'), 'packages' => settingOf('sponsor', 'packages', []), 'hunterLeft' => hunterLeft()];
     if ($ROLE === 'admin') $S += ['pl' => settingOf('sponsor', 'pl', null), 'offer' => $sd['offer'] ?? [], 'better' => $sd['better'] ?? []];
-    if ($ROLE === 'research') { $S = researchView($S); $X = researchView($X); $S['proposals'] = []; $S['packages'] = []; $S['hunterLeft'] = null; }
+    if ($ROLE === 'research' || $ROLE === 'outreach') { $S = researchView($S); $X = researchView($X); $S['proposals'] = []; $S['packages'] = []; $S['hunterLeft'] = null; }
+    if ($ROLE === 'outreach') { $S = otView('sponsor', $S); $X = otView('expo', $X); $base['outreach'] = otOut($ME); }
+    if (inIsOwner($ME)) $base['otpl'] = otList(true);   /* Claire's templates and Matthew's approve switch: his login only */
     return $base + ['sponsor' => $S, 'expo' => $X];
 }
 /* the research account's view of a list (2026-11-21): the cards, without what only the sellers work with: tours (visitors' names and
@@ -946,7 +976,7 @@ function eodText(int $now): array {
                 if ($a[$k]) $p[] = $a[$k] . ' ' . ($k === 'signed' ? $nm : $nm . ($a[$k] === 1 ? '' : 's'));
             if (!$p) continue;
             $all += $a['calls'] + $a['emails'] + $a['texts'] + $a['other'];
-            $rows[] = '  ' . $who . ': ' . implode(', ', $p);
+            $rows[] = '  ' . $who . (in_array($who, otHelpers(), true) ? ' (for Matthew)' : '') . ': ' . implode(', ', $p);
         }
         $L[] = $wn; if (!$rows) $L[] = '  Nothing logged today.'; else array_push($L, ...$rows);
     }

@@ -221,7 +221,7 @@ function apply(array &$M, string $w, array $r): void {
         case 'touch': {
             if (!$has || !is_array($r['touch'] ?? null)) return; $x = $r['touch']; $k = (string) ($r['k'] ?? newKey()); $m = (string) ($x['m'] ?? 'other');
             $T = ['k' => $k, 'at' => $at, 'when' => (int) ($x['when'] ?? $at) ?: $at, 'by' => $by, 'm' => $m, 'out' => (string) ($x['out'] ?? ''), 'note' => (string) ($x['note'] ?? '')];
-            foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from', 'tpl', 'tc', 'dm', 'ib'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
+            foreach (['to', 'ref', 'auto', 'tid', 'fu', 'from', 'tpl', 'tc', 'dm', 'ib', 'for'] as $f) if (isset($x[$f]) && $x[$f] !== '') $T[$f] = $x[$f];
             if (is_array($x['mail'] ?? null)) $T['mail'] = $x['mail'];   /* their email, read from Peak Partnerships (2026-11-19) */
             /* a tour confirmation (tc, 2026-11-19) is on the Activity but is not counted as the booker's own email */
             $M['recs'][$id]['touches'][] = $T; $dirty($id); if (empty($T['tc'])) $act($m, $id, $T['when'], $k); return;
@@ -252,7 +252,7 @@ function apply(array &$M, string $w, array $r): void {
            is written only once it went. */
         case 'dmail': {
             if (!$has) return; $ref = (string) ($r['ref'] ?? ''); if ($ref === '') return;
-            $x = []; foreach (['to', 'name', 'subject', 'text', 'sig', 'replyto', 'tpl', 'fu', 'fuWhat', 'book', 're'] as $f) if (isset($r[$f])) $x[$f] = $r[$f];
+            $x = []; foreach (['to', 'name', 'subject', 'text', 'sig', 'replyto', 'tpl', 'fu', 'fuWhat', 'book', 're', 'for', 'otpl', 'oh'] as $f) if (isset($r[$f])) $x[$f] = $r[$f];
             $M['recs'][$id]['dmails'][$ref] = $x + ['ref' => $ref, 'by' => $by, 'at' => $at, 'state' => 'sending', 'tries' => 0, 'why' => ''];
             $dirty($id); return;
         }
