@@ -751,6 +751,22 @@ try {
     ok(r.state === 'sent' && /book\.php\?px=dm[0-9a-f]{10}-[0-9a-f]{12}$/.test(px.replace(/&amp;/g, '&')), 'expo leads too; with the setting on, the HTML ends in a 1x1 image');
     const gif = await fetch(px.replace(/&amp;/g, '&')); ok(/image\/gif/.test(gif.headers.get('content-type') || ''), 'the image answers a GIF');
     D = await b('data'); ok(find('expo', XE.id).dmails[0].opens === 1 && find('expo', XE.id).touches.some((x) => x.dm === r.ref && x.by === 'Second Seller'), 'and the card shows the email opened once');
+    /* 24 Nov 2026 (Matthew: "make sure we are tracking metrics clicks opens link clicks"): links in a desk email are counted; the words shown
+       stay as written, the plain text keeps the address, and pay, sign-in and unsubscribe links are never wrapped */
+    r = await c2('dmsend', { world: 'expo', id: XE.id, to: 'lee@example.com', subject: 'Dates', text: 'Hi Lee,\n\nOur rates: https://peakpickleball.us/events/rental.\nPay here: https://square.link/u/abc123\nOpt out: https://example.com/unsubscribe?x=1' });
+    m = mimeParts(GM.sent[GM.sent.length - 1]); const dref = r.ref;
+    const hrefs = [...m.html.matchAll(/<a href="([^"]+)">([^<]+)<\/a>/g)].map((x) => [x[1].replace(/&amp;/g, '&'), x[2]]);
+    const evl = hrefs.find((x) => x[1] === 'https://peakpickleball.us/events/rental'), pay = hrefs.find((x) => /square\.link/.test(x[1])), un = hrefs.find((x) => /unsubscribe/.test(x[1]));
+    ok(r.state === 'sent' && evl && new RegExp('book\\.php\\?c=' + dref + '-[0-9a-f]{12}&u=https%3A%2F%2Fpeakpickleball\\.us%2Fevents%2Frental$').test(evl[0]) && pay && pay[0] === 'https://square.link/u/abc123' && un && un[0] === un[1].replace(/&amp;/g, '&')
+      && m.text.includes('https://peakpickleball.us/events/rental.') && !/c=dm/.test(m.text), 'a desk email’s link goes through the click counter (shown as written); pay and unsubscribe links are not wrapped; the plain text is unchanged');
+    let cl = await fetch(evl[0], { redirect: 'manual' });
+    ok(cl.status === 302 && cl.headers.get('location') === 'https://peakpickleball.us/events/rental' && lines('book-events.log').some((l) => { const j = JSON.parse(l); return j.t === 'click' && j.ref === dref && j.bot === 1; }), 'a click forwards at once; one in the first minute (a mail scanner) is logged as a bot, not counted');
+    cl = await fetch(evl[0].replace('rental', 'evil'), { redirect: 'manual' });
+    ok(cl.status === 302 && cl.headers.get('location') === 'https://peakpickleball.us/' && lines('book-events.log').filter((l) => JSON.parse(l).t === 'click').length === 1, 'an altered link goes to Peak’s own site (no open redirect) and is not logged');
+    writeFileSync(join(LD, 'book-events.log'), JSON.stringify({ t: 'click', ref: dref, l: 'aaaaaaaa', bot: 0, at: Math.floor(Date.now() / 1000) }) + '\n', { flag: 'a' });
+    D = await b('data'); const dmc = find('expo', XE.id).dmails.find((x) => x.ref === dref);
+    ok(dmc && dmc.clicks === 1 && D.expo.mail && D.expo.mail.month.desk.sent >= 2 && D.expo.mail.month.desk.clicked >= 1 && D.expo.mail.week.desk.sent >= 1, 'a person’s click counts on the card and in the desk’s email numbers (week and month) ' + JSON.stringify(D.expo.mail.month.desk));
+    ok(D.expo.mail.month.tour && D.sponsor.mail.month.out && typeof D.sponsor.mail.month.out.opened === 'number' && typeof D.sponsor.mail.week.out.clicked === 'number', 'the Peak email lists and tour confirmations have numbers for both periods too');
     /* 2026-11-20: a tour confirmation gets the same open image while that setting is on; the tour shows "opened"; Outbox counts it from book-events.log */
     r = await c2('tour', { world: 'expo', id: XE.id, date: later(9), time: '11:30', who: 'Lee Expo', email: 'lee@example.com', mail: true });
     m = mimeParts(GM.sent[GM.sent.length - 1]); const tpx = ((m.html.match(/<img src="([^"]+)"/) || [])[1] || '').replace(/&amp;/g, '&');
@@ -1379,7 +1395,27 @@ try {
   D = await b('data'); const dueN = D.sponsor.recs.filter((r) => r.next && r.next.date && r.next.date <= today() && !['signed', 'lost'].includes(r.stage)).length;
   ok(await jsUntil(`+document.querySelector('.kpi[data-k="due"] b').textContent`) === dueN && dueN >= 1 && await js(`document.querySelectorAll('[data-blk="due"] .row').length`) === dueN, `Today: follow-ups due (${dueN}), each listed`);
   ok(await jsUntil(`['due','fresh','wait','tours','week'].every(k=>!!document.querySelector('[data-blk="'+k+'"]'))&&/Proposals waiting/.test(document.querySelector('[data-blk="wait"]').textContent)`), 'Today has follow-ups due, to contact next, proposals waiting, tours coming up, this week');
-  ok(await js(`(()=>{const r=[...document.querySelectorAll('[data-blk="week"] tr')].find(r=>/Test Seller/.test(r.textContent));return !!r&&r.children[1].textContent===String(${(D.sponsor.week['Test Seller'] || {}).calls || 0})})()`) && (D.sponsor.week['Test Seller'] || {}).calls >= 3, 'This week shows the seller\u2019s calls');
+  ok(await js(`(()=>{const r=[...document.querySelectorAll('[data-blk="week"] tr')].find(r=>/Test Seller/.test(r.textContent));return !!r&&r.children[1].textContent===String(${(D.sponsor.month['Test Seller'] || {}).calls || 0})})()`) && (D.sponsor.month['Test Seller'] || {}).calls >= 3, 'This month (the default) shows the seller\u2019s calls');
+  /* 24 Nov 2026 (Matthew: "the week/month is outside of the line graphically. And I think month should be on by default over week"):
+     Month on by default, the switch inside the block's head at 1366 and 390 px, dark and light; Week is remembered on this device */
+  const perIn = `(()=>{const g=document.querySelector('[data-blk="week"] .bh .perseg'),h=document.querySelector('[data-blk="week"] .bh'),k=document.querySelector('[data-blk="week"]');if(!g||!h)return false;const a=g.getBoundingClientRect(),b=h.getBoundingClientRect(),c=k.getBoundingClientRect();return a.left>=b.left+4&&a.right<=b.right-4&&a.top>=b.top+2&&a.bottom<=b.bottom-2&&b.right<=c.right+0.5&&document.documentElement.scrollWidth<=innerWidth})()`;
+  ok(await js(`!localStorage.getItem('peakdesk.per')&&document.querySelector('[data-blk="week"] .perseg button.on').dataset.per==='month'&&/^This month by person/.test(document.querySelector('[data-blk="week"] h2').textContent)&&/This month/.test(document.querySelector('.kpi[data-k="week"]').textContent)`), 'Month is on by default (nothing chosen on this device)');
+  const perPlaces = [];
+  for (const [wd, ht, mob] of [[1366, 900, false], [390, 844, true]]) for (const th of ['dark', 'light']) {
+    await send('Emulation.setDeviceMetricsOverride', { width: wd, height: ht, deviceScaleFactor: mob ? 2 : 1, mobile: mob }); await js(`document.documentElement.dataset.theme='${th}'`); await sleep(250);
+    await js(`(()=>{const b=document.querySelector('[data-blk="week"]');scrollTo(0,b.getBoundingClientRect().top+scrollY-(innerWidth<600?240:120))})()`); await sleep(150);
+    perPlaces.push(await js(perIn)); await shot(`desk-perswitch-${wd === 390 ? 'phone' : 'desktop'}-${th}.png`);
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false }); await js(`document.documentElement.dataset.theme='dark'`); await sleep(200);
+  ok(perPlaces.length === 4 && perPlaces.every(Boolean), 'the Week / Month switch sits inside the block’s head (not on its line), 1366 and 390 px, dark and light ' + JSON.stringify(perPlaces));
+  await js(`(()=>{const b=document.querySelector('[data-blk="mail"]');scrollTo(0,b.getBoundingClientRect().top+scrollY-120)})()`); await sleep(150); await shot('desk-emails-block.png');
+  ok(await js(`(()=>{const m=document.querySelector('[data-blk="mail"]');return !!m&&[...m.querySelectorAll('tr td:first-child')].map(t=>t.textContent).join(',')==='Peak email lists,Desk emails,Tour confirmations'&&/^This month: emails/.test(m.querySelector('h2').textContent)})()`), 'Today: the emails for the same period (sent, opened, clicked, replied, booked), each kind a row');
+  await js(`document.querySelector('[data-blk="week"] .perseg [data-per="week"]').click()`); await sleep(300);
+  ok(await jsUntil(`localStorage.getItem('peakdesk.per')==='week'&&/^This week by person/.test(document.querySelector('[data-blk="week"] h2').textContent)&&/^This week: emails/.test(document.querySelector('[data-blk="mail"] h2').textContent)&&document.querySelector('[data-blk="week"] .perseg button.on').dataset.per==='week'`), 'Week: the block, the tile and the emails follow; the choice is kept on this device');
+  await send('Page.reload', {}); await sleep(1500);
+  ok(await jsUntil(`!!document.querySelector('[data-blk="week"] .perseg button.on')&&document.querySelector('[data-blk="week"] .perseg button.on').dataset.per==='week'`), 'someone’s own Week choice stays after a reload');
+  await js(`localStorage.setItem('peakdesk.per','')`); await send('Page.reload', {}); await sleep(1500);
+  ok(await jsUntil(`!!document.querySelector('[data-blk="week"] .perseg button.on')&&document.querySelector('[data-blk="week"] .perseg button.on').dataset.per==='month'`), 'and with no choice, Month again');
   await shot('desk-today.png');
   /* J.A.R.V.I.S. on the screen (2026-11-21) */
   ok(await jsUntil(`!!document.getElementById('jvfab')&&getComputedStyle(document.getElementById('jvfab')).position==='fixed'`), 'J.A.R.V.I.S.: the blue chat button is on every screen');
@@ -1496,7 +1532,7 @@ try {
   await sub('report');
   ok(/Who is on the desk/.test(await text()), 'More \u203a Report with who has done what');
   await clickText('main .btn', '/Open the report/', 400);
-  ok(await jsUntil(`/Sponsor pipeline/.test(document.querySelector('.paper h1').textContent)&&/This week by person/.test(document.querySelector('.paper').textContent)&&/Proposals out/.test(document.querySelector('.paper').textContent)`), 'the report page: stages, the week by person, proposals out');
+  ok(await jsUntil(`/Sponsor pipeline/.test(document.querySelector('.paper h1').textContent)&&/This month by person/.test(document.querySelector('.paper').textContent)&&/This month: emails sent/.test(document.querySelector('.paper').textContent)&&document.querySelectorAll('.paper .tb.mt tr').length===4&&/Proposals out/.test(document.querySelector('.paper').textContent)`), 'the report page: stages, the month by person (Month is the default, 24 Nov), the emails table, proposals out');
   writeFileSync(join(ROOT, 'tests', 'desk-report.pdf'), Buffer.from((await send('Page.printToPDF', { printBackground: true })).data, 'base64'));
   await clickText('.printbar button', '/Back/', 300);
   for (const s of ['pl', 'pk', 'offer', 'better']) { await sub(s); }

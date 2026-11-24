@@ -167,6 +167,13 @@ function bkGeneric(bool $renew = false): ?array {
 function bkMsgUrl(string $ref): string { return bkBase() . '?m=' . $ref . '-' . bkSig('m|' . $ref, 12); }
 /** the open image of one desk email (only when the admin setting is on) */
 function bkPixelUrl(string $ref): string { return bkBase() . '?px=' . $ref . '-' . bkSig('px|' . $ref, 12); }
+/** a web address in one desk email, counted when clicked (2026-11-24, Matthew: "make sure we are tracking metrics clicks opens link clicks"):
+    the booking page answers ?c= by logging a click on that email and forwarding at once to the address. The address rides in the link,
+    signed with the email's ref, so the page forwards only to addresses a desk email really carried (no open redirect). Sign-in, pay and
+    unsubscribe addresses are never wrapped (bkNoTrack). */
+function bkClickUrl(string $ref, string $url): string { return bkBase() . '?c=' . $ref . '-' . bkSig('c|' . $ref . '|' . $url, 12) . '&u=' . rawurlencode($url); }
+/** addresses that are never sent through the click counter: sign-in, magic and setup links, payments, unsubscribe / opt-out */
+function bkNoTrack(string $url): bool { return (bool) preg_match('~unsub|opt-?out|log-?in|sign-?in|signup|password|reset|token|magic|verify|/pay\b|pay\.|checkout|invoice|billing|stripe\.|square\.link|squareup\.|paypal\.|venmo\.|cash\.app~i', $url); }
 /** the link for one person on the Peak email sender's lists ({book}): who and which company, signed */
 function bkOutreachUrl(array $p): string {
     $x = []; foreach (['w', 'org', 'to', 'n', 'c', 'l', 'r'] as $k) $x[$k] = mb_substr((string) ($p[$k] ?? ''), 0, 120);
@@ -221,6 +228,8 @@ function bkStats(): array {
         $r = json_decode($l, true); if (!is_array($r)) continue; $t = (string) ($r['t'] ?? ''); $ref = (string) ($r['ref'] ?? ''); $h = (string) ($r['host'] ?? '');
         if ($t === 'view' && empty($r['bot'])) { if ($ref !== '') $o['ref'][$ref]['views'] = ($o['ref'][$ref]['views'] ?? 0) + 1; if ($h !== '') $o['host'][$h]['views'] = ($o['host'][$h]['views'] ?? 0) + 1; }
         if ($t === 'open' && $ref !== '') $o['ref'][$ref]['opens'] = ($o['ref'][$ref]['opens'] ?? 0) + 1;
+        if ($t === 'click' && $ref !== '' && empty($r['bot'])) $o['ref'][$ref]['clicks'] = ($o['ref'][$ref]['clicks'] ?? 0) + 1;   /* 2026-11-24 */
+        if ($t === 'pxsent' && $ref !== '') $o['ref'][$ref]['px'] = 1;
         if ($t === 'booked') { if ($ref !== '') $o['ref'][$ref]['booked'] = ($o['ref'][$ref]['booked'] ?? 0) + 1; if ($h !== '') $o['host'][$h]['booked'] = ($o['host'][$h]['booked'] ?? 0) + 1; }
     }
     fclose($fh); return $o;

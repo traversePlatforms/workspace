@@ -494,7 +494,7 @@ function shape(string $w, array $R, ?array $P = null): array {
     unset($t);
     $R['last'] = lastTouch($R); $R['tries'] = missCount($R); $R['people'] = people($w, $R);
     /* desk emails (2026-11-19): newest first, with how often the booking link in each was opened */
-    if (!empty($R['dmails'])) { $bs = bkStats()['ref']; $R['dmails'] = array_values(array_map(fn($x) => ['re' => is_array($x['re'] ?? null) ? ['k' => (string) ($x['re']['k'] ?? ''), 'subject' => (string) ($x['re']['subject'] ?? '')] : ''] + $x + ['views' => (int) ($bs[$x['ref']]['views'] ?? 0), 'opens' => (int) ($bs[$x['ref']]['opens'] ?? 0), 'booked' => (int) ($bs[$x['ref']]['booked'] ?? 0)], $R['dmails'])); usort($R['dmails'], fn($a, $b) => $b['at'] <=> $a['at']); }
+    if (!empty($R['dmails'])) { $bs = bkStats()['ref']; $R['dmails'] = array_values(array_map(fn($x) => ['re' => is_array($x['re'] ?? null) ? ['k' => (string) ($x['re']['k'] ?? ''), 'subject' => (string) ($x['re']['subject'] ?? '')] : ''] + $x + ['views' => (int) ($bs[$x['ref']]['views'] ?? 0), 'opens' => (int) ($bs[$x['ref']]['opens'] ?? 0), 'clicks' => (int) ($bs[$x['ref']]['clicks'] ?? 0), 'booked' => (int) ($bs[$x['ref']]['booked'] ?? 0)], $R['dmails'])); usort($R['dmails'], fn($a, $b) => $b['at'] <=> $a['at']); }
     unset($R['log']);
     return $R;
 }
@@ -504,7 +504,9 @@ function worldOut(string $w, ?array $P = null): array {
     foreach ($all as $R) { if (!empty($R['off'])) $removed[] = ['id' => $R['id'], 'name' => $R['name'], 'list' => $R['list'] ?? '', 'cat' => $R['cat'] ?? '', 'stage' => $R['stage'], 'at' => $R['off']['at'], 'by' => $R['off']['by']]; else $live[] = shape($w, $R, $P); }
     $C = W($w); $st = []; foreach ($C['stages'] as $k => $v) $st[] = [$k, $v];
     return ['stages' => $st, 'path' => $C['path'], 'reach' => $C['reach'], 'recs' => $live, 'removed' => $removed, 'tours' => array_map(fn($t) => $t + ['tms' => tmState($t)], toursOf($w)), 'tmFailed' => tmFailed($w), 'owners' => owners($w),
-        'week' => counts($w, weekStart()), 'weekFrom' => date('Y-m-d', weekStart()), 'month' => counts($w, monthStart()), 'monthFrom' => date('Y-m-d', monthStart()), 'team' => counts($w, 0), 'templates' => templatesOf($w), 'starters' => starterTemplates($w)];
+        'week' => counts($w, weekStart()), 'weekFrom' => date('Y-m-d', weekStart()), 'month' => counts($w, monthStart()), 'monthFrom' => date('Y-m-d', monthStart()),
+        /* the emails' numbers for the same two periods (2026-11-24): sent, opened, clicked, replied, booked (dmNums, desk-email.php) */
+        'mail' => ['week' => dmNums($w, weekStart()), 'month' => dmNums($w, monthStart())], 'team' => counts($w, 0), 'templates' => templatesOf($w), 'starters' => starterTemplates($w)];
 }
 function dataOut(string $ME, string $ROLE): array {
     $base = ['ok' => true, 'build' => BUILD, 'me' => ['name' => $ME, 'role' => $ROLE], 'methods' => METHODS, 'outs' => OUTS, 'mouts' => MOUTS, 'today' => date('Y-m-d'),
@@ -533,7 +535,7 @@ function dataOut(string $ME, string $ROLE): array {
 /* the research account's view of a list (2026-11-21): the cards, without what only the sellers work with: tours (visitors' names and
    emails), message templates, the desk emails sent and the words of emails received (the Inbox's) */
 function researchView(array $V): array {
-    $V['tours'] = []; $V['tmFailed'] = []; $V['templates'] = []; $V['starters'] = [];
+    $V['tours'] = []; $V['tmFailed'] = []; $V['templates'] = []; $V['starters'] = []; unset($V['mail']);
     foreach ($V['recs'] as &$r) {
         unset($r['dmails']);
         foreach ($r['touches'] as &$t) if (isset($t['mail'])) { $t['note'] = ''; unset($t['mail']); }

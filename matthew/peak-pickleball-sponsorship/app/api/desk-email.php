@@ -123,9 +123,13 @@ function dmCompose(array $d, string $ref): array {
     $hb = str_replace('{book}', "\x03", $hb);
     $h = htmlspecialchars(rtrim($hb), ENT_QUOTES, 'UTF-8');   /* the message alone: the signature and footer are drawn below (21 Nov) */
     $bb = bkBase();
-    $h = (string) preg_replace_callback('~\bhttps?://[^\s<>"\']+[^\s<>().,;:!?"\']~i', function ($m) use ($bb) {
-        $raw = html_entity_decode($m[0], ENT_QUOTES, 'UTF-8');
-        return '<a href="' . $m[0] . '">' . ($bb !== '' && str_starts_with($raw, $bb) ? 'Book a time' : $m[0]) . '</a>'; }, $h);
+    /* clicks (2026-11-24, Matthew: "make sure we are tracking metrics clicks opens link clicks"): in the HTML part every other address goes
+       through the booking page's click counter (bkClickUrl), the words shown unchanged; the booking link counts its own views, and sign-in,
+       pay and unsubscribe addresses are never wrapped (bkNoTrack). The plain-text part keeps every address as written. */
+    $h = (string) preg_replace_callback('~\bhttps?://[^\s<>"\']+[^\s<>().,;:!?"\']~i', function ($m) use ($bb, $ref) {
+        $raw = html_entity_decode($m[0], ENT_QUOTES, 'UTF-8'); $bk = $bb !== '' && str_starts_with($raw, $bb);
+        $href = $bk || bkNoTrack($raw) ? $m[0] : htmlspecialchars(bkClickUrl($ref, $raw), ENT_QUOTES, 'UTF-8');
+        return '<a href="' . $href . '">' . ($bk ? 'Book a time' : $m[0]) . '</a>'; }, $h);
     $la = '<a href="' . htmlspecialchars($link, ENT_QUOTES, 'UTF-8') . '">';
     $h = str_replace(["\x02", "\x03"], [$la . 'Pick a time that suits you</a>', $la . 'Book a time</a>'], $h);
     $px = dmConf()['pixel'] ? '<img src="' . htmlspecialchars(bkPixelUrl($ref), ENT_QUOTES, 'UTF-8') . '" width="1" height="1" alt="" style="display:block;border:0;width:1px;height:1px">' : '';
@@ -187,4 +191,36 @@ function dmDeliver(string $w, string $id, string $ref, string $me): array {
         error_log('peak desk email: ' . $e->getMessage() . ' @' . $e->getLine());
         return ['state' => 'failed', 'why' => 'the desk hit a problem sending it'];
     }
+}
+
+/* ---- the emails' numbers for the Today and Report screens (2026-11-24, Matthew: "make sure we are tracking metrics clicks opens link
+   clicks etc"). For one list (sponsors or expo) and one period (the Week / Month switch): the emails sent since $from and what happened to
+   those emails since, each email or person counted once, as Outbox counts them. Three kinds:
+     out   the Peak email lists (the sender's own log: opened = its open image, clicked = its r.php links, replied, booked, opted out, bounced)
+     desk  desk emails written on a card (opened = the desk's open image, clicked = its counted links, booking link opened, booked)
+     tour  tour confirmations (opened = the open image; they carry no links)
+   px = how many of the emails sent carried the open image (opens are out of those). Opens are rough (Apple Mail high, Outlook low). ---- */
+function dmNums(string $w, int $from): array {
+    $z = fn() => ['sent' => 0, 'px' => 0, 'opened' => 0, 'clicked' => 0, 'replied' => 0, 'booked' => 0, 'optouts' => 0, 'bounced' => 0, 'views' => 0];
+    $o = ['out' => $z(), 'desk' => $z(), 'tour' => $z()];
+    if (tmLoad() !== '') return $o + ['ready' => false];
+    static $S = null, $rows = null; $S ??= pmState(); $rows ??= pmRows();
+    $list = $w === 'expo' ? 'expo' : 'sponsors';
+    foreach ($S['people'] as $x) {
+        if ($x['list'] !== $list || (int) $x['sent'] < $from) continue;
+        $n = &$o['out']; $n['sent']++; $n['px'] += (int) !empty($S['settings']['opens']); $n['opened'] += (int) ($x['opens'] > 0); $n['clicked'] += (int) ($x['clicks'] > 0); $n['replied'] += (int) ($x['reply'] && !$x['stop']);
+        $n['booked'] += (int) !empty($x['booked']); $n['optouts'] += (int) ($x['unsub'] || $x['stop']); $n['bounced'] += (int) ($x['bounce'] > 0); $n['views'] += (int) ($x['views'] > 0); unset($n);
+    }
+    $bs = bkStats()['ref']; $seen = []; $rep = [];
+    foreach ($rows as $r) if (($r['t'] ?? '') === 'reply' && empty($r['stop'])) { $a = strtolower((string) ($r['to'] ?? '')); $rep[$a] = max($rep[$a] ?? 0, (int) ($r['at'] ?? 0)); }
+    foreach ($rows as $r) {
+        $t = (string) ($r['t'] ?? ''); if (($t !== 'deskmail' && $t !== 'tourmail') || empty($r['ok']) || !empty($r['test']) || ($r['w'] ?? '') !== $w || (int) ($r['at'] ?? 0) < $from) continue;
+        $ref = (string) ($r['ref'] ?? ''); if ($ref === '' || isset($seen[$ref])) continue; $seen[$ref] = 1;
+        $k = $t === 'deskmail' ? 'desk' : 'tour'; $b = $bs[$ref] ?? [];
+        $o[$k]['sent']++; $o[$k]['replied'] += (int) (($rep[strtolower((string) ($r['to'] ?? ''))] ?? 0) > (int) ($r['at'] ?? 0)); $o[$k]['opened'] += (int) (($b['opens'] ?? 0) > 0);
+        /* tour emails log 'pxsent' when they carried the image; a desk email carries it while the setting is on (its opens show it did) */
+        $o[$k]['px'] += (int) ($k === 'desk' ? (dmConf()['pixel'] || ($b['opens'] ?? 0) > 0) : (!empty($b['px']) || ($b['opens'] ?? 0) > 0));
+        if ($k === 'desk') { $o[$k]['clicked'] += (int) (($b['clicks'] ?? 0) > 0 || ($b['views'] ?? 0) > 0); $o[$k]['views'] += (int) (($b['views'] ?? 0) > 0); $o[$k]['booked'] += (int) (($b['booked'] ?? 0) > 0); }
+    }
+    return $o + ['ready' => true];
 }

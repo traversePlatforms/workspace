@@ -3,7 +3,8 @@
  * two-line index.php there requires this file); book-lib.php explains the links, the shared schedule and what a booking does.
  * It shows the open times and a short form, and nothing of the desk: no company names but the visitor's own (from their email's link),
  * no other bookings, no desk address. Opening it only logs a view; only the button (a POST, with a token of this page) books.
- *   ?p= ?g= ?m= ?o=  a booking link     ?px=  a desk email's open image (when that setting is on)     ?ics=  the visit as a calendar file */
+ *   ?p= ?g= ?m= ?o=  a booking link     ?px=  a desk email's open image (when that setting is on)     ?ics=  the visit as a calendar file
+ *   ?c=&u=  a counted link in a desk email (2026-11-24) */
 declare(strict_types=1);
 require __DIR__ . '/desk-store.php';
 require __DIR__ . '/tour-mail.php';
@@ -16,6 +17,16 @@ $q = $_GET; $ua = (string) ($_SERVER['HTTP_USER_AGENT'] ?? '');
 if (isset($q['px'])) {
     if (preg_match('/^(dm[0-9a-f]{10}|tc-[a-z0-9]{1,24}-[0-9]{1,5}-[rc])-([0-9a-f]{12})$/', (string) $q['px'], $m) && hash_equals(bkSig('px|' . $m[1], 12), $m[2])) bkLog(['t' => 'open', 'ref' => $m[1], 'proxy' => preg_match('/GoogleImageProxy|YahooMailProxy/i', $ua) ? 1 : 0]);
     header('Content-Type: image/gif'); echo base64_decode('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'); exit;
+}
+/* a counted link in a desk email (2026-11-24, bkClickUrl): log the click on that email (a mail scanner opening every link as the email lands
+   is logged with bot: 1 and not counted), then forward at once. A link that is not ours, or altered, goes to Peak's own site. */
+if (isset($q['c'])) {
+    $dest = 'https://peakpickleball.us/'; $u = (string) ($q['u'] ?? '');
+    if (preg_match('/^(dm[0-9a-f]{10})-([0-9a-f]{12})$/', (string) $q['c'], $m) && preg_match('#^https?://[^\s<>"\']+$#i', $u) && hash_equals(bkSig('c|' . $m[1] . '|' . $u, 12), $m[2])) {
+        $dest = $u; $x = bkMsg($m[1]);
+        bkLog(['t' => 'click', 'ref' => $m[1], 'l' => substr(hash('sha256', $u), 0, 8), 'bot' => bkBot($ua, $x ? (int) ($x[2]['sentAt'] ?? 0) : 0) ? 1 : 0]);
+    }
+    header('Location: ' . $dest, true, 302); exit;
 }
 /* the visit as a calendar file (the "Add it to my calendar" button after booking) */
 if (isset($q['ics'])) {
