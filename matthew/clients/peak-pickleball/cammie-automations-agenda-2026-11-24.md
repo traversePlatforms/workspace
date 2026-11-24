@@ -1,6 +1,6 @@
 # Patch automations: sit-down with Cammie
 
-<style>body{font-size:9.5pt;line-height:1.38}h2{font-size:12pt;margin:11px 0 4px}header{padding:10px 16px;margin-bottom:8px}header h1{font-size:17pt}p,ul{margin:4px 0}table{margin:4px 0}header p{display:none}</style>
+<style>body{font-size:9.5pt;line-height:1.3}h2{font-size:12pt;margin:9px 0 3px}header{padding:10px 16px;margin-bottom:8px}header h1{font-size:17pt}p,ul{margin:4px 0}table{margin:4px 0}header p{display:none}</style>
 
 **Tue 24 Nov 2026 · Cammie Wilson and Matthew Sharpe · 30 to 45 minutes · Goal:** agree which emails come back first, and how we redesign and approve them together.
 
@@ -17,7 +17,7 @@ Figures are Patch's own (Patch > Automations). Patch counts any spend by people 
 
 ## 2. What to settle for each one (15 min)
 
-**For all four:** the logo, colours and one email layout we reuse; how the Peak voice should sound (today: caps headline, "Hi {first name}", signed "The Peak Pickleball Team"); one main button per email.
+**For all four:** the logo, colours and one email layout we reuse; how the Peak voice should sound (today: caps headline, "Hi {first name}", signed "The Peak Pickleball Team"); one main button per email. **Light or full design?** For the reminders and welcomes, do we want them to feel personal (logo, colours, mostly text) so they reach the main inbox, and save the full designs for the promotional ones (birthday, win-backs, newsletters)?
 
 - **New-member welcome:** one email or a short series (first-week tips, two-week check-in, one month)? Where does the button link? Confirm the court rate ($7 an hour in CourtReserve, $6 in the old email), Play's notice period (15 or 30 days) and the right Facebook group for Play members.
 - **Free class:** keep the reminder at 4 pm the day before and the follow-up at 8 am the morning after? The button goes to Starter: does Starter eligibility run out? Add later steps for people who haven't joined?
