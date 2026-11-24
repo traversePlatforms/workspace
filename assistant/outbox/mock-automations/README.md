@@ -11,6 +11,10 @@ A clickable mock of Outbox as Peak Pickleball's member-email automation tool, in
 
 Lighter look: a white page, one accent (Outbox teal), a light header (no dark bar, no rainbow rule), underlined tabs, thin rules instead of filled boxes. One stylesheet, `site/app.css`, replaces v1's `outbox-base.css` (the copy of Outbox's own) and `mock.css`; both were removed from the server. Peak's logo, colours and fonts (Golos Text, Inter, self-hosted in `site/fonts/` from the website mock) appear only in the email previews, the brand kit and the workspace badge. A second Peak photo (`class-group.webp`) is in `site/img/` for the Image block; the same photo-permission note applies. Server backup before v2: `~/upload-backups/outbox-automations-mock-site-before-v2-20261124.tgz` (on the server and on the VM).
 
+## Dark and light, 24 Nov 2026
+
+v2 had dropped v1's dark mode; it is back. A switch in the header: **Auto** (follows the device), **Light**, **Dark**; the choice is kept in this browser only (`localStorage` key `om-theme`). On a phone (under 520 px) it is one button that cycles. All colours are tokens on `:root`; the dark set sits under `prefers-color-scheme` and `[data-theme="dark"]`. **The email preview (`.inbox`) always stays light**, because that is how the email arrives. Checks: `node tests/theme-test.mjs` (local, 10/10). Server backup before the change: `~/upload-backups/outbox-automations-mock-site-before-dark-20261124.tgz`.
+
 ## Screens (hash routes in one page, `site/app.js`)
 
 1. **Automations** (`#/automations`): one line of intro and one compact numbers row (Sent, Clicked, Joined, Opt-outs, Bounces; Opened small, with the Apple Mail note). 8 columns by default: Name (trigger under it), Status (on/off toggle + status pill), Last run, Next run, Sent, Clicked (count and %), Joined, Opt-outs. A Columns chooser adds Channels, Type, Delivered, Opened, Replies, Bounces, Failed. Filters: Status, Type, search. Fits 1440 px with no sideways scroll. Phone (under 760 px): the list comes first below the tabs, as compact cards (name, trigger, toggle, status, sent, clicked, joined), with the 30-day numbers in a collapsed "Last 30 days" strip below.

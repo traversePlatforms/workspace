@@ -620,3 +620,9 @@ function drawSettings() {
 }
 
 route();
+
+// Theme: Auto follows the device; Light and Dark stick (this browser only).
+(function(){var root=document.documentElement,bs=document.querySelectorAll(".thm button");
+function cur(){return root.dataset.theme||"auto"}
+function paint(){bs.forEach(function(b){var on=b.dataset.t===cur();b.setAttribute("aria-pressed",on?"true":"false");b.title=on?"Theme: "+b.textContent+" (tap to change)":""})}
+var order=["auto","light","dark"];bs.forEach(function(b){b.addEventListener("click",function(){var t=b.dataset.t;var narrow=[].some.call(bs,function(x){return x!==b&&x.offsetParent===null});if(narrow&&t===cur())t=order[(order.indexOf(t)+1)%3];if(t==="auto"){delete root.dataset.theme}else{root.dataset.theme=t}try{localStorage.setItem("om-theme",t)}catch(e){}paint()})});paint()})();
