@@ -21,6 +21,24 @@ What this document does now is fix the definitions and the starting numbers, so 
 | **After** | 11 Nov 2026 to yesterday | Grows every night |
 | **Same weeks last year** | The after dates minus 364 days (12 to 23 Nov 2025) | Pickleball is seasonal: November to January ran hot last year. This stops a seasonal dip being read as a failure, or a seasonal lift as a win |
 
+**Matthew's start date (added 25 Nov 2026, his note):** Matthew started at Peak on **Monday 23 Nov 2026**.
+- Everything before that date is "before." His weekly readouts count forward from it: Week 0 = 16 to 22 Nov, Week 1 = 23 to 29 Nov, and so on, Monday to Sunday.
+- The readouts are for Matthew himself, to see how his changes move things. They are not a report to Tyler unless he decides to send one.
+
+**Sources with "before" history as of 25 Nov 2026:**
+
+| Source | Before history | Store |
+|---|---|---|
+| CourtReserve | Sep 2024 on | `data/pulls/store/courtreserve/` |
+| Patch | Feb 2025 on | `data/pulls/store/patch/` |
+| Google Business Profile | Daily from Jun 2025 (Google's 18-month limit); every review since Oct 2024; search terms from Nov 2025 | `data/pulls/store/gbp/` |
+| Facebook Page | Daily from Sep 2024 | `data/pulls/store/meta/page-daily/` |
+| Facebook and Instagram posts | Every post (418 FB, 328 IG) | `data/pulls/store/meta/` |
+| Instagram account reach | Late Oct 2026 on only (Meta's 30-day limit); follower counts recorded from 23 Nov | `data/pulls/store/meta/` |
+| Meta ads | Dec 2025 on | `data/pulls/store/meta/ads-daily/` |
+
+**Website traffic (Google Analytics, Search Console): later, by Matthew's choice.** Both tools keep their own history, so the before period can still be read back to 23 Nov and earlier once access is added.
+
 **Readout rules:**
 
 - A change gets credit only when the after number beats **both** B (per week) and the same weeks last year.
