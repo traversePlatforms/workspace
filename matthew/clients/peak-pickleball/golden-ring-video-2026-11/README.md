@@ -12,3 +12,7 @@ Two 32 s, 1080x1920 Reels for the Golden Ring National Championships (15–17 Ja
   - Text cards: `node tools/cards.cjs`.
   - Ring grade: `tools/ringgrade.sh`.
 - **Draft 1** is in Matthew's Drive, folder "Peak - Golden Ring video drafts". Nothing is posted; the ad launches only on Matthew's go.
+- **Draft 2 (25 Nov):** music by Google Lyria (`tools/lyria.mjs`, lyria-3.5, about $0.08 a take; Matthew's go). There are 3 takes in `music/`.
+  - `tools/musicedit.sh` cuts each take so its hits land on the 14 / 22 / 26 s booms.
+  - Take 3's ending is turned down under the last voice line (`music/take3-edit-vo.wav`).
+  - Six files are in Drive, in "Draft 2 - with music". Sound effects are still the homemade ones (Matthew: keep them for now).
