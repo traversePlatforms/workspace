@@ -41,3 +41,7 @@ Two 32 s, 1080x1920 Reels for the Golden Ring National Championships (15–17 Ja
   - **Voices:** `tools/vo.mjs` reads the whole script in one take with eleven_v3, then cuts it into lines by word timings. Choose one with `VODIR=vo/<name>`.
     - Samples: adam, callum, roger, chris.
     - Premade voices that work on the free key: Adam, Roger, Callum, Eric, George, Liam, Will, Chris, Daniel, Brian.
+- **FINAL (Cammie, 25 Nov 2026):** Cammie re-edited it and says to use her version for the ads.
+  - File: `source/cammie-final/Golden-Ring-ad-Cammie-final-2026-11-25.mp4`, 26.2 s, 1080x1920, HEVC, 24 fps, music only.
+  - Drive: "Peak - Golden Ring video drafts/Final from Cammie (use for ads)".
+  - Her caption notes: say "club", not "facility"; link to registration, or else "register on pickleballtournaments.com".
