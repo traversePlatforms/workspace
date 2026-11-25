@@ -21,3 +21,7 @@ Two 32 s, 1080x1920 Reels for the Golden Ring National Championships (15–17 Ja
   - Frames used: MVI_0151 at 1.52 s, MVI_0150 at 1.36 s, MVI_0151 at 1.32 s (tight).
   - The shield push uses zoompan too. The old `ringgrade.sh` is no longer used.
   - Drive folder "Draft 3 - steady ring".
+- **Music fix (25 Nov):** the jump at 22 s into a quieter part of each track sounded like the music stopping and starting over (Matthew).
+  - Each take now plays as one continuous piece from its 14 s hit, with a 4 s fade over the end card.
+  - Files: `music/take*-cont.wav`, plus `take3-cont-vo.wav` with the ending turned down under the voice.
+  - Don't splice music sections again without a long crossfade.
