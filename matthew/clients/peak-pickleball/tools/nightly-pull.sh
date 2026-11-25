@@ -29,6 +29,8 @@ cd "$TOOLS" || exit 1
 "$NODE" meta-pull.mjs >> "$RUNLOG" 2>&1; me=$?
 # Google Business Profile (gbp-pull.mjs: fetched on the server, stored here). Same rule as Meta: logged as gbp=fail, never stops the run.
 "$NODE" gbp-pull.mjs >> "$RUNLOG" 2>&1; gb=$?
+# Golden Ring 2027 ad proof of concept (golden-ring-ad.mjs: Meta campaign day rows + the public registered-player count). Logged only.
+"$NODE" golden-ring-ad.mjs >> "$RUNLOG" 2>&1 || echo "golden ring tracker failed" >> "$RUNLOG"
 im=0
 if [ $cr -eq 0 ] && [ $pa -eq 0 ]; then "$NODE" impact.mjs --quiet >> "$RUNLOG" 2>&1; im=$?; fi
 

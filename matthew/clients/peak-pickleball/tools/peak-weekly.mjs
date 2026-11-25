@@ -105,9 +105,34 @@ ${seasonal}${notFinal}
 ${SECTIONS.map(([t, keys]) => `<div class="sec"><h2>${esc(t)}</h2><div class="card">${head}${keys.map((k) => byKey[k]).filter(Boolean).map(rowH).join('')}</div></div>`).join('\n')}
 <div class="sec"><h2>Google listing</h2><div class="card">${head}${google.map(rowH).join('')}</div>
 <p class="note">Views, calls, website clicks and directions are for ${esc(shortDay(GW.from))} to ${esc(shortDay(GW.to))}: Google finishes its counts about 3 days late, so they run one week behind the rest. Reviews are this week. All time: ${allRev} reviews, ${allAvg}★ average, Peak has replied to ${allReplied}.</p></div>
+${grBlock()}
 ${(T.notAvailable || []).length ? `<div class="sec"><h2>Not in this report yet</h2><div class="card">${T.notAvailable.map((n) => `<div class="mrow c6"><span class="m">${esc(n.label)}</span><span class="txt">${esc(n.why)}</span></div>`).join('')}</div></div>` : ''}
 <div class="sec defs"><h2>How each number is counted</h2><ul>${defs}<li><b>Google listing:</b> Google Business Profile API, read nightly (tools/gbp-pull.mjs). Reviews are stored as stars, dates and replied yes/no, no names.</li></ul></div>
 <div class="foot">For Matthew only. Made ${esc(longDay(denverDate()))} from the nightly read-only pull (data through ${esc(T.dataDay)}) by tools/peak-weekly.mjs. Club definitions: impact-measurement-2026-11-23.md.</div>`;
+
+
+// ---- Golden Ring 2027 Meta ad, proof of concept (25 Nov 2026): store/goldenring/daily.json from tools/golden-ring-ad.mjs -----------------
+function grBlock() {
+  let G = []; try { G = JSON.parse(fs.readFileSync(path.join(TOOLS, '..', 'data', 'pulls', 'store', 'goldenring', 'daily.json'), 'utf8')); } catch (e) { return ''; }
+  if (!G.length) return '';
+  const n = (v) => Number(v || 0), sum = (xs, k) => xs.reduce((a, r) => a + n(r[k]), 0);
+  const wk = G.filter((r) => r.date >= T.week.from && r.date <= T.week.to), upTo = G.filter((r) => r.date <= T.week.to);
+  const pl = upTo.filter((r) => r.players != null), last = pl[pl.length - 1], base = 4, wkStart = [...pl].reverse().find((r) => r.date < T.week.from);
+  const regs = last ? last.players - base : null, regsWk = last && (wkStart || pl[0]) ? last.players - (wkStart ? wkStart.players : base) : null;
+  const sp = sum(upTo, 'spend'), cl = sum(upTo, 'linkClicks'), lv = sum(upTo, 'landingViews');
+  const rg = (upTo[upTo.length - 1] || {}).regions || {}, all = Object.values(rg).reduce((a, b) => a + b, 0);
+  const row = (k, a, b) => `<div class="mrow c6"><span class="m">${esc(k)}</span><span class="n this">${a}</span><span class="n">${b}</span><span class="n ly"></span><span class="n ly"></span><span class="n"></span></div>`;
+  const $ = (v) => '$' + v.toFixed(2);
+  return `<div class="sec"><h2>Golden Ring 2027 ad (Meta, from 25 Nov)</h2><div class="card"><div class="mrow c6 th"><span>Measure</span><span class="n">This week</span><span class="n">Since launch</span><span class="n"></span><span class="n"></span><span class="n"></span></div>
+${row('Spend', $(sum(wk, 'spend')), $(sp))}${row('Times shown', sum(wk, 'impressions').toLocaleString(), sum(upTo, 'impressions').toLocaleString())}
+${row('Link clicks', sum(wk, 'linkClicks'), cl)}${row('Registration page loaded', sum(wk, 'landingViews'), lv)}
+${row('Cost per page load', sum(wk, 'landingViews') ? $(sum(wk, 'spend') / sum(wk, 'landingViews')) : '-', lv ? $(sp / lv) : '-')}
+${row('Players registered (total on pickleballtournaments.com)', last ? last.players : '-', last ? last.players + ' (was 4 at launch)' : '-')}
+${row('New registrations', regsWk != null ? regsWk : '-', regs != null ? regs : '-')}
+${row('Spend per new registration', regsWk ? $(sum(wk, 'spend') / regsWk) : '-', regs ? $(sp / regs) : '-')}
+${row('Shown in Colorado', all ? Math.round(100 * (rg.Colorado || 0) / all) + '%' : '-', '')}</div>
+<p class="note">Registrations happen on pickleballtournaments.com, which can't report who came from the ad. So "spend per new registration" counts every new player since launch, ad or not: it's an upper bound on what the ad cost per sign-up, not proof each came from it. Last year's Golden Ring ads cost about $0.28 a link click.</p></div>`;
+}
 
 const css = `<style>.mrow.c6{grid-template-columns:1fr 84px 84px 84px 84px 84px}.mrow.c6 .txt{grid-column:2 / 7}.kpis.k4{grid-template-columns:repeat(4,1fr)}
 .note{color:var(--soft);font-size:12.5px;margin:6px 2px}.defs ul{font-size:11px;color:var(--soft);padding-left:18px;columns:2;column-gap:22px}.defs li{break-inside:avoid;margin-bottom:4px}
