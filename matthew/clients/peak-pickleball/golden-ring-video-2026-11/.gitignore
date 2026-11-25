@@ -1,0 +1,6 @@
+# media stays out of git: regenerate with tools/ (sources: Cammie email 24 Nov + Peak library, see README)
+*
+!.gitignore
+!README.md
+!tools/
+!tools/*
