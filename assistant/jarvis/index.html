@@ -1411,6 +1411,8 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
         var h = el('div', 'hint'); add(h, c.error || (cerr ? 'Google said: ' + cerr : 'Your Traverse calendar is not connected yet. '), ' ', btn(c.source === 'none' ? 'Connect Traverse calendar' : 'Connect again', null, null, connectCal));
         out.push(h);
       }
+      /* 25 Nov: the Business Profile API is approved; the permission comes with one more Connect (business.manage rides on the calendar connect) */
+      if (S.st && S.st.gbp === false && c.source !== 'none') { var hg = el('div', 'hint'); add(hg, 'To read Peak\u2019s Google profile and reviews, connect the Traverse calendar again (once): ', btn('Connect again', null, null, connectCal)); out.push(hg); }
       if (c.events) {
         var DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MO = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], last = '';
         var ymdOf = function (s) { return String(s).slice(0, 10); };

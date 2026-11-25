@@ -33,7 +33,9 @@ function jvStatus(): array {
        reminders. The heartbeat is beat.txt (help-watch.sh, every 5 minutes while the laptop is awake) or the last push, whichever is newer. */
     $bf = aDataDir() . '/jarvis/beat.txt'; $beat = max($pushed, is_file($bf) ? (int) trim((string) file_get_contents($bf)) : 0);
     return ['ok' => true, 'now' => $now, 'pushedAt' => $pushed, 'beat' => min($beat, $now), 'overnight' => $over, 'builds' => $builds, 'teamHidden' => jvTeamHidden(),
-        'calendar' => jvCalendar(), 'waiting' => jvWaiting($j), 'money' => jvMoney($j), 'reminders' => jvReminders(), 'calWrite' => jvCalAccount(true) !== null];
+        'calendar' => jvCalendar(), 'waiting' => jvWaiting($j), 'money' => jvMoney($j), 'reminders' => jvReminders(), 'calWrite' => jvCalAccount(true) !== null,
+        /* 25 Nov: has any connect granted business.manage (Peak's Google Business Profile)? The Calendar panel offers Connect again until one has */
+        'gbp' => (bool) array_filter(jget('accounts.json'), fn($a) => is_array($a) && !empty($a['gbp']) && !empty($a['refresh']))];
 }
 
 /* ---------------------------------------------------------------- Waiting on you (19 Nov, P-8 step 5)
