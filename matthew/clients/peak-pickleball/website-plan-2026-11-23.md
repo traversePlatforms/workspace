@@ -74,8 +74,8 @@ The backbone is **"NEW Peak Site Map 2026"**, last changed 15 Oct 2026 in Peak's
 | Play (hub) | One place for every way to play, under the three subtitles from Cammie's map | A card per play type, each going to its own CR event list | A one-line description, who it's for, and a photo for each type | Cammie (photos); Matthew (copy); Tyler (any rules) |
 | Play Schedule: Open, Social, Senior, Veterans, DUPR Play | Cards on the Play page (CR links, per Cammie's map) | Each goes to its CR event list | The CR list link for each. /play-pickleball/ already links 9 CR lists (free class, Open Play, leagues, clinics, a by-level session, juniors, Senior, rating-level play, social). Veterans Play has no link yet. Juniors is on the site but not on the map (keep it?) | Cammie or Peak staff (links) |
 | Leagues | A real page to replace the /leagues/ redirect. It can hold the existing Peak Premier League page | "See leagues" goes to the CR league list | League formats, seasons, levels | Cammie or the league lead |
-| Upcoming Tournaments | Tournaments ahead | Register, on CR or pickleballtournaments.com | The tournament list (the Golden Ring 2027 link already exists) | Cammie |
-| Tournament Results | Past winners and photos | Share, or the next tournament | Results and photos per event | Cammie. Proposal: add in January if time runs short |
+| **Tournaments** (peakpickleball.us/tournaments; added 25 Nov) | One Peak page for every tournament ahead (Golden Ring, Veterans, PickleBowl and the rest). Today /tournaments/ just redirects to /play-pickleball/. **Proposal:** make it a real page, a card per tournament (dates, divisions, fee, hotel, what's included) | **Register**, which goes to that tournament's pickleballtournaments.com page (registration, payment, brackets and DUPR stay there). Each Register click is counted (Google Analytics event and the Meta pixel), so a tournament ad can land here first and show how many people went on to register | The tournament list and details per event (the Golden Ring 2027 link already exists) | Cammie (events); Matthew (page, tracking) |
+| Tournament Results | Past winners and photos (can sit on the Tournaments page as a section) | Share, or the next tournament | Results and photos per event | Cammie. Proposal: add in January if time runs short |
 
 ### Lessons & Learning (on the Play menu, per Cammie's map)
 | Page | Purpose | Main call to action, and where it goes | Content needed | Who |
@@ -345,6 +345,8 @@ Already asked in the 23 Nov emails, so not repeated here: the WordPress login, G
 ---
 
 ## Fact-check log
+
+- **25 Nov (Tournaments page):** peakpickleball.us/tournaments/ returned a 301 to /play-pickleball/ (checked 25 Nov 2026). "peakpickleballtournaments.com" is not a registered domain (Verisign RDAP 404, 25 Nov 2026); Golden Ring registration is on the third-party platform pickleballtournaments.com. Why it matters: Golden Ring 2027 Meta ad launched 25 Nov links straight to pickleballtournaments.com, where Peak can't count who registers (see impact tracking, tools/golden-ring-ad.mjs).
 
 **Verified**
 
