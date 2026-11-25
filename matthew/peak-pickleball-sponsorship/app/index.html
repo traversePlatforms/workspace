@@ -270,6 +270,7 @@ button.kpi:hover{border-color:var(--c,var(--acc))}
 .bcard b{display:block;line-height:1.25;font:700 13.5px/1.25 var(--disp)}.bcard small{color:var(--soft);display:block;margin-top:2px;font-size:12px}.bcard .due{text-align:left}
 .bcard .bf{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
 .bcard .lc,.bcard .tch{white-space:normal}
+.wnew{background:var(--card);border:1px solid var(--acc);border-radius:14px;padding:12px 16px;margin:0 0 14px}.wnh{display:flex;align-items:center;gap:10px}.wnh b{font:700 15px var(--disp)}.wnew ul{margin:8px 0 10px;padding-left:20px;font-size:13.5px;line-height:1.45}.wnew li{margin:3px 0}
 .strip .sr .tch{white-space:normal;flex:0 1 auto;min-width:0;overflow-wrap:anywhere}   /* 25 Nov: a long touch name on the card ("They replied by email (automatic)") wraps instead of being cut off on a phone */
 .bempty{color:var(--soft);font-size:13px;padding:6px 4px}
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40;display:flex;align-items:flex-start;justify-content:center;padding:5vh 12px;overflow:auto}
@@ -789,8 +790,35 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     if (research() && !RESEARCH_TABS[S.tab]) S.tab = 'leads';
     main.setAttribute('data-world', S.world); main.setAttribute('data-section', S.tab);
     head();
+    whatsNew();
     var sub = subOf(S.tab);
     ({ today: drawToday, inbox: drawInbox, leads: drawLeads, tours: drawToursTab, more: drawMore })[S.tab](sub);
+  }
+  /* "What's new" (2026-11-25, Matthew: a note to the team inside the desk). One note at a time: each person sees it on every tab until they tap
+     Got it, which is kept on that device (localStorage peakdesk.noteSeen = the note's id). A new note = a new id and new lines here. */
+  var NOTE = { id: 'redesign-2026-11-25', title: 'The desk got a tidy-up' };
+  function noteLines() {
+    var X = isX();
+    if (research()) return ['Pipeline and ' + (X ? 'Organisations' : 'Companies') + ' are now one tab: Leads. Search, then use the stage buttons and the List / Board switch.', 'Long explanations sit behind the small (i) buttons. Nothing was removed, only moved.'];
+    return [
+      'Five tabs now: Today, Inbox, Leads, Tours, More. Nothing was removed, only moved.',
+      'Today starts with the next person to reach, with Call, Text and Email buttons. The rest folds into tiles: tap one to open or close it.',
+      'Pipeline and ' + (X ? 'Organisations' : 'Companies') + ' are now one tab: Leads. Search, then use the stage buttons and the List / Board switch.',
+      X ? 'Quotes and bookings are in Leads: tap the Quote sent or Booked stage.' : 'Proposals and Signed are in Leads: tap the Proposal sent or Signed stage.',
+      'Tours is a week calendar like the Sixfold schedule. Tap a day to open or close it. Tours with no time yet are under No date yet.',
+      'On a ' + (X ? 'lead' : 'company') + '\u2019s card, Call, Text and Email stay at the top, and the sections fold.',
+      'Long explanations sit behind the small (i) buttons.'
+    ];
+  }
+  function whatsNew() {
+    var seen = ''; try { seen = localStorage.getItem('peakdesk.noteSeen') || ''; } catch (e) {}
+    if (seen === NOTE.id || !S.data) return;
+    var b = el('section', 'wnew'); b.setAttribute('data-note', NOTE.id); b.setAttribute('role', 'status');
+    var h = el('div', 'wnh'); h.appendChild(icBox('star', 'ico h-' + (isX() ? 'orange' : 'cyan'))); h.appendChild(el('b', null, 'What\u2019s new: ' + NOTE.title)); b.appendChild(h);
+    var ul = el('ul'); noteLines().forEach(function (t) { ul.appendChild(el('li', null, t)); }); b.appendChild(ul);
+    var ok = el('button', 'btn small', 'Got it'); ok.type = 'button'; ok.setAttribute('data-act', 'note-seen');
+    ok.addEventListener('click', function () { try { localStorage.setItem('peakdesk.noteSeen', NOTE.id); } catch (e) {} b.remove(); });
+    b.appendChild(ok); main.appendChild(b);
   }
   /* a long explanation sits behind a small (i) button (2026-11-25): one tap shows it, another hides it */
   function infoBtn(into, p) {

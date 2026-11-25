@@ -1651,6 +1651,15 @@ try {
   await waitFor(`!!document.querySelector('.signin input')`, 'sign-in');
   await js(`(()=>{const i=document.querySelector('.signin input');i.value='${SELLER}';document.querySelector('.signin').dispatchEvent(new Event('submit',{cancelable:true}));return 1})()`);
   await waitFor(`!!document.querySelector('.kpis')`, 'Today');
+  /* 25 Nov: the "What's new" note: on the screen until Got it, then gone on every tab and after a reload (kept on this device) */
+  ok(await jsUntil(`(()=>{const n=document.querySelector('.wnew');return !!n&&/What.s new/.test(n.textContent)&&/Leads/.test(n.textContent)&&n.querySelectorAll('li').length>=5&&!!n.querySelector('[data-act="note-seen"]')})()`), 'What\u2019s new: the note shows on Today with its lines and Got it');
+  await shot('desk-whatsnew.png');
+  await js(`document.querySelector('.tabs [data-tab="leads"]').click()`); await sleep(400);
+  ok(await jsUntil(`!!document.querySelector('.wnew')`), 'What\u2019s new: still there on another tab until Got it');
+  await js(`document.querySelector('.wnew [data-act="note-seen"]').click()`); await sleep(200);
+  await send('Page.reload', {}); await sleep(1500); await waitFor(`!!document.querySelector('.shead')`, 'reload after Got it');
+  ok(await js(`!document.querySelector('.wnew')&&localStorage.getItem('peakdesk.noteSeen')==='redesign-2026-11-25'`), 'What\u2019s new: Got it hides it for good on this device');
+  await js(`document.querySelector('.tabs [data-tab="today"]').click()`); await sleep(400); await waitFor(`!!document.querySelector('.kpis')`, 'Today again');
 
   const bgS = `(function(){var c=getComputedStyle(document.body).backgroundColor.match(/\\d+/g).map(Number);return c[0]+c[1]+c[2]})()`;
   ok(await jsUntil(`document.documentElement.dataset.theme==='dark'&&!localStorage.getItem('peakdesk.theme')`) && (await js(bgS)) < 120, 'the facelift: dark is the default (nothing chosen on this device, the device itself set to light)');
