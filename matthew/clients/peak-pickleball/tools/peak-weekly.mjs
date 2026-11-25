@@ -6,7 +6,7 @@
 //
 //   node tools/peak-weekly.mjs                 the week ending the latest Sunday (Colorado time), HTML + PDF in data/reports/ (gitignored)
 //   node tools/peak-weekly.mjs --end 2026-11-29
-//   node tools/peak-weekly.mjs --send          also post the PDF to his J.A.R.V.I.S. main thread (Open button, phone alert)
+//   node tools/peak-weekly.mjs --send          also put it on J.A.R.V.I.S.'s Reports shelf and post it in his main thread (phone alert)
 //
 // READ ONLY: everything comes from the local store the nightly pull keeps (data/pulls/store). The club numbers are impact.mjs's WEEK MODE
 // (57 measures, definitions there and in impact-measurement-2026-11-23.md); Google Business Profile is added here from store/gbp.
@@ -123,5 +123,9 @@ console.log('wrote', p);
 if (argv.includes('--send')) {
   const nice = path.join(OUT, `Peak-weekly-report-${END}.pdf`); fs.copyFileSync(p, nice);
   const msg = `Your Peak weekly report: ${T.weekLabel.replace(/ \(.*\)$/, '')}, ${shortDay(T.week.from)} to ${shortDay(T.week.to)}, against Week 0 (the week before you started). Open the PDF below.`;
+  // 25 Nov: onto J.A.R.V.I.S.'s Reports shelf first (right-hand Reports button), then the message with the PDF in his main thread
+  const title = `Peak weekly report · ${T.weekLabel.replace(/ \(.*\)$/, '')} · ${shortDay(T.week.from)} to ${shortDay(T.week.to)}`;
+  const shelf = execFileSync('bash', [path.join(process.env.HOME, 'jarvis', 'bin', 'sg.sh'), 'trav', `php ~/www/traverseplatforms.com/assistant-private/jvreport-add.php ${path.basename(nice)} '${title.replace(/'/g, '')}' ${END}`], { input: fs.readFileSync(nice), timeout: 120000 }).toString().trim();
+  console.log('reports shelf:', shelf);
   execFileSync('bash', [path.join(REPO, 'assistant/jarvis/tools/jarvis-reply.sh'), 'main', 'answered', '--pdf', nice], { input: msg, stdio: ['pipe', 'inherit', 'inherit'], timeout: 120000 });
 }

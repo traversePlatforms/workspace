@@ -121,6 +121,8 @@ if ($action === 'jvremindset') { if (!$isPost) out(['ok' => false], 405); out(jv
 if ($action === 'jvdecide') { if (!$isPost) out(['ok' => false], 405); out(jvDecide($body)); }
 /* 19 Nov: his desk chats, in J.A.R.V.I.S. itself (lib/desk.php), and its own phone alerts (lib/jarvis.php jvPush) */
 if ($action === 'jvdesk') out(['ok' => true, 'threads' => jdList(), 'pending' => jdPending()]);
+/* 25 Nov: one PDF from the Reports shelf (lib/jarvis.php rpServe) */
+if ($action === 'jvreportfile') rpServe((string) ($_GET['f'] ?? ''));
 if ($action === 'jvdeskfile') jdServeFile((string) ($_GET['id'] ?? ''), (string) ($_GET['f'] ?? ''), !empty($_GET['dl']));
 if ($action === 'jvdesksend') { if (!$isPost) out(['ok' => false], 405); @set_time_limit(60); out(jdSend($body)); }
 if ($action === 'jvdeskclose') { if (!$isPost) out(['ok' => false], 405); out(jdClose((string) ($body['id'] ?? ''))); }

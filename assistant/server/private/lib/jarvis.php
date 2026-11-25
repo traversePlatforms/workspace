@@ -35,7 +35,9 @@ function jvStatus(): array {
     return ['ok' => true, 'now' => $now, 'pushedAt' => $pushed, 'beat' => min($beat, $now), 'overnight' => $over, 'builds' => $builds, 'teamHidden' => jvTeamHidden(),
         'calendar' => jvCalendar(), 'waiting' => jvWaiting($j), 'money' => jvMoney($j), 'reminders' => jvReminders(), 'calWrite' => jvCalAccount(true) !== null,
         /* 25 Nov: has any connect granted business.manage (Peak's Google Business Profile)? The Calendar panel offers Connect again until one has */
-        'gbp' => (bool) array_filter(jget('accounts.json'), fn($a) => is_array($a) && !empty($a['gbp']) && !empty($a['refresh']))];
+        'gbp' => (bool) array_filter(jget('accounts.json'), fn($a) => is_array($a) && !empty($a['gbp']) && !empty($a['refresh'])),
+        /* 25 Nov: the Reports panel (weekly PDFs the cloud computer drops in with jvreport-add.php) */
+        'reports' => rpList()];
 }
 
 /* ---------------------------------------------------------------- Waiting on you (19 Nov, P-8 step 5)
@@ -363,4 +365,16 @@ function jvCalendar(): array {
     $out = ['source' => $label, 'events' => $ev];
     @mkdir(dirname($cf), 0700, true); file_put_contents($cf, json_encode(['email' => $email, 'at' => time(), 'out' => $out]), LOCK_EX); @chmod($cf, 0600);
     return $out;
+}
+
+/* ---- Reports (25 Nov 2026, Matthew: "add the reports button"): a shelf of PDFs for him, newest first. The cloud computer's weekly jobs add
+   one with assistant-private/jvreport-add.php (PDF on stdin, over ssh); the page lists them from jvStatus and opens one through
+   api.php?action=jvreportfile (his own sign-in, like the desk's files). data/jarvis/reports/: the PDFs + index.json. */
+function rpDir(): string { $d = aDataDir() . '/jarvis/reports'; @mkdir($d, 0700, true); return $d; }
+function rpList(): array { $j = json_decode((string) @file_get_contents(rpDir() . '/index.json'), true); return is_array($j) ? array_slice($j, 0, 60) : []; }
+function rpServe(string $f): void {
+    if (!preg_match('/^[A-Za-z0-9-]{1,90}\.pdf$/D', $f) || !is_file(rpDir() . '/' . $f)) { http_response_code(404); exit; }
+    $p = rpDir() . '/' . $f;
+    header('Content-Type: application/pdf'); header('Content-Disposition: inline; filename="' . $f . '"'); header('Cache-Control: private, no-store');
+    header('X-Content-Type-Options: nosniff'); header('Content-Length: ' . filesize($p)); readfile($p); exit;
 }

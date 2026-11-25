@@ -1283,7 +1283,9 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
     brief: { side: 'R', n: '06', t: 'Morning brief', icon: 'brief' },
     cal: { side: 'R', n: '07', t: 'Calendar', icon: 'cal' },
     builds: { side: 'R', n: '08', t: 'Builds running', icon: 'build' },
-    money: { side: 'R', n: '09', t: 'Money', icon: 'coin' }
+    money: { side: 'R', n: '09', t: 'Money', icon: 'coin' },
+    /* 25 Nov (Matthew: "add the reports button"): the weekly PDFs (Peak weekly report, Sundays), newest first */
+    reports: { side: 'R', n: '10', t: 'Reports', icon: 'doc' }
   };
   function waitingOpen() { return ((S.st && S.st.waiting) || []).filter(function (w) { return !w.decided; }); }
   function remOpen() { return ((S.st && S.st.reminders) || []).filter(function (r) { return r.state === 'open'; }); }
@@ -1291,6 +1293,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
   function panelCount(k) {
     if (k === 'inbox') return S.home ? items().length + ' waiting · ' + drafted() + ' drafted' : '';
     if (k === 'waiting') { var w = waitingOpen().length; return w ? w + ' to decide' : ''; }
+    if (k === 'reports') { var rp = (S.st && S.st.reports) || []; return rp.length ? rp.length + ' saved' : ''; }
     if (k === 'remind') { var d = remDue().length, o = remOpen().length; return d ? d + ' due' : o ? o + ' set' : ''; }
     if (k === 'team') { var o = teamOpen().length; return o ? o + ' open' : ''; }
     if (k === 'today') return S.st && S.st.overnight ? 'updated ' + clock(S.st.overnight.at).replace(' ', '') : '';
@@ -1501,6 +1504,17 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       return out;
     },
     /* 19 Nov (P-8 step 6): totals only. Renewals from the reminders, Stripe (read only) and the Spend Ledger from the laptop's push. */
+    reports: function () {
+      if (!S.st) return el('div', 'empty', 'Looking…');
+      var rp = S.st.reports || [], out = [];
+      if (!rp.length) return el('div', 'empty', 'No reports yet. The Peak weekly report lands here every Sunday night.');
+      rp.forEach(function (r) {
+        var b = btn(null, 'doc', 'li', function () { window.open(API + '?action=jvreportfile&f=' + encodeURIComponent(r.f), '_blank'); });
+        var x = el('div', 'lx'); add(x, el('div', 'lt', r.title), el('div', 'ls', dayName(r.day) + ' · PDF, ' + (r.kb || '?') + ' KB'));
+        add(b, x); out.push(b);
+      });
+      return out;
+    },
     money: function () {
       if (!S.st) return el('div', 'empty', 'Looking…');
       var m = S.st.money || {}, out = moneyBank(m.bank), ren = remOpen().filter(function (r) { return r.money; }).sort(function (a, b) { return a.money.on < b.money.on ? -1 : 1; });
@@ -1888,7 +1902,7 @@ ol.steps,ul.steps{margin:0;padding-left:20px;display:grid;gap:6px;font-size:13px
       var sc = el('div', 'pscroll');
       if (S.tab === 'inbox') sc.appendChild(panel('inbox'));
       if (S.tab === 'team') { sc.appendChild(panel('waiting')); if (teamOpen().length) sc.appendChild(panel('team')); }
-      if (S.tab === 'today') ['today', 'remind', 'cal', 'builds', 'money'].forEach(function (k) { sc.appendChild(panel(k)); });
+      if (S.tab === 'today') ['today', 'remind', 'cal', 'builds', 'money', 'reports'].forEach(function (k) { sc.appendChild(panel(k)); });
       if (S.tab === 'more') sc.appendChild(moreList());
       body.appendChild(sc);
     }
