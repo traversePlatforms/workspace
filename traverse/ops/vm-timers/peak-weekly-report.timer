@@ -1,0 +1,9 @@
+[Unit]
+Description=Peak weekly report, Sundays 9:15 pm Colorado time (after the 8:30 pm business report refreshes the Peak pull)
+
+[Timer]
+OnCalendar=Sun *-*-* 21:15:00 America/Denver
+Persistent=true
+
+[Install]
+WantedBy=timers.target

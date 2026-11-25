@@ -1,0 +1,11 @@
+[Unit]
+Description=Peak Pickleball weekly report for Matthew: this week vs Week 0 (before day one 23 Nov 2026), PDF to J.A.R.V.I.S. (Matthew 25 Nov 2026)
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/yard/main/matthew/clients/peak-pickleball
+Environment=PATH=/home/yard/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=TZ=America/Denver
+ExecStart=/usr/bin/node /home/yard/main/matthew/clients/peak-pickleball/tools/peak-weekly.mjs --send
+TimeoutStartSec=20min
+Nice=10
