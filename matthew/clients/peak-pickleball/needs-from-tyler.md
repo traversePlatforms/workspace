@@ -132,6 +132,9 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
     sponsorships; marketing spend), never payroll or employee pay, and never write anything. It makes the before/after results and ad return
     complete.
 
+36. **Front-desk QR check-in (found 25 Nov):** the two USB check-in scanners act as keyboards, so a scan types the member's number into whatever window is in front. When CourtReserve isn't the front window, the number lands in chat or another tab and staff have to check people in by hand, worst when it's busy. Proposed fix: CourtReserve's built-in **Self Check-In Kiosk** (Organization Settings, Kiosks, Create Kiosk) on a device that does nothing else, with the scanners plugged into it ([CourtReserve help](https://help.courtreserve.com/en/articles/4993563-self-check-in-kiosk)). Fallback: keep the mini PC and add a small free program that brings CourtReserve to the front on every scan. Questions for Tyler: (a) is there another computer at the desk besides the mini PC (Mini S12 Pro)? (b) is check-in done by staff, or is Peak OK with members scanning themselves in? (c) is the mini PC on Windows? (d) what is the "bline" the scanners connect to? (e) a quiet time to do it (after close or before open), as check-in may be down for about an hour.
+37. **Phones (PK-13):** the questions went as a separate email (provider and bill, contract, who owns the number, phones and where, what happens to unanswered calls, voicemail, staffed hours, what callers ask, missed-call text-back yes or no).
+
 ## Fact-check log
 - Shared mailbox, Send As and the extra app permission: Microsoft 365 needs an Exchange or Global admin for each. Matthew isn't one. The "Grant admin consent" button was greyed out for him on 17 Nov.
 - Tyler's OK for the read-only cancellation report: given 13 Nov (memory, peak-internal-systems-and-site).
@@ -143,3 +146,5 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
   - WordPress 7.1.5 (generator tag), with themes/Avada and themes/Peak-Pickleball in the page's file paths.
   - The IP 170.249.198.162 resolves back to host.lwdserver.com.
   - Who runs lwdserver.com: **unresolved**. Don't name a company until Tyler says.
+
+- 25 Nov: item 36 from Matthew's photos of the scanner label ("2D payment barcode scanner, interface USB HID/USB VCP/RS232") and the mini PC label (Mini S, MINIS12 PRO). The kiosk feature and "any generic scanner" are from CourtReserve's own help article, read 25 Nov 2026.
