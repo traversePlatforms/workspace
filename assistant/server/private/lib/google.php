@@ -9,6 +9,9 @@ const G_SCOPES = 'https://www.googleapis.com/auth/gmail.modify';
    my traverse calendar or tell you to do it"): Calendar EVENTS (read, and add when he asks), asked for only when he connects a calendar from
    J.A.R.V.I.S. (Connect with cal), so the other inboxes stay Gmail-only. Since 19 Nov J.A.R.V.I.S. adds reminders as events once the connect granted calendar.events (calWrite). */
 const G_CAL_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+/* 25 Nov: Google approved project 808186776004 for the Business Profile API (case 0-9004000042336). business.manage rides on the same
+   J.A.R.V.I.S. calendar connect (only the Traverse account uses it), so one reconnect lets the nightly pull read Peak's profile and reviews. */
+const G_GBP_SCOPE = 'https://www.googleapis.com/auth/business.manage';
 
 function gClient(): array {
     $c = cfg();
@@ -37,7 +40,7 @@ function gAuthUrl(bool $cal = false, bool $hub = false): string {
     $_SESSION['gstate'] = bin2hex(random_bytes(16));
     $_SESSION['greturn'] = $cal ? ($hub ? 'hub' : 'jarvis/') : '';   /* a calendar connect started on J.A.R.V.I.S. goes back there (inside the hub: the hub, which reopens its last tab) */
     return 'https://accounts.google.com/o/oauth2/v2/auth?' . http_build_query(['client_id' => gClient()['id'], 'redirect_uri' => gRedirect(), 'response_type' => 'code',
-        'scope' => G_SCOPES . ($cal ? ' ' . G_CAL_SCOPE : ''), 'access_type' => 'offline', 'prompt' => 'consent select_account', 'include_granted_scopes' => 'true', 'state' => $_SESSION['gstate']]);
+        'scope' => G_SCOPES . ($cal ? ' ' . G_CAL_SCOPE . ' ' . G_GBP_SCOPE : ''), 'access_type' => 'offline', 'prompt' => 'consent select_account', 'include_granted_scopes' => 'true', 'state' => $_SESSION['gstate']]);
 }
 /** where the oauth answer sends the page back to (set by gAuthUrl, used once) */
 function gReturn(): string { aSessionStart(); $r = (string) ($_SESSION['greturn'] ?? ''); unset($_SESSION['greturn']); return $r === 'hub' ? '../hub-cc1f31de/' : ($r === 'jarvis/' ? 'jarvis/' : ''); }
@@ -59,7 +62,8 @@ function gCallback(string $code, string $state): ?string {
             'connected' => $old['connected'] ?? time(), 'lastCheck' => $old['lastCheck'] ?? 0, 'on' => $old['on'] ?? true,
             'cal' => str_contains((string) ($t['scope'] ?? ''), 'auth/calendar') || !empty($old['cal']),
             /* 19 Nov: events can be ADDED (J.A.R.V.I.S. reminders) only when this connect granted calendar.events itself, not calendar.readonly */
-            'calWrite' => (bool) preg_match('#auth/calendar\.events(\s|$)#', (string) ($t['scope'] ?? '')) || !empty($old['calWrite'])];   /* Google lists every granted scope */
+            'calWrite' => (bool) preg_match('#auth/calendar\.events(\s|$)#', (string) ($t['scope'] ?? '')) || !empty($old['calWrite']),
+            'gbp' => str_contains((string) ($t['scope'] ?? ''), 'auth/business.manage') || !empty($old['gbp'])];   /* Google lists every granted scope */
         return $a;
     });
     alog('account connected', ['email' => $email]);
