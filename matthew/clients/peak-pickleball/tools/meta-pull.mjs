@@ -4,7 +4,7 @@
 // and its two ad accounts. No personal data: counts only (no commenter or reactor names, no comment or message text from the public).
 // Writes data/pulls/<date>/meta/snapshot.json and the store data/pulls/store/meta/<series>/YYYY-MM.json.gz (all gitignored).
 // First run backfills (Page insights 90 days, Instagram 28, ads from 2025-01-01); later runs re-read the last 2 days (ads: last 7).
-// Usage: node meta-pull.mjs [--backfill]
+// Usage: node meta-pull.mjs [--backfill] [--deep]   (--deep: Page insights from opening + every post; once, by hand)
 import { readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
@@ -47,6 +47,8 @@ function upsert(series, rows, keyOf, dateOf) {
   return m.size;
 }
 const first = readStore('meta/page-daily').length === 0 || process.argv.includes('--backfill');
+// --deep (25 Nov, Matthew's baseline before day one 23 Nov): Page insights back to opening, every Facebook and Instagram post. Run by hand once.
+const deep = process.argv.includes('--deep'), OPEN = '2024-09-01';
 
 // ---- 0. page token (memory only) ---------------------------------------------------------------------------------------------------------
 const acc = await g('me/accounts', { fields: 'id,name,access_token,instagram_business_account', limit: 50 });
@@ -61,15 +63,17 @@ if (pf.error) problems.push('page followers ' + pf.error); else snap.page = { fo
 const pageDaily = {}; // date -> { metric: value }
 const since = addDays(today, first ? -90 : -2), until = addDays(today, 1);
 const PAGE_METRICS = ['page_follows', 'page_daily_follows', 'page_daily_follows_unique', 'page_daily_unfollows_unique', 'page_post_engagements', 'page_views_total', 'page_media_view', 'page_total_media_view_unique', 'page_impressions_unique', 'page_impressions', 'page_fan_adds'];
-for (const m of PAGE_METRICS) {
-  const r = await g(PAGE_ID + '/insights', { metric: m, period: 'day', since, until }, PT);
-  if (r.error || !r.data || !r.data[0]) { rejected.add('page:' + m); continue; }
+const wins = []; // Meta answers at most ~90 days per request: deep walks from opening in 90-day windows
+if (deep) for (let a = OPEN; a < until; a = addDays(a, 90)) wins.push([a, addDays(a, 90) < until ? addDays(a, 90) : until]); else wins.push([since, until]);
+for (const m of PAGE_METRICS) for (const [ws, we] of wins) {
+  const r = await g(PAGE_ID + '/insights', { metric: m, period: 'day', since: ws, until: we }, PT);
+  if (r.error || !r.data || !r.data[0]) { rejected.add('page:' + m + (deep ? ' ' + ws : '')); continue; }
   for (const v of r.data[0].values) if (v.end_time && typeof v.value === 'number') (pageDaily[dayOf(v.end_time)] ||= {})[m] = v.value;
 }
 upsert('page-daily', Object.entries(pageDaily).map(([date, o]) => ({ date, ...o })), (r) => r.date, (r) => r.date);
 
 // ---- 2. Page posts, last 30 days (counts only) ----------------------------------------------------------------------------------------------
-const posts = await paged(PAGE_ID + '/posts', { fields: 'id,created_time,status_type,shares,reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0),message,insights.metric(post_total_media_view_unique,post_media_view,post_clicks)', since: addDays(today, -30), limit: 25 }, PT);
+const posts = await paged(PAGE_ID + '/posts', { fields: 'id,created_time,status_type,shares,reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0),message,insights.metric(post_total_media_view_unique,post_media_view,post_clicks)', since: deep ? OPEN : addDays(today, -30), limit: 25 }, PT, deep ? 60 : 4);
 let postRows = [];
 if (posts.error) problems.push('posts ' + JSON.stringify(posts.error)); else {
   postRows = posts.map((p) => {
@@ -78,7 +82,7 @@ if (posts.error) problems.push('posts ' + JSON.stringify(posts.error)); else {
   });
   upsert('posts', postRows, (r) => r.id, (r) => r.date);
 }
-snap.page.posts30d = postRows.length;
+snap.page.posts30d = postRows.filter((r) => r.date >= addDays(today, -30)).length; if (deep) snap.page.postsAll = postRows.length;
 
 // ---- 3. Instagram -------------------------------------------------------------------------------------------------------------------------
 const igDaily = {}; let igRows = [];
@@ -97,12 +101,12 @@ if (IG) {
     for (const x of r.data) (igDaily[d] ||= {})[x.name] = x.total_value && x.total_value.value;
   }
   upsert('ig-daily', Object.entries(igDaily).map(([date, o]) => ({ date, ...o })), (r) => r.date, (r) => r.date);
-  const media = await paged(IG + '/media', { fields: 'id,timestamp,media_type,like_count,comments_count,insights.metric(reach)', limit: 30 }, PT, 2);
+  const media = await paged(IG + '/media', { fields: 'id,timestamp,media_type,like_count,comments_count,insights.metric(reach)', limit: 30 }, PT, deep ? 30 : 2);
   if (media.error) problems.push('ig media ' + JSON.stringify(media.error)); else {
-    igRows = media.filter((x) => x.timestamp.slice(0, 10) >= addDays(today, -30)).map((x) => ({ id: x.id, date: x.timestamp.slice(0, 10), created: x.timestamp, type: x.media_type, likes: x.like_count ?? null, comments: x.comments_count ?? null, reach: num(x.insights && x.insights.data && x.insights.data[0] && x.insights.data[0].values[0].value), fetched: today }));
+    igRows = media.filter((x) => deep || x.timestamp.slice(0, 10) >= addDays(today, -30)).map((x) => ({ id: x.id, date: x.timestamp.slice(0, 10), created: x.timestamp, type: x.media_type, likes: x.like_count ?? null, comments: x.comments_count ?? null, reach: num(x.insights && x.insights.data && x.insights.data[0] && x.insights.data[0].values[0].value), fetched: today }));
     upsert('ig-media', igRows, (r) => r.id, (r) => r.date);
   }
-  snap.ig.media30d = igRows.length;
+  snap.ig.media30d = igRows.filter((r) => r.date >= addDays(today, -30)).length; if (deep) snap.ig.mediaAll = igRows.length;
 }
 // one follower line per pull day (the number as of the pull)
 upsert('followers', [{ date: today, pageFollowers: snap.page.followers ?? null, pageFans: snap.page.fans ?? null, igFollowers: snap.ig.followers ?? null, igMedia: snap.ig.media ?? null }], (r) => r.date, (r) => r.date);
