@@ -270,6 +270,7 @@ button.kpi:hover{border-color:var(--c,var(--acc))}
 .bcard b{display:block;line-height:1.25;font:700 13.5px/1.25 var(--disp)}.bcard small{color:var(--soft);display:block;margin-top:2px;font-size:12px}.bcard .due{text-align:left}
 .bcard .bf{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
 .bcard .lc,.bcard .tch{white-space:normal}
+.strip .sr .tch{white-space:normal;flex:0 1 auto;min-width:0;overflow-wrap:anywhere}   /* 25 Nov: a long touch name on the card ("They replied by email (automatic)") wraps instead of being cut off on a phone */
 .bempty{color:var(--soft);font-size:13px;padding:6px 4px}
 .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:40;display:flex;align-items:flex-start;justify-content:center;padding:5vh 12px;overflow:auto}
 .sheet{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:520px;width:100%;padding:18px}.sheet h2{margin:0 0 10px;font-size:19px}
@@ -437,7 +438,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 .tdays{display:grid;gap:8px}
 .tday{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}.tday.now{border-color:var(--acc)}.tday.lit{box-shadow:0 0 0 3px var(--acc)}
 .tdh{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--chip)}.tdh b{font:700 14px var(--disp)}.tdh .tag{margin:0}.tdn{margin-left:auto;font-size:12.5px;color:var(--soft)}
-.tday.free .tdn{color:var(--accInk);font-weight:700}.tday.past.free .tdn{color:var(--soft);font-weight:400}
+.tday.free .tdn{color:var(--soft);font-weight:400}
+.tdh[role=button]{cursor:pointer;user-select:none}.tdh .chev{margin-left:4px}.tday.shut .tdh .chev{transform:rotate(-45deg);margin-top:0}.tdempty{padding:10px 14px;color:var(--soft);font-size:13px}
 .trow{border-top:1px solid var(--line)}.trow.open{background:var(--accent2)}
 .trh{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;width:100%;text-align:left;border:0;background:none;color:var(--ink);padding:10px 14px;align-items:start}
 .trh:hover{background:var(--accent2)}.ttime{font:800 14px var(--disp);color:var(--accInk);padding-top:1px}
@@ -1039,11 +1041,11 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       }), empty: isX() ? 'No quotes out.' : 'No proposals out.' });
       var tb = tile(colA, { key: 'tours', hue: 'amber', icon: 'cal', title: 'Tours coming up', n: tours.length || null, note: nt ? 'next ' + fmtDay(nt.date) : '', rows: tours.slice(0, 8).filter(function (t) { return rec(t.lead); }).map(function (t) { return rowFor(rec(t.lead), { extra: fmtDay(t.date) + ', ' + fmtTime(t.time) + (t.who ? ' · ' + t.who : '') }); }), empty: 'No tours booked. Book one from a company’s card.' });
       var tw0 = el('button', 'lnk tolink', 'The week’s schedule ›'); tw0.type = 'button'; tw0.addEventListener('click', function () { go('tours'); }); tb._body.appendChild(tw0);
-      /* this month's numbers: closed by default */
-      var P = PER(), wb = tile(colB, { key: 'week', hue: 'green', icon: 'chart', title: P.label + ' by person', n: wkN || null, note: 'from ' + fmtDay(P.from) + ', touches by kind', extra: perSwitch() });   /* 24 Nov: the switch in the head, inside the box */
+      /* this month's numbers: open on a computer, closed on a phone (25 Nov, Matthew) */
+      var P = PER(), wb = tile(colB, { key: 'week', open: !isPhone(), hue: 'green', icon: 'chart', title: P.label + ' by person', n: wkN || null, note: 'from ' + fmtDay(P.from) + ', touches by kind', extra: perSwitch() });   /* 24 Nov: the switch in the head, inside the box */
       weekBars(wb._body, P.T); var tw = el('div', 'tw'); tw.appendChild(teamTable(P.T, true)); wb._body.appendChild(tw);
       /* the emails (2026-11-24, Matthew: "make sure we are tracking metrics clicks opens link clicks"): the same period as the switch */
-      var MN = mailNums(); if (MN) { var mb = tile(colB, { key: 'mail', hue: 'cyan', icon: 'mail', title: P.label + ': emails', n: MN.sent || null, note: 'sent from ' + fmtDay(P.from) + ', and what happened to them' });
+      var MN = isAdmin() ? mailNums() : null; if (MN) { var mb = tile(colB,   /* 25 Nov (Matthew): the email numbers are for the admin only */ { key: 'mail', hue: 'cyan', icon: 'mail', title: P.label + ': emails', n: MN.sent || null, note: 'sent from ' + fmtDay(P.from) + ', and what happened to them' });
         var mt = el('div', 'tw'); mt.appendChild(mailTable(MN)); mb._body.appendChild(mt);
         mb._body.appendChild(el('div', 'mnote', 'Opens are rough: Apple Mail opens every email it receives, Outlook often blocks the image. Clicks are the reliable number.')); }
     });
@@ -1140,7 +1142,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   /* ---- Leads (2026-11-25): the old Pipeline and Companies (Organisations) in one place. One search, the list chips (under the title),
      stage chips, List or Board; Filters (whose, sort, last contacted, and on the Expo leads category and priority) behind one button.
      Proposal sent and Signed (Quote sent and Booked on the Expo leads) also show what Tours & deals showed for them. ---- */
-  var leadsView = function () { try { return localStorage.getItem('peakdesk.leadsview') === 'board' ? 'board' : 'list'; } catch (e) { return 'list'; } };
+  var leadsView = function () { try { var v = localStorage.getItem('peakdesk.leadsview'); if (v === 'board' || v === 'list') return v; } catch (e) {} return isPhone() ? 'list' : 'board'; };   /* 25 Nov (Matthew): Board on a computer, List on a phone, until the person picks */
   function drawLeads(sub) {
     if (sub === 'removed') return drawRemoved();
     splitView(function (left) {
@@ -2204,8 +2206,19 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var days = el('div', 'tdays'); box.appendChild(days);
     for (var i = 0; i < 7; i++) {
       var d = plusD(wk, i), L = T.filter(function (t) { return t.date === d; }), db = el('div', 'tday' + (d === now ? ' now' : '') + (d < now ? ' past' : '') + (L.length ? '' : ' free')); db.setAttribute('data-day', d);
-      var dh = el('div', 'tdh'); dh.appendChild(el('b', null, dayLong(d))); if (d === now) dh.appendChild(el('span', 'tag good', 'Today')); dh.appendChild(el('span', 'tdn', L.length ? plural(L.length, 'tour') : d < now ? 'No tours' : 'Open')); db.appendChild(dh);
-      L.forEach(function (t) { db.appendChild(tourRow(t)); });
+      var dh = el('div', 'tdh'); dh.appendChild(el('b', null, dayLong(d))); if (d === now) dh.appendChild(el('span', 'tag good', 'Today')); dh.appendChild(el('span', 'tdn', L.length ? plural(L.length, 'tour') : 'No tours')); db.appendChild(dh);
+      /* 25 Nov (Matthew: the day buttons did nothing, and an open day would not close): each day opens and closes; a day with tours starts open */
+      var dbody = el('div', 'tdb'); db.appendChild(dbody);
+      L.forEach(function (t) { dbody.appendChild(tourRow(t)); });
+      if (!L.length) dbody.appendChild(el('div', 'tdempty', d < now ? 'No tours that day.' : 'Nothing booked yet. Open a card and use Book a tour, or send your booking link.'));
+      (function (db, dh, dbody, d, has) {
+        var chev = el('span', 'chev'); chev.setAttribute('aria-hidden', 'true'); dh.appendChild(chev);
+        dh.setAttribute('role', 'button'); dh.tabIndex = 0; S.tdayOpen = S.tdayOpen || {};
+        var set = function (v) { S.tdayOpen[d] = v; dbody.hidden = !v; db.classList.toggle('shut', !v); dh.setAttribute('aria-expanded', String(v)); };
+        set(S.tdayOpen[d] != null ? S.tdayOpen[d] : has);
+        dh.addEventListener('click', function () { set(dbody.hidden); });
+        dh.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); set(dbody.hidden); } });
+      })(db, dh, dbody, d, !!L.length);
       days.appendChild(db);
     }
     var later = up.filter(function (t) { return t.date > end; }), before = up.filter(function (t) { return t.date < wk; });

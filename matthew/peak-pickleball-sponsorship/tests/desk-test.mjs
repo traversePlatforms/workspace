@@ -1673,10 +1673,10 @@ try {
   }
   await send('Emulation.setDeviceMetricsOverride', { width: 1366, height: 900, deviceScaleFactor: 1, mobile: false }); await js(`document.documentElement.dataset.theme='dark'`); await sleep(200);
   ok(perPlaces.length === 4 && perPlaces.every(Boolean), 'the Week / Month switch sits inside the block’s head (not on its line), 1366 and 390 px, dark and light ' + JSON.stringify(perPlaces));
-  await js(`(()=>{const b=document.querySelector('[data-blk="mail"]');scrollTo(0,b.getBoundingClientRect().top+scrollY-120)})()`); await sleep(150); await shot('desk-emails-block.png');
-  ok(await js(`(()=>{const m=document.querySelector('[data-blk="mail"]');return !!m&&[...m.querySelectorAll('tr td:first-child')].map(t=>t.textContent).join(',')==='Peak email lists,Desk emails,Tour confirmations'&&/^This month: emails/.test(m.querySelector('h2').textContent)})()`), 'Today: the emails for the same period (sent, opened, clicked, replied, booked), each kind a row');
+  /* 25 Nov (Matthew): the email numbers are for the admin only; a seller has no emails tile (the admin's is checked further down) */
+  ok(await js(`!document.querySelector('[data-blk="mail"]')`), 'Today: a seller does not see the emails tile (admin only)');
   await js(`document.querySelector('[data-blk="week"] .perseg [data-per="week"]').click()`); await sleep(300);
-  ok(await jsUntil(`localStorage.getItem('peakdesk.per')==='week'&&/^This week by person/.test(document.querySelector('[data-blk="week"] h2').textContent)&&/^This week: emails/.test(document.querySelector('[data-blk="mail"] h2').textContent)&&document.querySelector('[data-blk="week"] .perseg button.on').dataset.per==='week'`), 'Week: the block, the tile and the emails follow; the choice is kept on this device');
+  ok(await jsUntil(`localStorage.getItem('peakdesk.per')==='week'&&/^This week by person/.test(document.querySelector('[data-blk="week"] h2').textContent)&&document.querySelector('[data-blk="week"] .perseg button.on').dataset.per==='week'`), 'Week: the block and the tile follow; the choice is kept on this device');
   await send('Page.reload', {}); await sleep(1500);
   ok(await jsUntil(`!!document.querySelector('[data-blk="week"] .perseg button.on')&&document.querySelector('[data-blk="week"] .perseg button.on').dataset.per==='week'`), 'someone’s own Week choice stays after a reload');
   await js(`localStorage.setItem('peakdesk.per','')`); await send('Page.reload', {}); await sleep(1500);
@@ -1715,6 +1715,9 @@ try {
   await click('.ownbar [data-owner="all"]');
   /* Pipeline */
   await tab('leads');
+  /* 25 Nov (Matthew): Leads opens on the Board on a computer (List on a phone) until the person picks; the rest of these checks use List */
+  ok(await jsUntil(`!!document.querySelector('[data-view="board"][aria-pressed="true"]')&&!!document.querySelector('main .board')`), 'Leads opens on the Board on a computer until the person picks');
+  await click('[data-view="list"]', 500);
   ok(await jsUntil(`document.querySelectorAll('.funnel .fr').length===10&&document.querySelectorAll('.xstagechips [data-x]').length>=3&&!!document.querySelector('[data-blk="funnel"].shut')`), 'Leads: the stages at a glance (10, with counts) folded away, and a chip for each stage');
   await click('.funnel .fr[data-st="emailed"]');
   const emailedIds = D.sponsor.recs.filter((r) => r.stage === 'emailed').map((r) => r.id);
@@ -1793,6 +1796,11 @@ try {
   }
   ok(byUrl === 5, 'a seller opening #sponsor/more/report, /pl, /pk, /offer or /better by address gets My email & booking link and nothing of them (' + byUrl + ' of 5)');
   await signAs(ADMIN, 'the admin, for the report'); await world('sponsor');
+  /* 25 Nov: the admin's Today keeps the emails tile; This month by person starts open on a computer */
+  await tab('today');
+  ok(await jsUntil(`(()=>{const w=document.querySelector('[data-blk="week"]');return !!w&&!w.classList.contains('shut')})()`), 'Today: This month by person starts open on a computer');
+  ok(await jsUntil(`(()=>{const m=document.querySelector('[data-blk="mail"]');return !!m&&[...m.querySelectorAll('tr td:first-child')].map(t=>t.textContent).join(',')==='Peak email lists,Desk emails,Tour confirmations'})()`), 'Today: the admin sees the emails for the same period (sent, opened, clicked, replied, booked)');
+  await js(`(()=>{const b=document.querySelector('[data-blk="mail"]');b._setOpen&&b._setOpen(true);scrollTo(0,b.getBoundingClientRect().top+scrollY-120)})()`); await sleep(150); await shot('desk-emails-block.png');
   await tab('more'); ok((await chipsNow()) === 'report,pl,pk,offer,better,mine,cal,look,settings', 'More (the admin): unchanged, all nine');
   await sub('report');
   ok(/Who is on the desk/.test(await text()), 'More \u203a Report with who has done what');
@@ -1854,6 +1862,11 @@ try {
   await signAs(SELLER, 'the seller again'); await world('sponsor');
   { const T0 = (await b('data')).sponsor.tours.filter((t) => t.date >= today()).sort((p, q) => (p.date + p.time).localeCompare(q.date + q.time))[0]; await tourOpen(T0); }
   ok(await jsUntil(`[...document.querySelectorAll('main button')].some(b=>b.textContent==='Add to my calendar')&&/Coming up/.test(document.querySelector('main').textContent)&&!!document.querySelector('.schednav')&&document.querySelectorAll('.tday').length===7`), 'Tours: the week, each day, a tour opened with Add to my calendar'); await shot('desk-tours.png');
+  /* 25 Nov (Matthew: the day buttons did nothing, an open day would not close): every day opens and closes; a day with tours starts open, an empty one closed */
+  ok(await js(`(()=>{const D=[...document.querySelectorAll('.tday')],full=D.find(d=>d.querySelector('.trow,.tour,[data-tour]')||!d.classList.contains('free')),empty=D.find(d=>d.classList.contains('free'));if(!full||!empty)return false;
+    const fb=full.querySelector('.tdb'),eb=empty.querySelector('.tdb');if(fb.hidden||!eb.hidden)return false;
+    full.querySelector('.tdh').click();const c1=fb.hidden;full.querySelector('.tdh').click();const c2=!fb.hidden;empty.querySelector('.tdh').click();const c3=!eb.hidden&&/Nothing booked yet|No tours that day/.test(eb.textContent);empty.querySelector('.tdh').click();
+    return c1&&c2&&c3&&eb.hidden&&!/\bOpen\b/.test(empty.querySelector('.tdh').textContent)})()`), 'Tours: each day opens and closes on a tap (tours open, empty days closed and saying so)');
   await goHash('#sponsor/leads/all/signed'); await clickText('main button', '/\\+ Add a sponsor/', 300);
   await js(`(()=>{const i=document.querySelector('.sheet input');i.value=${JSON.stringify(K.name.toLowerCase())};i.dispatchEvent(new Event('input'));return 1})()`); await sleep(100);
   ok(await jsUntil(`/already on the desk/.test(document.querySelector('.sheet').textContent)`), '+ Add a sponsor: a company already on the desk is offered instead');
