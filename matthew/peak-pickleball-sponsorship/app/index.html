@@ -378,6 +378,103 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 /* finger-sized targets on touch screens (device QA D2/D3, 2026-10-27): at least 40 px tall; desktop density unchanged */
 @media (pointer:coarse),(max-width:640px){.chips button,.world button,.seg button,.btn,.btn.small,.qb button{min-height:40px}.fu button{min-height:34px}.who .lnk,#signout{min-height:40px;padding:0 6px}.tabs button{min-height:48px}}
 .perseg{display:inline-flex;gap:0;vertical-align:middle;flex:none}.blk>.bh .perseg{margin-left:auto}.perh{display:flex;align-items:center;justify-content:space-between;gap:8px 12px;flex-wrap:wrap}.perh h2{margin-right:auto}.mnote{padding:0 16px 12px;font-size:12px;color:var(--soft)}.tb.mt td.n,.tb.mt th.n{white-space:nowrap}@media print{.perseg{display:none}}.perseg button{font:inherit;font-size:13px;padding:4px 12px;border:1px solid var(--line,#ccd);background:transparent;color:inherit;cursor:pointer}.perseg button:first-child{border-radius:8px 0 0 8px}.perseg button:last-child{border-radius:0 8px 8px 0;border-left:0}.perseg button.on{background:#1f5fad;color:#fff;border-color:transparent}
+/* 2026-11-25 redesign: five tabs, folding tiles, the (i) button, quick contacting, the week of tours, More as a menu */
+.shead h1{margin:0}.shtop>.ibtn{margin-right:auto}
+.subchips{align-items:center}.shead .subchips{margin-top:2px}
+.ibtn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);background:var(--card);color:var(--soft);font:italic 700 13px/1 Georgia,serif;display:inline-grid;place-items:center;padding:0;flex:none;align-self:center}
+.ibtn[aria-expanded="true"]{border-color:var(--acc);color:var(--accInk)}
+.blk>.bh .ibtn,.p5>.bh .ibtn{width:22px;height:22px;font-size:12px}
+.sdesc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.fold>.fhead{cursor:pointer;user-select:none}.fold>.fhead:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+.chev{margin-left:auto;width:9px;height:9px;border-right:2px solid var(--soft);border-bottom:2px solid var(--soft);transform:rotate(45deg);flex:none;margin-top:-4px;transition:transform .15s}
+.fold.shut>.fhead .chev{transform:rotate(-45deg);margin-top:0}
+.blk>.bh .lnk~.chev,.blk>.bh .perseg~.chev{margin-left:10px}
+.blk.shut>.bh,.p5.shut>.bh{border-bottom:0}
+.p5 .p5why{margin:0;padding:10px 16px 0;color:var(--soft);font-size:12.5px}
+.p5>.bh .bn{font:700 12px var(--sans);padding:2px 8px;border-radius:9px;background:var(--accent2);color:var(--accInk)}
+.blk .tolink{display:block;padding:10px 16px;font-size:13.5px;border-top:1px solid var(--line);width:100%;text-align:left}
+/* the five numbers, compact */
+.kpis.kstrip{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:0 0 14px}
+.kstrip .kpi{padding:9px 12px 9px 16px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;column-gap:10px;align-items:center}
+.kstrip .kpi::after{display:none}.kstrip .kpi::before{width:4px;box-shadow:none}
+:root[data-theme="light"] .kstrip .kpi{border-top-width:3px;padding-left:12px}
+.kstrip .kpi b{grid-row:1/span 2;grid-column:1;font-size:26px;margin:0;min-width:28px;text-align:center}
+.kstrip .kpi .kl{grid-column:2;font-size:11px;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.kstrip .kpi .kl svg.i{display:none}
+.kstrip .kpi>span:last-child{grid-column:2;margin:1px 0 0;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* the next one to reach */
+.nextc{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--c,var(--acc));border-radius:14px;padding:14px 16px;margin:0 0 14px;box-shadow:0 0 22px color-mix(in srgb,var(--c,var(--acc)) calc(var(--glow)*60%),transparent)}
+.nxtop{display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap}.nxk{font:800 11px var(--sans);text-transform:uppercase;letter-spacing:.08em;color:var(--soft)}
+.nxw{font:700 12px var(--sans);padding:2px 9px;border-radius:999px;background:var(--t);color:var(--k)}
+.nxname{display:block;border:0;background:none;padding:4px 0 0;color:var(--ink);font:800 21px/1.2 var(--disp);text-align:left;letter-spacing:-.01em;max-width:100%;overflow-wrap:anywhere}
+.nxname:hover{color:var(--accInk)}.nxsub{color:var(--soft);font-size:13px;margin:2px 0 10px}
+.nxtouch{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.nxtouch button{border:1px solid color-mix(in srgb,var(--c,var(--line)) 40%,transparent);background:var(--t,var(--card));color:var(--k,var(--ink));border-radius:999px;padding:5px 11px 5px 6px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.nxtouch button .ico{background:var(--c);color:#0b0b0a;width:22px;height:22px;border-radius:50%}
+:root[data-theme="light"] .nxtouch button{background:var(--card);border:1.5px solid var(--t)}:root[data-theme="light"] .nxtouch button .ico{background:var(--d);color:#fff}
+/* Call, Text, Email */
+.qcall{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.detail .qcall{position:sticky;top:-18px;z-index:2;background:var(--card);padding:10px 0;margin:4px 0 2px;border-bottom:1px solid var(--line)}
+.qc{display:flex;align-items:center;gap:9px;min-height:50px;padding:8px 12px;border-radius:12px;text-decoration:none;background:var(--btnBg);color:var(--btnInk);min-width:0}
+.qc svg.i{width:20px;height:20px;flex:none}.qc .qt{display:grid;min-width:0}.qc b{font:800 15px/1.15 var(--disp)}.qc small{font-size:11.5px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qc.qc-text,.qc.qc-email{background:var(--chip);color:var(--ink);border:1px solid var(--line)}
+.qc.off{background:var(--chip);color:var(--soft);border:1px dashed var(--line);pointer-events:none}.qc.off small{opacity:1}
+/* Leads: filters behind one button */
+.controls .viewseg button svg.i{width:14px;height:14px}
+.fbtn .fcount{font:800 11px var(--sans);padding:0 6px;border-radius:9px;background:var(--btnBg);color:var(--btnInk)}
+.fpanel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px 4px;margin:0 0 14px}.fpanel .controls{margin-bottom:10px}
+.fnote{color:var(--soft);font-size:13px;margin:-4px 0 10px}
+.stagechips button[class*="h-"]{border-left:3px solid var(--c)}
+.sth{font-size:15.5px;margin:4px 0 8px}
+/* the card's folding sections */
+.sec.fold>h3{display:flex;align-items:center;gap:8px;margin:0;padding:2px 0 8px}.sec.fold.shut{padding-bottom:6px}.sec.fold.shut>h3{padding-bottom:0}
+.sec .hn{font:700 11px var(--sans);letter-spacing:0;text-transform:none;padding:1px 7px;border-radius:9px;background:var(--chip);color:var(--ink)}
+/* Tours: Sixfold's week schedule */
+.schedv{display:grid;gap:10px;margin:0 0 18px}
+.schednav{display:flex;justify-content:space-between;align-items:center;gap:8px}.schednav b{font:800 16px var(--disp);text-align:center}
+.schednav button,.schedjump button,.schedpick{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;font:700 13.5px var(--sans);white-space:nowrap}
+.schedjump{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.schedjump button:disabled{opacity:.5}
+.schedpick{display:inline-flex;align-items:center;gap:8px;cursor:pointer}.schedpick svg.i{color:var(--accInk)}.schedpick input{border:0;background:transparent;color:inherit;font:600 13.5px var(--sans);padding:0;min-width:0}
+.tdays{display:grid;gap:8px}
+.tday{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}.tday.now{border-color:var(--acc)}.tday.lit{box-shadow:0 0 0 3px var(--acc)}
+.tdh{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--chip)}.tdh b{font:700 14px var(--disp)}.tdh .tag{margin:0}.tdn{margin-left:auto;font-size:12.5px;color:var(--soft)}
+.tday.free .tdn{color:var(--accInk);font-weight:700}.tday.past.free .tdn{color:var(--soft);font-weight:400}
+.trow{border-top:1px solid var(--line)}.trow.open{background:var(--accent2)}
+.trh{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;width:100%;text-align:left;border:0;background:none;color:var(--ink);padding:10px 14px;align-items:start}
+.trh:hover{background:var(--accent2)}.ttime{font:800 14px var(--disp);color:var(--accInk);padding-top:1px}
+.tmid{display:grid;gap:2px;min-width:0}.tmid b{font:700 14.5px var(--disp)}.tmid small{color:var(--soft);font-size:12.5px}
+.tbadges{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}.tbadges .tag,.tbadges .pill{margin:0}
+.trow.m-done .ttime,.trow.m-ask .ttime{color:var(--soft)}
+.tbody2{padding:0 12px 12px}.tbody2 .card{margin:0}
+.tmore{font-size:13.5px;color:var(--soft)}
+.nrow{display:flex;gap:8px 14px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:11px 16px;border-top:1px solid var(--line)}.nrow:first-child{border-top:0}.nrow .nm b{white-space:normal}
+.blk .tbody>.card{margin:10px 12px}
+/* More: a menu list */
+.moremenu{display:grid;gap:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:0 0 14px;align-self:start}
+.mitem{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);text-align:left;padding:11px 14px;width:100%}
+.mitem:first-child{border-top:0}.mitem:hover{background:var(--accent2)}.mitem[aria-pressed="true"]{background:var(--accent2);box-shadow:inset 3px 0 0 var(--acc)}
+.mitem .mic{width:30px;height:30px;border-radius:9px;background:var(--accent2);color:var(--accInk)}.mitem .mic svg.i{width:16px;height:16px}
+.mitem .mt{display:grid;min-width:0}.mitem b{font:700 14.5px var(--disp)}.mitem small{color:var(--soft);font-size:12.5px}.mgo{color:var(--soft);font-size:20px}
+.moremenu.shut{display:none}.moreback{display:block;margin:0 0 12px;font-size:14.5px}
+@media (min-width:1000px){main[data-section="more"]{display:grid;grid-template-columns:270px minmax(0,1fr);column-gap:22px;align-items:start}
+  main[data-section="more"]>*{grid-column:2;min-width:0}main[data-section="more"]>.shead{grid-column:1/-1}
+  main[data-section="more"]>.moremenu{grid-column:1;grid-row:2/span 40;position:sticky;top:84px}.mitem .mgo{display:none}}
+@media (max-width:640px){
+  .tabs button .tl{overflow:visible;text-overflow:clip;font-size:11px}
+  .kpis.kstrip{display:flex;overflow-x:auto;scrollbar-width:none;gap:6px;margin:0 -14px 12px;padding:0 14px}.kpis.kstrip::-webkit-scrollbar{display:none}
+  .kstrip .kpi{flex:0 0 auto;width:auto;max-width:200px;padding:7px 10px 7px 13px}.kstrip .kpi b{font-size:21px;min-width:22px}.kstrip .kpi>span:last-child{display:none}
+  .kpis .kpi[data-k="week"]{grid-column:auto}
+  .nextc{padding:12px 13px}.nxname{font-size:19px}
+  .qc{flex-direction:column;justify-content:center;gap:3px;padding:8px 4px;text-align:center;min-height:58px}.qc .qt{justify-items:center}.qc small{max-width:100%}
+  .detail .qcall{top:-14px}
+  .nxtouch button{min-height:38px}
+  .trh{grid-template-columns:64px minmax(0,1fr);padding:10px 12px}.schednav button{padding:8px 9px;font-size:12.5px}.schednav b{font-size:13.5px}
+  .shtop .btn.small{padding:6px 10px}
+  .p5>.bh{flex-wrap:nowrap}.p5>.bh>span{flex-basis:auto}.p5>.bh>span.chev{flex:none}
+  .blk>.bh .bs{display:none}.blk>.bh{flex-wrap:nowrap}.blk>.bh h2{min-width:0}.blk>.bh .lnk{white-space:nowrap}
+  main[data-section="leads"] .chips.subchips,main[data-section="inbox"] .chips.subchips{flex-wrap:nowrap;overflow-x:auto;align-items:center;margin-right:-14px;padding-right:14px}
+  main[data-section="leads"] .controls .search{flex:1 1 100%}
+  .nxtouch{display:grid;grid-template-columns:1fr 1fr}.nxtouch .chiplab{grid-column:1/-1}.nxtouch button{justify-content:flex-start}
+}
 </style>
 </head>
 <body>
@@ -394,7 +491,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-24.2';
+  var BUILD = '2026-11-25.1';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -575,30 +672,35 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       .catch(function () { toast('No connection. Not saved.'); return {}; });
   }
 
-  /* ---- the bar: Sponsors or Expo leads, then the tabs ---- */
+  /* ---- the bar: Sponsors or Expo leads, then the tabs ----
+     2026-11-25 redesign (Matthew: "too cluttered ... today, pipeline, and companies all lead to some what similiar places"): five tabs in
+     both lists, the same on a computer and a phone: Today (what to do now), Inbox (with Mine, the old My leads), Leads (the old Pipeline,
+     Companies or Organisations, and the Proposals, Signed and Quotes parts of Tours & deals), Tours (a week schedule, Sixfold's job
+     schedule) and More. Nothing was taken away: it moved, folded behind a tile or a button, or merged. The old addresses still work (legacy()). */
   var TABS = {
-    sponsor: [['today', 'Today'], ['inbox', 'Inbox'], ['myleads', 'My leads'], ['pipe', 'Pipeline'], ['list', 'Companies'], ['deals', 'Tours & deals'], ['more', 'More']],
-    expo: [['today', 'Today'], ['inbox', 'Inbox'], ['myleads', 'My leads'], ['pipe', 'Pipeline'], ['list', 'Organisations'], ['deals', 'Tours & quotes'], ['more', 'More']]
+    sponsor: [['today', 'Today'], ['inbox', 'Inbox'], ['leads', 'Leads'], ['tours', 'Tours'], ['more', 'More']],
+    expo: [['today', 'Today'], ['inbox', 'Inbox'], ['leads', 'Leads'], ['tours', 'Tours'], ['more', 'More']]
   };
   var MYSUBS = [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['sent', 'Sent to the Inbox']];
-  var MYDESC = 'Replies to your own emails (the Peak email blasts and the desk emails you sent yourself), for you alone: nobody else on the desk sees them, here, in the Inbox or on a card. Each one says which email it answered and when that went. Reply goes from Peak Partnerships in the same thread. Outcome is your dated record of how it stands. Send to the Inbox hands one to the team (one person, or anyone), with a note; later emails in that thread go there too, and Bring back returns it while nobody has replied to it.';
+  var MYDESC = 'Mine: replies to your own emails (the Peak email blasts and the desk emails you sent yourself), for you alone: nobody else on the desk sees them, here, in the Inbox or on a card. Each one says which email it answered and when that went. Reply goes from Peak Partnerships in the same thread. Outcome is your dated record of how it stands. Send to the Inbox hands one to the team (one person, or anyone), with a note; later emails in that thread go there too, and Bring back returns it while nobody has replied to it.';
+  var INSUBS = [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other'], ['mine', 'Mine']];
   var SUBS = {
-    sponsor: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], myleads: MYSUBS, list: [['all', 'All companies'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added on the desk'], ['removed', 'Removed']],
-      deals: [['tours', 'Tours'], ['props', 'Proposals'], ['signed', 'Signed']],
+    sponsor: { inbox: INSUBS, leads: [['all', 'All'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added'], ['removed', 'Removed']],
       more: [['report', 'Report'], ['pl', 'Profit & loss'], ['pk', 'Packages'], ['offer', 'What Peak offers'], ['better', 'What we could offer'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['scripts', 'Outreach scripts'], ['look', 'Look'], ['settings', 'Settings']] },
-    expo: { inbox: [['open', 'To answer'], ['wait', 'Waiting on them'], ['done', 'Done'], ['other', 'Other']], myleads: MYSUBS, list: [['all', 'All organisations'], ['removed', 'Removed']], deals: [['tours', 'Tours'], ['quotes', 'Quotes and bookings']],
+    expo: { inbox: INSUBS, leads: [['all', 'All'], ['removed', 'Removed']],
       more: [['report', 'Report'], ['ref', 'Questions and venues'], ['mine', 'My email & booking link'], ['cal', 'My calendar'], ['scripts', 'Outreach scripts'], ['look', 'Look'], ['settings', 'Settings']] }
   };
+  var INDESC = 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.';
   var DESC = {
-    sponsor: { myleads: MYDESC, inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
-      today: 'What to do now: follow-ups due, who to reach next, proposals waiting, tours coming up, and the week so far.',
-      pipe: 'Every company by stage, from To contact to Signed. Pick a stage to work it.',
-      list: 'Every company on the desk, by list: the researched new leads, Peak’s own sponsors, local businesses and the ones added on the desk.',
-      deals: 'Tours at Peak, proposals sent and signed sponsors.', more: 'The report, profit and loss, packages, what Peak offers sponsors, your calendar link and the look.' },
-    expo: { myleads: MYDESC, inbox: 'Every email that comes to partnerships@peakpickleball.us, newest first, within about 5 minutes. Open one to read it. Reply answers from Peak Partnerships with your signature, in the same thread. Attach to a company puts it on a card. Claim locks it to you: only you can answer it (here or from a card) until you or Matthew release it. Replying claims it too. When they write again in the same thread, their new email stays with whoever had the old one. To answer: nobody here has replied yet, or they wrote again. Answered it in Outlook, on the phone or by a call? Press Mark as answered: it moves to Waiting on them as if you had replied here (Undo puts it back). Waiting on them: we replied, so it moves there by itself; when they write back, their new email is under To answer; after 14 days with no answer it counts as Done. Back to To answer if you still owe them something. Done: pressed Done, or closed after 14 days. Other: notices, bounces and out-of-office replies; Remove takes one off the list. Alerts: More, My email & booking link.',
-      today: 'Expo leads to work now: follow-ups due, who to reach next, quotes waiting, tours coming up, and the week so far.',
-      pipe: 'Every expo lead by stage, from To contact to Booked. Kept apart from the sponsors: nothing here counts there.',
-      list: 'Organisations that run expos, shows and fairs and could rent Peak as their venue.', deals: 'Tours of Peak for organisers, quotes sent and events booked.',
+    sponsor: { inbox: INDESC,
+      today: 'What to do now: the next company to reach, then follow-ups due, who to reach next, proposals waiting, tours coming up and this month’s numbers. Tap a tile to open or close it; the desk remembers it on this device.',
+      leads: 'Every company on the desk. Search, pick a stage (To contact to Signed) or a list (the researched new leads, Peak’s own sponsors, local businesses, the ones added on the desk). List or Board. Proposal sent and Signed show the proposals and the signed sponsors.',
+      tours: 'Tours at Peak, a week at a time. Tap a tour to move it, cancel it, add it to your calendar or say how it went. Companies at Meeting / tour booked with no time yet are under No date yet.',
+      more: 'The report, profit and loss, packages, what Peak offers sponsors, your calendar link and the look.' },
+    expo: { inbox: INDESC,
+      today: 'Expo leads to work now: the next one to reach, follow-ups due, who to reach next, quotes waiting, tours coming up and this month’s numbers. Kept apart from the sponsors: nothing here counts there.',
+      leads: 'Organisations that run expos, shows and fairs and could rent Peak as their venue. Search, pick a stage (To contact to Booked), List or Board. Quote sent and Booked show the quotes and events booked.',
+      tours: 'Tours of Peak for organisers, a week at a time. Tap a tour to move it, cancel it, add it to your calendar or say how it went.',
       more: 'A report on the expo leads, the questions for Peak and the competing venues, your calendar link and the look.' }
   };
   /* admins only (2026-11-20, Matthew): Settings, and in More the Report, Profit & loss, Packages, What Peak offers and What we could offer.
@@ -612,20 +714,23 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   var research = function () { return !!(S.data && (S.data.me.role === 'research' || S.data.me.role === 'outreach')); };
   /* the outreach account (2026-11-24, Claire for Matthew): research, plus touches, follow-ups and emails from Matthew's approved templates */
   var outreach = function () { return !!(S.data && S.data.me.role === 'outreach'); };
-  var RESEARCH_TABS = { list: 1, more: 1 };
+  var RESEARCH_TABS = { leads: 1, more: 1 };
   var subList = function (t) {
     var L = SUBS[S.world][t];
+    if (L && t === 'inbox' && !myOn()) L = L.filter(function (x) { return x[0] !== 'mine'; });   /* Mine (the old My leads): Matthew's own login only */
     if (L && research()) return L.filter(function (x) { return t === 'more' ? x[0] === 'look' || (x[0] === 'scripts' && outreach()) : x[0] !== 'removed'; });
     if (L && t === 'more') L = L.filter(function (x) { return x[0] !== 'scripts' || !!(S.data && S.data.otpl); });   /* Outreach scripts: Matthew's login only */
     return L && S.data && !isAdmin() ? L.filter(function (x) { return !(t === 'more' ? ADMIN_SUBS[x[0]] : x[0] === 'settings'); }) : L;
   };
   var subOf = function (t) { var L = subList(t); return L ? (S.sub[S.world + t] && L.some(function (x) { return x[0] === S.sub[S.world + t]; }) ? S.sub[S.world + t] : L[0][0]) : ''; };
+  var mySub = function () { var v = S.sub[S.world + 'mine']; return MYSUBS.some(function (x) { return x[0] === v; }) ? v : 'open'; };
+  /* the stage picked on Leads, kept per list (a stage picked under New leads does not carry into Local businesses) */
+  var leadsKey = function (sub) { return S.world + 'leads' + (sub || subOf('leads')); };
+  var leadsSt = function (sub) { var v = S.st[leadsKey(sub)] || 'all'; return v === 'all' || W().stages.some(function (x) { return x[0] === v; }) ? v : 'all'; };
   function tabCount(t) {
     if (t === 'today') { var n = recs().filter(function (r) { return isDue(r) && ownerOk(r); }).length; return n ? [n, 1] : null; }
-    if (t === 'inbox') { var ni = inboxOn() ? +S.data.inbox.open || 0 : 0; return ni ? [ni, 1] : null; }
-    if (t === 'myleads') { var nm = myOn() ? +S.data.myleads.open || 0 : 0; return nm ? [nm, 1] : null; }
-    if (t === 'pipe') return [recs().filter(function (r) { return r.stage !== 'new' && r.stage !== 'lost'; }).length];
-    if (t === 'list') return [recs().length];
+    if (t === 'inbox') { var ni = (inboxOn() ? +S.data.inbox.open || 0 : 0) + (myOn() ? +S.data.myleads.open || 0 : 0); return ni ? [ni, 1] : null; }
+    if (t === 'tours') { var nt = upTours().filter(function (x) { return daysTo(x.date) <= 7; }).length; return nt ? [nt] : null; }
     return null;
   }
   function bar() {
@@ -642,55 +747,89 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var t = $('tabs'); t.textContent = '';
     TABS[S.world].forEach(function (x) {
       if (x[0] === 'inbox' && !inboxOn()) return;   /* sellers and admins only (2026-11-20) */
-      if (x[0] === 'myleads' && !myOn()) return;   /* Matthew's own login only (2026-11-24; the server sends nobody else its counts) */
       if (research() && !RESEARCH_TABS[x[0]]) return;
-      var b = el('button'); b.type = 'button'; b.setAttribute('data-tab', x[0]); b.appendChild(ic({ inbox: 'mail', myleads: 'user', today: 'home', pipe: 'board', list: 'list', deals: 'deal', more: 'more' }[x[0]])); b.appendChild(el('span', 'tl', x[1]));
+      var b = el('button'); b.type = 'button'; b.setAttribute('data-tab', x[0]); b.appendChild(ic({ inbox: 'mail', today: 'home', leads: 'list', tours: 'cal', more: 'more' }[x[0]])); b.appendChild(el('span', 'tl', x[1]));
       var n = tabCount(x[0]); if (n) b.appendChild(el('b', 'tn' + (n[1] ? ' hot' : ''), String(n[0])));
       if (S.tab === x[0]) b.setAttribute('aria-current', 'page');
-      b.addEventListener('click', function () { go(x[0]); }); t.appendChild(b);
+      b.addEventListener('click', function () { if (x[0] === 'more') S.moreMenu = true; go(x[0]); }); t.appendChild(b);
     });
   }
   function go(t, sub) { S.tab = t; if (sub) S.sub[S.world + t] = sub; S.print = null; S.sel = null; remember(); bar(); draw(); window.scrollTo(0, 0); }
-  function remember() { try { history.replaceState(null, '', '#' + S.world + '/' + S.tab + (subOf(S.tab) ? '/' + subOf(S.tab) : '')); } catch (e) {} }
+  function remember() {
+    var h = '#' + S.world + '/' + S.tab, sb = subOf(S.tab);
+    if (sb) h += '/' + sb;
+    if (S.tab === 'inbox' && sb === 'mine') h += '/' + mySub();
+    if (S.tab === 'leads' && sb !== 'removed' && leadsSt(sb) !== 'all') h += '/' + leadsSt(sb);
+    try { history.replaceState(null, '', h); } catch (e) {}
+  }
+  /* the old addresses (staff links, alerts, J.A.R.V.I.S.) into their new home: [world, tab, sub, more] */
+  function legacy(w, t, a, b) {
+    if (t === 'pipe') return [w, 'leads', 'all', a && a !== 'stages' ? a : ''];
+    if (t === 'list') return [w, 'leads', a || 'all', b || ''];
+    if (t === 'myleads') return [w, 'inbox', 'mine', a || 'open'];
+    if (t === 'deals') return a === 'props' ? [w, 'leads', 'all', 'proposal'] : a === 'signed' ? [w, 'leads', 'all', 'signed'] : a === 'quotes' ? [w, 'leads', 'all', 'quote'] : [w, 'tours', '', ''];
+    return [w, t, a || '', b || ''];
+  }
+  function place(w, t, a, b) {   /* set the place from an address (legacy ones first turned into new ones) */
+    var L = legacy(w, t, a, b); S.world = L[0];
+    if (!TABS[S.world].some(function (x) { return x[0] === L[1]; })) return;
+    S.tab = L[1];
+    if (L[2]) S.sub[S.world + L[1]] = L[2];
+    if (L[1] === 'inbox' && L[2] === 'mine' && L[3]) S.sub[S.world + 'mine'] = L[3];
+    if (L[1] === 'leads' && L[3]) S.st[S.world + 'leads' + (L[2] || 'all')] = L[3];
+    if (L[1] === 'more' && L[2]) S.moreMenu = false;
+  }
   function draw() {
     main.textContent = ''; document.documentElement.classList.remove('lock');
     if (S.print && S.print.kind === 'report' && !isAdmin()) S.print = null;   /* the report: admins only (2026-11-20) */
     if (S.print) return S.print.kind === 'proposal' ? printProposal(S.print.pid) : printReport();
-    if (!TABS[S.world].some(function (x) { return x[0] === S.tab; }) || (S.tab === 'inbox' && !inboxOn()) || (S.tab === 'myleads' && !myOn())) S.tab = 'today';
-    if (research() && !RESEARCH_TABS[S.tab]) S.tab = 'list';
+    if (!TABS[S.world].some(function (x) { return x[0] === S.tab; }) || (S.tab === 'inbox' && !inboxOn())) S.tab = 'today';
+    if (research() && !RESEARCH_TABS[S.tab]) S.tab = 'leads';
     main.setAttribute('data-world', S.world); main.setAttribute('data-section', S.tab);
     head();
     var sub = subOf(S.tab);
-    ({ today: drawToday, inbox: drawInbox, myleads: drawMyLeads, pipe: drawPipe, list: drawList, deals: drawDeals, more: drawMore })[S.tab](sub);
+    ({ today: drawToday, inbox: drawInbox, leads: drawLeads, tours: drawToursTab, more: drawMore })[S.tab](sub);
+  }
+  /* a long explanation sits behind a small (i) button (2026-11-25): one tap shows it, another hides it */
+  function infoBtn(into, p) {
+    var b = el('button', 'ibtn', 'i'); b.type = 'button'; b.setAttribute('aria-label', 'What is this?'); b.title = 'What is this?'; b.setAttribute('aria-expanded', 'false');
+    p.hidden = true; b.addEventListener('click', function () { p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden)); });
+    into.appendChild(b); return b;
   }
   function head() {
     var x = TABS[S.world].filter(function (s) { return s[0] === S.tab; })[0], h = el('div', 'shead'), top = el('div', 'shtop');
-    var h1 = el('h1'); if (!expoOnly() && S.tab !== 'inbox' && S.tab !== 'myleads') h1.appendChild(document.createTextNode((isX() ? 'Expo leads' : 'Sponsors') + ' · ')); h1.appendChild(el('span', null, x[1])); top.appendChild(h1);
-    if ((S.tab === 'list' || S.tab === 'pipe') && !research()) { var add = el('button', 'btn ghost small', isX() ? '+ Add an expo lead' : '+ Add a company'); add.type = 'button'; add.addEventListener('click', isX() ? expoAddForm : addForm); top.appendChild(add); }
-    var desc = S.tab === 'more' && !isAdmin() ? DESC_SELLER[S.world] : DESC[S.world][S.tab];
+    var h1 = el('h1'); if (!expoOnly() && S.tab !== 'inbox') h1.appendChild(document.createTextNode((isX() ? 'Expo leads' : 'Sponsors') + ' · ')); h1.appendChild(el('span', null, x[1])); top.appendChild(h1);
+    var desc = S.tab === 'more' && !isAdmin() ? DESC_SELLER[S.world] : S.tab === 'inbox' && subOf('inbox') === 'mine' ? MYDESC : DESC[S.world][S.tab];
     if (research()) desc = S.tab === 'more' ? 'The look of the desk on this device.' : 'Open a ' + (isX() ? 'lead' : 'company') + ', look up its website, phone and general email from public sources, and note where each came from. This account never emails, texts or calls anyone.';
     if (outreach()) desc = S.tab === 'more' ? 'Your scripts and emails (drafts until Matthew approves them), and the look of the desk on this device.' : 'Open a ' + (isX() ? 'lead' : 'company') + ' to look it up, or to reach out for Matthew: log a call or voicemail, send an approved email, hand a warm reply to Matthew. Everything you do here counts as his.'; if (S.tab === 'more' && isAdmin()) desc = desc.replace(/ and the look\.$/, ', the look, and the settings (message templates, the end-of-day email).');
-    h.appendChild(top); h.appendChild(el('p', 'sdesc', desc));
+    var sd = el('p', 'sdesc', desc); infoBtn(top, sd);
+    if (S.tab === 'leads' && !research()) { var add = el('button', 'btn ghost small', isX() ? '+ Add an expo lead' : '+ Add a company'); add.type = 'button'; add.addEventListener('click', isX() ? expoAddForm : addForm); top.appendChild(add); }
+    h.appendChild(top); h.appendChild(sd);
     var L = subList(S.tab);
-    if (L) {
+    if (L && S.tab !== 'more') {
       var sc = el('div', 'chips subchips'), cur = subOf(S.tab);
+      if (S.tab === 'leads') sc.insertBefore(el('span', 'chiplab', 'List'), null);
       L.forEach(function (s) {
         var n = subCount(S.tab, s[0]); if (n === 0 && cur !== s[0] && s[0] === 'removed') return;
-        var b = el('button', null, s[1]); b.type = 'button'; b.setAttribute('data-sub', s[0]); if (n != null) b.appendChild(el('b', null, String(n)));
+        var b = el('button', s[0] === 'mine' ? 'minechip' : null, s[1]); b.type = 'button'; b.setAttribute('data-sub', s[0]); if (n != null) b.appendChild(el('b', null, String(n)));
         b.setAttribute('aria-pressed', String(cur === s[0]));
         b.addEventListener('click', function () { S.sub[S.world + S.tab] = s[0]; S.sel = null; remember(); draw(); });
         sc.appendChild(b);
       });
       h.appendChild(sc);
+      if (S.tab === 'inbox' && cur === 'mine') {   /* Mine's own lists (the old My leads) */
+        var mc = el('div', 'chips subchips mychips'); mc.appendChild(el('span', 'chiplab', 'Mine'));
+        MYSUBS.forEach(function (s) { var b = el('button', null, s[1]); b.type = 'button'; b.setAttribute('data-my', s[0]); var n = S.data.myleads && S.data.myleads[s[0]] != null ? +S.data.myleads[s[0]] : null; if (n != null) b.appendChild(el('b', null, String(n)));
+          b.setAttribute('aria-pressed', String(mySub() === s[0])); b.addEventListener('click', function () { S.sub[S.world + 'mine'] = s[0]; remember(); draw(); }); mc.appendChild(b); });
+        h.appendChild(mc);
+      }
     }
     main.appendChild(h);
   }
   function subCount(t, k) {
-    if (t === 'inbox') return inboxOn() && S.data.inbox[k] != null ? +S.data.inbox[k] : null;
-    if (t === 'myleads') return myOn() && S.data.myleads[k] != null ? +S.data.myleads[k] : null;
+    if (t === 'inbox') return k === 'mine' ? (myOn() && S.data.myleads.open != null ? +S.data.myleads.open : null) : inboxOn() && S.data.inbox[k] != null ? +S.data.inbox[k] : null;
     var R = recs();
-    if (t === 'list') return k === 'all' ? R.length : k === 'removed' ? W().removed.length : R.filter(function (r) { return secOf(r) === k; }).length;
-    if (t === 'deals') return k === 'tours' ? upTours().length : k === 'props' ? (W().proposals || []).length : k === 'signed' ? R.filter(function (r) { return r.stage === 'signed'; }).length : k === 'quotes' ? R.filter(function (r) { return r.stage === 'quote' || r.stage === 'booked'; }).length : null;
+    if (t === 'leads') return k === 'all' ? R.length : k === 'removed' ? W().removed.length : R.filter(function (r) { return secOf(r) === k; }).length;
     return null;
   }
   /* whose companies: everyone's, mine, the open ones (nobody's yet), or one person's; kept on this device */
@@ -734,7 +873,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   function splitView(build) {
     var split = el('div', 'split' + (S.sel && rec(S.sel) ? ' open' : '')), left = el('div'); left.style.minWidth = '0';
     split.appendChild(left); main.appendChild(split); build(left);
-    if (S.sel && rec(S.sel)) { split.appendChild(card(rec(S.sel))); if (isPhone()) document.documentElement.classList.add('lock'); }
+    if (S.sel && rec(S.sel)) { var cd = card(rec(S.sel)); split.appendChild(cd); if (isPhone()) document.documentElement.classList.add('lock');
+      if (S.openMail === S.sel) { S.openMail = null; var ms = cd.querySelector('.dmsec'); if (ms && ms._open) { unfold(ms); setTimeout(function () { ms._open(); }, 30); } } }
   }
   var searchBox = function (into, key, ph, redraw) { var q = el('input', 'search'); q.type = 'search'; q.placeholder = ph; q.value = S.qs[key] || ''; q.addEventListener('input', function () { S.qs[key] = q.value; redraw(); }); into.appendChild(q); return q; };
   var hay = function (r) { return [r.name, r.kind, r.cat, r.events, r.venue, r.why, r.about, r.owner].concat((r.people || []).map(function (c) { return (c.name || '') + ' ' + (c.role || '') + ' ' + (c.email || ''); })).join(' ').toLowerCase(); };
@@ -756,12 +896,44 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       function (r) { return ['pink', (isX() ? 'Quote' : 'Proposal') + ' waiting ' + plural(Math.max(0, daysSince(r.stageAt)), 'day')]; }, 'wait');
     return out;
   }
-  function p5Strip(into) {
-    var P = priority5(), box = el('div', 'p5'), h = el('div', 'bh'), h2 = el('h2'); box.setAttribute('data-blk', 'p5');
+  /* ---- folding (2026-11-25, Matthew: "tuck things behind buttons and behind collapseable tiles"): a tile's head opens and closes it; each
+     one's state is kept on this device (localStorage "peakdesk.fold"), else its default ---- */
+  var foldMap = function () { try { return JSON.parse(localStorage.getItem('peakdesk.fold') || '{}') || {}; } catch (e) { return {}; } };
+  var foldGet = function (k, def) { var m = foldMap(); return m[k] == null ? !!def : !!m[k]; };
+  var foldSet = function (k, v) { var m = foldMap(); m[k] = v ? 1 : 0; try { localStorage.setItem('peakdesk.fold', JSON.stringify(m)); } catch (e) {} };
+  /* box: the tile; head: its head (stays shown); body: what folds away. key: what it is remembered by */
+  function foldify(box, head, body, key, def) {
+    var open = foldGet(key, def), chev = el('span', 'chev'); chev.setAttribute('aria-hidden', 'true'); head.appendChild(chev);
+    box.classList.add('fold'); head.classList.add('fhead'); head.setAttribute('role', 'button'); head.tabIndex = 0; box.setAttribute('data-fold', key);
+    var set = function (v, keep) { open = v; body.hidden = !v; box.classList.toggle('shut', !v); head.setAttribute('aria-expanded', String(v)); if (!keep) foldSet(key, v); };
+    set(open, true);
+    head.addEventListener('click', function (e) { if (e.target.closest('button,a,select,input,.seg') && e.target !== head) return; set(!open); });
+    head.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target === head) { e.preventDefault(); set(!open); } });
+    box._setOpen = function (v) { set(v); }; box._body = body;
+    return box;
+  }
+  var unfold = function (n) { for (var f = n; f; f = f.parentElement) if (f._setOpen && f.classList.contains('shut')) f._setOpen(true); };
+  /* a tile with a count (Today, Tours, Leads): the head is its title, the count and a short note */
+  function tile(into, o) {
+    var b = el('div', 'blk h-' + (o.hue || 'slate') + (o.cls ? ' ' + o.cls : '')); b.setAttribute('data-blk', o.key);
+    var h = el('div', 'bh'); h.appendChild(icBox(o.icon || 'list', 'bi')); h.appendChild(el('h2', null, o.title));
+    if (o.n != null) h.appendChild(el('b', 'bn', String(o.n))); if (o.note) h.appendChild(el('span', 'bs', o.note));
+    if (o.more) { var m = el('button', 'lnk', o.more[0]); m.type = 'button'; m.addEventListener('click', function (e) { e.stopPropagation(); o.more[1](); }); h.appendChild(m); }
+    if (o.extra) h.appendChild(o.extra);
+    var body = el('div', 'tbody'); b.appendChild(h); b.appendChild(body);
+    (o.rows || []).forEach(function (x) { body.appendChild(x); });
+    if (o.rows && !o.rows.length && o.empty) body.appendChild(el('div', 'empty', o.empty));
+    foldify(b, h, body, (o.fk || 'tile') + '.' + S.world + '.' + o.key, o.open);
+    into.appendChild(b); return b;
+  }
+  function p5Strip(into, def) {
+    var P = priority5(), box = el('div', 'p5'), h = el('div', 'bh'), h2 = el('h2'), body = el('div', 'tbody'); box.setAttribute('data-blk', 'p5');
     h2.appendChild(document.createTextNode('Priority ')); h2.appendChild(el('span', null, '5')); h.appendChild(icBox('star', 'ico h-' + (isX() ? 'orange' : 'cyan'))); h.appendChild(h2);
-    h.appendChild(el('span', null, 'the five to reach first: late follow-ups, then due today, then the best new ones, then ' + (isX() ? 'quotes' : 'proposals') + ' waiting longest'));
-    box.appendChild(h);
-    if (!P.length) { box.appendChild(el('div', 'empty', 'Nobody to reach right now.')); into.appendChild(box); return; }
+    h.appendChild(el('b', 'bn', String(P.length)));
+    var why = el('p', 'p5why', 'The five to reach first: late follow-ups, then due today, then the best new ones, then ' + (isX() ? 'quotes' : 'proposals') + ' waiting longest.'); infoBtn(h, why);
+    box.appendChild(h); box.appendChild(body); body.appendChild(why);
+    foldify(box, h, body, 'tile.' + S.world + '.p5', def);
+    if (!P.length) { body.appendChild(el('div', 'empty', 'Nobody to reach right now.')); into.appendChild(box); return; }
     var pl = el('div', 'pl');
     P.forEach(function (x, i) {
       var r = x.r, b = el('button', 'p5b h-' + x.why[0]); b.type = 'button'; b.setAttribute('data-id', r.id); b.setAttribute('data-rank', String(i + 1)); b.setAttribute('data-cat', x.cat);
@@ -773,12 +945,57 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       b.addEventListener('click', function () { var id = b.getAttribute('data-id'); if (!rec(id)) return; if (!S.sel) S.listY = window.scrollY; S.sel = id; draw(); });
       pl.appendChild(b);
     });
-    box.appendChild(pl); into.appendChild(box);
+    body.appendChild(pl); into.appendChild(box);
+  }
+  /* ---- quick contacting (2026-11-25, Matthew: "find a way for mobile to be easier to use for quick contacting of prospects"): the best phone
+     and email on a card, as three big buttons. Call and Text open the phone; Email opens Write an email (Peak Partnerships) on the card ---- */
+  function reachOf(r) {
+    var P = (r.people || []).filter(function (p) { return !p.dnc; }).sort(function (a, b) { return (b.best ? 1 : 0) - (a.best ? 1 : 0); });
+    var nm = function (p) { return p && p.name && p.name !== 'general inbox' ? p.name : ''; };
+    var pp = P.filter(function (p) { return p.phone; })[0], pe = P.filter(function (p) { return p.email; })[0], fp = found(r, 'phones')[0], fe = found(r, 'emails')[0];
+    return { phone: r.callHow && r.phone ? { v: r.phone, who: '' } : pp ? { v: pp.phone, who: nm(pp) } : r.phone ? { v: r.phone, who: '' } : fp ? { v: fp.phone, who: '' } : null,
+      email: pe ? { v: pe.email, who: nm(pe) } : fe ? { v: fe.email, who: '' } : null };
+  }
+  function quickBar(r, onCard) {
+    if (research()) return null;   /* the research and outreach accounts never call, text or email from a card's buttons */
+    var R = reachOf(r), q = el('div', 'qcall'); q.setAttribute('data-qc', r.id);
+    var mk = function (k, icon, label, href, sub, fn) {
+      var a = el('a', 'qc qc-' + k + (href ? '' : ' off')); a.setAttribute('data-qc', k); a.appendChild(ic(icon)); var t = el('span', 'qt'); t.appendChild(el('b', null, label)); t.appendChild(el('small', null, sub)); a.appendChild(t);
+      if (href) { a.href = href; a.addEventListener('click', function (e) { if (fn) fn(e); }); } else { a.setAttribute('aria-disabled', 'true'); a.title = sub; }
+      q.appendChild(a); return a;
+    };
+    var ph = R.phone, em = R.email, num = ph ? ph.v.replace(/[^\d+]/g, '') : '';
+    mk('call', 'ph', 'Call', ph ? 'tel:' + num : '', ph ? (ph.who ? first(ph.who) : ph.v) : 'No phone', function () { if (onCard) promptAfter(r, 'call', ph.who); });
+    mk('text', 'msg', 'Text', ph ? 'sms:' + num : '', ph ? (ph.who ? first(ph.who) : 'this number') : 'No phone', function () { if (onCard) promptAfter(r, 'text', ph.who); });
+    mk('email', 'mail', 'Email', em ? 'mailto:' + em.v : '', em ? (em.who ? first(em.who) : em.v) : 'No email', function (e) {
+      var sec = onCard ? onCard.querySelector('.dmsec') : null;
+      if (sec && sec._open && !readOnly()) { e.preventDefault(); unfold(sec); sec._open(); return; }   /* Write an email: from Peak Partnerships, logged on the card */
+      if (!onCard) { e.preventDefault(); S.sel = r.id; S.openMail = r.id; draw(); return; }
+      promptAfter(r, 'email', em.who);
+    });
+    return q;
+  }
+  /* the next one to reach (the first of Priority 5): call, text or email in one tap, then one tap for how it went */
+  function nextCard(into) {
+    var P = priority5(); if (!P.length) return;
+    var x = P[0], r = x.r, c = el('div', 'nextc h-' + x.why[0]); c.setAttribute('data-blk', 'next'); c.setAttribute('data-id', r.id);
+    var top = el('div', 'nxtop'); top.appendChild(el('span', 'nxk', 'Next to reach')); top.appendChild(el('span', 'nxw', x.why[1] + (r.tries ? ' · try ' + Math.min(r.tries + 1, S.data.tries.max) + ' of ' + S.data.tries.max : ''))); c.appendChild(top);
+    var nb = el('button', 'nxname', r.name); nb.type = 'button'; nb.setAttribute('data-act', 'nextopen'); nb.addEventListener('click', function () { if (!S.sel) S.listY = window.scrollY; S.sel = r.id; draw(); }); c.appendChild(nb);
+    c.appendChild(el('div', 'nxsub', [r.next && r.next.what && x.cat !== 'new' ? r.next.what : '', r.last ? touchName(r.last) + ' ' + relDay(r.last.when) : 'Not contacted yet', r.owner ? who(r.owner) : 'Open'].filter(Boolean).join(' · ')));
+    var qb = quickBar(r, null); if (qb) c.appendChild(qb);
+    if (!readOnly() && !research()) {
+      var ahead = r.next && r.next.date && r.next.date > today(), live = DONE().indexOf(r.stage) < 0;
+      var fuOf = function (k) { return k === 'call/noanswer' ? (S.data.nextBiz || addBiz(1)) : ahead || !live ? '' : addBiz(3); };   /* the card's rule: No answer, the next working day; else in 3 working days */
+      var tq = el('div', 'nxtouch'); tq.appendChild(el('span', 'chiplab', 'How it went'));
+      QUICK.forEach(function (y) { var b = el('button', 'h-' + y[3]); b.type = 'button'; b.setAttribute('data-m', y[0] + '/' + y[1]); b.appendChild(icBox(y[4])); b.appendChild(document.createTextNode(y[2]));
+        b.addEventListener('click', function () { logTouch(r, { m: y[0], out: y[1], note: '', fu: fuOf(y[0] + '/' + y[1]) }, b); }); tq.appendChild(b); });
+      c.appendChild(tq);
+    }
+    into.appendChild(c);
   }
   function drawToday() {
     splitView(function (left) {
       ownerBar(left);
-      p5Strip(left);
       var R = recs().filter(ownerOk), due = R.filter(isDue).sort(function (a, b) { return a.next.date.localeCompare(b.next.date) || best(a, b); });
       var late = due.filter(function (r) { return r.next.date < today(); }).length;
       var fresh = R.filter(function (r) { return r.stage === 'new' && r.list !== 'renew'; }).sort(best);   /* prospects: Peak's current sponsors are renewals, not cold calls */
@@ -787,16 +1004,18 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var tours = upTours().filter(function (t) { return ids[t.lead]; });
       var wk = PER().T, wkN = 0; Object.keys(wk).forEach(function (n) { if (n !== 'Claude Check') { var a = wk[n]; wkN += (a.calls || 0) + (a.emails || 0) + (a.texts || 0) + (a.other || 0); } });
       var wv = wait.reduce(function (n, r) { return n + valueOf(r); }, 0), nt = tours[0];
-      var k = el('div', 'kpis');
+      nextCard(left);
+      /* the five numbers, now a compact strip: a tap opens its tile */
+      var k = el('div', 'kpis kstrip');
       [[due.length, 'Follow-ups due', late ? late + ' late · ' + (due.length - late) + ' today' : 'due today', 'red', 'due', 'clock'],
         [fresh.length, 'To contact', 'nobody reached yet', isX() ? 'orange' : 'cyan', 'fresh', 'target'],
         [wait.length, isX() ? 'Quotes out' : 'Proposals out', wv ? money(wv) + (isX() ? ' waiting' : ' a year waiting') : isX() ? 'quotes waiting on an answer' : 'proposals waiting on an answer', 'pink', 'wait', 'doc'],
         [tours.length, 'Tours coming up', nt ? 'next ' + fmtDay(nt.date) + ', ' + fmtTime(nt.time) : 'tours coming up', 'amber', 'tours', 'cal'],
         [wkN, PER().label, 'touches logged', 'green', 'week', 'chart']].forEach(function (x) {
-        var c = el('button', 'kpi h-' + x[3] + (x[4] === 'due' && late ? ' hot' : '')); c.type = 'button'; c.setAttribute('data-k', x[4]);
+        var c = el('button', 'kpi h-' + x[3] + (x[4] === 'due' && late ? ' hot' : '')); c.type = 'button'; c.setAttribute('data-k', x[4]); c.title = x[1] + ': ' + x[2];
         var kl = el('span', 'kl'); kl.appendChild(ic(x[5])); kl.appendChild(document.createTextNode(x[1])); c.appendChild(kl);
         c.appendChild(el('b', null, String(x[0]))); c.appendChild(el('span', null, x[2]));
-        c.addEventListener('click', function () { var t = left.querySelector('[data-blk="' + x[4] + '"]'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+        c.addEventListener('click', function () { var t = left.querySelector('[data-blk="' + x[4] + '"]'); if (t) { unfold(t); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
         k.appendChild(c);
       });
       left.appendChild(k);
@@ -805,31 +1024,28 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         if (od) { var xl = el('p', 'xlink'); xl.appendChild(document.createTextNode((other === 'expo' ? 'Expo leads' : 'Sponsors') + ': ' + plural(od, 'follow-up') + ' due too. ')); var xb = el('button', 'lnk', 'Open ›'); xb.type = 'button'; xb.addEventListener('click', function () { S.world = other; S.sel = null; remember(); bar(); draw(); }); xl.appendChild(xb); left.appendChild(xl); }
       }
       var grid = el('div', 'tgrid'), colA = el('div'), colB = el('div'); colA.style.minWidth = colB.style.minWidth = '0'; grid.appendChild(colA); grid.appendChild(colB); left.appendChild(grid);
-      var blk = function (into, key, hue, icon, title, n, note, rows, empty, more) {
-        var b = el('div', 'blk h-' + hue); b.setAttribute('data-blk', key); var h = el('div', 'bh'); h.appendChild(icBox(icon, 'bi')); h.appendChild(el('h2', null, title));
-        if (n != null) h.appendChild(el('b', 'bn', String(n))); if (note) h.appendChild(el('span', 'bs', note));
-        if (more) { var m = el('button', 'lnk', more[0]); m.type = 'button'; m.addEventListener('click', more[1]); h.appendChild(m); }
-        b.appendChild(h); if (!rows.length) b.appendChild(el('div', 'empty', empty)); rows.forEach(function (x) { b.appendChild(x); }); into.appendChild(b); return b;
-      };
       /* booked from a booking link (2026-11-19): the host sees it here for three days; a general-link booking (no host) shows to admins */
       var LB = upTours().filter(function (t) { return t.src === 'link' && rec(t.lead) && (t.host === me() || (!t.host && S.data.me.role === 'admin')) && Date.now() / 1000 - (t.at || 0) < 3 * 86400; });
-      if (LB.length) blk(colA, 'linkbooked', 'amber', 'cal', 'Booked from ' + (LB.every(function (t) { return t.host === me(); }) ? 'your booking link' : 'a booking link'), LB.length, 'the last 3 days', LB.map(function (t) { return rowFor(rec(t.lead), { extra: fmtDay(t.date) + ', ' + fmtTime(t.time) + (t.who ? ' · ' + t.who : '') + ' · booked ' + ago(t.at) + (t.host ? '' : ' · general link, no host yet') }); }), '');
-      blk(colA, 'due', 'red', 'clock', 'Follow-ups due', due.length || null, due.length ? 'late ones first' : '', due.map(function (r) { return rowFor(r, { extra: (r.next.date < today() ? 'Late: ' : 'Today: ') + (r.next.what || 'follow up') + ' · ' + lastLine(r) }); }), 'Nothing due. A follow-up set on a call, email or text shows here on its day.');
+      /* closed by default, except the most urgent: a fresh booking, else late follow-ups, else Priority 5 */
+      var urgent = LB.length ? 'linkbooked' : late ? 'due' : 'p5';
+      p5Strip(colA, urgent === 'p5');
+      if (LB.length) tile(colA, { key: 'linkbooked', hue: 'amber', icon: 'cal', title: 'Booked from ' + (LB.every(function (t) { return t.host === me(); }) ? 'your booking link' : 'a booking link'), n: LB.length, note: 'the last 3 days', open: true, rows: LB.map(function (t) { return rowFor(rec(t.lead), { extra: fmtDay(t.date) + ', ' + fmtTime(t.time) + (t.who ? ' · ' + t.who : '') + ' · booked ' + ago(t.at) + (t.host ? '' : ' · general link, no host yet') }); }) });
+      tile(colA, { key: 'due', hue: 'red', icon: 'clock', title: 'Follow-ups due', n: due.length || null, note: due.length ? (late ? late + ' late, late ones first' : 'due today') : '', open: urgent === 'due', rows: due.map(function (r) { return rowFor(r, { extra: (r.next.date < today() ? 'Late: ' : 'Today: ') + (r.next.what || 'follow up') + ' · ' + lastLine(r) }); }), empty: 'Nothing due. A follow-up set on a call, email or text shows here on its day.' });
       var showN = S.more.fresh ? fresh.length : 8;
-      blk(colA, 'fresh', isX() ? 'orange' : 'cyan', 'target', 'To contact next', fresh.length || null, fresh.length ? 'best ' + (isX() ? 'priority' : 'route') + ' first' : '', fresh.slice(0, showN).map(function (r) { return rowFor(r, { where: !isX() }); }), 'Everyone here has been reached at least once.',
-        fresh.length > showN ? ['Show all ' + fresh.length, function () { S.more.fresh = 1; draw(); }] : null);
-      blk(colA, 'wait', 'pink', 'doc', isX() ? 'Quotes waiting on an answer' : 'Proposals waiting on an answer', wait.length || null, wait.length ? 'longest wait first' : '', wait.map(function (r) {
+      tile(colA, { key: 'fresh', hue: isX() ? 'orange' : 'cyan', icon: 'target', title: 'To contact next', n: fresh.length || null, note: fresh.length ? 'best ' + (isX() ? 'priority' : 'route') + ' first' : '', rows: fresh.slice(0, showN).map(function (r) { return rowFor(r, { where: !isX() }); }), empty: 'Everyone here has been reached at least once.',
+        more: fresh.length > showN ? ['Show all ' + fresh.length, function () { S.more.fresh = 1; foldSet('tile.' + S.world + '.fresh', 1); draw(); }] : null });
+      tile(colA, { key: 'wait', hue: 'pink', icon: 'doc', title: isX() ? 'Quotes waiting on an answer' : 'Proposals waiting on an answer', n: wait.length || null, note: wait.length ? 'longest wait first' : '', rows: wait.map(function (r) {
         var v = valueOf(r); return rowFor(r, { extra: 'Sent ' + relDay(r.stageAt) + (v ? ' · ' + money(v) + (isX() ? '' : ' a year') : '') + ' · ' + lastLine(r) });
-      }), isX() ? 'No quotes out.' : 'No proposals out.');
-      var P = PER(), wb = blk(colB, 'week', 'green', 'chart', P.label + ' by person', wkN || null, 'from ' + fmtDay(P.from) + ', touches by kind', [], '');
-      wb.querySelector('.empty').remove(); wb.querySelector('.bh').appendChild(perSwitch());   /* 24 Nov: in the head, inside the box (it sat on the line) */
-      weekBars(wb, P.T); var tw = el('div', 'tw'); tw.appendChild(teamTable(P.T, true)); wb.appendChild(tw);
+      }), empty: isX() ? 'No quotes out.' : 'No proposals out.' });
+      var tb = tile(colA, { key: 'tours', hue: 'amber', icon: 'cal', title: 'Tours coming up', n: tours.length || null, note: nt ? 'next ' + fmtDay(nt.date) : '', rows: tours.slice(0, 8).filter(function (t) { return rec(t.lead); }).map(function (t) { return rowFor(rec(t.lead), { extra: fmtDay(t.date) + ', ' + fmtTime(t.time) + (t.who ? ' · ' + t.who : '') }); }), empty: 'No tours booked. Book one from a company’s card.' });
+      var tw0 = el('button', 'lnk tolink', 'The week’s schedule ›'); tw0.type = 'button'; tw0.addEventListener('click', function () { go('tours'); }); tb._body.appendChild(tw0);
+      /* this month's numbers: closed by default */
+      var P = PER(), wb = tile(colB, { key: 'week', hue: 'green', icon: 'chart', title: P.label + ' by person', n: wkN || null, note: 'from ' + fmtDay(P.from) + ', touches by kind', extra: perSwitch() });   /* 24 Nov: the switch in the head, inside the box */
+      weekBars(wb._body, P.T); var tw = el('div', 'tw'); tw.appendChild(teamTable(P.T, true)); wb._body.appendChild(tw);
       /* the emails (2026-11-24, Matthew: "make sure we are tracking metrics clicks opens link clicks"): the same period as the switch */
-      var MN = mailNums(); if (MN) { var mb = blk(colB, 'mail', 'cyan', 'mail', P.label + ': emails', MN.sent || null, 'sent from ' + fmtDay(P.from) + ', and what happened to them', [], '');
-        mb.querySelector('.empty').remove(); var mt = el('div', 'tw'); mt.appendChild(mailTable(MN)); mb.appendChild(mt);
-        mb.appendChild(el('div', 'mnote', 'Opens are rough: Apple Mail opens every email it receives, Outlook often blocks the image. Clicks are the reliable number.')); }
-      var tb = blk(colB, 'tours', 'amber', 'cal', 'Tours coming up', tours.length || null, '', [], 'No tours booked. Book one from a company’s card.');
-      if (tours.length) { tb.querySelector('.empty').remove(); tours.slice(0, 8).forEach(function (t) { var r = rec(t.lead); if (r) tb.appendChild(rowFor(r, { extra: fmtDay(t.date) + ', ' + fmtTime(t.time) + (t.who ? ' · ' + t.who : '') })); }); }
+      var MN = mailNums(); if (MN) { var mb = tile(colB, { key: 'mail', hue: 'cyan', icon: 'mail', title: P.label + ': emails', n: MN.sent || null, note: 'sent from ' + fmtDay(P.from) + ', and what happened to them' });
+        var mt = el('div', 'tw'); mt.appendChild(mailTable(MN)); mb._body.appendChild(mt);
+        mb._body.appendChild(el('div', 'mnote', 'Opens are rough: Apple Mail opens every email it receives, Outlook often blocks the image. Clicks are the reliable number.')); }
     });
   }
   /* each person's touches this week as one bar, a colour a kind (the mockup's "This week by person") */
@@ -880,40 +1096,6 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     return t;
   }
 
-  /* ---- Pipeline: by stage, like Sixfold's; nothing opens until a stage is picked (Matthew, 2026-10-21) ---- */
-  function drawPipe() {
-    splitView(function (left) {
-      var key = S.world + 'pipe', redraw = function () { draw(); };
-      ownerBar(left);
-      var c = el('div', 'controls'); searchBox(c, key, isX() ? 'Search expo leads, events, people' : 'Search companies, people', function () { inner(); });
-      var lc = el('label', 'sortby'); var ls = el('select'); ls.setAttribute('aria-label', 'Last contacted'); ls.className = 'lcsel'; LC.forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; ls.appendChild(x); }); ls.value = S.lc[key] || '';
-      ls.addEventListener('change', function () { S.lc[key] = ls.value; inner(); }); lc.appendChild(ls); c.appendChild(lc);
-      if (!isX()) { var ll = el('label', 'sortby'), lsel = el('select'); lsel.setAttribute('aria-label', 'Which list'); lsel.className = 'listsel'; [['all', 'Every list'], ['new', 'New leads'], ['peak', 'Peak sponsors'], ['local', 'Local businesses'], ['added', 'Added on the desk']].forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; lsel.appendChild(x); }); lsel.value = S.list; lsel.addEventListener('change', function () { S.list = lsel.value; inner(); }); ll.appendChild(lsel); c.appendChild(ll); }
-      var vw = el('div', 'seg'); [['stages', 'Stages'], ['board', 'Board']].forEach(function (o) { var b = el('button', null, o[1]); b.type = 'button'; b.setAttribute('data-view', o[0]); b.setAttribute('aria-pressed', String(S.view.pipe === o[0])); b.addEventListener('click', function () { S.view.pipe = o[0]; try { localStorage.setItem('peakdesk.pipeview', o[0]); } catch (e) {} draw(); }); vw.appendChild(b); }); c.appendChild(vw);
-      left.appendChild(c);
-      var box = el('div'); left.appendChild(box);
-      function inner() {
-        box.textContent = '';
-        var q = (S.qs[key] || '').trim().toLowerCase(), f = S.lc[key] || '';
-        var R = recs().filter(function (r) { return ownerOk(r) && lcOk(r, f) && (!q || hay(r).indexOf(q) >= 0) && (isX() || S.list === 'all' || secOf(r) === S.list); });
-        if (S.view.pipe === 'board') return drawBoard(box, R);
-        var st = S.st[key] || '';
-        var sc = el('div', 'chips stagechips'); sc.appendChild(el('span', 'chiplab', 'Stage'));
-        W().stages.forEach(function (x) { var n = R.filter(function (r) { return r.stage === x[0]; }).length; var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('data-st', x[0]); b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(st === x[0])); b.addEventListener('click', function () { S.st[key] = st === x[0] ? '' : x[0]; S.sel = null; draw(); }); sc.appendChild(b); });
-        box.appendChild(sc);
-        if (!st) return funnel(box, R, key);
-        var rows = R.filter(function (r) { return r.stage === st; });
-        rows.sort(st === 'new' ? best : st === 'notnow' ? function (a, b) { return ((a.next && a.next.date) || '9999').localeCompare((b.next && b.next.date) || '9999'); } : function (a, b) { return ((a.next && a.next.date) || '9999').localeCompare((b.next && b.next.date) || '9999') || (a.last ? a.last.when : 0) - (b.last ? b.last.when : 0); });
-        var list = el('div', 'list'); box.appendChild(list);
-        if (!rows.length) list.appendChild(el('div', 'empty', q || f ? 'Nobody at ' + STN(st) + ' matches.' : 'Nobody at ' + STN(st) + '.'));
-        rows.forEach(function (r) {
-          var x = st === 'notnow' && r.notnow ? 'Come back ' + fmtDay(r.notnow.back) + (r.notnow.why ? ': ' + r.notnow.why : '') : st === 'lost' && r.lost ? 'Lost: ' + (r.lost.why || 'no reason given') + ' · ' + relDay(r.lost.at) : null;
-          list.appendChild(rowFor(r, { where: !isX() && S.list === 'all', extra: x }));
-        });
-      }
-      inner();
-    });
-  }
   /* every stage with how many are in it (and what the deals are worth); a tap opens the stage */
   function funnel(into, R, key) {
     var fb = el('div', 'fbar'), wk0 = dOf(W().weekFrom).getTime() / 1000, f = el('div', 'funnel');
@@ -925,7 +1107,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var nm = el('b'); nm.appendChild(el('i')); nm.appendChild(document.createTextNode(x[1])); b.appendChild(nm);
       b.appendChild(el('strong', null, String(ls.length)));
       b.appendChild(el('span', null, v ? money(v) : x[0] === 'new' ? 'nobody reached' : nw ? '+' + nw + ' this week' : ls.length ? 'none this week' : 'none'));
-      b.addEventListener('click', function () { S.st[key] = x[0]; draw(); });
+      b.addEventListener('click', function () { S.st[key] = x[0]; remember(); draw(); });
       f.appendChild(b);
     });
     into.appendChild(f);
@@ -955,66 +1137,112 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var p = el('p', null, n0 + ' still to contact' + (nl ? ' · ' + nl + ' lost' : '') + '. Open a card to log a touch or move it.'); p.style.cssText = 'color:var(--soft);font-size:13.5px'; into.appendChild(p);
   }
 
-  /* ---- Companies / Organisations: the lists, with sort, stage and (expo) priority and category ---- */
-  function drawList(sub) {
+  /* ---- Leads (2026-11-25): the old Pipeline and Companies (Organisations) in one place. One search, the list chips (under the title),
+     stage chips, List or Board; Filters (whose, sort, last contacted, and on the Expo leads category and priority) behind one button.
+     Proposal sent and Signed (Quote sent and Booked on the Expo leads) also show what Tours & deals showed for them. ---- */
+  var leadsView = function () { try { return localStorage.getItem('peakdesk.leadsview') === 'board' ? 'board' : 'list'; } catch (e) { return 'list'; } };
+  function drawLeads(sub) {
     if (sub === 'removed') return drawRemoved();
     splitView(function (left) {
-      var key = S.world + 'list' + sub, X = isX();
-      ownerBar(left);
+      var key = leadsKey(sub), X = isX(), st = leadsSt(sub), view = leadsView();
       var base = recs().filter(function (r) { return ownerOk(r) && (X || sub === 'all' || secOf(r) === sub); });
       var SORT = X ? [['pri', 'Priority first'], ['next', 'Next step soonest'], ['last', 'Contacted longest ago'], ['name', 'Name A to Z']]
         : sub === 'peak' ? [['peak', 'Active first'], ['end', 'Contract ends soonest'], ['name', 'Name A to Z']]
         : [['reach', 'Best contact first'], ['score', 'Score'], ['next', 'Next step soonest'], ['last', 'Contacted longest ago'], ['name', 'Name A to Z']].concat(sub === 'local' || sub === 'all' ? [['miles', 'Nearest first']] : []);
       var sortOf = function () { var v = S.sort[key]; return SORT.some(function (o) { return o[0] === v; }) ? v : SORT[0][0]; };
-      var c = el('div', 'controls'); searchBox(c, key, X ? 'Search expo leads, events, venues, people' : 'Search companies, people', function () { rows(); });
+      var c = el('div', 'controls'); searchBox(c, key, X ? 'Search expo leads, events, venues, people' : 'Search companies, people', function () { paint(); });
+      var vw = el('div', 'seg viewseg'); vw.setAttribute('role', 'group'); vw.setAttribute('aria-label', 'List or board');
+      [['list', 'List', 'list'], ['board', 'Board', 'board']].forEach(function (o) { var b = el('button'); b.type = 'button'; b.appendChild(ic(o[2])); b.appendChild(document.createTextNode(o[1])); b.setAttribute('data-view', o[0]); b.setAttribute('aria-pressed', String(view === o[0]));
+        b.addEventListener('click', function () { try { localStorage.setItem('peakdesk.leadsview', o[0]); } catch (e) {} draw(); }); vw.appendChild(b); });
+      c.appendChild(vw);
+      var nf = (S.owner !== 'all' ? 1 : 0) + (S.lc[key] ? 1 : 0) + (X && S.xcat !== 'all' ? 1 : 0) + (X && S.xpri !== 'all' ? 1 : 0) + (S.sort[key] && S.sort[key] !== SORT[0][0] ? 1 : 0);
+      var fbn = el('button', 'btn ghost small fbtn'); fbn.type = 'button'; fbn.setAttribute('data-act', 'filters'); fbn.appendChild(document.createTextNode('Filters')); if (nf) fbn.appendChild(el('b', 'fcount', String(nf)));
+      c.appendChild(fbn); left.appendChild(c);
+      var fp = el('div', 'fpanel'); fp.hidden = !S.fopen; fbn.setAttribute('aria-expanded', String(!!S.fopen));
+      fbn.addEventListener('click', function () { S.fopen = !S.fopen; fp.hidden = !S.fopen; fbn.setAttribute('aria-expanded', String(S.fopen)); });
+      ownerBar(fp);
+      var fr = el('div', 'controls');
       var lab = el('label', 'sortby'); lab.appendChild(el('span', null, 'Sort')); var sel = el('select'); sel.setAttribute('aria-label', 'Sort'); sel.className = 'sortsel';
       SORT.forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; sel.appendChild(x); }); sel.value = sortOf();
-      sel.addEventListener('change', function () { S.sort[key] = sel.value; rows(); }); lab.appendChild(sel); c.appendChild(lab);
+      sel.addEventListener('change', function () { S.sort[key] = sel.value; draw(); }); lab.appendChild(sel); fr.appendChild(lab);
+      var lc = el('label', 'sortby'); var ls = el('select'); ls.setAttribute('aria-label', 'Last contacted'); ls.className = 'lcsel'; LC.forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; ls.appendChild(x); }); ls.value = S.lc[key] || '';
+      ls.addEventListener('change', function () { S.lc[key] = ls.value; draw(); }); lc.appendChild(ls); fr.appendChild(lc);
       if (X) {
         var cats = {}; base.forEach(function (o) { if (o.cat) cats[o.cat] = (cats[o.cat] || 0) + 1; });
         var cl = el('label', 'sortby'), cs = el('select'); cs.setAttribute('aria-label', 'Category'); cs.className = 'xcat';
         [['all', 'Every category']].concat(Object.keys(cats).sort().map(function (k) { return [k, k + ' (' + cats[k] + ')']; })).forEach(function (o) { var x = el('option', null, o[1]); x.value = o[0]; cs.appendChild(x); });
         if (S.xcat !== 'all' && !cats[S.xcat]) S.xcat = 'all'; cs.value = S.xcat;
-        cs.addEventListener('change', function () { S.xcat = cs.value; S.sel = null; draw(); }); cl.appendChild(cs); c.appendChild(cl);
+        cs.addEventListener('change', function () { S.xcat = cs.value; S.sel = null; draw(); }); cl.appendChild(cs); fr.appendChild(cl);
       }
-      left.appendChild(c);
-      var inCat = base.filter(function (o) { return !X || S.xcat === 'all' || o.cat === S.xcat; }), st = S.st[key] || 'all';
-      var chipRow = function (label, cls, opts, cur, val, pick) {
+      fp.appendChild(fr); left.appendChild(fp);
+      var inCat = base.filter(function (o) { return !X || S.xcat === 'all' || o.cat === S.xcat; });
+      var chipRow = function (into, label, cls, opts, cur, val, pick) {
         var r = el('div', 'chips stagechips ' + cls); r.appendChild(el('span', 'chiplab', label));
         opts.forEach(function (x) {
           var n = x[0] === 'all' ? inCat.length : inCat.filter(function (o) { return val(o) === x[0]; }).length; if (!n && x[0] !== 'all' && cur !== x[0]) return;
-          var b = el('button', null, x[1]); b.type = 'button'; b.setAttribute('data-x', x[0]); b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(cur === x[0]));
-          b.addEventListener('click', function () { pick(x[0]); S.sel = null; draw(); }); r.appendChild(b);
+          var b = el('button', x[0] !== 'all' ? 'h-' + (HUEOF[x[0]] || 'slate') : null, x[1]); b.type = 'button'; b.setAttribute('data-x', x[0]); b.appendChild(el('b', null, String(n))); b.setAttribute('aria-pressed', String(cur === x[0]));
+          b.addEventListener('click', function () { pick(x[0]); S.sel = null; remember(); draw(); }); r.appendChild(b);
         });
-        left.appendChild(r);
+        into.appendChild(r); return r;
       };
-      chipRow('Stage', 'xstagechips', [['all', 'Any']].concat(W().stages), st, function (o) { return o.stage; }, function (v) { S.st[key] = v; });
       if (X) {
-        chipRow('Priority', 'xprichips', [['all', 'Any'], ['1', '1'], ['2', '2'], ['3', '3']], S.xpri, function (o) { return String(o.pri); }, function (v) { S.xpri = v; });
-        var p = el('p', null, 'Priority 1: a recurring indoor show in Colorado Springs or north El Paso County that rents its venue. 2: a good fit with a catch. 3: a long shot.'); p.style.cssText = 'color:var(--soft);font-size:13px;margin:-4px 0 10px'; left.appendChild(p);
+        chipRow(fp, 'Priority', 'xprichips', [['all', 'Any'], ['1', '1'], ['2', '2'], ['3', '3']], S.xpri, function (o) { return String(o.pri); }, function (v) { S.xpri = v; });
+        var p = el('p', 'fnote', 'Priority 1: a recurring indoor show in Colorado Springs or north El Paso County that rents its venue. 2: a good fit with a catch. 3: a long shot.'); fp.appendChild(p);
       }
-      var list = el('div', 'list'); left.appendChild(list);
+      var q = function () { return (S.qs[key] || '').trim().toLowerCase(); }, f = S.lc[key] || '';
+      var pass = function (o) { return lcOk(o, f) && (!X || S.xpri === 'all' || String(o.pri) === S.xpri) && (!q() || hay(o).indexOf(q()) >= 0); };
+      var box = el('div'); left.appendChild(box);
+      if (view === 'board') { var paint = function () { box.textContent = ''; drawBoard(box, inCat.filter(pass)); }; paint(); return; }
+      chipRow(left, 'Stage', 'xstagechips', [['all', 'All']].concat(W().stages), st, function (o) { return o.stage; }, function (v) { S.st[key] = v; });
+      left.appendChild(box);
+      if (st === 'all') { var ft = tile(left, { key: 'funnel', fk: 'leads', hue: 'slate', icon: 'board', title: 'Stages at a glance', note: 'how many at each stage, and what the deals are worth' }); funnel(ft._body, inCat, key); left.appendChild(box); }
+      /* what Tours & deals showed for a stage (2026-11-25: reached from its stage chip) */
+      if (!X && st === 'proposal') { var pt = tile(left, { key: 'props', fk: 'leads', hue: 'pink', icon: 'doc', title: 'Every proposal made', n: (W().proposals || []).length, note: 'open one to save it as a PDF', open: true }); drawProps(pt._body); left.appendChild(box); }
+      if (!X && st === 'signed') { box.remove(); drawSigned(left); return; }
+      if (X && (st === 'quote' || st === 'booked')) quotesSum(left, st);
+      left.appendChild(box);
+      var list = el('div', 'list'); box.appendChild(list);
       var byName = function (a, b) { return a.name.localeCompare(b.name); }, nextOf = function (r) { return (r.next && r.next.date) || '9999'; };
-      var endOf = function (r) { var p = pkOf(r); return p && /^\d{4}-\d{2}-\d{2}$/.test(p.end || '') ? p.end : '9999'; };
+      var endOf = function (r) { var pk = pkOf(r); return pk && /^\d{4}-\d{2}-\d{2}$/.test(pk.end || '') ? pk.end : '9999'; };
       var ORDER = { reach: best, pri: best, name: byName, score: function (a, b) { return (b.score || 0) - (a.score || 0) || byName(a, b); },
         next: function (a, b) { return nextOf(a).localeCompare(nextOf(b)) || byName(a, b); }, last: function (a, b) { return (a.last ? a.last.when : 0) - (b.last ? b.last.when : 0) || byName(a, b); },
         peak: function (a, b) { return pkRank(a) - pkRank(b) || grp(b) - grp(a) || byName(a, b); }, end: function (a, b) { return endOf(a).localeCompare(endOf(b)) || pkRank(a) - pkRank(b) || byName(a, b); },
         miles: function (a, b) { var x = milesOf(a), y = milesOf(b); return (x == null ? 1e9 : x) - (y == null ? 1e9 : y) || byName(a, b); } };
-      function rows() {
+      var extraOf = function (r) {
+        if (r.stage === 'notnow' && r.notnow && st === 'notnow') return 'Come back ' + fmtDay(r.notnow.back) + (r.notnow.why ? ': ' + r.notnow.why : '');
+        if (r.stage === 'lost' && r.lost && st === 'lost') return 'Lost: ' + (r.lost.why || 'no reason given') + ' · ' + relDay(r.lost.at);
+        if (st === 'quote' && r.stage === 'quote') return 'Sent ' + relDay(r.stageAt) + (r.quote && r.quote.amount ? ' · ' + money(r.quote.amount) : '') + (r.quote && r.quote.note ? ' · ' + r.quote.note : '');
+        if (st === 'booked' && r.stage === 'booked') return [r.booked && r.booked.date ? 'Event ' + fmtDay(r.booked.date) : '', r.booked && r.booked.amount ? money(r.booked.amount) : '', r.booked && r.booked.note].filter(Boolean).join(' · ') || 'Booked ' + relDay(r.stageAt);
+        if (st === 'proposal' && r.stage === 'proposal') { var v = valueOf(r); return 'Sent ' + relDay(r.stageAt) + (v ? ' · ' + money(v) + ' a year' : '') + ' · ' + lastLine(r); }
+        return null;
+      };
+      function paint() {
+        if (!list) return;
         list.textContent = '';
-        var q = (S.qs[key] || '').trim().toLowerCase();
-        var L = inCat.filter(function (o) { return (st === 'all' || o.stage === st) && (!X || S.xpri === 'all' || String(o.pri) === S.xpri) && (!q || hay(o).indexOf(q) >= 0); });
+        var L = inCat.filter(function (o) { return (st === 'all' || o.stage === st) && pass(o); });
         L.sort(ORDER[sortOf()] || best);
-        if (!L.length) { list.appendChild(el('div', 'empty', q ? 'Nobody here matches “' + q + '”.' : 'Nobody here.')); return; }
-        L.forEach(function (r) { list.appendChild(rowFor(r, { where: !X && sub === 'all' })); });
+        if (!L.length) { list.appendChild(el('div', 'empty', q() ? 'Nobody here matches “' + q() + '”.' : st !== 'all' ? 'Nobody at ' + STN(st) + '.' : 'Nobody here.')); return; }
+        L.forEach(function (r) { list.appendChild(rowFor(r, { where: !X && sub === 'all', extra: extraOf(r) })); });
       }
-      rows();
+      paint();
     });
+  }
+  /* the Expo leads' quotes out and events booked (was Tours & quotes, Quotes and bookings) */
+  function quotesSum(into, st) {
+    var Q = recs().filter(function (r) { return r.stage === 'quote'; }), B = recs().filter(function (r) { return r.stage === 'booked'; });
+    var k = el('div', 'kpis kstrip'), qv = Q.reduce(function (n, r) { return n + valueOf(r); }, 0), bv = B.reduce(function (n, r) { return n + valueOf(r); }, 0);
+    [[String(Q.length), 'Quotes out', qv ? money(qv) : 'waiting on an answer', 'pink'], [String(B.length), 'Events booked', bv ? money(bv) : 'booked', 'green']].forEach(function (x) { var c = el('div', 'kpi h-' + x[3]); c.appendChild(el('span', 'kl', x[1])); c.appendChild(el('b', null, x[0])); c.appendChild(el('span', null, x[2])); k.appendChild(c); });
+    into.appendChild(k);
+    /* the other half of the old Quotes and bookings, one tap away */
+    var O = st === 'quote' ? B : Q;
+    tile(into, { key: st === 'quote' ? 'xbooked' : 'xquotes', fk: 'leads', hue: st === 'quote' ? 'green' : 'pink', icon: 'doc', title: st === 'quote' ? 'Booked' : 'Quotes waiting on an answer', n: O.length, empty: st === 'quote' ? 'No events booked yet.' : 'No quotes out.',
+      rows: O.map(function (r) { return rowFor(r, { extra: r.stage === 'booked' ? [r.booked && r.booked.date ? 'Event ' + fmtDay(r.booked.date) : '', r.booked && r.booked.amount ? money(r.booked.amount) : '', r.booked && r.booked.note].filter(Boolean).join(' · ') || 'Booked ' + relDay(r.stageAt) : 'Sent ' + relDay(r.stageAt) + (r.quote && r.quote.amount ? ' · ' + money(r.quote.amount) : '') }); }) });
+    into.appendChild(el('h2', 'sth', st === 'quote' ? 'Quotes waiting on an answer' : 'Booked'));
   }
   /* taken off the desk, newest first, each with Bring back (2026-10-24) */
   function drawRemoved() {
     var R = W().removed.slice().sort(function (a, b) { return b.at - a.at; }), list = el('div', 'list');
-    if (!R.length) { S.sub[S.world + 'list'] = 'all'; remember(); return draw(); }
+    if (!R.length) { S.sub[S.world + 'leads'] = 'all'; remember(); return draw(); }
     R.forEach(function (x) {
       var r = el('div', 'row'); r.style.cursor = 'default'; r.setAttribute('data-id', x.id); r.appendChild(el('div', 'sc', '–'));
       var nm = el('div', 'nm'); nm.appendChild(el('b', null, x.name)); nm.appendChild(el('small', null, [isX() ? x.cat : LISTNAME[x.list], STN(x.stage), 'removed by ' + x.by + ', ' + ago(x.at)].filter(Boolean).join(' · '))); r.appendChild(nm);
@@ -1025,11 +1253,21 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   }
 
   /* ---- a company's card ---- */
+  /* a card section that folds: its h3 opens and closes the rest; anything that opens it from elsewhere (a template, a reply) unfolds it first */
+  function fsec(s, key, def, n) {
+    var h = s.firstChild; if (!h || h.tagName !== 'H3') return s;
+    if (n != null) h.appendChild(el('span', 'hn', String(n)));
+    var body = el('div', 'secb'); while (h.nextSibling) body.appendChild(h.nextSibling); s.appendChild(body);
+    foldify(s, h, body, 'card.' + key, def);
+    ['_open', '_tpl', '_reply'].forEach(function (k) { var f = s[k]; if (typeof f === 'function') s[k] = function () { unfold(s); return f.apply(null, arguments); }; });
+    return s;
+  }
   function card(r) {
     var X = isX(), d = el('aside', 'detail'); d.setAttribute('data-id', r.id);
     var cx = el('button', 'lnk close', 'Close ×'); cx.type = 'button'; cx.addEventListener('click', function () { S.sel = null; draw(); window.scrollTo(0, S.listY || 0); }); d.appendChild(cx);
     d.appendChild(el('h2', null, r.name));
     d.appendChild(el('div', 'sub', (X ? ['Priority ' + r.pri, r.cat, r.mine ? 'added on the desk by ' + r.by : ''] : [LISTNAME[r.list], r.kind, r.score != null ? 'score ' + r.score + (r.list === 'local' ? '' : '/9') : '', milesOf(r) != null ? milesOf(r) + ' mi from Peak' : '']).filter(Boolean).join(' · ')));
+    var qb = quickBar(r, d); if (qb) d.appendChild(qb);   /* Call, Text, Email: pinned at the top (2026-11-25) */
     if (r.why) { var w = el('div'); w.style.fontSize = '14px'; if (X) w.appendChild(el('b', null, 'Why Peak: ')); w.appendChild(document.createTextNode(r.why)); d.appendChild(w); }
     if (r.about) { var ab = el('div', 'aboutline'); ab.style.fontSize = '14px'; ab.appendChild(el('b', null, 'What they do: ')); ab.appendChild(document.createTextNode(r.about)); ab.appendChild(el('small', null, ' · from their website')); d.appendChild(ab); }   /* the look-up after adding (2026-11-24) */
     d.appendChild(strip(r));
@@ -1040,23 +1278,24 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     if (X) d.appendChild(eventsSec(r));
     if (research()) {   /* the research account (2026-11-21): who to reach, the look-up, what she found and where; nothing that reaches anyone */
       d.appendChild(contactsSec(r));
-      if (outreach()) { d.appendChild(outreachSec(r)); if (!r.olock) d.appendChild(followSec(r)); }
+      if (outreach()) { d.appendChild(outreachSec(r)); if (!r.olock) d.appendChild(fsec(followSec(r), 'follow', false)); }
       if (!X) d.appendChild(scanSec(r));
       d.appendChild(lookedSec(r));
-      d.appendChild(activitySec(r));
+      d.appendChild(fsec(activitySec(r), 'activity', false, (r.touches || []).length + (r.notes || []).length || null));
       return d;
     }
     d.appendChild(touchPanel(r));
-    var ts = tplSec(r); d.appendChild(ts); d._openTpl = ts._open;
-    d.appendChild(dmSec(r));   /* Write an email (2026-11-19) */
-    d.appendChild(stageSec(r));
-    if (!X && r.stage === 'signed') d.appendChild(signedSec(r));
-    if (!X && r.peak) d.appendChild(peakSec(r));
-    d.appendChild(contactsSec(r));
-    d.appendChild(followSec(r));
-    d.appendChild(dealSec(r));
-    d.appendChild(activitySec(r));
-    if (!X) d.appendChild(scanSec(r));
+    /* 2026-11-25: the sections fold (each remembered on this device); How to reach them is open to start, the rest closed */
+    d.appendChild(fsec(contactsSec(r), 'contacts', true, (r.people || []).length || null));
+    var ts = fsec(tplSec(r), 'tpl', false); d.appendChild(ts); d._openTpl = ts._open;
+    d.appendChild(fsec(dmSec(r), 'dm', false));   /* Write an email (2026-11-19) */
+    d.appendChild(fsec(activitySec(r), 'activity', false, (r.touches || []).length + (r.notes || []).length || null));
+    d.appendChild(fsec(followSec(r), 'follow', false));
+    d.appendChild(fsec(dealSec(r), 'deal', false));
+    d.appendChild(fsec(stageSec(r), 'stage', false));
+    if (!X && r.stage === 'signed') d.appendChild(fsec(signedSec(r), 'signed', true));
+    if (!X && r.peak) d.appendChild(fsec(peakSec(r), 'peak', false));
+    if (!X) d.appendChild(fsec(scanSec(r), 'scan', false));
     var rmv = el('button', 'lnk', X ? 'Remove this lead from the Expo leads' : 'Remove this company from the desk'); rmv.type = 'button'; rmv.style.cssText = 'color:var(--warn);margin-top:14px;display:block';
     rmv.addEventListener('click', function () { removeRec(r); }); d.appendChild(rmv);
     return d;
@@ -1074,7 +1313,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   function outreachSec(r) {
     var O = S.data.outreach || {}, s = el('div', 'sec outreachsec'); s.appendChild(el('h3', null, 'Reach out for Matthew'));
     if (r.olock) { var lk = el('div', 'fuhint olock', r.olock); lk.setAttribute('data-olock', '1'); s.appendChild(lk); return s; }
-    s.appendChild(el('div', 'fuhint', 'What you log or send here counts as Matthew’s. Replies to your emails go to his My leads, not to you. Never give a price, a package or a date.'));
+    s.appendChild(el('div', 'fuhint', 'What you log or send here counts as Matthew’s. Replies to your emails go to his Inbox (Mine), not to you. Never give a price, a package or a date.'));
     var T = oTpls(S.world);
     T.filter(function (t) { return t.kind !== 'email'; }).forEach(function (t) { s.appendChild(oScript(t, r.name)); });
     /* a touch */
@@ -1268,7 +1507,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         if (k === WIN() && !isX()) return signedForm(r);
         if (k === 'booked') return inlineForm(box, 'Booked: the event', [['date', 'date', ''], ['amount', 'text', '', 'Rental $ (optional)'], ['note', 'text', '', 'What was agreed']], 'Mark Booked', function (v) { save('stage', { id: r.id, stage: 'booked', date: v.date, amount: v.amount, note: v.note }, 'Booked: ' + r.name); });
         if (k === 'quote') return inlineForm(box, 'Quote sent', [['amount', 'text', r.quote && r.quote.amount || '', 'Quote $ (optional)'], ['note', 'text', r.quote && r.quote.note || '', 'For what (days, space)']], 'Mark Quote sent', function (v) { save('stage', { id: r.id, stage: 'quote', amount: v.amount, note: v.note }, 'Quote sent'); });
-        if (k === TOURST() && r.stage !== k) { var t = document.querySelector('.detail .tourf'); if (t) { t.hidden = false; t.scrollIntoView({ block: 'center' }); var di = t.querySelector('input'); if (di) di.focus(); } return; }
+        if (k === TOURST() && r.stage !== k) { var t = document.querySelector('.detail .tourf'); if (t) { unfold(t); t.hidden = false; t.scrollIntoView({ block: 'center' }); var di = t.querySelector('input'); if (di) di.focus(); } return; }
         if (r.stage !== k) save('stage', { id: r.id, stage: k }, 'Moved to ' + x[1]);
       });
       seg.appendChild(b);
@@ -1842,7 +2081,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     f.appendChild(el('small', null, 'It is yours once added; change the owner on its card.')).style.color = 'var(--soft)';
     var dup = el('div', 'dupbox'); dup.hidden = true; f.insertBefore(dup, b);
     var body = function () { return { name: n.value, kind: k.value, why: w.value, phone: p.value, site: s.value }; };
-    var after = function (j) { b.disabled = false; if (!j || !j.ok) return; if (j.merged) { var o = rec(j.id); if (o) openRec(o); return; } S.tab = 'list'; S.sub.sponsorlist = 'added'; S.st.sponsorlistadded = 'all'; S.sel = j.id; remember(); bar(); draw(); if (s.value.trim() && rec(j.id)) lookUp(rec(j.id)); };
+    var after = function (j) { b.disabled = false; if (!j || !j.ok) return; if (j.merged) { var o = rec(j.id); if (o) openRec(o); return; } S.tab = 'leads'; S.sub.sponsorleads = 'added'; S.st.sponsorleadsadded = 'all'; S.sel = j.id; remember(); bar(); draw(); if (s.value.trim() && rec(j.id)) lookUp(rec(j.id)); };
     [n, p, s].forEach(function (i) { i.addEventListener('input', function () { liveDupes(dup, body(), after); }); });
     b.addEventListener('click', function () { b.disabled = true; addCompany(body(), null, dup, after); });
     var hd = main.querySelector('.shead'); main.insertBefore(c, hd ? hd.nextSibling : main.firstChild); n.focus();
@@ -1859,7 +2098,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     [n, k, dl, pr, ev, vn, sz, w, st, lab, cn, cr, ce, cp, b].forEach(function (x) { f.appendChild(x); }); c.appendChild(f);
     var dup = el('div', 'dupbox'); dup.hidden = true; f.insertBefore(dup, b);
     var body = function () { return { name: n.value, cat: k.value, pri: +pr.value, events: ev.value, venue: vn.value, size: sz.value, why: w.value, site: st.value, cname: cn.value, crole: cr.value, email: ce.value, phone: cp.value }; };
-    var after = function (j) { b.disabled = false; if (!j || !j.ok) return; if (j.merged) { var o = rec(j.id); if (o) openRec(o); return; } S.tab = 'list'; S.sub.expolist = 'all'; S.xpri = 'all'; S.xcat = 'all'; S.sel = j.id; remember(); bar(); draw(); };
+    var after = function (j) { b.disabled = false; if (!j || !j.ok) return; if (j.merged) { var o = rec(j.id); if (o) openRec(o); return; } S.tab = 'leads'; S.sub.expoleads = 'all'; S.st.expoleadsall = 'all'; S.xpri = 'all'; S.xcat = 'all'; S.sel = j.id; remember(); bar(); draw(); };
     [n, st, ce, cp].forEach(function (i) { i.addEventListener('input', function () { liveDupes(dup, body(), after); }); });
     b.addEventListener('click', function () { b.disabled = true; addCompany(body(), null, dup, after); });
     var hd = main.querySelector('.shead'); main.insertBefore(c, hd ? hd.nextSibling : main.firstChild); n.focus();
@@ -1919,36 +2158,97 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     into.appendChild(f);
   }
 
-  /* ---- Tours & deals ---- */
-  function drawDeals(sub) { ({ tours: drawTours, props: drawProps, signed: drawSigned, quotes: drawQuotes })[sub](); }
-  /* tours (2026-10-24): booked with no date yet, the tours ahead by day (calendar, move, cancel), past ones asking how it went */
-  function drawTours() {
+  /* ---- Tours (2026-11-25, Matthew: "use the same job scheduler we use for sixfold as a the way to display tours"): Sixfold's job schedule,
+     a week at a time: ‹ Week before · the week · Week after ›, This week and Pick a day, then each day with its tours in time order (an empty
+     day shows as open). Tap a tour for everything it had: Move, Cancel, Add to my calendar, how it went. Booked with no time yet, the
+     confirmation emails that did not go, how it went and past tours are tiles below. ---- */
+  var monOf = function (s) { var d = dOf(s); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return iso(d); };
+  var plusD = function (s, n) { var d = dOf(s); d.setDate(d.getDate() + n); return iso(d); };
+  var dayLong = function (s) { return dOf(s).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }); };
+  function drawToursTab() {
     var now = today(), T = W().tours.slice().sort(function (a, b) { return (a.date + a.time).localeCompare(b.date + b.time); });
     var up = T.filter(function (t) { return t.date >= now; }), past = T.filter(function (t) { return t.date < now; }).reverse();
     var ask = past.filter(function (t) { return !t.out; }), done = past.filter(function (t) { return t.out; });
     var need = recs().filter(function (r) { return r.stage === TOURST() && !up.some(function (t) { return t.lead === r.id; }); });
-    var k = el('div', 'kpis');
-    [[up.length, 'tours coming up'], [up.filter(function (t) { return daysTo(t.date) <= 7; }).length, 'in the next 7 days'], [need.length, 'booked with no date yet'], [ask.length, 'waiting on how it went']].forEach(function (x) { var c = el('div', 'kpi'); c.appendChild(el('b', null, String(x[0]))); c.appendChild(el('span', null, x[1])); k.appendChild(c); });
+    var wk = S.tourWk && /^\d{4}-\d{2}-\d{2}$/.test(S.tourWk) ? S.tourWk : monOf(now), end = plusD(wk, 6), thisWk = monOf(now);
+    var again = function (w, day) { S.tourWk = w; S.tourOpen = null; draw(); if (day) setTimeout(function () { var d = main.querySelector('.tday[data-day="' + day + '"]'); if (d) { d.scrollIntoView({ block: 'center' }); d.classList.add('lit'); setTimeout(function () { d.classList.remove('lit'); }, 2200); } }, 60); };
+    var k = el('div', 'kpis kstrip');
+    [[up.length, 'Coming up', 'tours with a date', 'amber', 'up'], [up.filter(function (t) { return daysTo(t.date) <= 7; }).length, 'Next 7 days', 'tours', 'cyan', 'soon'], [need.length, 'No date yet', 'booked, no time', 'slate', 'need'], [ask.length, 'How did it go?', 'waiting on an answer', 'pink', 'ask']].forEach(function (x) {
+      var c = el('button', 'kpi h-' + x[3]); c.type = 'button'; c.setAttribute('data-k', x[4]); var kl = el('span', 'kl', x[1]); c.appendChild(kl); c.appendChild(el('b', null, String(x[0]))); c.appendChild(el('span', null, x[2]));
+      c.addEventListener('click', function () { var t = x[4] === 'up' || x[4] === 'soon' ? main.querySelector('.schedv') : main.querySelector('[data-blk="' + x[4] + '"]'); if (t) { unfold(t); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
+      k.appendChild(c);
+    });
     main.appendChild(k);
-    if (need.length) { main.appendChild(el('h2', null, STN(TOURST()) + ', no date yet')); need.forEach(function (r) { main.appendChild(needCard(r)); }); }
-    main.appendChild(el('h2', null, 'Tours coming up'));
-    if (!up.length) main.appendChild(el('div', 'empty', 'No tours with a date. Open a card and use Book a tour.'));
-    var g0 = '';
-    up.forEach(function (t) { var n = daysTo(t.date), g = n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n <= 7 ? 'This week' : 'Later'; if (g !== g0) { g0 = g; main.appendChild(el('div', 'daygrp', g)); } main.appendChild(tourCard(t, 'up')); });
+    /* the confirmation emails that did not go: shown open, it needs someone */
     var TF = W().tmFailed || [];
     if (TF.length) {
-      main.appendChild(el('h2', null, 'Confirmation emails not sent'));
+      var tf = tile(main, { key: 'tmfail', fk: 'tours', hue: 'red', icon: 'mail', title: 'Confirmation emails not sent', n: TF.length, open: true });
       TF.forEach(function (x) {
         var c = el('div', 'card'); c.setAttribute('data-tmfail', x.tid); c.appendChild(el('h3', null, (x.off ? 'Cancelled: ' : '') + fmtDay(x.date) + ', ' + fmtTime(x.time) + ' · ' + x.name));
         c.appendChild(el('small', null, x.state.text));
         if (TMC().on) { var b = el('button', 'btn small', x.state.s === 'stale' ? 'Send the new time' : 'Retry'); b.type = 'button'; b.setAttribute('data-tm', 'retry'); b.style.marginTop = '8px'; b.addEventListener('click', function () { b.disabled = true; save('tourmail', { tid: x.tid }).then(function (j) { tmToast('', j); }); }); c.appendChild(el('div')).appendChild(b); }
-        main.appendChild(c);
+        tf._body.appendChild(c);
       });
     }
-    if (ask.length) { main.appendChild(el('h2', null, 'How did it go?')); ask.forEach(function (t) { main.appendChild(tourCard(t, 'ask')); }); }
-    if (done.length) { main.appendChild(el('h2', null, 'Past tours')); done.forEach(function (t) { main.appendChild(tourCard(t, 'done')); }); }
+    /* the week */
+    var box = el('div', 'schedv'); main.appendChild(box);
+    var nav = el('div', 'schednav'), pv = el('button', null, '‹ Week before'), nx = el('button', null, 'Week after ›'); pv.type = nx.type = 'button'; pv.setAttribute('data-wk', 'prev'); nx.setAttribute('data-wk', 'next');
+    nav.appendChild(pv); nav.appendChild(el('b', 'wkname', fmtDay(wk) + ' – ' + fmtDay(end))); nav.appendChild(nx); box.appendChild(nav);
+    pv.addEventListener('click', function () { again(plusD(wk, -7)); }); nx.addEventListener('click', function () { again(plusD(wk, 7)); });
+    var jr = el('div', 'schedjump'), tw = el('button', null, 'This week'); tw.type = 'button'; tw.setAttribute('data-wk', 'this'); if (wk === thisWk) { tw.disabled = true; tw.title = 'You are on this week'; }
+    tw.addEventListener('click', function () { again(thisWk, now); }); jr.appendChild(tw);
+    var lab = el('label', 'schedpick'); lab.appendChild(ic('cal')); lab.appendChild(el('span', null, 'Pick a day'));
+    var di = el('input'); di.type = 'date'; di.value = wk; di.setAttribute('aria-label', 'Pick a day to go to its week'); di.setAttribute('data-wk', 'pick');
+    di.addEventListener('change', function () { if (/^\d{4}-\d{2}-\d{2}$/.test(di.value)) again(monOf(di.value), di.value); });
+    lab.appendChild(di); jr.appendChild(lab); box.appendChild(jr);
+    var days = el('div', 'tdays'); box.appendChild(days);
+    for (var i = 0; i < 7; i++) {
+      var d = plusD(wk, i), L = T.filter(function (t) { return t.date === d; }), db = el('div', 'tday' + (d === now ? ' now' : '') + (d < now ? ' past' : '') + (L.length ? '' : ' free')); db.setAttribute('data-day', d);
+      var dh = el('div', 'tdh'); dh.appendChild(el('b', null, dayLong(d))); if (d === now) dh.appendChild(el('span', 'tag good', 'Today')); dh.appendChild(el('span', 'tdn', L.length ? plural(L.length, 'tour') : d < now ? 'No tours' : 'Open')); db.appendChild(dh);
+      L.forEach(function (t) { db.appendChild(tourRow(t)); });
+      days.appendChild(db);
+    }
+    var later = up.filter(function (t) { return t.date > end; }), before = up.filter(function (t) { return t.date < wk; });
+    if (later.length) { var lt = el('div', 'tmore'); lt.appendChild(document.createTextNode(plural(later.length, 'more tour') + ' after this week, the next on ' + fmtDay(later[0].date) + '. ')); var lb = el('button', 'lnk', 'Go to that week ›'); lb.type = 'button'; lb.setAttribute('data-act', 'tnextwk'); lb.addEventListener('click', function () { again(monOf(later[0].date), later[0].date); }); lt.appendChild(lb); box.appendChild(lt); }
+    if (before.length) { var bt = el('div', 'tmore'); bt.appendChild(document.createTextNode(plural(before.length, 'tour') + ' coming up before this week. ')); var bb = el('button', 'lnk', '‹ This week'); bb.type = 'button'; bb.addEventListener('click', function () { again(thisWk, now); }); bt.appendChild(bb); box.appendChild(bt); }
+    if (!up.length) box.appendChild(el('div', 'tmore', 'No tours with a date. Open a card and use Book a tour.'));
+    /* booked with no time yet: Pick a time opens the booking form */
+    var nt = tile(main, { key: 'need', fk: 'tours', hue: 'slate', icon: 'clock', title: 'No date yet', n: need.length, note: STN(TOURST()) + ', no time picked', empty: 'Every tour booked has a time.', rows: [] });
+    need.forEach(function (r) {
+      var c = el('div', 'nrow'); c.setAttribute('data-id', r.id); var nm = el('div', 'nm'); nm.appendChild(el('b', null, r.name));
+      nm.appendChild(el('small', null, [isX() ? r.cat : r.kind, r.owner ? 'owner ' + r.owner : 'open', r.next && r.next.what ? 'Next: ' + (r.next.date ? fmtDay(r.next.date) + ', ' : '') + r.next.what : ''].filter(Boolean).join(' · '))); c.appendChild(nm);
+      var acts = el('div', 'seg'), pk = el('button', 'btn small', 'Pick a time'), op = el('button', null, 'Open the card'); pk.type = op.type = 'button'; pk.setAttribute('data-act', 'picktime');
+      pk.addEventListener('click', function () { var sh = sheet('Book a tour: ' + r.name); tourForm(r, sh.box, 'Book it', function () { sh.close(); }); });
+      op.addEventListener('click', function () { openRec(r); }); acts.appendChild(pk); acts.appendChild(op); c.appendChild(acts);
+      nt._body.appendChild(c);
+    });
+    if (need.length) { var em0 = nt._body.querySelector('.empty'); if (em0) em0.remove(); }
+    var at = tile(main, { key: 'ask', fk: 'tours', hue: 'pink', icon: 'flag', title: 'How did it go?', n: ask.length, note: 'past tours waiting on an answer', open: ask.length > 0, empty: 'Nothing waiting: every past tour says how it went.', rows: ask.map(function (t) { return tourCard(t, 'ask'); }) });
+    void at;
+    tile(main, { key: 'done', fk: 'tours', hue: 'green', icon: 'cal', title: 'Past tours', n: done.length, empty: 'No past tours yet.', rows: done.map(function (t) { return tourCard(t, 'done'); }) });
   }
-  var openRec = function (r) { S.tab = 'list'; S.sub[S.world + 'list'] = isX() ? 'all' : secOf(r); S.st[S.world + 'list' + S.sub[S.world + 'list']] = 'all'; S.print = null; S.sel = r.id; remember(); bar(); draw(); window.scrollTo(0, 0); };
+  /* one tour in the week: time, the company, who is coming, who from Peak meets them, the badges; a tap opens its card of actions */
+  function tourRow(t) {
+    var r = rec(t.lead) || { name: 'A removed company', stage: '' }, mode = t.date >= today() ? 'up' : t.out ? 'done' : 'ask';
+    var w = el('div', 'trow' + (S.tourOpen === t.tid ? ' open' : '') + ' m-' + mode); w.setAttribute('data-tid', t.tid);
+    var b = el('button', 'trh'); b.type = 'button'; b.setAttribute('aria-expanded', String(S.tourOpen === t.tid));
+    b.appendChild(el('span', 'ttime', fmtTime(t.time)));
+    var mid = el('span', 'tmid'); mid.appendChild(el('b', null, r.name));
+    mid.appendChild(el('small', null, [t.who ? 'Coming: ' + t.who : 'Who is coming: not given', t.host ? 'Meets them: ' + (t.host === me() ? 'you' : first(t.host)) : t.src === 'link' ? 'no host yet' : 'Booked by ' + (t.by === me() ? 'you' : first(t.by)), t.mins ? t.mins + ' min' : ''].filter(Boolean).join(' · ')));
+    var bd = el('span', 'tbadges');
+    if (t.src === 'link') bd.appendChild(el('span', 'tag good', 'From ' + (t.host ? (t.host === me() ? 'your' : first(t.host) + '’s') + ' link' : 'the general link')));
+    var st = t.tms || {}; if (mode === 'up' && st.text) bd.appendChild(el('span', 'tag' + (st.s === 'failed' || st.s === 'stale' ? ' careful' : st.s === 'sent' ? ' good' : ''), st.s === 'sent' ? 'Confirmation sent' : st.s === 'failed' ? 'Email not sent' : st.s === 'stale' ? 'New time not sent' : st.s === 'none' ? 'No confirmation' : st.text.slice(0, 40)));
+    if (mode === 'ask') bd.appendChild(el('span', 'tag careful', 'How did it go?'));
+    if (mode === 'done') bd.appendChild(el('span', 'pill o-' + t.out, t.out === 'toured' ? 'Toured' : 'Did not show'));
+    mid.appendChild(bd); b.appendChild(mid); w.appendChild(b);
+    var body = el('div', 'tbody2'); body.hidden = S.tourOpen !== t.tid; w.appendChild(body);
+    var fill = function () { body.textContent = ''; body.appendChild(tourCard(t, mode)); };
+    if (!body.hidden) fill();
+    b.addEventListener('click', function () { var o = body.hidden; if (o) fill(); body.hidden = !o; S.tourOpen = o ? t.tid : null; w.classList.toggle('open', o); b.setAttribute('aria-expanded', String(o)); });
+    return w;
+  }
+  /* open a company's card on Leads (from a tour, a proposal, the Inbox): its own list, and its stage if one is picked that it is not at */
+  var openRec = function (r) { S.tab = 'leads'; var sb = isX() ? 'all' : (subOf('leads') === 'all' || subOf('leads') === secOf(r) ? subOf('leads') : secOf(r)); if (sb === 'removed') sb = isX() ? 'all' : secOf(r); S.sub[S.world + 'leads'] = sb; var st = leadsSt(sb); if (st !== 'all' && st !== r.stage) S.st[leadsKey(sb)] = 'all'; S.print = null; S.sel = r.id; remember(); bar(); draw(); window.scrollTo(0, 0); };
   /* ---- tour confirmation emails (2026-11-19): OFF until an admin turns them on in More, Settings ---- */
   var TMC = function () { return (S.data && S.data.tourmail) || { on: false }; };
   var tmToast = function (head, j) {
@@ -1993,7 +2293,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     }
     return line;
   }
-  function tourForm(r, into, label) {
+  function tourForm(r, into, label, done) {
     var f = el('div', 'form inl'); var tw = el('div', 'two'), d = el('input'), h = el('input'); d.type = 'date'; d.min = today(); h.type = 'time'; h.step = 900; d.setAttribute('aria-label', 'Tour day'); h.setAttribute('aria-label', 'Tour time'); tw.appendChild(d); tw.appendChild(h); f.appendChild(tw);
     var ln = el('select'); ln.setAttribute('aria-label', 'How long'); (TMC().mins || [15, 30, 45, 60, 90, 120]).forEach(function (m) { var o = el('option', null, (m < 60 ? m + ' minutes' : m === 60 ? '1 hour' : m % 60 ? Math.floor(m / 60) + ' hour ' + (m % 60) + ' minutes' : (m / 60) + ' hours') + (m === 30 ? ' (usual)' : '')); o.value = m; ln.appendChild(o); }); ln.value = '30'; f.appendChild(ln);
     /* who is coming: someone on the card with an email (not marked Don't contact), or typed in */
@@ -2009,15 +2309,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var tick = tmTick(r, function () { return { date: d.value, time: h.value, mins: +ln.value, who: who.value, email: em.value }; }); f.appendChild(tick.node);
     em.addEventListener('input', function () { tick.paint(); });
     if (P.length) pickP();
-    var go = el('button', 'btn small', label || 'Book the tour'); go.type = 'button'; go.addEventListener('click', function () { save('tour', { id: r.id, lead: r.id, date: d.value, time: h.value, mins: +ln.value, who: who.value, email: em.value.trim(), mail: tick.want(), note: nt.value }).then(function (j) { tmToast('Tour booked', j); }); }); f.appendChild(go);
+    var go = el('button', 'btn small', label || 'Book the tour'); go.type = 'button'; go.addEventListener('click', function () { save('tour', { id: r.id, lead: r.id, date: d.value, time: h.value, mins: +ln.value, who: who.value, email: em.value.trim(), mail: tick.want(), note: nt.value }).then(function (j) { tmToast('Tour booked', j); if (j && j.ok && done) done(); }); }); f.appendChild(go);
     into.appendChild(f); return f;
-  }
-  function needCard(r) {
-    var c = el('div', 'card'); c.appendChild(el('h3', null, r.name));
-    c.appendChild(el('small', null, [isX() ? r.cat : r.kind, r.owner ? 'owner ' + r.owner : 'open', r.next && r.next.what ? 'Next: ' + (r.next.date ? fmtDay(r.next.date) + ', ' : '') + r.next.what : ''].filter(Boolean).join(' · ')));
-    tourForm(r, c, 'Book it');
-    var op = el('button', 'lnk', 'Open the card'); op.type = 'button'; op.style.marginTop = '6px'; op.addEventListener('click', function () { openRec(r); }); c.appendChild(op);
-    return c;
   }
   function tourCard(t, mode) {
     var r = rec(t.lead) || { name: 'A removed company', stage: '' }, c = el('div', 'card');
@@ -2053,41 +2346,29 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var a = el('a'); a.href = URL.createObjectURL(new Blob([txt], { type: 'text/calendar' })); a.download = 'peak-tour-' + t.date + '.ics'; document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
   }
-  function drawProps() {
+  function drawProps(into) {
     var P = (W().proposals || []).slice().sort(function (a, b) { return b.at - a.at; });
-    if (!P.length) { main.appendChild(el('div', 'empty', 'No proposals yet. Open a card and use Make a proposal.')); return; }
+    if (!P.length) { into.appendChild(el('div', 'empty', 'No proposals yet. Open a card and use Make a proposal.')); return; }
     P.forEach(function (p) {
       var r = rec(p.lead) || {}, c = el('div', 'card'); c.appendChild(el('h3', null, p.company + ' · ' + money(p.total)));
       c.appendChild(el('small', null, p.lines.map(function (x) { return (x.qty > 1 ? x.qty + ' × ' : '') + x.name; }).join(', ') + ' · ' + ago(p.at) + ' by ' + p.by + (r.stage ? ' · now ' + STN(r.stage) : '')));
       var row = el('div', 'seg'); row.style.marginTop = '8px';
       var b = el('button', null, 'Open · save as PDF'); b.type = 'button'; b.addEventListener('click', function () { S.print = { kind: 'proposal', pid: p.pid }; draw(); window.scrollTo(0, 0); }); row.appendChild(b);
       if (r.id) { var o = el('button', null, 'Open the card'); o.type = 'button'; o.addEventListener('click', function () { openRec(r); }); row.appendChild(o); }
-      c.appendChild(row); main.appendChild(c);
+      c.appendChild(row); into.appendChild(c);
     });
   }
-  /* expo: quotes out and events booked */
-  function drawQuotes() {
-    var Q = recs().filter(function (r) { return r.stage === 'quote'; }).sort(function (a, b) { return a.stageAt - b.stageAt; }), B = recs().filter(function (r) { return r.stage === 'booked'; });
-    var k = el('div', 'kpis'), qv = Q.reduce(function (n, r) { return n + valueOf(r); }, 0), bv = B.reduce(function (n, r) { return n + valueOf(r); }, 0);
-    [[String(Q.length), 'quotes out' + (qv ? ', ' + money(qv) : '')], [String(B.length), 'events booked' + (bv ? ', ' + money(bv) : '')]].forEach(function (x) { var c = el('div', 'kpi'); c.appendChild(el('b', null, x[0])); c.appendChild(el('span', null, x[1])); k.appendChild(c); });
-    main.appendChild(k);
-    var sec = function (title, L, extra, empty) { main.appendChild(el('h2', null, title)); if (!L.length) { main.appendChild(el('div', 'empty', empty)); return; } var list = el('div', 'list'); L.forEach(function (r) { list.appendChild(rowFor(r, { extra: extra(r) })); }); main.appendChild(list); };
-    var clickOpen = function () { [].forEach.call(main.querySelectorAll('.row'), function (b) { b.addEventListener('click', function () { var r = rec(b.getAttribute('data-id')); if (r) openRec(r); }, true); }); };
-    sec('Quotes waiting on an answer', Q, function (r) { return 'Sent ' + relDay(r.stageAt) + (r.quote && r.quote.amount ? ' · ' + money(r.quote.amount) : '') + (r.quote && r.quote.note ? ' · ' + r.quote.note : ''); }, 'No quotes out. Mark a lead Quote sent from its card.');
-    sec('Booked', B, function (r) { return [r.booked && r.booked.date ? 'Event ' + fmtDay(r.booked.date) : '', r.booked && r.booked.amount ? money(r.booked.amount) : '', r.booked && r.booked.note].filter(Boolean).join(' · ') || 'Booked ' + relDay(r.stageAt); }, 'No events booked yet.');
-    clickOpen();
-  }
   /* signed sponsors: what they bought, renewals, what we owe them (2026-10-24) */
-  function drawSigned() {
+  function drawSigned(into) {
     var L = recs().filter(function (r) { return r.stage === 'signed'; }), renewOf = function (r) { return r.signed ? addMonths(r.signed.start, r.signed.months) : ''; };
     L.sort(function (a, b) { return (renewOf(a) || '9999').localeCompare(renewOf(b) || '9999') || a.name.localeCompare(b.name); });
     var k = el('div', 'kpis'), yr = L.reduce(function (n, r) { return n + valueOf(r); }, 0);
     var soon = L.filter(function (r) { var x = renewOf(r); return x && daysTo(x) <= 90; }).length, todo = L.reduce(function (n, r) { return n + (r.todos || []).filter(function (x) { return !x.done; }).length; }, 0);
     [[String(L.length), 'sponsors signed'], [money(yr), 'a year, all of them'], [String(soon), 'renewals in the next 90 days'], [String(todo), 'to-dos open']].forEach(function (x) { var c = el('div', 'kpi'); c.appendChild(el('b', null, x[0])); c.appendChild(el('span', null, x[1])); k.appendChild(c); });
-    main.appendChild(k);
+    into.appendChild(k);
     var hd = el('div', 'controls'); hd.appendChild(el('h2', null, 'Signed sponsors')).style.margin = '0 auto 0 0';
-    var ad = el('button', 'btn small', '+ Add a sponsor'); ad.type = 'button'; ad.addEventListener('click', function () { signedForm(null); }); hd.appendChild(ad); main.appendChild(hd);
-    if (!L.length) { main.appendChild(el('div', 'empty', 'No sponsors signed yet. Add one with + Add a sponsor, or mark a company Signed from its card.')); return; }
+    var ad = el('button', 'btn small', '+ Add a sponsor'); ad.type = 'button'; ad.addEventListener('click', function () { signedForm(null); }); hd.appendChild(ad); into.appendChild(hd);
+    if (!L.length) { into.appendChild(el('div', 'empty', 'No sponsors signed yet. Add one with + Add a sponsor, or mark a company Signed from its card.')); return; }
     L.forEach(function (r) {
       var c = el('div', 'card'), v = valueOf(r), rn = renewOf(r);
       c.appendChild(el('h3', null, r.name + (v ? ' · ' + money(v) + ' a year' : '')));
@@ -2109,7 +2390,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var ed = el('button', null, r.signed ? 'Edit the details' : 'Add the details'); ed.type = 'button'; ed.addEventListener('click', function () { signedForm(r); }); row.appendChild(ed);
       var op = el('button', null, 'Open the card'); op.type = 'button'; op.addEventListener('click', function () { openRec(r); }); row.appendChild(op);
       var rv = el('button', null, 'Remove'); rv.type = 'button'; rv.addEventListener('click', function () { removeRec(r); }); row.appendChild(rv);
-      c.appendChild(row); main.appendChild(c);
+      c.appendChild(row); into.appendChild(c);
     });
   }
   function sheet(title) {
@@ -2128,7 +2409,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         warn.textContent = ''; var t = cN.value.trim().toLowerCase(); if (!t) return;
         var hit = S.data.sponsor.recs.filter(function (x) { return x.name.trim().toLowerCase() === t; })[0], gone = S.data.sponsor.removed.filter(function (x) { return x.name.trim().toLowerCase() === t; })[0];
         if (hit) { warn.className = 'warnline'; warn.appendChild(document.createTextNode(hit.name + ' is already on the desk. ')); var mb = el('button', 'lnk', 'Mark that one signed'); mb.type = 'button'; mb.addEventListener('click', function () { sh.close(); signedForm(hit); }); warn.appendChild(mb); }
-        else if (gone) { warn.className = 'warnline'; warn.textContent = gone.name + ' was removed. Bring it back from Companies › Removed, then mark it signed.'; }
+        else if (gone) { warn.className = 'warnline'; warn.textContent = gone.name + ' was removed. Bring it back from Leads › Removed, then mark it signed.'; }
       });
       var cK = inp('Kind (e.g. Car dealer)'), cS = inp('Website (the desk looks them up from it)'), cP = inp('Company phone');
       f.appendChild(el('label', 'lab', 'Who we deal with'));
@@ -2183,6 +2464,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
   var readOnly = function () { return !!(S.data && S.data.me.name === 'Claude Check'); };
   var FREE = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'me.com', 'aol.com', 'comcast.net', 'msn.com', 'live.com', 'protonmail.com', 'att.net'];
   function drawInbox(sub) {
+    if (sub === 'mine') return drawMyLeads(mySub());   /* Mine: the old My leads, Matthew's own login only (subList) */
     var box = el('div', 'inbox'); main.appendChild(box);
     box.appendChild(el('div', 'empty', 'Loading the Inbox…'));
     api('inbox&f=' + encodeURIComponent(sub)).then(function (j) {
@@ -2326,7 +2608,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         });
         list.appendChild(el('div')).appendChild(b);
       });
-      if (t && !L.length) list.appendChild(el('div', 'fuhint', 'No company by that name. Add it first (Companies, + Add a company), then attach.'));
+      if (t && !L.length) list.appendChild(el('div', 'fuhint', 'No company by that name. Add it first (Leads, + Add a company), then attach.'));
     };
     q.addEventListener('input', paint); paint(); q.focus();
   }
@@ -2374,17 +2656,18 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     return 'Answers ' + what + (v.subject ? ' “' + v.subject + '”' : '') + ', sent ' + when(v.at) + (v.how === 'card' && v.to ? ' to ' + v.to + ' (the same company)' : '') + '.';
   };
   var ocText = function (o) { return o.st + (o.amount != null ? ', $' + Number(o.amount).toLocaleString('en-US') : '') + (o.note ? ': ' + o.note : '') + ' (' + when(o.at) + ')'; };
-  var evText = function (e) { return e.t === 'mback' ? 'Brought back to My leads, ' + when(e.at) : 'Sent to ' + (e.to ? e.to : 'the Inbox') + ', ' + when(e.at) + (e.note ? ', with note “' + e.note + '”' : ''); };
+  var evText = function (e) { return e.t === 'mback' ? 'Brought back to Mine, ' + when(e.at) : 'Sent to ' + (e.to ? e.to : 'the Inbox') + ', ' + when(e.at) + (e.note ? ', with note “' + e.note + '”' : ''); };
   function drawMyLeads(sub) {
     var box = el('div', 'inbox myleads'); main.appendChild(box);
-    box.appendChild(el('div', 'empty', 'Loading My leads…'));
+    box.appendChild(el('div', 'empty', 'Loading Mine…'));
     api('myleads&f=' + encodeURIComponent(sub)).then(function (j) {
-      if (S.tab !== 'myleads' || !box.isConnected) return;
+      if (S.tab !== 'inbox' || subOf('inbox') !== 'mine' || !box.isConnected) return;
       if (j._status === 401) return signin();
       box.textContent = '';
-      if (!j.ok) { box.appendChild(el('div', 'empty', j.error || 'My leads did not load.')); return; }
+      if (!j.ok) { box.appendChild(el('div', 'empty', j.error || 'Mine did not load.')); return; }
       S.data.myleads = j.counts; S.myPeople = j.people || []; S.myOutcomes = j.outcomes || []; bar();
-      [].forEach.call(document.querySelectorAll('.shead .subchips button'), function (b) { var k = b.getAttribute('data-sub'), t = b.querySelector('b'); if (t && j.counts[k] != null) t.textContent = String(j.counts[k]); });
+      [].forEach.call(document.querySelectorAll('.shead .mychips button'), function (b) { var k = b.getAttribute('data-my'), t = b.querySelector('b'); if (t && j.counts[k] != null) t.textContent = String(j.counts[k]); });
+      var mt = document.querySelector('.shead .subchips [data-sub="mine"] b'); if (mt && j.counts.open != null) mt.textContent = String(j.counts.open);
       if (!j.items.length) { box.appendChild(el('div', 'empty', sub === 'open' ? 'Nothing to answer. Replies to your own emails show here within about 5 minutes.' : sub === 'wait' ? 'Nobody to wait on.' : sub === 'done' ? 'Nothing done yet.' : 'Nothing sent to the Inbox.')); return; }
       j.items.forEach(function (it) { box.appendChild(myRow(it)); });
       if (S.inSel) { var want = S.inSel; S.inSel = null; [].forEach.call(box.querySelectorAll('.inrow'), function (d) { if (d.getAttribute('data-iid') === want && d._open) d._open(); }); }
@@ -2442,8 +2725,8 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
       var acts = el('div', 'acts'), pane = el('div', 'inpane');
       var mk = function (t, act, cls) { var b = el('button', cls || 'btn small ghost', t); b.type = 'button'; b.setAttribute('data-act', act); acts.appendChild(b); return b; };
       if (sent) {
-        var bb = mk('Bring back to My leads', 'mybring', 'btn small');
-        bb.addEventListener('click', function () { if (!confirm('Bring this back to My leads? It leaves the Inbox' + (it.claim ? ' and ' + it.claim.by + ' stops answering it' : '') + '.')) return; bb.disabled = true; api('myback', { iid: it.iid }).then(function (x) { bb.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after('Back in My leads'); }); });
+        var bb = mk('Bring back to Mine', 'mybring', 'btn small');
+        bb.addEventListener('click', function () { if (!confirm('Bring this back to Mine? It leaves the Inbox' + (it.claim ? ' and ' + it.claim.by + ' stops answering it' : '') + '.')) return; bb.disabled = true; api('myback', { iid: it.iid }).then(function (x) { bb.disabled = false; if (!x.ok) { toast(x.error || 'Not saved.'); return; } after('Back in My leads'); }); });
         body.appendChild(acts); body.appendChild(el('div', 'fuhint', 'In the Inbox now: shown here read only. Bring back works while nobody else has replied to it.'));
       } else {
         var rb = it.rp && it.from ? mk('Reply', 'inreply', 'btn small') : null;
@@ -2473,7 +2756,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     f.appendChild(sel);
     f.appendChild(el('label', 'lab', 'A note to them (optional)'));
     var nt = el('textarea'); nt.rows = 3; nt.className = 'mynote'; nt.setAttribute('aria-label', 'Note'); nt.placeholder = 'What they should know'; f.appendChild(nt);
-    f.appendChild(el('div', 'fuhint', 'It leaves My leads and shows in the Inbox with your note; their later emails in this thread go there too. You keep a line for it here, and can bring it back while nobody has replied.'));
+    f.appendChild(el('div', 'fuhint', 'It leaves Mine and shows in the Inbox with your note; their later emails in this thread go there too. You keep a line for it here, and can bring it back while nobody has replied.'));
     var acts = el('div', 'acts'), go2 = el('button', 'btn small', 'Send'), x = el('button', 'lnk', 'Close'); go2.type = x.type = 'button'; go2.setAttribute('data-act', 'mytoingo'); acts.appendChild(go2); acts.appendChild(x); f.appendChild(acts);
     x.addEventListener('click', function () { pane.textContent = ''; });
     go2.addEventListener('click', function () {
@@ -2568,14 +2851,30 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var h = String(hash || '').replace(/^.*#/, '').split('/');
     if (h[0] === 'jarvis' && window.JVChat) { jvMount(); JVChat.open(/^h[0-9]{14}[0-9a-f]{4}$/.test(h[1] || '') ? h[1] : null); return false; }
     if (h[0] === 'inbox' && inboxOn()) { S.inSel = h[1] || null; go('inbox', 'open'); return true; }
-    if (h[0] === 'myleads' && myOn()) { S.inSel = h[1] || null; go('myleads', 'open'); return true; }
+    if (h[0] === 'myleads' && myOn()) { S.inSel = h[1] || null; S.sub[S.world + 'mine'] = 'open'; go('inbox', 'mine'); return true; }   /* an alert's tap for the old My leads: Inbox, Mine */
+    if ((h[0] === 'sponsor' || h[0] === 'expo') && S.data && S.data[h[0]] && !(expoOnly() && h[0] === 'sponsor')) { place(h[0], h[1] || 'today', h[2], h[3]); S.sel = null; S.print = null; remember(); bar(); draw(); window.scrollTo(0, 0); return true; }
     if (h[0] === 'card' && (h[1] === 'sponsor' || h[1] === 'expo') && S.data && S.data[h[1]]) { if (S.world !== h[1]) S.world = h[1]; var r = rec(h[2] || ''); if (r) { bar(); openRec(r); return true; } }
     return false;
   }
   if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', function (e) { if (e.data && e.data.type === 'push-open' && S.data) load(function () { if (!route(e.data.url)) draw(); }); });
 
   /* ---- More ---- */
+  /* More (2026-11-25): the same contents, as a menu list. On a computer the menu sits on the left beside what is open; on a phone the
+     More tab opens the menu, and ‹ More goes back to it */
+  var MOREHINT = { report: 'The numbers, to save as a PDF', pl: 'What the sponsors bring in and cost', pk: 'The packages and their prices', offer: 'Peak’s sponsor spots today', better: 'Ideas, with outside prices',
+    mine: 'Your signature, booking link and alerts', cal: 'Your tours and follow-ups in your own calendar', scripts: 'What to say on calls, and the emails', look: 'Dark or light', settings: 'Templates, emails, booking times', ref: 'Questions for Peak, competing venues' };
+  var MOREICON = { report: 'chart', pl: 'deal', pk: 'doc', offer: 'star', better: 'target', mine: 'mail', cal: 'cal', scripts: 'note', look: 'sun', settings: 'pen', ref: 'flag' };
   function drawMore(sub) {
+    var L = subList('more') || [], menuOnly = isPhone() && S.moreMenu, m = el('div', 'subchips moremenu' + (isPhone() && !menuOnly ? ' shut' : ''));
+    L.forEach(function (x) {
+      var b = el('button', 'mitem'); b.type = 'button'; b.setAttribute('data-sub', x[0]); b.setAttribute('aria-pressed', String(!menuOnly && sub === x[0]));
+      b.appendChild(icBox(MOREICON[x[0]] || 'more', 'ico mic')); var t = el('span', 'mt'); t.appendChild(el('b', null, x[1])); t.appendChild(el('small', null, MOREHINT[x[0]] || '')); b.appendChild(t); b.appendChild(el('span', 'mgo', '›'));
+      b.addEventListener('click', function () { S.sub[S.world + 'more'] = x[0]; S.moreMenu = false; remember(); draw(); window.scrollTo(0, 0); });
+      m.appendChild(b);
+    });
+    main.appendChild(m);
+    if (menuOnly) return;
+    if (isPhone()) { var bk = el('button', 'lnk moreback', '‹ More'); bk.type = 'button'; bk.setAttribute('data-act', 'moreback'); bk.addEventListener('click', function () { S.moreMenu = true; draw(); window.scrollTo(0, 0); }); main.appendChild(bk); }
     if (ADMIN_SUBS[sub] && !isAdmin()) return;   /* never drawn for a seller (subOf already keeps them off it) */
     ({ report: drawReport, pl: drawPl, pk: drawPk, offer: function () { drawInfo('What Peak offers sponsors now', S.data.sponsor.offer); }, better: function () { drawInfo('What we could offer or do better', S.data.sponsor.better); }, look: drawLook, ref: drawExpoRef, cal: drawCal, mine: drawMine, scripts: drawScripts, settings: drawSettings })[sub]();
   }
@@ -2915,11 +3214,11 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     var f = el('p', null, 'From ' + (X.from || 'the venue research') + (X.built ? '; on the desk since ' + fmtD(X.built) : '') + '.'); f.style.cssText = 'color:var(--soft);font-size:13px'; main.appendChild(f);
   }
 
-  /* the address keeps the place: #sponsor/pipe, #expo/list/removed; the old desk's addresses land on Today */
+  /* the address keeps the place: #sponsor/leads/new/called, #expo/leads/removed, #sponsor/inbox/mine/wait, #sponsor/tours; the old desk's addresses land on Today */
   (function () {
     var h = (location.hash || '').slice(1).split('/');
     if (h[0] === 'inbox' || h[0] === 'myleads' || h[0] === 'card' || h[0] === 'jarvis') S.route = location.hash;   /* an alert's tap (2026-11-20; + J.A.R.V.I.S. 2026-11-21): routed once the data is in */
-    else if (h[0] === 'sponsor' || h[0] === 'expo') { S.world = h[0]; if (h[1] && TABS[h[0]].some(function (x) { return x[0] === h[1]; })) { S.tab = h[1]; if (h[2]) S.sub[h[0] + h[1]] = h[2]; } }
+    else if (h[0] === 'sponsor' || h[0] === 'expo') place(h[0], h[1] || 'today', h[2], h[3]);   /* old addresses (#sponsor/pipe, #sponsor/list/new, #sponsor/myleads/wait, #sponsor/deals/props ...) land on their new home */
   })();
   load(S.route ? function () { var r = S.route; S.route = null; if (!route(r)) { remember(); draw(); } } : undefined);
 })();

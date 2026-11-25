@@ -66,7 +66,7 @@
  * action answers 404 to anyone else for one of his emails, and no card shows them its words; desk-inbox.php explains. */
 declare(strict_types=1);
 define('DESK', 1);
-const BUILD = '2026-11-24.3';   /* + two tour schedules, sponsor and expo (book-lib.php) */
+const BUILD = '2026-11-25.1';   /* the redesign: five tabs (Today, Inbox, Leads, Tours, More); the page only */
 const DESK_URL = 'https://traverseplatforms.com/peak-desk-28d38d/';
 const EOD_HOUR = 18;   /* the end-of-day email: 6 pm Colorado time */
 /* what the research account may do (2026-11-21, handleIn explains) */
