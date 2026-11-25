@@ -16,3 +16,8 @@ Two 32 s, 1080x1920 Reels for the Golden Ring National Championships (15–17 Ja
   - `tools/musicedit.sh` cuts each take so its hits land on the 14 / 22 / 26 s booms.
   - Take 3's ending is turned down under the last voice line (`music/take3-edit-vo.wav`).
   - Six files are in Drive, in "Draft 2 - with music". Sound effects are still the homemade ones (Matthew: keep them for now).
+- **Draft 3 (25 Nov):** Matthew found the hand-held ring clips too shaky, so the ring scenes are now sharp stills.
+  - `tools/ringstill.sh` takes the frame with the least blur (the scores are from ffmpeg blurdetect) and gives it a smooth zoompan push and a gold glint.
+  - Frames used: MVI_0151 at 1.52 s, MVI_0150 at 1.36 s, MVI_0151 at 1.32 s (tight).
+  - The shield push uses zoompan too. The old `ringgrade.sh` is no longer used.
+  - Drive folder "Draft 3 - steady ring".

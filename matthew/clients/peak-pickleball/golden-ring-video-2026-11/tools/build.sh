@@ -15,15 +15,14 @@ plate() { ffmpeg -v error -y -loop 1 -t $2 -i "$1" -vf "scale=1080:1920,scale=w=
 act() { ffmpeg -v error -y -ss $2 -t $3 -i $P/IMG_$1.MOV -vf "scale=$V,eq=contrast=1.18:saturation=1.08:gamma=0.92,colorbalance=rh=0.04:bh=-0.03,vignette=PI/4,fps=30" $ENC "$4"; }
 
 echo "plates"; plate ai/dust.jpg 32 $W/p-dust.mp4; plate ai/rays.jpg 6 $W/p-rays.mp4; plate ai/smoke.jpg 3 $W/p-smoke.mp4
-[ -f $W/r151.mp4 ] || bash tools/ringgrade.sh $S/MVI_0151.mov $W/r151.mp4 0 1560
-[ -f $W/r150.mp4 ] || bash tools/ringgrade.sh $S/MVI_0150.mov $W/r150.mp4 0 1480
-[ -f $W/r149.mp4 ] || bash tools/ringgrade.sh $S/MVI_0149.mov $W/r149.mp4 1 1480
 
-echo "S1 reveal 0-5"
-ffmpeg -v error -y -i $W/r151.mp4 -i $W/p-dust.mp4 -filter_complex "[0]crop=1080:1560:0:360,pad=1080:1920:0:0:black,setpts=PTS*1.12,tpad=stop_mode=clone:stop_duration=1,trim=0:5,scale=w='1080*(1+0.12*t/5)':h=-2:eval=frame,crop=1080:1920,fps=30,fade=in:st=0:d=2.2,format=gbrp[r];[1]trim=0:5,setpts=PTS-STARTPTS,format=gbrp[d];[r][d]blend=all_mode=screen:all_opacity=0.55,format=yuv420p" $ENC $W/s1.mp4
+echo "S1 reveal 0-5"   # sharp still from MVI_0151 (the clips are hand-held), smooth push and a gold glint: tools/ringstill.sh
+[ -f $W/st151.mp4 ] || bash tools/ringstill.sh $S/MVI_0151.mov 1.52 0 1500 1.12 5 0.08 2.6 $W/st151.mp4
+ffmpeg -v error -y -i $W/st151.mp4 -i $W/p-dust.mp4 -filter_complex "[0]trim=0:5,setpts=PTS-STARTPTS,fade=in:st=0:d=2.2,format=gbrp[r];[1]trim=0:5,setpts=PTS-STARTPTS,format=gbrp[d];[r][d]blend=all_mode=screen:all_opacity=0.55,format=yuv420p" $ENC $W/s1.mp4
 echo "S2 stakes 5-9"
-ffmpeg -v error -y -i $W/r150.mp4 -t 2 -i $W/r150.mp4 -filter_complex "[0]crop=1080:1560:0:360,pad=1080:1920:0:0:black,trim=0.6:2.6,setpts=PTS-STARTPTS,scale=w='1080*(1+0.10*t/2)':h=-2:eval=frame,crop=1080:1920,fps=30" $ENC $W/s2a.mp4
-ffmpeg -v error -y -loop 1 -t 2 -i "$S/library-golden-ring/Golden Ring Pickleball Shield Logo-2.png" -i $W/p-rays.mp4 -filter_complex "[0]scale=880:-2,pad=1080:1920:(ow-iw)/2:330:black,scale=w='1080*(1+0.08*t/2)':h=-2:eval=frame,crop=1080:1920,fps=30,format=gbrp[l];[1]trim=0:2,setpts=PTS-STARTPTS,format=gbrp[r];[l][r]blend=all_mode=screen:all_opacity=0.6,format=yuv420p" $ENC $W/s2b.mp4
+[ -f $W/st150.mp4 ] || bash tools/ringstill.sh $S/MVI_0150.mov 1.36 0 1480 1.12 2 0.07 0.5 $W/st150.mp4
+ffmpeg -v error -y -i $W/st150.mp4 -vf fps=30 $ENC $W/s2a.mp4
+ffmpeg -v error -y -i "$S/library-golden-ring/Golden Ring Pickleball Shield Logo-2.png" -i $W/p-rays.mp4 -filter_complex "[0]scale=880:-2,pad=1080:1920:(ow-iw)/2:330:black,scale=4320:7680:flags=lanczos,zoompan=z='1+0.08*on/60':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=60:s=1080x1920:fps=30,trim=end_frame=60,format=gbrp[l];[1]trim=0:2,setpts=PTS-STARTPTS,format=gbrp[r];[l][r]blend=all_mode=screen:all_opacity=0.6,format=yuv420p" $ENC $W/s2b.mp4
 echo "S3 arena 9-14"
 FL=$(ls $S/library-facility/*.mp4 | head -1)
 ffmpeg -v error -y -ss 7.0 -t 3.5 -i "$FL" -vf "crop=608:1080:(1920-608)/2:0,scale=$V,eq=contrast=1.2:saturation=1.05:gamma=0.9,colorbalance=rh=0.05:bh=-0.04,vignette=PI/4,fps=30" $ENC $W/s3a.mp4
@@ -32,7 +31,8 @@ echo "S4 competition 14-22"
 act 3730 0.8 0.8 $W/c1.mp4; act 3749 1.2 0.8 $W/c2.mp4; act 3741 0.3 0.8 $W/c3.mp4; act 3721 0.0 0.9 $W/c4.mp4
 act 3731 1.2 0.9 $W/c5.mp4; act 3740 1.0 0.8 $W/c6.mp4; act 3748 2.3 0.8 $W/c7.mp4; act 3738 2.8 1.0 $W/c8.mp4; act 3743 0.4 1.2 $W/c9.mp4
 echo "S5 road 22-26"
-ffmpeg -v error -y -i $W/r149.mp4 -i $W/p-rays.mp4 -filter_complex "[0]crop=1080:1560:0:360,pad=1080:1920:0:0:black,tpad=stop_mode=clone:stop_duration=1,trim=0:4,setpts=PTS-STARTPTS,scale=w='1080*(1+0.10*t/4)':h=-2:eval=frame,crop=1080:1920,fps=30,format=gbrp[r];[1]trim=0:4,setpts=PTS-STARTPTS,format=gbrp[y];[r][y]blend=all_mode=screen:all_opacity=0.35,format=yuv420p" $ENC $W/s5.mp4
+[ -f $W/st151b.mp4 ] || bash tools/ringstill.sh $S/MVI_0151.mov 1.32 0 1500 1.40 4 0.08 1.6 $W/st151b.mp4
+ffmpeg -v error -y -i $W/st151b.mp4 -i $W/p-rays.mp4 -filter_complex "[0]trim=0:4,setpts=PTS-STARTPTS,format=gbrp[r];[1]trim=0:4,setpts=PTS-STARTPTS,format=gbrp[y];[r][y]blend=all_mode=screen:all_opacity=0.35,format=yuv420p" $ENC $W/s5.mp4
 echo "End 26-32"
 ffmpeg -v error -y -f lavfi -t 6 -i color=black:s=1080x1920:r=30 -i $W/p-dust.mp4 -filter_complex "[1]trim=26:32,setpts=PTS-STARTPTS,format=gbrp[d];[0]format=gbrp[b];[b][d]blend=all_mode=screen:all_opacity=0.7,format=yuv420p" $ENC $W/s6.mp4
 
