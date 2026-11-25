@@ -25,3 +25,7 @@ Two 32 s, 1080x1920 Reels for the Golden Ring National Championships (15–17 Ja
   - Each take now plays as one continuous piece from its 14 s hit, with a 4 s fade over the end card.
   - Files: `music/take*-cont.wav`, plus `take3-cont-vo.wav` with the ending turned down under the voice.
   - Don't splice music sections again without a long crossfade.
+- **Last match cut (25 Nov):** Matthew didn't want the clapping fans (IMG_3743) as the last cut.
+  - Replaced with the medal podium from the Veterans Tournament, Day 3: `MVI_0007 (1).MOV`, 0.2–1.4 s. These are Peak's camera clips, sideways, so they need transpose=2.
+  - Clips copied to `source/library-veterans/` (read-only copy from the shared library).
+  - No clip in the library shows a player celebrating a winning point.

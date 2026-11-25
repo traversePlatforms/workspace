@@ -29,7 +29,8 @@ ffmpeg -v error -y -ss 7.0 -t 3.5 -i "$FL" -vf "crop=608:1080:(1920-608)/2:0,sca
 ffmpeg -v error -y -ss 25.6 -t 1.5 -i "$FL" -vf "crop=608:1080:(1920-608)/2-120:0,scale=$V,eq=contrast=1.2:saturation=1.05:gamma=0.9,colorbalance=rh=0.05:bh=-0.04,vignette=PI/4,fps=30" $ENC $W/s3b.mp4
 echo "S4 competition 14-22"
 act 3730 0.8 0.8 $W/c1.mp4; act 3749 1.2 0.8 $W/c2.mp4; act 3741 0.3 0.8 $W/c3.mp4; act 3721 0.0 0.9 $W/c4.mp4
-act 3731 1.2 0.9 $W/c5.mp4; act 3740 1.0 0.8 $W/c6.mp4; act 3748 2.3 0.8 $W/c7.mp4; act 3738 2.8 1.0 $W/c8.mp4; act 3743 0.4 1.2 $W/c9.mp4
+act 3731 1.2 0.9 $W/c5.mp4; act 3740 1.0 0.8 $W/c6.mp4; act 3748 2.3 0.8 $W/c7.mp4; act 3738 2.8 1.0 $W/c8.mp4; # last cut: medal podium on Peak's 1st/2nd blocks (Veterans Tournament, Day 3; Peak camera, shot sideways so transpose=2), in place of the clapping fans
+ffmpeg -v error -y -ss 0.2 -t 1.2 -i "$S/library-veterans/d3/MVI_0007 (1).MOV" -vf "transpose=2,scale=$V,eq=contrast=1.15:saturation=1.1:gamma=1.05:brightness=0.03,colorbalance=rh=0.04:bh=-0.03,vignette=PI/4,fps=30" $ENC $W/c9.mp4
 echo "S5 road 22-26"
 [ -f $W/st151b.mp4 ] || bash tools/ringstill.sh $S/MVI_0151.mov 1.32 0 1500 1.40 4 0.08 1.6 $W/st151b.mp4
 ffmpeg -v error -y -i $W/st151b.mp4 -i $W/p-rays.mp4 -filter_complex "[0]trim=0:4,setpts=PTS-STARTPTS,format=gbrp[r];[1]trim=0:4,setpts=PTS-STARTPTS,format=gbrp[y];[r][y]blend=all_mode=screen:all_opacity=0.35,format=yuv420p" $ENC $W/s5.mp4
