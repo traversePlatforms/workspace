@@ -29,3 +29,15 @@ Two 32 s, 1080x1920 Reels for the Golden Ring National Championships (15–17 Ja
   - Replaced with the medal podium from the Veterans Tournament, Day 3: `MVI_0007 (1).MOV`, 0.2–1.4 s. These are Peak's camera clips, sideways, so they need transpose=2.
   - Clips copied to `source/library-veterans/` (read-only copy from the shared library).
   - No clip in the library shows a player celebrating a winning point.
+- **Draft 4 (25 Nov):**
+  - **Transitions:** the scenes are built with handles and joined with xfade, so every scene still starts on its beat.
+    - 5 s white-gold flash, 9 s cross-fade, 12.5 s whip blur, 14 s quick flash, 22 s dip to black, 26 s slow cross-fade.
+    - Don't use the xfade transitions `dissolve` (comes out grainy) or `zoomin` (pixelates).
+  - **Scene 2** is one shot of the ring and shield together. The ring is keyed with `MASKOUT` from ringstill.sh, a solid ring shape.
+  - **Footage brightened** (gamma up, lighter vignette).
+  - **Sound effects** are now ElevenLabs sound generation, in `sfx/`.
+    - They duck under the voice: the end-card braam was burying the last line.
+    - The homemade thuds are gone; the cuts get quiet swishes.
+  - **Voices:** `tools/vo.mjs` reads the whole script in one take with eleven_v3, then cuts it into lines by word timings. Choose one with `VODIR=vo/<name>`.
+    - Samples: adam, callum, roger, chris.
+    - Premade voices that work on the free key: Adam, Roger, Callum, Eric, George, Liam, Will, Chris, Daniel, Brian.

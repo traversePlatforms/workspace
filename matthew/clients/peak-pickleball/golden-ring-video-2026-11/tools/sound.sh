@@ -17,16 +17,36 @@ HITS="5.0 9.0 14.0 22.0 26.0"
 CUTS="14.8 15.6 16.4 17.3 18.2 19.0 19.8 20.8"
 VOAT="2.5 5.5 9.6 19.0 22.6 26.4"
 
-sfx() {  # builds the sound-design stem
-  local IN="-i $W/drone.wav" FC="" n=1 L="[0]"
-  for t in $HITS; do ms=$(printf '%.0f' $(echo "$t*1000"|bc -l)); IN="$IN -i $W/boom.wav"; FC="$FC[$n]adelay=$ms|$ms[x$n];"; L="$L[x$n]"; n=$((n+1)); done
-  for t in $HITS; do ms=$(printf '%.0f' $(echo "($t-0.7)*1000"|bc -l)); IN="$IN -i $W/whoosh.wav"; FC="$FC[$n]adelay=$ms|$ms[x$n];"; L="$L[x$n]"; n=$((n+1)); done
-  for t in $CUTS; do ms=$(printf '%.0f' $(echo "$t*1000"|bc -l)); IN="$IN -i $W/tick.wav"; FC="$FC[$n]adelay=$ms|$ms[x$n];"; L="$L[x$n]"; n=$((n+1)); done
-  ffmpeg -v error -y $IN -filter_complex "${FC}${L}amix=inputs=$n:normalize=0,atrim=0:32" -ac 2 -ar $R $W/sfx.wav
+sfx() {  # ElevenLabs sound effects (sfx/*.mp3) laid at fixed times over the homemade drone: "file time gain [fade-out-at]"
+  local LIST="riser 0.7 0.6
+impact 5.0 0.5
+hit2 9.0 0.55
+braam 14.0 0.5
+impact 22.0 0.5
+braam 26.0 0.45
+whoosh 4.78 0.6
+whoosh 8.78 0.6
+whoosh 13.78 0.6
+whoosh 21.78 0.6
+whoosh 25.78 0.6
+shimmer 2.6 1.0
+shimmer 5.5 1.0
+shimmer 23.6 1.0
+cheer 20.7 0.35 1.4"
+  for t in $CUTS; do LIST="$LIST
+swish $t 0.35"; done
+  local IN="-i $W/drone.wav" FC="[0]volume=0.6[d];" L="[d]" n=1
+  while read -r f t g fo; do ms=$(printf '%.0f' $(echo "$t*1000"|bc -l)); IN="$IN -i sfx/$f.mp3"
+    fx="aresample=$R,volume=$g"; [ -n "$fo" ] && fx="$fx,afade=out:st=$fo:d=0.6"
+    FC="$FC[$n]$fx,adelay=$ms|$ms[x$n];"; L="$L[x$n]"; n=$((n+1)); done <<< "$LIST"
+  ffmpeg -v error -y $IN -filter_complex "${FC}${L}amix=inputs=$n:normalize=0,alimiter=limit=0.95,atrim=0:32" -ac 2 -ar $R $W/sfx.wav
 }
-vo() {
-  local IN="" FC="" L="" n=0 i=1
-  for t in $VOAT; do ms=$(printf '%.0f' $(echo "$t*1000"|bc -l)); IN="$IN -i vo/l$i.mp3"; FC="$FC[$n]aresample=$R,adelay=$ms|$ms,pan=stereo|c0=c0|c1=c0[v$n];"; L="$L[v$n]"; n=$((n+1)); i=$((i+1)); done
+vo() {  # VODIR picks the voice (default vo/); a line longer than its slot is sped up (at most 15%) so it never runs into the next
+  local IN="" FC="" L="" n=0 i=1 D=${VODIR:-vo} A=($VOAT 31.85)
+  for t in $VOAT; do ms=$(printf '%.0f' $(echo "$t*1000"|bc -l)); IN="$IN -i $D/l$i.mp3"
+    len=$(ffprobe -v error -show_entries format=duration -of csv=p=0 $D/l$i.mp3); room=$(echo "${A[$i]}-$t-0.1"|bc -l)
+    sp=$(python3 -c "print(min(1.15,max(1.0,$len/$room)))")
+    FC="$FC[$n]aresample=$R,atempo=$sp,adelay=$ms|$ms,pan=stereo|c0=c0|c1=c0[v$n];"; L="$L[v$n]"; n=$((n+1)); i=$((i+1)); done
   ffmpeg -v error -y $IN -filter_complex "${FC}${L}amix=inputs=$n:normalize=0,acompressor=threshold=-18dB:ratio=3:attack=5:release=120,apad,atrim=0:32" -ac 2 -ar $R $W/vo.wav
 }
 sfx; vo
@@ -36,10 +56,10 @@ if [ -n "$MUSIC" ]; then
 else MV=""; MT=0; fi
 # voiceover version: voice on top; music ducked under the voice (sidechain) when there is music
 if [ $MT = 1 ]; then
-  ffmpeg -v error -y -i $W/sfx.wav -i $W/vo.wav $MV -filter_complex "[1]asplit[v1][v2];[2]volume=0.8[m];[m][v2]sidechaincompress=threshold=0.04:ratio=6:attack=20:release=300[md];[0]volume=0.7[s];[s][md][v1]amix=inputs=3:normalize=0,alimiter=limit=0.89,loudnorm=I=-14:TP=-1.5:LRA=11" -ar $R $W/mix-vo.wav
+  ffmpeg -v error -y -i $W/sfx.wav -i $W/vo.wav $MV -filter_complex "[1]asplit=3[v1][v2][v3];[2]volume=0.8[m];[m][v2]sidechaincompress=threshold=0.04:ratio=6:attack=20:release=300[md];[0]volume=0.7[s0];[s0][v3]sidechaincompress=threshold=0.03:ratio=8:attack=10:release=250[s];[s][md][v1]amix=inputs=3:normalize=0,alimiter=limit=0.89,loudnorm=I=-14:TP=-1.5:LRA=11" -ar $R $W/mix-vo.wav
   ffmpeg -v error -y -i $W/sfx.wav $MV -filter_complex "[1]volume=1.0[m];[0]volume=0.7[s];[s][m]amix=inputs=2:normalize=0,alimiter=limit=0.89,loudnorm=I=-14:TP=-1.5:LRA=11" -ar $R $W/mix-text.wav
 else
-  ffmpeg -v error -y -i $W/sfx.wav -i $W/vo.wav -filter_complex "[0]volume=0.8[s];[s][1]amix=inputs=2:normalize=0,alimiter=limit=0.89,loudnorm=I=-14:TP=-1.5:LRA=11" -ar $R $W/mix-vo.wav
+  ffmpeg -v error -y -i $W/sfx.wav -i $W/vo.wav -filter_complex "[1]asplit[v1][v2];[0]volume=0.8[s0];[s0][v2]sidechaincompress=threshold=0.03:ratio=8:attack=10:release=250[s];[s][v1]amix=inputs=2:normalize=0,alimiter=limit=0.89,loudnorm=I=-14:TP=-1.5:LRA=11" -ar $R $W/mix-vo.wav
   ffmpeg -v error -y -i $W/sfx.wav -filter_complex "[0]alimiter=limit=0.89,loudnorm=I=-14:TP=-1.5:LRA=11" -ar $R $W/mix-text.wav
 fi
 echo "mixes done (music: $MT)"

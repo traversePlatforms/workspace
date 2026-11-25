@@ -22,6 +22,8 @@ color=black:s=1080x1920[bg];[bg][k]overlay,vignette=PI/4.5,crop=1080:1560:0:360,
 n=$(printf '%.0f' $(echo "$dur*30" | bc -l))
 ZP="scale=4320:7680:flags=lanczos,zoompan=z='1+$push*on/$n':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=$n:s=1080x1920:fps=30"
 ffmpeg -v error -y -loop 1 -i $W/still.png -vf "$ZP,format=yuv420p" -frames:v $n -c:v libx264 -crf 15 -preset medium $W/push.mp4
+# optional: MASKOUT=file.mp4 saves a solid ring shape (holes in the black inlay filled) that moves with the push, for keying the ring over other layers
+[ -n "$MASKOUT" ] && ffmpeg -v error -y -loop 1 -i $W/mask.png -vf "format=gray,gblur=sigma=14,lutyuv=y='if(gt(val\,125)\,255\,0)',gblur=sigma=2,$ZP,format=gray" -frames:v $n -c:v libx264 -crf 12 -preset medium "$MASKOUT"
 if [ "$sw" = "-" ]; then mv $W/push.mp4 "$out"; rm -rf $W; exit 0; fi
 ffmpeg -v error -y -loop 1 -i $W/mask.png -vf "format=gray,gblur=sigma=40,lutyuv=y='min(255,val*2.6)',$ZP,format=gray" -frames:v $n -c:v libx264 -crf 15 -preset medium $W/pmask.mp4
 # 3. glint: a soft diagonal band crossing the frame in 1.1 s from time $sw, warm gold, limited to the ring by the mask

@@ -12,34 +12,49 @@ V="1080:1920"
 # a still plate, slowly pushing in, for D seconds
 plate() { ffmpeg -v error -y -loop 1 -t $2 -i "$1" -vf "scale=1080:1920,scale=w='1080*(1+0.10*t/$2)':h=-2:eval=frame,crop=1080:1920,fps=30" $ENC "$3"; }
 # match clip: start, length, out
-act() { ffmpeg -v error -y -ss $2 -t $3 -i $P/IMG_$1.MOV -vf "scale=$V,eq=contrast=1.18:saturation=1.08:gamma=0.92,colorbalance=rh=0.04:bh=-0.03,vignette=PI/4,fps=30" $ENC "$4"; }
+act() { ffmpeg -v error -y -ss $2 -t $3 -i $P/IMG_$1.MOV -vf "scale=$V,eq=contrast=1.1:saturation=1.08:gamma=1.15:brightness=0.02,colorbalance=rh=0.04:bh=-0.03,vignette=PI/5.5,fps=30" $ENC "$4"; }
 
 echo "plates"; plate ai/dust.jpg 32 $W/p-dust.mp4; plate ai/rays.jpg 6 $W/p-rays.mp4; plate ai/smoke.jpg 3 $W/p-smoke.mp4
 
-echo "S1 reveal 0-5"   # sharp still from MVI_0151 (the clips are hand-held), smooth push and a gold glint: tools/ringstill.sh
-[ -f $W/st151.mp4 ] || bash tools/ringstill.sh $S/MVI_0151.mov 1.52 0 1500 1.12 5 0.08 2.6 $W/st151.mp4
-ffmpeg -v error -y -i $W/st151.mp4 -i $W/p-dust.mp4 -filter_complex "[0]trim=0:5,setpts=PTS-STARTPTS,fade=in:st=0:d=2.2,format=gbrp[r];[1]trim=0:5,setpts=PTS-STARTPTS,format=gbrp[d];[r][d]blend=all_mode=screen:all_opacity=0.55,format=yuv420p" $ENC $W/s1.mp4
-echo "S2 stakes 5-9"
-[ -f $W/st150.mp4 ] || bash tools/ringstill.sh $S/MVI_0150.mov 1.36 0 1480 1.12 2 0.07 0.5 $W/st150.mp4
-ffmpeg -v error -y -i $W/st150.mp4 -vf fps=30 $ENC $W/s2a.mp4
-ffmpeg -v error -y -i "$S/library-golden-ring/Golden Ring Pickleball Shield Logo-2.png" -i $W/p-rays.mp4 -filter_complex "[0]scale=880:-2,pad=1080:1920:(ow-iw)/2:330:black,scale=4320:7680:flags=lanczos,zoompan=z='1+0.08*on/60':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=60:s=1080x1920:fps=30,trim=end_frame=60,format=gbrp[l];[1]trim=0:2,setpts=PTS-STARTPTS,format=gbrp[r];[l][r]blend=all_mode=screen:all_opacity=0.6,format=yuv420p" $ENC $W/s2b.mp4
+# Scenes are made a little LONGER than their slot (handles), so each scene change can be a real transition (xfade) while
+# every scene still starts on its beat: 5, 7, 9, 12.5, 14, 22, 26 s. Transition at T of length d starts at T - d/2.
+echo "S1 reveal 0-5 (+0.2 tail)"   # sharp still from MVI_0151 (the clips are hand-held), smooth push and a gold glint: tools/ringstill.sh
+[ -f $W/st151h.mp4 ] || bash tools/ringstill.sh $S/MVI_0151.mov 1.52 0 1500 1.12 5.2 0.08 2.6 $W/st151h.mp4
+ffmpeg -v error -y -i $W/st151h.mp4 -i $W/p-dust.mp4 -filter_complex "[0]trim=0:5.2,setpts=PTS-STARTPTS,fade=in:st=0:d=2.2,format=gbrp[r];[1]trim=0:5.2,setpts=PTS-STARTPTS,format=gbrp[d];[r][d]blend=all_mode=screen:all_opacity=0.55,format=yuv420p" $ENC $W/s1.mp4
+echo "S2 stakes 5-9: ring and shield together"   # the LEGEND side alone, then it eases down and back while the shield rises in above it
+[ -f $W/st150k.mp4 ] || MASKOUT=$W/st150k-mask.mp4 bash tools/ringstill.sh $S/MVI_0150.mov 1.36 0 1480 1.12 4.5 0.06 0.7 $W/st150k.mp4
+X="clip((t-1.3)/1.0\\,0\\,1)"; E="($X*$X*(3-2*$X))"; SC="(1-0.38*$E)"; TY="(670+260*$E)"
+ffmpeg -v error -y -i $W/st150k.mp4 -loop 1 -t 4.5 -i "$S/library-golden-ring/Golden Ring Pickleball Shield Logo-2.png" -i $W/p-rays.mp4 -i $W/st150k-mask.mp4 -filter_complex "
+color=black:s=1080x1920:r=30:d=4.5[bg];[1]scale=540:-2,format=rgba,fade=in:st=1.4:d=0.8:alpha=1[sh];[bg][sh]overlay=270:60,format=gbrp[b1];
+[2]trim=0:4.5,setpts=PTS-STARTPTS,fade=in:st=1.4:d=0.8,format=gbrp[ry];[b1][ry]blend=all_mode=screen:all_opacity=0.5[b2];
+[3]format=gray[am];[0][am]alphamerge,scale=w='1080*$SC':h='1920*$SC':eval=frame[rs];
+[b2]format=rgba[b3];[b3][rs]overlay=x='540-495*$SC':y='$TY-670*$SC':eval=frame,format=yuv420p" -t 4.5 $ENC $W/s2.mp4
 echo "S3 arena 9-14"
 FL=$(ls $S/library-facility/*.mp4 | head -1)
-ffmpeg -v error -y -ss 7.0 -t 3.5 -i "$FL" -vf "crop=608:1080:(1920-608)/2:0,scale=$V,eq=contrast=1.2:saturation=1.05:gamma=0.9,colorbalance=rh=0.05:bh=-0.04,vignette=PI/4,fps=30" $ENC $W/s3a.mp4
-ffmpeg -v error -y -ss 25.6 -t 1.5 -i "$FL" -vf "crop=608:1080:(1920-608)/2-120:0,scale=$V,eq=contrast=1.2:saturation=1.05:gamma=0.9,colorbalance=rh=0.05:bh=-0.04,vignette=PI/4,fps=30" $ENC $W/s3b.mp4
-echo "S4 competition 14-22"
-act 3730 0.8 0.8 $W/c1.mp4; act 3749 1.2 0.8 $W/c2.mp4; act 3741 0.3 0.8 $W/c3.mp4; act 3721 0.0 0.9 $W/c4.mp4
-act 3731 1.2 0.9 $W/c5.mp4; act 3740 1.0 0.8 $W/c6.mp4; act 3748 2.3 0.8 $W/c7.mp4; act 3738 2.8 1.0 $W/c8.mp4; # last cut: medal podium on Peak's 1st/2nd blocks (Veterans Tournament, Day 3; Peak camera, shot sideways so transpose=2), in place of the clapping fans
-ffmpeg -v error -y -ss 0.2 -t 1.2 -i "$S/library-veterans/d3/MVI_0007 (1).MOV" -vf "transpose=2,scale=$V,eq=contrast=1.15:saturation=1.1:gamma=1.05:brightness=0.03,colorbalance=rh=0.04:bh=-0.03,vignette=PI/4,fps=30" $ENC $W/c9.mp4
+ffmpeg -v error -y -ss 6.7 -t 4.0 -i "$FL" -vf "crop=608:1080:(1920-608)/2:0,scale=$V,eq=contrast=1.1:saturation=1.05:gamma=1.12:brightness=0.02,colorbalance=rh=0.05:bh=-0.04,vignette=PI/5.5,fps=30" $ENC $W/s3a.mp4
+ffmpeg -v error -y -ss 25.4 -t 1.85 -i "$FL" -vf "crop=608:1080:(1920-608)/2-120:0,scale=$V,eq=contrast=1.1:saturation=1.05:gamma=1.12:brightness=0.02,colorbalance=rh=0.05:bh=-0.04,vignette=PI/5.5,fps=30" $ENC $W/s3b.mp4
+echo "S4 competition 14-22 (hard cuts inside, on the beat)"
+act 3730 0.65 0.95 $W/c1.mp4; act 3749 1.2 0.8 $W/c2.mp4; act 3741 0.3 0.8 $W/c3.mp4; act 3721 0.0 0.9 $W/c4.mp4
+act 3731 1.2 0.9 $W/c5.mp4; act 3740 1.0 0.8 $W/c6.mp4; act 3748 2.3 0.8 $W/c7.mp4; act 3738 2.8 1.0 $W/c8.mp4
+# last cut: medal podium on Peak's 1st/2nd blocks (Veterans Tournament, Day 3; Peak camera, shot sideways so transpose=2), in place of the clapping fans
+ffmpeg -v error -y -ss 0.2 -t 1.45 -i "$S/library-veterans/d3/MVI_0007 (1).MOV" -vf "transpose=2,scale=$V,eq=contrast=1.08:saturation=1.1:gamma=1.25:brightness=0.04,colorbalance=rh=0.04:bh=-0.03,vignette=PI/5.5,fps=30" $ENC $W/c9.mp4
+: > $W/list4.txt; for f in c1 c2 c3 c4 c5 c6 c7 c8 c9; do echo "file '$f.mp4'" >> $W/list4.txt; done
+ffmpeg -v error -y -f concat -safe 0 -i $W/list4.txt -c copy $W/s4.mp4
 echo "S5 road 22-26"
-[ -f $W/st151b.mp4 ] || bash tools/ringstill.sh $S/MVI_0151.mov 1.32 0 1500 1.40 4 0.08 1.6 $W/st151b.mp4
-ffmpeg -v error -y -i $W/st151b.mp4 -i $W/p-rays.mp4 -filter_complex "[0]trim=0:4,setpts=PTS-STARTPTS,format=gbrp[r];[1]trim=0:4,setpts=PTS-STARTPTS,format=gbrp[y];[r][y]blend=all_mode=screen:all_opacity=0.35,format=yuv420p" $ENC $W/s5.mp4
-echo "End 26-32"
-ffmpeg -v error -y -f lavfi -t 6 -i color=black:s=1080x1920:r=30 -i $W/p-dust.mp4 -filter_complex "[1]trim=26:32,setpts=PTS-STARTPTS,format=gbrp[d];[0]format=gbrp[b];[b][d]blend=all_mode=screen:all_opacity=0.7,format=yuv420p" $ENC $W/s6.mp4
+[ -f $W/st151bh.mp4 ] || bash tools/ringstill.sh $S/MVI_0151.mov 1.32 0 1500 1.40 4.75 0.08 1.85 $W/st151bh.mp4
+ffmpeg -v error -y -i $W/st151bh.mp4 -i $W/p-rays.mp4 -filter_complex "[0]trim=0:4.75,setpts=PTS-STARTPTS,format=gbrp[r];[1]trim=0:4.75,setpts=PTS-STARTPTS,format=gbrp[y];[r][y]blend=all_mode=screen:all_opacity=0.35,format=yuv420p" $ENC $W/s5.mp4
+echo "End 26-32 (+0.5 head)"
+ffmpeg -v error -y -f lavfi -t 6.5 -i color=black:s=1080x1920:r=30 -i $W/p-dust.mp4 -filter_complex "[1]trim=25.5:32,setpts=PTS-STARTPTS,format=gbrp[d];[0]format=gbrp[b];[b][d]blend=all_mode=screen:all_opacity=0.7,format=yuv420p" $ENC $W/s6.mp4
 
-echo "concat"
-: > $W/list.txt; for f in s1 s2a s2b s3a s3b c1 c2 c3 c4 c5 c6 c7 c8 c9 s5 s6; do echo "file '$f.mp4'" >> $W/list.txt; done
-ffmpeg -v error -y -f concat -safe 0 -i $W/list.txt -c copy $W/base.mp4
+echo "transitions"   # scene: next transition (type, length)
+#  5 ring top -> LEGEND side: white-gold flash   9 ring and shield -> arena: cross-fade
+#  12.5 courts -> sign: whip blur   14 -> matches: quick flash on the drop   22 -> ring: dip through black   26 ring -> end card: slow cross-fade
+XF="fadewhite:0.4:5 fade:0.6:9 hblur:0.4:12.5 fadewhite:0.3:14 fadeblack:0.6:22 fade:1.0:26"
+IN=""; for f in s1 s2 s3a s3b s4 s5 s6; do IN="$IN -i $W/$f.mp4"; done
+FC=""; for i in 0 1 2 3 4 5 6; do FC="$FC[$i]fps=30,settb=1/30,format=yuv420p[n$i];"; done
+prev=n0; k=1; for x in $XF; do IFS=: read -r ty d T <<< "$x"; o=$(echo "$T-$d/2"|bc -l)
+  FC="$FC[$prev][n$k]xfade=transition=$ty:duration=$d:offset=$o[x$k];"; prev=x$k; k=$((k+1)); done
+ffmpeg -v error -y $IN -filter_complex "${FC%;}" -map "[$prev]" -t 32 $ENC $W/base.mp4
 echo "base $(ffprobe -v error -show_entries format=duration -of csv=p=0 $W/base.mp4)"
 
 echo "flare track"   # a gold flare burst on each scene change
