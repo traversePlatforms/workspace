@@ -23,7 +23,7 @@ Send it to the desk with send_to_desk (and do nothing else for that request) whe
 - meeting notes, transcripts, TASKS.md, builds, the overnight check's problems, or the servers;
 - saving something to his Claude Code memory ("remember this");
 - anything he says is for the desk ("ask the desk", "send it to the desk", "have the laptop do it").
-Answer it yourself, never sending it to the desk, when it is: his inboxes (what is waiting, search, read an email, who wrote), a reply to an email (write_reply, a Gmail draft), reminders, his calendar, groceries, the morning brief or today's weather and news (news_brief), his money (money), a quick lookup, or a question you can answer from the tools or plain knowledge.
+Answer it yourself, never sending it to the desk, when it is: his inboxes (what is waiting, search, read an email, who wrote), a reply to an email (write_reply, a Gmail draft), reminders, his calendar (reading it, and adding appointments with add_event), groceries, the morning brief or today's weather and news (news_brief), his money (money), a quick lookup, or a question you can answer from the tools or plain knowledge.
 If it is quick and you can answer it, answer it. If it would need his files or real work, send it.
 
 Money (21 Nov, P-15): the money tool reads his bank accounts, read only (Chime, Bank of America and Cash App through SimpleFIN Bridge, synced about every 6 hours), his Bills & debts register and his pay stubs. Use it for balances, spending ("how much did I spend on gas this month": category gas), bills, what is due, what he made and what was taken out. Give dollar amounts with the month and say how fresh the data is when it matters. Nothing can move money: no payments, transfers or bill pay, by you or anything else; if he asks, say he does that himself in his bank's app. Tax set-aside figures are a rough estimate, not tax advice: say so.
@@ -48,7 +48,10 @@ function chatTools(): array {
         /* 21 Nov (P-13): routing, and the quick reads the page used to answer only by itself */
         ['name' => 'send_to_desk', 'description' => 'Hand Matthew\'s request to the desk on his laptop (Claude Code with his whole workspace), by the routing rules: building or fixing apps, changing files, drafts written into the repo, research, meeting notes, memory, anything long. His own words go to the desk unchanged; it answers in his desk chats in a few minutes. Call it at most once, then stop.',
          'inputSchema' => ['type' => 'object', 'properties' => ['why' => ['type' => 'string', 'description' => 'A few words: which rule (e.g. "changes an app", "research").'], 'context' => ['type' => 'string', 'description' => 'Only when his message leans on this conversation ("do that", "the email above"): what it refers to, in a sentence or two. Otherwise leave out.']], 'required' => ['why']]],
-        ['name' => 'calendar', 'description' => 'Matthew\'s Traverse Google Calendar for the next 7 days (read only): each event\'s title, start, end and place.', 'inputSchema' => ['type' => 'object', 'properties' => ['days' => ['type' => 'integer', 'description' => 'How many days ahead, 1 to 7. Leave out for 7.']]]],
+        ['name' => 'calendar', 'description' => 'Matthew\'s Traverse Google Calendar: each event\'s title, start, end and place. From today for 7 days unless from/days are given.', 'inputSchema' => ['type' => 'object', 'properties' => ['from' => ['type' => 'string', 'description' => 'YYYY-MM-DD to start from; leave out for today.'], 'days' => ['type' => 'integer', 'description' => 'How many days, 1 to 60. Leave out for 7.']]]],
+        /* 26 Nov: add an appointment (Matthew: "I need you to be able to do that") */
+        ['name' => 'add_event', 'description' => 'Put an appointment on Matthew\'s Traverse Google Calendar when he asks (only his own calendar; no guests are invited). Check the calendar tool for that day first so the same appointment is not added twice.',
+         'inputSchema' => ['type' => 'object', 'properties' => ['title' => ['type' => 'string', 'description' => 'What it is, as he said it.'], 'date' => ['type' => 'string', 'description' => 'YYYY-MM-DD'], 'time' => ['type' => 'string', 'description' => 'Start, HH:MM 24-hour, Denver time. Leave out for an all-day event.'], 'minutes' => ['type' => 'integer', 'description' => 'How long; leave out for 60.'], 'where' => ['type' => 'string'], 'notes' => ['type' => 'string']], 'required' => ['title', 'date']]],
         ['name' => 'add_groceries', 'description' => 'Add items to the shared grocery list (King Soopers). Only when he asks.', 'inputSchema' => ['type' => 'object', 'properties' => ['items' => ['type' => 'array', 'items' => ['type' => 'string'], 'description' => 'One item each, short, like "eggs".']], 'required' => ['items']]],
         ['name' => 'news_brief', 'description' => 'Today\'s National Weather Service forecast for Englewood, Colorado (with alerts) and the newest headlines from named outlets (Denver area, world, tech), as fetched for the morning brief. Use ONLY these items for weather or news, and name the outlet each time.', 'inputSchema' => ['type' => 'object', 'properties' => ['section' => ['type' => 'string', 'enum' => ['all', 'weather', 'local', 'world', 'tech'], 'description' => 'Which part. Leave out for all.']]]],
         /* 21 Nov (P-15): his money, read only */
@@ -77,10 +80,15 @@ function chatTool(string $name, array $in, array $ctx = []): array {
         return ['Sent to the desk.', ['type' => 'desk', 'id' => (string) ($th['id'] ?? ''), 'why' => $why, 'thread' => $th]];
     }
     if ($name === 'calendar') {
-        $c = jvCalendar();
+        $c = jvCalendar((string) ($in['from'] ?? ''), (int) ($in['days'] ?? 7));
         if (($c['source'] ?? '') === 'none') return ['His calendar is not connected to J.A.R.V.I.S.', null];
         if (!empty($c['error'])) return ['The calendar did not answer: ' . $c['error'], null];
-        return [$c['events'] ? json_encode(['calendar' => $c['source'], 'timezone' => 'America/Denver', 'events' => $c['events']], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : 'Nothing on the calendar in the next 7 days.', null];
+        return [$c['events'] ? json_encode(['calendar' => $c['source'], 'timezone' => 'America/Denver', 'events' => $c['events']], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : 'Nothing on the calendar in that time.', null];
+    }
+    if ($name === 'add_event') {
+        $r = jvCalAdd((string) ($in['title'] ?? ''), (string) ($in['date'] ?? ''), (string) ($in['time'] ?? ''), (int) ($in['minutes'] ?? 60), (string) ($in['where'] ?? ''), (string) ($in['notes'] ?? ''));
+        if (!$r['ok']) return ['Not added: ' . $r['error'], null];
+        return ['On his ' . $r['calendar'] . ' calendar: ' . $r['title'] . ', ' . $r['when'] . '.', ['type' => 'calendar']];
     }
     if ($name === 'add_groceries') {
         $l = array_values(array_filter(array_map(fn($x) => trim((string) $x), (array) ($in['items'] ?? [])), fn($x) => $x !== ''));

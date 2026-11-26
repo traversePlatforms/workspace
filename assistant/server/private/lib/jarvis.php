@@ -335,15 +335,40 @@ function jvTeamHide(string $key, int $upd): array {
     $f = aDataDir() . '/jarvis/hidden-team.json'; @mkdir(dirname($f), 0700, true); file_put_contents($f, json_encode($h), LOCK_EX); @chmod($f, 0600);
     return ['ok' => true];
 }
-/** the next 7 days of the Traverse inbox's primary calendar (any connected calendar if Traverse has none), cached 5 minutes. Read only. */
-function jvCalendar(): array {
+/** 26 Nov 2026 (Matthew: "how come you can't add appointments. I need you to be able to do that"): put one appointment on the Traverse
+   calendar, for the Assistant's add_event tool. $date YYYY-MM-DD, $time HH:MM (24-hour; '' = all day), $mins length (default 60).
+   Only Matthew's own calendar; no guests, so Google sends no invitation to anyone. */
+function jvCalAdd(string $title, string $date, string $time = '', int $mins = 60, string $where = '', string $notes = ''): array {
+    $title = jvClean($title, 200); $where = jvClean($where, 200); $notes = jvClean($notes, 1500);
+    if ($title === '') return ['ok' => false, 'error' => 'Give the appointment a name.'];
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $date) || !checkdate((int) substr($date, 5, 2), (int) substr($date, 8, 2), (int) substr($date, 0, 4))) return ['ok' => false, 'error' => 'The date must be YYYY-MM-DD.'];
+    if ($time !== '' && !preg_match('/^([01]?\d|2[0-3]):[0-5]\d$/D', $time)) return ['ok' => false, 'error' => 'The time must be HH:MM, 24-hour.'];
+    $acc = jvCalAccount(true);
+    if (!$acc) return ['ok' => false, 'error' => jvCalAccount() ? 'The calendar is connected read only: connect the calendar again in J.A.R.V.I.S. to allow adding.' : 'The calendar is not connected to J.A.R.V.I.S.'];
+    $tok = gToken((string) $acc['email']); if (!$tok) return ['ok' => false, 'error' => 'The calendar needs reconnecting.'];
+    $tz = jvTz(); $mins = max(5, min(1440, $mins ?: 60));
+    $ev = ['summary' => $title, 'description' => trim($notes . "\n\nAdded by J.A.R.V.I.S.")];
+    if ($where !== '') $ev['location'] = $where;
+    if ($time === '') { $st = new DateTime($date, $tz); $ev['start'] = ['date' => $date]; $ev['end'] = ['date' => (clone $st)->modify('+1 day')->format('Y-m-d')]; }
+    else { $st = new DateTime($date . ' ' . $time, $tz); $ev['start'] = ['dateTime' => $st->format(DATE_RFC3339), 'timeZone' => 'America/Denver']; $ev['end'] = ['dateTime' => (clone $st)->modify('+' . $mins . ' minutes')->format(DATE_RFC3339), 'timeZone' => 'America/Denver']; }
+    $res = http('POST', jvCalBase() . 'calendars/primary/events', null, $ev, ['Authorization: Bearer ' . $tok]);
+    $eid = (string) ($res['id'] ?? '');
+    if ($eid === '') { if (function_exists('alog')) alog('calendar add failed', ['status' => (int) ($res['_status'] ?? 0)]); return ['ok' => false, 'error' => 'Google Calendar did not take it (HTTP ' . (int) ($res['_status'] ?? 0) . ').']; }
+    @unlink(aDataDir() . '/jarvis/cal-cache.json');
+    if (function_exists('alog')) alog('calendar event added', ['date' => $date]);
+    return ['ok' => true, 'id' => $eid, 'calendar' => (string) ($acc['label'] ?? 'Traverse'), 'when' => $st->format($time === '' ? 'l j F Y' : 'l j F Y, g:ia') . ($time === '' ? ' (all day)' : ''), 'title' => $title];
+}
+/** the next 7 days of the Traverse inbox's primary calendar (any connected calendar if Traverse has none), cached 5 minutes. Read only.
+   26 Nov: $from (YYYY-MM-DD) and $days (1 to 60) look further ahead for the Assistant; only the default 7 days from today is cached. */
+function jvCalendar(string $from = '', int $days = 7): array {
+    $days = max(1, min(60, $days)); $plain = $from === '' && $days === 7;
     $acc = jvCalAccount();
     if (!$acc) return ['source' => 'none', 'need' => 'Connect the Traverse calendar to see it here.'];
     $email = (string) $acc['email']; $label = (string) ($acc['label'] ?? $email);
     $cf = aDataDir() . '/jarvis/cal-cache.json';
     $c = is_file($cf) ? json_decode((string) file_get_contents($cf), true) : null;
-    if (is_array($c) && ($c['email'] ?? '') === $email && time() - (int) ($c['at'] ?? 0) < 300) return $c['out'];
-    $tz = new DateTimeZone('America/Denver'); $from = new DateTime('today', $tz); $to = (clone $from)->modify('+7 days');
+    if ($plain && is_array($c) && ($c['email'] ?? '') === $email && time() - (int) ($c['at'] ?? 0) < 300) return $c['out'];
+    $tz = new DateTimeZone('America/Denver'); $fromD = $from; $from = new DateTime(preg_match('/^\d{4}-\d{2}-\d{2}$/D', $fromD) ? $fromD : 'today', $tz); $to = (clone $from)->modify('+' . $days . ' days');
     $tok = gToken($email);
     if (!$tok) return ['source' => $label, 'error' => 'The ' . $label . ' calendar needs reconnecting.', 'events' => []];
     $r = http('GET', jvCalBase() . 'calendars/primary/events?' . http_build_query(['timeMin' => $from->format(DATE_RFC3339), 'timeMax' => $to->format(DATE_RFC3339),
@@ -363,6 +388,7 @@ function jvCalendar(): array {
             'allDay' => $all, 'where' => jvClean($i['location'] ?? '', 80)];
     }
     $out = ['source' => $label, 'events' => $ev];
+    if (!$plain) return $out;
     @mkdir(dirname($cf), 0700, true); file_put_contents($cf, json_encode(['email' => $email, 'at' => time(), 'out' => $out]), LOCK_EX); @chmod($cf, 0600);
     return $out;
 }

@@ -208,6 +208,7 @@ const gsrv = http.createServer((req, res) => {
         return R({ stopReason: 'end_turn', content: [{ type: 'text', text: JSON.stringify({ weather: 'The National Weather Service says there is a chance of snow showers today, with a high of 47 and a low of 21, and a Winter Weather Advisory is in effect.', local: 'Colorado Public Radio reports: ' + first('local') + '.', world: 'BBC News reports: ' + first('world') + '.', tech: 'Ars Technica reports: ' + first('tech') + '.' }) }] }); }
       const txt = typeof last.content === 'string' ? last.content : ''; AN.calls.push({ kind: 'chat', jb, txt });
       if (txt && /spend on gas/i.test(txt)) return R({ stopReason: 'tool_use', content: [{ type: 'tool_use', id: 'toolu_money1', name: 'money', input: { category: 'gas' } }] });
+      if (txt && /stepping stone/i.test(txt)) return R({ stopReason: 'tool_use', content: [{ type: 'tool_use', id: 'toolu_ev1', name: 'add_event', input: { title: 'Stepping Stone LLC appointment', date: '2026-12-10', time: '16:40' } }] });   /* 26 Nov */
       if (txt && /\b(fix|build|deploy)\b/i.test(txt)) return R({ stopReason: 'tool_use', content: [{ type: 'tool_use', id: 'toolu_mock1', name: 'send_to_desk', input: { why: 'changes an app' } }] });
       return R({ stopReason: 'end_turn', content: [{ type: 'text', text: txt ? 'Mock Assistant: two emails need an answer from you.' : 'Done.' }] }); }
     G.calls.push(req.method + ' ' + p);
@@ -1527,6 +1528,13 @@ try {
     ok(await until('/you spent \\$80\\.10 on gas/.test(document.querySelector(".chat").innerText)', 9000), 'the Assistant answers a money question with its money tool');
     const tc = AN.calls.find(c => c.kind === 'moneytool'), chat1 = AN.calls.find(c => c.kind === 'chat' && c.txt);
     ok(tc && tc.res.includes('Shell Oil') && /category\\*":\\*"Gas/.test(tc.res) &&!tc.res.includes(SF_PASS) && chat1 && chat1.jb.tools.some(t => t.name === 'money') && /Nothing can move money/.test(JSON.stringify(chat1.jb.system)), 'money tool: read only, gas transactions for the month; the Assistant is told nothing can move money');
+    /* 26 Nov (Matthew: "how come you can't add appointments"): the Assistant's add_event puts it on the Traverse calendar */
+    { const AF2 = path.join(DATA, 'accounts.json'), ac2 = JSON.parse(fs.readFileSync(AF2, 'utf8')); ac2['m.sharpe@traverse.example.test'].calWrite = true; fs.writeFileSync(AF2, JSON.stringify(ac2));
+      const ev0 = (G.events || []).length; AN.calls.length = 0;
+      await ev('document.getElementById("ask").value="Add my Stepping Stone LLC appointment on 10 December at 4:40pm"'); await click('.cmdbar .snd');
+      ok(await until('(G=>G)(document.querySelectorAll(".chat .msg").length) && !document.querySelector(".chat .wait")', 9000) && await nodeUntil0(() => (G.events || []).length === ev0 + 1), 'add_event: the Assistant adds an appointment');
+      const e1 = (G.events || [])[ev0] || {}, chat2 = AN.calls.find(c => c.kind === 'chat' && c.txt);
+      ok(e1.summary === 'Stepping Stone LLC appointment' && /^2026-12-10T16:40:00-07:00$/.test((e1.start || {}).dateTime || '') && /^2026-12-10T17:40:00-07:00$/.test((e1.end || {}).dateTime || '') && !e1.attendees && chat2 && chat2.jb.tools.some(t => t.name === 'add_event'), 'add_event: right title, 4:40 pm Denver, an hour long, no guests (' + JSON.stringify(e1.start) + ')'); }
     const mp = fs.readFileSync(path.join(REPO, 'assistant', 'server', 'private', 'lib', 'money.php'), 'utf8');
     ok(!/CURLOPT_POST\b|CURLOPT_CUSTOMREQUEST|CURLOPT_POSTFIELDS/.test(mp), 'nothing in the money code can send anything to the bank feed but a read');
     fs.writeFileSync(CFG, cfg0);
