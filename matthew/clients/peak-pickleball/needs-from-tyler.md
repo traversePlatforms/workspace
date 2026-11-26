@@ -20,7 +20,7 @@ Simplest ask (Matthew, 19 Nov): give Matthew the **Exchange Administrator** role
 8. Are the offer shapes really on offer: court naming, event presence, and memberships bundled for a sponsor's staff? Is renting the whole building for expos on offer? (The emails now say "growing our group of local sponsors", Cai's wording, so the "first group" question is settled.)
 8a. **The tech add-ons for sponsors** (new 20 Nov; the sheet for Brandon is matthew/peak-pickleball-sponsorship/sponsor-add-ons-for-brandon-2026-11-20.pdf): is Peak OK offering tracked QR codes on court signs, a monthly sponsor report, sponsor slides on the TVs, member deals with codes, and a staff sign-up link? Who sets their prices: Peak, Brandon or Matthew?
 9. Are the sponsor packages still $12,000 and $24,000 a year?
-10. **OK to share Peak's own numbers with prospects:** about 630 members paying dues and about 67,000 sign-ups a year. These are used in Jamie's email (Bad Daddy's).
+10. **DONE 26 Nov: Tyler gave Matthew permission.** **OK to share Peak's own numbers with prospects:** about 630 members paying dues and about 67,000 sign-ups a year. These are used in Jamie's email (Bad Daddy's).
 11. Tours: how long they run (we assumed 30 minutes), who meets the visitors, and which days and times to offer.
 12. Do Cai, Brandon, Nneka and Lance have Peak email addresses, so they can get copies of the tour confirmations?
 
