@@ -72,8 +72,6 @@ CATS = [
    'A month of posts drafted; each one approved by them first.', '', B + ' (post calendar)', '1–2 h', '3–5 h'),
   ('spotlight', 'Spotlight posts with Peak', 'Peak features your business on its socials, ready for you to share.',
    'Peak features the sponsor; they share it.', '', '1 h (template)', '30 min', '30 min'),
-  ('video', 'Short videos from Peak', 'Clips of your name on the courts, at events and with the winners, for your own pages.',
-   'Clips of their name on court, events, winners.', '', B + ' (video tools)', '30 min', '2–4 h per video'),
  ]),
  ('Marketing', 'Bringing in customers.', [
   ('deals', 'Member deals with codes', 'A special offer for Peak members with its own code, so you see real redemptions.',
@@ -92,7 +90,7 @@ AUTO = {'qr': '0', 'report': '~5 min', 'stats': '0', 'sstats': '0',
         'cam': '~1 h', 'wifi': '0',
         'health': 'none (one-time)', 'landing': '0', 'forms': '0', 'newsite': 'see hosting', 'host': '15–30 min',
         'seo': '1–2 h', 'revreq': '0', 'revalert': '0',
-        'profile': 'none (one-time)', 'posts': '1–2 h', 'spotlight': '~10 min', 'video': '1–2 h per video',
+        'profile': 'none (one-time)', 'posts': '1–2 h', 'spotlight': '~10 min',
         'deals': '~5 min', 'ads': '~1 h', 'news': '45 min–1 h'}
 
 N = {}
@@ -101,7 +99,7 @@ for _, _, items in CATS:
     for it in items:
         i += 1
         N[it[0]] = i
-assert i == 27, i
+assert i == 26, i   # 26 Nov: short videos removed (Matthew: no video content; he doesn't want to deal with music)
 assert set(AUTO) == set(N), set(N) ^ set(AUTO)
 e = html.escape
 def nums(*ks): return ', '.join(str(N[k]) for k in ks[:-1]) + ' and ' + str(N[ks[-1]])
@@ -165,11 +163,11 @@ out.append('</table>')
 out.append(f'''<ul class="notes">
   <li><b>Typical bundles, per sponsor:</b> items {nums('qr', 'report', 'deals')} (QR codes, report, member deal) take about 1¼ h to set up and 30–45 min a month today, <b>about 10 min once automated</b>. Adding the TV slides, partner spot and sponsor page ({nums('tv', 'spot', 'page')}) brings it to about 3½ h to set up and 1½–2 h a month today, <b>about 25 min once automated</b>. Local search ({N['seo']}) adds 4–6 h to set up and 3–5 h a month (1–2 h automated).</li>
   <li><b>A website and socials starter ({', '.join(str(N[k]) for k in ['stats', 'sstats', 'health', 'revreq', 'profile', 'posts'])}):</b> about 8–12 h to set up, then 3–5 h a month today, <b>1–2 h once automated</b>, all of it the monthly posts.</li>
-  <li><b>What stays real work</b> even automated: local search ({N['seo']}), monthly posts ({N['posts']}), videos ({N['video']}), ads ({N['ads']}) and the newsletter ({N['news']}), because they need judgment, writing or the sponsor's approval. Nothing posts or sends without an OK.</li>
+  <li><b>What stays real work</b> even automated: local search ({N['seo']}), monthly posts ({N['posts']}), ads ({N['ads']}) and the newsletter ({N['news']}), because they need judgment, writing or the sponsor's approval. Nothing posts or sends without an OK.</li>
   <li><b>Keep about 15 min a month per sponsor</b> on top of these for check-ins, questions and fixing what breaks.</li>
 </ul>
 </body>
 </html>
 ''')
 (HERE / 'sponsor-add-ons-time-2026-11-26.html').write_text('\n'.join(out))
-print('wrote both; 27 items in', len(CATS), 'categories:', ', '.join(f'{c} ({len(x)})' for c, _, x in CATS))
+print(f'wrote both; {i} items in', len(CATS), 'categories:', ', '.join(f'{c} ({len(x)})' for c, _, x in CATS))
