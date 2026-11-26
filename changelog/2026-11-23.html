@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>End of day: Monday 23 to Wednesday, 25 November 2026</title>
+<!-- Matthew's daily changes report for 2026-11-23 to 2026-11-25. Made by shared/tools/eod (README.md there). Fonts: Outfit + DM Sans from traverse/app/tools/eod-assets (Open Font License). -->
+<style>
+@font-face{font-family:Outfit;font-weight:800;src:url('../traverse/app/tools/eod-assets/Outfit-ExtraBold.ttf')}
+@font-face{font-family:Outfit;font-weight:600;src:url('../traverse/app/tools/eod-assets/Outfit-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:400;src:url('../traverse/app/tools/eod-assets/DMSans-Regular.ttf')}
+@font-face{font-family:'DM Sans';font-weight:600;src:url('../traverse/app/tools/eod-assets/DMSans-SemiBold.ttf')}
+@font-face{font-family:'DM Sans';font-weight:700;src:url('../traverse/app/tools/eod-assets/DMSans-Bold.ttf')}
+:root{--navy:#13294b;--navyd:#0d1d36;--ink:#16202e;--soft:#56627a;--line:#e3e7ee;--bg:#f4f6f9;--card:#fff;--orange:#d6400c;--good:#2f7a3a;--goodbg:#e4f2e3;--warn:#a85d00;--warnbg:#fff2dc}
+@page{size:Letter;margin:0.45in}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 'DM Sans',system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.page{max-width:860px;margin:0 auto;padding:24px 16px 48px}
+.head{background:var(--navy);color:#fff;border-radius:16px;padding:26px 28px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px}
+.head h1{font:800 30px/1.1 Outfit,sans-serif;margin:0}
+.head .d{color:#c9d5e6;margin-top:6px;font-size:15px}
+.head .tag{font:600 13px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#ffb38f}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 8px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.kpi b{display:block;font:800 40px/1 Outfit,sans-serif;color:var(--navy)}
+.kpi span{display:block;font-weight:600;margin-top:6px}
+.kpi small{color:var(--soft);font-size:13px}
+.kpi.warn b{color:var(--orange)}
+h2{font:600 20px Outfit,sans-serif;margin:26px 0 10px;color:var(--navy);display:flex;align-items:center;gap:10px}
+h2 .n{font:700 12px 'DM Sans',sans-serif;background:var(--navy);color:#fff;border-radius:999px;padding:2px 9px}
+h3{font:600 14px 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.sec{break-inside:avoid;page-break-inside:avoid}
+.row{break-inside:avoid}h2{break-after:avoid}
+.row{display:grid;grid-template-columns:150px 1fr;gap:14px;padding:11px 18px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .k{font-weight:700;color:var(--ink)}
+.row .k i{display:block;font-style:normal;font-weight:400;color:var(--soft);font-size:12px}
+.row .v{color:#2a3446}
+.row .v em{font-style:normal;color:var(--soft)}
+.pill{display:inline-block;font:700 11px 'DM Sans',sans-serif;letter-spacing:.04em;text-transform:uppercase;border-radius:999px;padding:1px 8px;margin-right:6px;vertical-align:1px}
+.live{background:var(--goodbg);color:var(--good)}
+.off{background:#eef0f4;color:var(--soft)}
+.posted{background:#e6ecfb;color:#2b4fa8}
+.run{background:var(--warnbg);color:var(--warn)}
+.wait .row .k{color:var(--orange)}
+.mrow{display:grid;grid-template-columns:1fr 120px 120px 110px;gap:12px;padding:10px 18px;border-top:1px solid var(--line);align-items:baseline}
+.mrow:first-child{border-top:0}
+.mrow.th{background:#f8f9fb;font:700 11.5px 'DM Sans',sans-serif;letter-spacing:.05em;text-transform:uppercase;color:var(--soft);padding-top:7px;padding-bottom:7px}
+.mrow .m{font-weight:700}
+.mrow .m i{display:block;font-style:normal;font-weight:400;color:var(--soft);font-size:12px;line-height:1.35}
+.mrow .n{text-align:right;font-variant-numeric:tabular-nums}
+.mrow .n.this{font-weight:700;color:var(--navy)}
+.mrow .na{grid-column:2 / 5;color:var(--soft);font-style:italic;text-align:right}
+.mrow .txt{grid-column:2 / 5;text-align:right;color:#2a3446}
+.mrow.c5{grid-template-columns:1fr 92px 92px 100px 100px}
+.mrow.c5 .na,.mrow.c5 .txt{grid-column:2 / 6}
+.mrow .n.ly{color:var(--soft)}
+.mrow .m i.norm{color:var(--navy);font-weight:600;margin-top:1px}
+.chg{white-space:nowrap;display:inline-block;font:700 12.5px 'DM Sans',sans-serif;border-radius:999px;padding:1px 9px;background:#eef0f4;color:var(--soft)}
+.chg.up{background:var(--goodbg);color:var(--good)}
+.chg.down{background:var(--warnbg);color:var(--warn)}
+.dash{color:#9aa3b2}
+.nstrip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.nc{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px}
+.nc .co{font:700 12px 'DM Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--soft)}
+.nc .st{display:flex;gap:18px;margin-top:6px;color:var(--soft);font-size:12.5px;line-height:1.25}
+.nc .st span{display:flex;flex-direction:column}
+.nc .st b{font:800 26px/1.05 Outfit,sans-serif;color:var(--navy)}
+.nc small{display:block;color:var(--soft);font-size:11.5px;margin-top:4px}
+.row .v b{font-weight:700;color:var(--ink)}
+.tmrw .row.dl .k{color:var(--warn)}
+.foot{color:var(--soft);font-size:12.5px;margin-top:28px;border-top:1px solid var(--line);padding-top:12px}
+@media print{body{font-size:12px;line-height:1.36}.page{padding:0 4px 8px}.head{padding:14px 22px}.head h1{font-size:26px}.kpis{margin:12px 0 4px;gap:10px}.kpi{padding:8px 14px}.kpi b{font-size:28px}.kpi small{font-size:11.5px}h2{font-size:16px;margin:10px 0 5px}h3{margin:8px 0 4px}.row{padding:4px 14px;grid-template-columns:140px 1fr}.mrow{padding:4px 14px}.mrow .m i{font-size:10.5px}.foot{margin-top:6px;padding-top:6px;font-size:11px}.nc{padding:6px 12px}.nc .st b{font-size:20px}.sec{break-inside:auto;page-break-inside:auto}}
+@media (max-width:620px){.row{grid-template-columns:1fr;gap:2px}.head{flex-direction:column;align-items:flex-start}.mrow{grid-template-columns:1fr 70px 70px 70px}.mrow.c5{grid-template-columns:1fr 60px 60px 70px 60px}.nstrip{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="head">
+  <div><div class="tag">End of day · catch-up</div><h1>Monday 23 to Wednesday, 25 November 2026</h1><div class="d">Catch-up: what changed 23 to 25 November (the computer was off, so the daily reports didn't run)</div></div>
+  <div class="d">Traverse · Sixfold · Peak · J.A.R.V.I.S.</div>
+</div>
+<div class="kpis">
+  <div class="kpi"><b>28</b><span>Changes today</span><small>across 4 companies and the workspace</small></div>
+  <div class="kpi"><b>4</b><span>Areas touched</span><small>Traverse · Sixfold 365 · Peak Pickleball · J.A.R.V.I.S. and workspace</small></div>
+  <div class="kpi"><b>3</b><span>Running tonight</span><small>Golden Ring ad · Nightly pulls · Sunday reports</small></div>
+  <div class="kpi warn"><b>6</b><span>Waiting on you</span><small>Listed at the bottom</small></div>
+</div>
+
+<div class="sec"><h2>The day's numbers <small style="font:400 13px 'DM Sans',sans-serif;color:var(--soft)">counts only; the weekly report has the rest</small></h2>
+<div class="nstrip"><div class="nc"><div class="co">Sixfold 365</div><div class="st"><span><b>7</b> leads</span><span><b>1</b> quotes sent</span><span><b>0</b> jobs booked</span></div><small>Sixfold 365 app</small></div><div class="nc"><div class="co">Peak Pickleball</div><div class="st"><span><b>5</b> emails sent</span><span><b>0</b> replies</span><span><b>0</b> tours booked</span></div><small>outreach sender and desk logs</small></div><div class="nc"><div class="co">Traverse</div><div class="st"><span><b>0</b> site visitors</span><span><b>0</b> demos booked</span></div><small>cookie-free site counting</small></div></div></div>
+
+<div class="sec">
+<h2>Traverse <span class="n">3</span> <small style="font:400 13px 'DM Sans',sans-serif;color:var(--soft)">the field app, editions, website</small></h2>
+<div class="card">
+  <div class="row"><div class="k">Traverse PDF look<i>25 Nov</i></div><div class="v"><span class="pill live">Live</span>A shared Traverse PDF kit (navy band, Traverse fonts and mark). Most PDFs use it from now on.</div></div>
+  <div class="row"><div class="k">Meta hub<i>23 Nov</i></div><div class="v"><span class="pill live">Live</span>Traverse is the hub in Meta: own portfolio, the Traverse Page moved in with full control, Peak and Sixfold as partners.</div></div>
+  <div class="row"><div class="k">Lawn sizes<i>23-24 Nov</i></div><div class="v"><span class="pill run">Running</span>The last batches of lawn measurements were restarted and finished on the cloud computer.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Sixfold 365 <span class="n">4</span> <small style="font:400 13px 'DM Sans',sans-serif;color:var(--soft)">app, websites, email</small></h2>
+<div class="card">
+  <div class="row"><div class="k">ClickUp sync<i>24 Nov</i></div><div class="v"><span class="pill live">Live</span>A lead Jen removed no longer comes back from the ClickUp sync.</div></div>
+  <div class="row"><div class="k">Times contacted<i>24 Nov</i></div><div class="v"><span class="pill live">Live</span>New Pipeline filter for Jen: contacted once, twice, 3+ or not yet.</div></div>
+  <div class="row"><div class="k">Brad and Jen in J.A.R.V.I.S.<i>23 Nov</i></div><div class="v"><span class="pill live">Live</span>Brad reaches J.A.R.V.I.S. from his crew login; Jen gets her own working session.</div></div>
+  <div class="row"><div class="k">Before and after report<i>25 Nov</i></div><div class="v"><span class="pill posted">Sent</span>Report on the 10 days since the handover (leads, jobs, money, overhead), on your Reports shelf.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Peak Pickleball <span class="n">15</span> <small style="font:400 13px 'DM Sans',sans-serif;color:var(--soft)">sponsor desk, Outbox and email, data work</small></h2>
+<div class="card">
+  <div class="row"><div class="k">Desk redesign<i>25 Nov</i></div><div class="v"><span class="pill live">Live</span>Five tabs (Today, Inbox, Leads, Tours, More), tours on a Sixfold-style schedule, better on a phone, and a What's new note for the team.</div></div>
+  <div class="row"><div class="k">Reply all<i>25 Nov</i></div><div class="v"><span class="pill live">Live</span>The desk Inbox can reply to everyone on an email, with others copied (off by default).</div></div>
+  <div class="row"><div class="k">Desk Inbox<i>23 Nov</i></div><div class="v"><span class="pill live">Live</span>Four tabs (To answer, Waiting on them, Done, Other), claims lock an email to one person, and links in emails open.</div></div>
+  <div class="row"><div class="k">My leads<i>23 Nov</i></div><div class="v"><span class="pill live">Live</span>Replies to your own emails go to a section only you can open.</div></div>
+  <div class="row"><div class="k">New desk accounts<i>24 Nov</i></div><div class="v"><span class="pill live">Live</span>Bria added for outreach; Claire's outreach role (contacts on your behalf).</div></div>
+  <div class="row"><div class="k">Sponsor prices<i>25 Nov</i></div><div class="v"><span class="pill live">Live</span>The desk's packages are now Tyler's list (16 priced, $1,200 to $250,000). The old $12,000 and $24,000 are gone.</div></div>
+  <div class="row"><div class="k">Golden Ring ad<i>25 Nov</i></div><div class="v"><span class="pill live">Live</span>Cammie's video, $25 a day, Springs, Denver, Pueblo and Castle Rock only. Launched on your go, approved by 12:54 pm. Tracked nightly.</div></div>
+  <div class="row"><div class="k">Golden Ring video<i>24-25 Nov</i></div><div class="v"><span class="pill posted">Sent</span>Four drafts (Lyria music, ring stills, sound effects). Cammie made the final version, now stored for the ads.</div></div>
+  <div class="row"><div class="k">Weekly Peak report<i>25 Nov</i></div><div class="v"><span class="pill live">Live</span>Every Sunday at 9:15 pm on your Reports shelf: this week vs Week 0 (before you started), plus Google listing and the ad.</div></div>
+  <div class="row"><div class="k">Data pulls<i>23-25 Nov</i></div><div class="v"><span class="pill run">Running</span>Nightly CourtReserve, Patch, Facebook, Instagram and Google listing numbers; Facebook history back to Sep 2024.</div></div>
+  <div class="row"><div class="k">Email blasts<i>23-25 Nov</i></div><div class="v"><span class="pill posted">Sent</span>Sponsor list 28 sent; expo list 26 sent, 3 replies (Dana Cain, Front Range Makers Market, Pikes Peak Senior News).</div></div>
+  <div class="row"><div class="k">Sponsor follow-ups<i>25 Nov</i></div><div class="v"><span class="pill off">Built, off</span>The 8 sponsors who opened are on the desk to call Mon 30 Nov. New follow-up and first-email drafts use Peak's numbers; nothing sent.</div></div>
+  <div class="row"><div class="k">Add-on sheets<i>25 Nov</i></div><div class="v"><span class="pill off">Built, off</span>Sponsor add-ons list (26 items, 6 groups) and an internal time and pricing sheet; starter pack sent to Brandon by you.</div></div>
+  <div class="row"><div class="k">Emails sent on your go<i>23-25 Nov</i></div><div class="v"><span class="pill posted">Sent</span>Tyler (phones and QR check-in, the form question, ad results), Nathan (QuickBooks connection, cc Brandon), Dana and Traci, Stephanie.</div></div>
+  <div class="row"><div class="k">Plans and drafts<i>23-25 Nov</i></div><div class="v"><span class="pill off">Built, off</span>Website plan with a Tournaments page, Patch replacement plan, sponsor payment process, phone plan, RYVL briefing for Nneka, website mock.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>J.A.R.V.I.S. and workspace <span class="n">6</span> <small style="font:400 13px 'DM Sans',sans-serif;color:var(--soft)">cloud computer, backups, automations</small></h2>
+<div class="card">
+  <div class="row"><div class="k">Main workspace<i>23 Nov</i></div><div class="v"><span class="pill live">Live</span>The cloud computer is the main workspace; codes, keys and private notes moved there. The 6 pm backup runs there too.</div></div>
+  <div class="row"><div class="k">Reports button<i>25 Nov</i></div><div class="v"><span class="pill live">Live</span>A Reports shelf in J.A.R.V.I.S. where PDFs land for you.</div></div>
+  <div class="row"><div class="k">Google listing access<i>25 Nov</i></div><div class="v"><span class="pill live">Live</span>Business Profile API approved and connected; Peak's listing is pulled nightly.</div></div>
+  <div class="row"><div class="k">Needs-you messages<i>23 Nov</i></div><div class="v"><span class="pill live">Live</span>When the cloud computer needs you, it messages you in your app.</div></div>
+  <div class="row"><div class="k">Home Screen badge<i>24 Nov</i></div><div class="v"><span class="pill live">Live</span>The app badge shows the real count and clears when there's nothing.</div></div>
+  <div class="row"><div class="k">Inbox delete<i>23 Nov</i></div><div class="v"><span class="pill live">Live</span>Delete moves an email to Gmail's Trash, with Undo.</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Team activity <span class="n">1</span> <small style="font:400 13px 'DM Sans',sans-serif;color:var(--soft)">J.A.R.V.I.S. in the Sixfold app, post calendar and Peak desk</small></h2>
+<div class="card">
+  <div class="row"><div class="k">Jen McPherson<i>Sixfold app help desk</i></div><div class="v"><b>1 request:</b> Can we check if aftercare emails are set up to send to jobs that are fall cleanup only? (answered)</div></div>
+</div>
+</div>
+
+<div class="sec">
+<h2>Running tonight <span class="n">3</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Golden Ring ad</div><div class="v"><span class="pill run">Running</span>$25 a day. Through this morning: $18.28 spent, 80 link clicks, 100% Colorado.</div></div>
+  <div class="row"><div class="k">Nightly pulls</div><div class="v"><span class="pill run">Running</span>Peak (CourtReserve, Patch, Meta, Google listing, Golden Ring) at 2:30 am.</div></div>
+  <div class="row"><div class="k">Sunday reports</div><div class="v"><span class="pill run">Running</span>Peak weekly report and the business numbers report on Sunday 29 Nov.</div></div>
+</div>
+</div>
+
+<div class="sec tmrw">
+<h2>Tomorrow <span class="n">2</span> <small style="font:400 13px 'DM Sans',sans-serif;color:var(--soft)">Traverse calendar, as the Assistant last read it (Nov 26, 7:50 AM MT)</small></h2>
+<div class="card">
+  <div class="row"><div class="k">all day<i>Thu 26 Nov</i></div><div class="v">Kids: Thanksgiving school break</div></div>
+  <div class="row dl"><div class="k">Wed 2 Dec<i>due</i></div><div class="v">Surge: 1 dated item (see the laptop)</div></div>
+</div>
+</div>
+
+<div class="sec wait">
+<h2>Waiting on you <span class="n">6</span></h2>
+<div class="card">
+  <div class="row"><div class="k">Sponsor emails</div><div class="v">Read the follow-up and new first email (drafts file); then an inbox test to your own Gmail and Outlook.</div></div>
+  <div class="row"><div class="k">Tour recording</div><div class="v">Record Brandon's tour with J.A.R.V.I.S. and photograph each sponsor spot.</div></div>
+  <div class="row"><div class="k">Nathan</div><div class="v">His reply on connecting QuickBooks and Brandon's Sales Manager login.</div></div>
+  <div class="row"><div class="k">Tyler</div><div class="v">Answers on the phones (PK-13), the QR check-in (PK-14) and the form question.</div></div>
+  <div class="row"><div class="k">Sixfold ad spend</div><div class="v">The dated Ads Manager screenshot (15 Nov to now) for the before and after report.</div></div>
+  <div class="row"><div class="k">Anne's feedback</div><div class="v">Pass to Brandon: Pikes Peak Senior News passed on price (more than the Antlers).</div></div>
+</div>
+</div>
+
+<div class="foot">Catch-up report for 23-25 Nov 2026, made 26 Nov. Changes from git plus emails, settings and desk changes made outside it.</div>
+</div>
+</body>
+</html>
