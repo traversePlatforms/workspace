@@ -25,6 +25,8 @@
  *   attach  put on a company's card (a touch, as a matched reply is)
  *   rmail   the words of a reply sent from the Inbox with no card; reply: each reply's result
  *   read    the first time a seller opened it (it is then marked read in Peak Partnerships; nothing is ever moved or deleted)
+ *   rcpt    who else their email went to (2026-11-26, Reply all): its To and Cc as Microsoft gives them, looked up the first time it is opened
+ *           or answered (inRcpt) and kept, so it works for emails from before too
  * Sellers and admins see it; the read-only Claude Check account may look and never act; the Expo-only account doesn't get it.
  *
  * Alerts: Web Push to the desk app (each person turns it on per device in More, My email & booking link) and, optionally, a short email to
@@ -301,6 +303,7 @@ function inApply(?array $R, array $r): ?array {
             elseif (!empty($R['answered'])) { $R['back'] = $R['back'] ?? ($R['answered']['back'] ?? null); $R['answered'] = null; }
             break;
         case 'hide': $R['hide'] = !empty($r['on']) ? ['by' => $by, 'at' => $at, 'bounce' => (array) ($r['bounce'] ?? [])] : null; break;   /* Remove, from Other */
+        case 'rcpt': if (empty($R['rcpt'])) $R['rcpt'] = ['to' => (array) ($r['to'] ?? []), 'cc' => (array) ($r['cc'] ?? [])]; break;   /* Reply all (2026-11-26) */
         case 'rmail': $x = $r; unset($x['t'], $x['iid']); $R['rmails'][(string) $r['ref']] = $x; break;
         /* My leads (2026-11-24) */
         case 'via': if (empty($R['via']) && is_array($r['via'] ?? null)) $R['via'] = $r['via']; break;
@@ -308,7 +311,7 @@ function inApply(?array $R, array $r): ?array {
         case 'mback': $R['mback'][] = ['by' => $by, 'at' => $at, 'ms' => (int) ($r['ms'] ?? $at * 1000)]; break;
         case 'outcome': $R['outcomes'][] = ['st' => (string) ($r['st'] ?? ''), 'amount' => isset($r['amount']) ? (int) $r['amount'] : null, 'note' => (string) ($r['note'] ?? ''), 'by' => $by, 'at' => $at]; break;
         case 'reply': {
-            $x = ['ref' => (string) ($r['ref'] ?? ''), 'ok' => !empty($r['ok']), 'why' => (string) ($r['why'] ?? ''), 'to' => (string) ($r['to'] ?? ''), 'by' => $by, 'at' => $at];
+            $x = ['ref' => (string) ($r['ref'] ?? ''), 'ok' => !empty($r['ok']), 'why' => (string) ($r['why'] ?? ''), 'to' => (string) ($r['to'] ?? ''), 'by' => $by, 'at' => $at] + (!empty($r['cc']) ? ['cc' => (string) $r['cc']] : []);
             $R['replies'] = array_values(array_filter($R['replies'] ?? [], fn($y) => $y['ref'] !== $x['ref'])); $R['replies'][] = $x;
             if ($x['ok']) { $R['back'] = null; if (!empty($R['answered'])) $R['answered']['back'] = null; }   /* a reply after Back to To answer: Waiting again (by the log's order, not the clock) */
             break;
@@ -437,7 +440,7 @@ function inOut(array $R, array $names, bool $full, ?array $st = null, bool $owne
     $o = ['iid' => (string) $R['iid'], 'at' => (int) $R['at'], 'from' => (string) $R['from'], 'name' => (string) $R['name'], 'subject' => (string) $R['subject'], 'cat' => (string) $R['cat'], 'why' => (string) ($R['why'] ?? ''),
         'files' => array_map(fn($a, $i) => ['n' => $a['n'], 'i' => $i, 'dl' => inFileOk($a), 'size' => (int) $a['size']], $R['att'] ?? [], array_keys($R['att'] ?? [])),
         'claim' => null, 'done' => $R['done'] ?? null, 'read' => !empty($R['read']), 'stop' => !empty($R['stop']), 'auto' => !empty($R['auto']),
-        'replies' => array_map(fn($x) => ['by' => $x['by'], 'at' => $x['at'], 'ok' => $x['ok'], 'why' => $x['why']], $R['replies'] ?? []), 'card' => null, 'rp' => (string) ($R['mid'] ?? '') !== '' || (string) ($R['imid'] ?? '') !== ''];
+        'replies' => array_map(fn($x) => ['by' => $x['by'], 'at' => $x['at'], 'ok' => $x['ok'], 'why' => $x['why']] + (isset($x['cc']) ? ['cc' => $x['cc']] : []), $R['replies'] ?? []), 'card' => null, 'rp' => (string) ($R['mid'] ?? '') !== '' || (string) ($R['imid'] ?? '') !== ''];
     if (!empty($R['card']['id'])) { $k = $R['card']['w'] . ':' . $R['card']['id']; $o['card'] = ['w' => (string) $R['card']['w'], 'id' => (string) $R['card']['id'], 'name' => (string) ($names[$k][0] ?? ''), 'off' => !empty($names[$k][1]), 'by' => (string) ($R['card']['by'] ?? '')]; }
     $st ??= inStates(inAll())[(string) $R['iid']] ?? ['b' => 'open', 'how' => '', 'at' => 0];
     $o['box'] = $st['b']; $o['how'] = $st['how']; $o['boxAt'] = (int) $st['at']; if (!empty($st['newer'])) $o['newer'] = $st['newer'];
@@ -484,7 +487,46 @@ function inOpen(string $iid, string $me, bool $act): array {
         try { $b = inBox($R); if ($b !== '') { [$s] = pmGraph('PATCH', $b . '/messages/' . rawurlencode((string) $R['mid']), ['isRead' => true]); if ($s === 200) inRow(['t' => 'read', 'iid' => $iid, 'by' => $me]); } }
         catch (Throwable $e) { error_log('peak desk inbox read: ' . $e->getMessage()); }
     }
-    return ['ok' => true, 'item' => inOut($R, inNames([$R]), true, inStates(inAll())[$iid] ?? null, inIsOwner($me))];
+    $o = inOut($R, inNames([$R]), true, inStates(inAll())[$iid] ?? null, inIsOwner($me));
+    if (($R['cat'] ?? '') === 'mail' && $o['rp']) $o['others'] = inOthers($R, $act);   /* Reply all (2026-11-26): who else it went to */
+    return ['ok' => true, 'item' => $o];
+}
+/* ---- Reply all (2026-11-26, Matthew: "add the reply all option to the desk just in case more people do it"). The others on their email's
+   To and Cc, looked up from Microsoft with the message's id (the Inbox never kept them) the first time it is opened or answered, then kept
+   (an rcpt row). Never ours: Peak Partnerships, any @peakpickleball.us address, the sending mailbox, nor any desk person's own reply
+   address; nor the sender themself. Only offered when the Peak email sender here can send a Cc (pmCcList). ---- */
+function inRcpt(array $R, bool $keep = true): ?array {
+    if (is_array($R['rcpt'] ?? null)) return $R['rcpt'];
+    try {
+        $b = inBox($R); if ($b === '') return null;
+        [$s, $j] = pmGraph('GET', $b . '/messages/' . rawurlencode((string) $R['mid']) . '?$select=toRecipients,ccRecipients');
+        if ($s !== 200) return null;
+        $pick = fn($L) => array_values(array_slice(array_filter(array_map(fn($x) => ['address' => strtolower(trim((string) ($x['emailAddress']['address'] ?? ''))), 'name' => clean($x['emailAddress']['name'] ?? '', 80)], is_array($L) ? $L : []), fn($x) => filter_var($x['address'], FILTER_VALIDATE_EMAIL)), 0, 40));
+        $o = ['to' => $pick($j['toRecipients'] ?? []), 'cc' => $pick($j['ccRecipients'] ?? [])];
+        if ($keep) inRow(['t' => 'rcpt', 'iid' => (string) $R['iid'], 'to' => $o['to'], 'cc' => $o['cc'], 'by' => 'Microsoft']);
+        return $o;
+    } catch (Throwable $e) { error_log('peak desk inbox rcpt: ' . $e->getMessage()); return null; }
+}
+function inOurs(string $e): bool {
+    $e = strtolower(trim($e)); if (preg_match('/@(.+\.)?peakpickleball\.us$/', $e)) return true;
+    if (defined('TM_ORGANIZER') && $e === strtolower(TM_ORGANIZER)) return true;
+    try { if (function_exists('pmFrom') && tmLoad() === '' && $e === strtolower((string) (pmFrom()['email'] ?? ''))) return true; } catch (Throwable $e2) {}
+    foreach (jread('people-settings.json', []) as $p) if (is_array($p) && $e !== '' && strtolower(trim((string) ($p['replyto'] ?? ''))) === $e) return true;
+    return false;
+}
+/** the others a Reply all copies: [['email', 'name']] (none when the sender here can't send a Cc) */
+function inOthers(array $R, bool $keep = true): array {
+    if (!function_exists('tmLoad') || tmLoad() !== '' || !function_exists('pmCcList')) return [];   /* the sender's code loads on first use */
+    $X = inRcpt($R, $keep); if (!$X) return [];
+    $from = strtolower((string) $R['from']); $o = [];
+    foreach (array_merge($X['to'], $X['cc']) as $x) { $a = strtolower((string) ($x['address'] ?? '')); if ($a === '' || $a === $from || isset($o[$a]) || inOurs($a)) continue; $o[$a] = ['email' => $a, 'name' => (string) ($x['name'] ?? '')]; }
+    return array_values(array_slice($o, 0, 20));
+}
+/** Reply all: the others, each checked as the reply itself is (Don't contact, the do-not-email list): [cc for pmCcList, [[email, why]] left off] */
+function inCcFor(array $R, ?array $C): array {
+    $cc = []; $off = [];
+    foreach (inOthers($R) as $x) { $no = dmMayGet($C ?? ['dnc' => []], $x['email']); if ($no !== '') $off[] = ['email' => $x['email'], 'why' => $no]; else $cc[] = ['address' => $x['email'], 'name' => $x['name']]; }
+    return [$cc, $off];
 }
 /** the Graph path of the mailbox an email is in, when it is Peak Partnerships and the sender's code is here ('' otherwise) */
 function inBox(array $R): string {
@@ -634,15 +676,19 @@ function inReply(string $iid, array $b, string $me, string $role = 'seller'): ar
     $card = !empty($R['card']['id']) ? $R['card'] : null; $C = $card ? (recs((string) $card['w'])[(string) $card['id']] ?? null) : null;
     if ($C && !empty($C['off'])) $C = null;
     if (!$c || inLocked($c, $me)) inRow(['t' => 'claim', 'iid' => $iid, 'on' => true, 'by' => $me]);
+    /* Reply all (2026-11-26): all: true copies the others on their email (checked one by one; one that may not be emailed is left off) */
+    [$cc, $ccOff] = !empty($b['all']) ? inCcFor($R, $C) : [[], []];
+    $ccNote = fn(array $x) => array_merge($ccOff, array_map(fn($y) => ['email' => (string) $y['address'], 'why' => (string) $y['why']], (array) ($x['ccOff'] ?? [])));
     if ($C) {
         $w = (string) $card['w'];
         $no = dmMayGet($C, $d['to']); if ($no !== '') return ['ok' => false, 'error' => 'Not sent: ' . $no . '.', 'code' => 400];
         if ($d['book'] && !bkConf()['on']) return ['ok' => false, 'error' => 'Booking links are off, so the booking link would not work. Take {book} out.', 'code' => 400];
         $mine = dmMine($me); $ref = 'dm' . bin2hex(random_bytes(5)); $id = (string) $C['id'];
-        withLock(fn() => commit($w, [['t' => W($w)['T']['dmail'], 'id' => $id, 'ref' => $ref, 'sig' => $mine['sig'], 'replyto' => $mine['replyto'], 'by' => $me, 'at' => time()] + ['re' => $re] + $d]));
-        $x = dmDeliver($w, $id, $ref, $me);
-        inRow(['t' => 'reply', 'iid' => $iid, 'ref' => $ref, 'ok' => in_array($x['state'] ?? '', ['sent', 'dup'], true), 'why' => (string) ($x['why'] ?? ''), 'to' => $d['to'], 'w' => $w, 'id' => $id, 'by' => $me]);
-        return ['ok' => true, 'ref' => $ref, 'card' => ['w' => $w, 'id' => $id, 'name' => (string) $C['name']]] + $x;
+        withLock(fn() => commit($w, [['t' => W($w)['T']['dmail'], 'id' => $id, 'ref' => $ref, 'sig' => $mine['sig'], 'replyto' => $mine['replyto'], 'by' => $me, 'at' => time()] + ['re' => $re] + ($cc ? ['cc' => $cc] : []) + $d]));
+        $x = dmDeliver($w, $id, $ref, $me); $off = $ccNote($x);
+        inRow(['t' => 'reply', 'iid' => $iid, 'ref' => $ref, 'ok' => in_array($x['state'] ?? '', ['sent', 'dup'], true), 'why' => (string) ($x['why'] ?? ''), 'to' => $d['to'], 'w' => $w, 'id' => $id, 'by' => $me]
+            + (!empty($x['cc']) ? ['cc' => implode(', ', $x['cc'])] : []) + ($off ? ['ccOff' => implode(', ', array_column($off, 'email'))] : []));
+        return ['ok' => true, 'ref' => $ref, 'card' => ['w' => $w, 'id' => $id, 'name' => (string) $C['name']], 'ccOff' => $off] + $x + ['cc' => []];
     }
     $no = dmMayGet(['dnc' => []], $d['to']); if ($no !== '') return ['ok' => false, 'error' => 'Not sent: ' . $no . '.', 'code' => 400];
     if ($d['book']) return ['ok' => false, 'error' => 'A booking link needs a company: use Attach to a company first, then reply.', 'code' => 400];
@@ -650,10 +696,11 @@ function inReply(string $iid, array $b, string $me, string $role = 'seller'): ar
     inRow(['t' => 'rmail', 'iid' => $iid, 'ref' => $ref, 'to' => $d['to'], 'name' => $d['name'], 'subject' => $d['subject'], 'text' => $d['text'], 'sig' => $mine['sig'], 'replyto' => $mine['replyto'], 'by' => $me]);
     $m = dmCompose($d + ['sig' => $mine['sig']], $ref);
     $x = pmDeskSend(['ref' => $ref, 'to' => $d['to'], 'name' => $d['name'], 'subject' => $m['subject'], 'text' => $m['text'], 'html' => $m['html'], 'replyTo' => $mine['replyto'], 'replyName' => $me,
-        'w' => '', 'org' => '', 'company' => '', 'by' => $me, 'reply' => $re]);
-    $ok = !empty($x['ok']);
-    inRow(['t' => 'reply', 'iid' => $iid, 'ref' => $ref, 'ok' => $ok, 'why' => $ok ? '' : (string) ($x['why'] ?? 'it did not send'), 'to' => $d['to'], 'by' => $me]);
-    return ['ok' => true, 'ref' => $ref, 'state' => $ok ? (!empty($x['dup']) ? 'dup' : 'sent') : 'failed', 'why' => $ok ? '' : (string) ($x['why'] ?? 'it did not send'), 'to' => $d['to']];
+        'w' => '', 'org' => '', 'company' => '', 'by' => $me, 'reply' => $re] + ($cc ? ['cc' => $cc] : []));
+    $ok = !empty($x['ok']); $off = $ccNote($x); $sentCc = $ok ? (array) ($x['cc'] ?? []) : [];
+    inRow(['t' => 'reply', 'iid' => $iid, 'ref' => $ref, 'ok' => $ok, 'why' => $ok ? '' : (string) ($x['why'] ?? 'it did not send'), 'to' => $d['to'], 'by' => $me]
+        + ($sentCc ? ['cc' => implode(', ', $sentCc)] : []) + ($off ? ['ccOff' => implode(', ', array_column($off, 'email'))] : []));
+    return ['ok' => true, 'ref' => $ref, 'state' => $ok ? (!empty($x['dup']) ? 'dup' : 'sent') : 'failed', 'why' => $ok ? '' : (string) ($x['why'] ?? 'it did not send'), 'to' => $d['to'], 'cc' => $sentCc, 'ccOff' => $off];
 }
 
 /* ---- alerts: who wants what ---- */

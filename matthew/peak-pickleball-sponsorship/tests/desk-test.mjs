@@ -45,7 +45,9 @@ const gmock = http.createServer((req, res) => { let bd = ''; req.on('data', (d) 
   if (req.method === 'POST' && rest === '/sendMail') { GM.calls++; if (GM.fail) return j(GM.fail.code, { error: { code: GM.fail.err, message: GM.fail.err } }); GM.sent.push(Buffer.from(bd, 'base64').toString('utf8')); GM.boxes.push(box); res.writeHead(202); return res.end(); }
   if (req.method === 'GET' && rest === '/mailFolders/inbox') return j(200, { id: 'inbox' });
   if (req.method === 'GET' && rest === '/mailFolders/sentitems/messages') return j(200, { value: [{ from: { emailAddress: { name: 'Peak Partnerships', address: 'partnerships@peakpickleball.us' } } }] });
-  if (req.method === 'POST' && /^\/messages\/[^/]+\/createReply$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]), did = 'draft' + (Object.keys(GM.drafts).length + 1); GM.drafts[did] = { of: id, box, create: JSON.parse(bd || '{}') }; return j(201, { id: did, body: { contentType: 'html', content: '<html><body><div>Their email, quoted</div></body></html>' } }); }
+  /* Reply all (2026-11-26): who an email went to, as Microsoft gives it (GM.rcpt by message id; 404 for one not set, as for one gone) */
+  if (req.method === 'GET' && /^\/messages\/[^/]+$/.test(rest) && /toRecipients/.test(u.search)) { const id = decodeURIComponent(rest.split('/')[2]); GM.rcptGets = (GM.rcptGets || 0) + 1; return GM.rcpt && GM.rcpt[id] ? j(200, GM.rcpt[id]) : j(404, { error: { code: 'ErrorItemNotFound' } }); }
+  if (req.method === 'POST' && /^\/messages\/[^/]+\/createReply(All)?$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]), did = 'draft' + (Object.keys(GM.drafts).length + 1); GM.drafts[did] = { of: id, box, kind: /All$/.test(rest) ? 'all' : 'reply', create: JSON.parse(bd || '{}') }; return j(201, { id: did, body: { contentType: 'html', content: '<html><body><div>Their email, quoted</div></body></html>' } }); }
   if (req.method === 'PATCH' && /^\/messages\/[^/]+$/.test(rest)) { const id = decodeURIComponent(rest.split('/')[2]); if (GM.drafts[id]) Object.assign(GM.drafts[id], JSON.parse(bd || '{}')); else (GM.patched ||= []).push([box, id, JSON.parse(bd || '{}')]); return j(200, { id }); }
   /* an attachment, as the Inbox downloads one (2026-11-20) */
   if (req.method === 'GET' && /^\/messages\/[^/]+\/attachments\/[^/]+$/.test(rest)) { const aid = decodeURIComponent(rest.split('/')[4]); return j(200, { '@odata.type': '#microsoft.graph.fileAttachment', name: 'x', contentBytes: Buffer.from('PNG-BYTES-' + aid).toString('base64') }); }
@@ -1112,6 +1114,38 @@ try {
       ok((await a('inboxanswered', { iid: ML, on: true })).ok && (await lst('wait')).items.some((x) => x.iid === ML && x.claim.by === 'Second Seller' && x.answered.by === 'Test Admin'), 'an admin can (the claim stays the claimer’s)');
       ok((await b('inboxanswered', { iid: ML, on: false }))._status === 409 && (await c2('inboxanswered', { iid: ML, on: false })).ok && await has('open', ML) && (await lst('open')).items.find((x) => x.iid === ML).claim.by === 'Second Seller', 'Undo: refused for another seller; the claimer undoes it and keeps the claim');
       ok((await cc('inboxanswered', { iid: ML, on: true }))._status === 403, 'Claude Check marks nothing');
+      /* ---- Reply all (2026-11-26, Matthew: "add the reply all option to the desk just in case more people do it"). Who else an email went to
+         is looked up from the stand-in for Microsoft (GM.rcpt) and kept; nothing reaches Microsoft. ---- */
+      {
+        const rcp = (a, n) => ({ emailAddress: n ? { address: a, name: n } : { address: a } });
+        GM.rcpt = { AAMkRA1: { toRecipients: [rcp(MB, 'Peak Partnerships'), rcp('traci@ratest.com', 'Traci Anderson')], ccRecipients: [rcp('Dana@RAtest.com', 'Dana Ra'), rcp('cammie@peakpickleball.us', 'Cammie'), rcp('gone2@ratest.com', 'Gone Two')] },
+          AAMkRA2: { toRecipients: [rcp(MB)], ccRecipients: [] }, AAMkRA3: { toRecipients: [rcp(MB), rcp('traci@ratest.com', 'Traci Anderson')], ccRecipients: [] } };
+        const RA = inIn({ from: 'dana@ratest.com', name: 'Dana Ra', subject: 'Event dates', at: now - 5000, text: 'Copying Traci.', mid: 'AAMkRA1', mb: MB, imid: '<ra1@ratest.com>' });
+        const RS = inIn({ from: 'solo@ratest.com', name: 'Solo Ra', subject: 'Just me', at: now - 4990, text: 'Only me.', mid: 'AAMkRA2', mb: MB, imid: '<ra2@ratest.com>' });
+        const RB = inIn({ from: 'bea@ratest.com', name: 'Bea Ra', subject: 'Booth sizes', at: now - 4980, text: 'Traci is copied.', mid: 'AAMkRA3', mb: MB, imid: '<ra3@ratest.com>' });
+        const o1 = (await b('inboxone&iid=' + RA)).item, o2 = (await b('inboxone&iid=' + RS)).item; await b('inboxone&iid=' + RB);
+        ok(o1.others.map((x) => x.email).join() === 'traci@ratest.com,gone2@ratest.com' && o1.others[0].name === 'Traci Anderson' && o2.others.length === 0, 'Reply all: the others on her email are offered (never Peak Partnerships, a Peak address, nor her own); none on one that came to us alone');
+        const raG = GM.rcptGets; delete GM.rcpt.AAMkRA1;
+        const raO = await b('inboxone&iid=' + RA);
+        ok(raO.item.others.length === 2 && GM.rcptGets === raG && lines('inbox.log').filter((l) => l.includes('"t":"rcpt"') && l.includes(RA)).length === 1, 'looked up once and kept (an rcpt row), so it still works once the message is gone from the mailbox');
+        ok(!JSON.stringify((await b('inbox')).items).includes('traci@ratest.com'), 'the list itself carries no addresses; only the opened email does');
+        /* a plain reply still goes to her only */
+        let r0 = GM.replies.length, rr = await b('inboxreply', { iid: RA, subject: 'RE: Event dates', text: 'Plain answer.' }), RP = GM.replies[GM.replies.length - 1] || {};
+        ok(rr.ok && rr.state === 'sent' && GM.replies.length === r0 + 1 && RP.kind === 'reply' && RP.create.message.toRecipients.length === 1 && RP.create.message.toRecipients[0].emailAddress.address === 'dana@ratest.com' && !RP.create.message.ccRecipients && !RP.ccRecipients && rr.cc.length === 0, 'Reply (switch off): Microsoft’s createReply, To her only, nobody copied');
+        /* Reply all, with one copied address on the do-not-email list: left off, said so; the reply still goes */
+        writeFileSync(join(MAILD, 'events.log'), JSON.stringify({ t: 'suppress', to: 'gone2@ratest.com', why: 'test', at: now }) + '\n', { flag: 'a' });
+        r0 = GM.replies.length; rr = await b('inboxreply', { iid: RA, subject: 'RE: Event dates', text: 'Hello Dana and Traci.', all: true }); RP = GM.replies[GM.replies.length - 1] || {};
+        ok(rr.ok && rr.state === 'sent' && GM.replies.length === r0 + 1 && RP.kind === 'all' && RP.of === 'AAMkRA1' && RP.create.message.toRecipients.map((x) => x.emailAddress.address).join() === 'dana@ratest.com'
+          && RP.create.message.ccRecipients.map((x) => x.emailAddress.address + '|' + x.emailAddress.name).join() === 'traci@ratest.com|Traci Anderson' && RP.ccRecipients.map((x) => x.emailAddress.address).join() === 'traci@ratest.com' && RP.toRecipients.map((x) => x.emailAddress.address).join() === 'dana@ratest.com'
+          && /Hello Dana and Traci\.[\s\S]*Test Seller[\s\S]*Their email, quoted/.test(RP.body.content), 'Reply all: Microsoft’s createReplyAll in the same thread, To her, Cc Traci (set again on the draft), signed as a reply is');
+        ok(rr.cc.join() === 'traci@ratest.com' && rr.ccOff.length === 1 && rr.ccOff[0].email === 'gone2@ratest.com' && /do-not-email/.test(rr.ccOff[0].why), 'the one on the do-not-email list is left off and the answer says so; the reply is not failed for it');
+        const ir = lines('inbox.log').map((l) => JSON.parse(l)).filter((x) => x.t === 'reply' && x.iid === RA).pop(), dmr = readFileSync(join(MAILD, 'events.log'), 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)).filter((x) => x.t === 'deskmail' && x.ref === rr.ref).pop();
+        ok(ir.cc === 'traci@ratest.com' && ir.ccOff === 'gone2@ratest.com' && dmr && dmr.ok && dmr.cc === 'traci@ratest.com' && dmr.re === 'reply' && (await b('inboxone&iid=' + RA)).item.replies.pop().cc === 'traci@ratest.com', 'logged: who was copied on the Inbox reply row and the sender’s deskmail row');
+        /* the fallback (no message id: a new email with In-Reply-To) carries the Cc line too */
+        const fb = JSON.parse(await new Promise((res, rej) => execFile('php', ['-r', 'require getenv("LIB"); echo json_encode(pmDeskSend(["ref" => "dm" . bin2hex(random_bytes(5)), "to" => "dana@ratest.com", "name" => "Dana Ra", "subject" => "RE: Event dates", "text" => "x", "html" => "<p>x</p>", "cc" => [["address" => "traci@ratest.com", "name" => "Traci Anderson"], ["address" => "gone2@ratest.com"], ["address" => "dana@ratest.com"]], "reply" => ["mid" => "", "mb" => "", "imid" => "<ra1@ratest.com>"], "by" => "Test Seller"]));'], { encoding: 'utf8', env: { ...env, LIB: env.DESK_PEAK_MAIL_LIB } }, (e, so) => e ? rej(e) : res(so))));
+        const fm = GM.sent[GM.sent.length - 1] || '';
+        ok(fb.ok && fb.cc.join() === 'traci@ratest.com' && /^Cc: Traci Anderson <traci@ratest\.com>\r$/m.test(fm) && !/gone2@/.test(fm) && /^In-Reply-To: <ra1@ratest\.com>\r$/m.test(fm) && /^To: Dana Ra <dana@ratest\.com>\r$/m.test(fm), 'the fallback (their email gone): a new email with In-Reply-To and the same Cc line, the do-not-email one left off, never her twice');
+      }
       /* the counts on each tab */
       const CT = await lst('open'), SUMS = {};
       for (const f of ['open', 'wait', 'done', 'other', 'removed']) SUMS[f] = (await lst(f)).items.length;
@@ -2076,6 +2110,15 @@ try {
     await click('.inrow [data-act="inattach"]', 200);
     ok(await jsUntil(`!!document.querySelector('.inrow .inq')`), 'Attach to a company asks which company');
     await shot('desk-inbox.png');
+    /* Reply all (2026-11-26): the switch only on an email that had others on it; off until ticked; who would be copied */
+    const raRow = (who) => `[...document.querySelectorAll('.inrow')].find(r=>r.querySelector('.inhd')&&/${who}/.test(r.querySelector('.inhd').textContent))`;
+    await js(`${raRow('Bea Ra')}.querySelector('.inhd').click()`); await waitFor(`!!${raRow('Bea Ra')}.querySelector('[data-act="inreply"]')`, 'Bea’s email opened');
+    await js(`${raRow('Bea Ra')}.querySelector('[data-act="inreply"]').click()`); await sleep(200);
+    ok(await js(`(()=>{const r=${raRow('Bea Ra')},c=r.querySelector('[data-in="replyall"]');if(!c||c.checked)return false;const h=c.closest('.tmtick').querySelector('small');const off=/not copied unless ticked/.test(h.textContent)&&/Traci Anderson \\(traci@ratest\\.com\\)/.test(h.textContent);c.click();return off&&/^Also to: Traci Anderson \\(traci@ratest\\.com\\)$/.test(h.textContent)&&!/peakpickleball/.test(h.textContent)})()`), 'Reply on an email with others copied: a Reply all switch, off, then “Also to: Traci Anderson (traci@ratest.com)” when ticked');
+    await js(`${raRow('Bea Ra')}.querySelector('[data-in="replyall"]').closest('.tmtick').scrollIntoView({block:'center'})`); await sleep(150); await shot('desk-inbox-replyall.png');
+    await js(`${raRow('Solo Ra')}.querySelector('.inhd').click()`); await waitFor(`!!${raRow('Solo Ra')}.querySelector('[data-act="inreply"]')`, 'Solo’s email opened');
+    await js(`${raRow('Solo Ra')}.querySelector('[data-act="inreply"]').click()`); await sleep(200);
+    ok(await js(`(()=>{const r=${raRow('Solo Ra')};return !!r.querySelector('.dmbody')&&!r.querySelector('[data-in="replyall"]')})()`), 'and none on an email that came to us alone');
     await sub('other'); await waitFor(`document.querySelectorAll('.inrow.other').length>=3`, 'Other');
     ok(await jsUntil(`[...document.querySelectorAll('.inrow')].every(r=>r.classList.contains('other'))`), 'Other: the notices, the auto-replies and CourtReserve');
     /* the four lists (2026-11-23) */

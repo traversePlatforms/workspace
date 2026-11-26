@@ -828,6 +828,9 @@ function pmDeskMime(array $m): string {
     $to = (string) $m['to']; $nm = trim(str_replace(['"', '\\', "\r", "\n", '<', '>'], '', (string) ($m['name'] ?? ''))); if ($nm !== '') $to = $enc($nm) . ' <' . $to . '>';
     $rt = strtolower(trim((string) ($m['replyTo'] ?? ''))); $rtName = trim(str_replace(['"', '\\', "\r", "\n", '<', '>'], '', (string) ($m['replyName'] ?? '')));
     $head = "To: $to\r\n" . (string) ($m['fromHead'] ?? '') . "Subject: " . $enc((string) $m['subject']) . "\r\n";
+    /* Reply all (2026-11-26): the others copied on their email, as Cc */
+    $cc = array_map(function ($c) use ($enc) { $n = trim(str_replace(['"', '\\', "\r", "\n", '<', '>', ','], '', (string) ($c['name'] ?? ''))); return ($n !== '' ? $enc($n) . ' ' : '') . '<' . $c['address'] . '>'; }, pmCcList($m['cc'] ?? [], (string) $m['to']));
+    if ($cc) $head .= 'Cc: ' . implode(', ', $cc) . "\r\n";
     if ($rt !== '' && filter_var($rt, FILTER_VALIDATE_EMAIL)) $head .= 'Reply-To: ' . ($rtName !== '' ? $enc($rtName) . ' ' : '') . '<' . $rt . ">\r\n";
     /* a reply to their email when Microsoft's own reply cannot be used (2026-11-19): the thread is kept by these two lines */
     $ir = (string) ($m['inReplyTo'] ?? ''); if (preg_match('/^<[\x21-\x3B\x3D\x3F-\x7E]{3,250}>$/', $ir)) $head .= "In-Reply-To: $ir\r\nReferences: $ir\r\n";
@@ -836,6 +839,17 @@ function pmDeskMime(array $m): string {
         . $part('Content-Type: text/plain; charset=UTF-8', str_replace("\n", "\r\n", str_replace("\r", '', (string) $m['text'])))
         . $part('Content-Type: text/html; charset=UTF-8', (string) $m['html'])
         . "--$al--\r\n";
+}
+/** Reply all (2026-11-26, Matthew: "add the reply all option to the desk just in case more people do it"): the others to copy, cleaned:
+    [['address' => lower-case, 'name' => ...]], valid addresses only, never $to itself, each once, at most 20. Strings are taken too. */
+function pmCcList($cc, string $to = ''): array {
+    $o = []; $to = strtolower(trim($to));
+    foreach (is_array($cc) ? $cc : [] as $c) {
+        $a = strtolower(trim((string) (is_array($c) ? ($c['address'] ?? '') : $c))); if ($a === '' || $a === $to || isset($o[$a]) || !filter_var($a, FILTER_VALIDATE_EMAIL) || preg_match('/[\s<>,;"]/', $a)) continue;
+        $o[$a] = ['address' => $a, 'name' => is_array($c) ? pmClean($c['name'] ?? '', 80) : ''];
+        if (count($o) >= 20) break;
+    }
+    return array_values($o);
 }
 /** send one desk email now: ['ok' => true, 'dup' => bool] or ['ok' => false, 'kind' => ..., 'why' => ...]; never throws */
 function pmDeskSend(array $m): array {
@@ -846,19 +860,25 @@ function pmDeskSend(array $m): array {
         if (!filter_var($to, FILTER_VALIDATE_EMAIL)) return ['ok' => false, 'kind' => 'address', 'why' => 'that email does not look right'];
         if (trim((string) ($m['subject'] ?? '')) === '' || trim((string) ($m['text'] ?? '')) === '') return ['ok' => false, 'kind' => 'other', 'why' => 'the email is incomplete'];
         $S = pmState(); if (isset($S['suppressed'][$to])) return ['ok' => false, 'kind' => 'blocked', 'why' => $to . ' is on the do-not-email list (' . $S['suppressed'][$to] . ')'];
+        /* Reply all (2026-11-26): a copied address on the do-not-email list is left off (said so), never the reason the reply fails */
+        $cc = []; $ccOff = [];
+        foreach (pmCcList($m['cc'] ?? [], $to) as $c) { if (isset($S['suppressed'][$c['address']])) $ccOff[] = ['address' => $c['address'], 'why' => $c['address'] . ' is on the do-not-email list (' . $S['suppressed'][$c['address']] . ')']; else $cc[] = $c; }
+        $m['cc'] = $cc; $ccOut = ['cc' => array_column($cc, 'address'), 'ccOff' => $ccOff];
         $lk = @fopen(pmData() . '/deskmail.lock', 'c'); if ($lk) flock($lk, LOCK_EX);
         try {
-            if (pmDeskRow($ref)) return ['ok' => true, 'dup' => true];
+            if (pmDeskRow($ref)) return ['ok' => true, 'dup' => true] + $ccOut;
             $F = pmFrom(); $re = is_array($m['reply'] ?? null) ? $m['reply'] : null;
             $x = $re ? pmReplySend($re, $to, $m, $F) : pmSendOne(['to' => $to, 'mime' => pmDeskMime(['to' => $to, 'fromHead' => pmFromHead($F)] + $m)], null, $F);
             $row = ['t' => 'deskmail', 'ref' => $ref, 'to' => $to, 'from' => $F['email'], 'w' => (string) ($m['w'] ?? ''), 'org' => (string) ($m['org'] ?? ''), 'company' => pmClean($m['company'] ?? '', 100),
                 'by' => pmClean($m['by'] ?? '', 60), 'subject' => pmClean($m['subject'] ?? '', 160), 'ok' => !empty($x['ok'])];
             if ($re) $row['re'] = (string) ($x['via'] ?? 'reply');
+            if ($cc) $row['cc'] = implode(', ', $ccOut['cc']);
+            if ($ccOff) $row['ccOff'] = implode(', ', array_column($ccOff, 'address'));
             if (empty($x['ok'])) { $row['kind'] = (string) ($x['kind'] ?? 'other'); $row['why'] = mb_substr((string) ($x['why'] ?? ''), 0, 200); }
             pmLog($row);
-            if (!empty($x['ok'])) return ['ok' => true, 'dup' => false];
+            if (!empty($x['ok'])) return ['ok' => true, 'dup' => false] + $ccOut;
             $why = pmWhyText($row['kind'], $row['why']);
-            return ['ok' => false, 'kind' => $row['kind'], 'why' => $why];
+            return ['ok' => false, 'kind' => $row['kind'], 'why' => $why] + $ccOut;
         } finally { if ($lk) { flock($lk, LOCK_UN); fclose($lk); } }
     } catch (Throwable $e) { return ['ok' => false, 'kind' => 'other', 'why' => mb_substr($e->getMessage(), 0, 160)]; }
 }
@@ -870,16 +890,19 @@ function pmWhyText(string $kind, string $why): string {
 /** a desk email that answers one of their emails (2026-11-19): Microsoft's own reply on that message in the mailbox it came to (createReply,
     the seller's words put above their email, then send), so it stays in one thread for them and in Peak Partnerships. When that message is no
     longer there, or it came to another mailbox (Matthew's own, before), it goes as a new email with In-Reply-To instead. Their email is never
-    moved or deleted. Answers like pmSendOne, plus 'via' => reply | thread. */
+    moved or deleted. Answers like pmSendOne, plus 'via' => reply | thread. Reply all (2026-11-26): with $m['cc'] (pmCcList) it is Microsoft's
+    createReplyAll instead, To them and Cc exactly the others given (set again on the draft, so nobody else is added); the fallback carries
+    the same Cc line. */
 function pmReplySend(array $re, string $to, array $m, array $F): array {
     $mid = (string) ($re['mid'] ?? ''); $mb = strtolower((string) ($re['mb'] ?? '')); $imid = (string) ($re['imid'] ?? '');
     $fallback = fn() => pmSendOne(['to' => $to, 'mime' => pmDeskMime(['to' => $to, 'fromHead' => pmFromHead($F), 'inReplyTo' => $imid] + $m)], null, $F) + ['via' => 'thread'];
     if ($mid === '' || !preg_match('#^[A-Za-z0-9+/=_-]{1,400}$#D', $mid) || $mb === '' || $mb !== $F['email']) return $fallback();
     $base = $F['base'] . '/messages/';
     $msg = ['toRecipients' => [['emailAddress' => array_filter(['address' => $to, 'name' => trim(str_replace(['"', "\r", "\n"], '', (string) ($m['name'] ?? '')))], 'strlen')]]];
+    $cc = pmCcList($m['cc'] ?? [], $to); if ($cc) $msg['ccRecipients'] = array_map(fn($c) => ['emailAddress' => array_filter($c, 'strlen')], $cc);
     $rt = strtolower(trim((string) ($m['replyTo'] ?? '')));
     if ($rt !== '' && filter_var($rt, FILTER_VALIDATE_EMAIL)) $msg['replyTo'] = [['emailAddress' => array_filter(['address' => $rt, 'name' => trim(str_replace(['"', "\r", "\n"], '', (string) ($m['replyName'] ?? '')))], 'strlen')]];
-    [$s, $d, $raw, $a] = pmGraph('POST', $base . rawurlencode($mid) . '/createReply', ['message' => $msg]);
+    [$s, $d, $raw, $a] = pmGraph('POST', $base . rawurlencode($mid) . ($cc ? '/createReplyAll' : '/createReply'), ['message' => $msg]);
     if ($s === 404 && (string) ($d['error']['code'] ?? '') !== 'MailboxNotFound') return $fallback();   /* their email is no longer in the mailbox */
     if (($s !== 200 && $s !== 201) || empty($d['id'])) return pmSendErr($s, $d, $raw, $a, $F) + ['via' => 'reply'];
     $id = (string) $d['id']; $orig = (string) ($d['body']['content'] ?? '');
@@ -888,7 +911,8 @@ function pmReplySend(array $re, string $to, array $m, array $F): array {
     if (preg_match('/<body[^>]*>/i', $orig, $bm, PREG_OFFSET_CAPTURE)) { $at = $bm[0][1] + strlen($bm[0][0]); $html = substr($orig, 0, $at) . $mine . '<br>' . substr($orig, $at); }
     else $html = $mine . '<br>' . $orig;
     $left = ' (a draft of it is left in the mailbox\'s Drafts)';
-    [$s2, $d2, $raw2, $a2] = pmGraph('PATCH', $base . rawurlencode($id), ['subject' => (string) ($m['subject'] ?? ''), 'body' => ['contentType' => 'HTML', 'content' => $html]]);
+    [$s2, $d2, $raw2, $a2] = pmGraph('PATCH', $base . rawurlencode($id), ['subject' => (string) ($m['subject'] ?? ''), 'body' => ['contentType' => 'HTML', 'content' => $html]]
+        + ($cc ? ['toRecipients' => $msg['toRecipients'], 'ccRecipients' => $msg['ccRecipients']] : []));
     if ($s2 !== 200) { $e = pmSendErr($s2, $d2, $raw2, $a2, $F); $e['why'] .= $left; return $e + ['via' => 'reply']; }
     [$s3, $d3, $raw3, $a3] = pmGraph('POST', $base . rawurlencode($id) . '/send', null, ['Content-Length: 0']);
     if ($s3 === 202 || $s3 === 200) { if ($F['shared']) pmFromMark('sendas', true); return ['ok' => true, 'from' => $F['email'], 'via' => 'reply']; }

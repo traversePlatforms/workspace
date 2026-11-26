@@ -171,24 +171,28 @@ function dmDeliver(string $w, string $id, string $ref, string $me): array {
         $no = dmMayGet($R, (string) $d['to']); if ($no !== '') { withLock(fn() => commit($w, [$res(false, $no, 'dnc')])); return ['state' => 'blocked', 'why' => $no, 'to' => (string) $d['to']]; }
         $mb = tmMailbox(); if (!$mb['ok']) { withLock(fn() => commit($w, [$res(false, $mb['why'], 'mailer')])); return ['state' => 'failed', 'why' => $mb['why'], 'to' => (string) $d['to']]; }
         $m = dmCompose($d, $ref);
+        /* Reply all from the Inbox (2026-11-26): the others copied, each checked again now; one that may not be emailed is left off */
+        $cc = []; $ccOff = [];
+        foreach (is_array($d['cc'] ?? null) ? $d['cc'] : [] as $c) { $a = strtolower((string) ($c['address'] ?? '')); if ($a === '') continue; $no = dmMayGet($R, $a); if ($no !== '') $ccOff[] = ['address' => $a, 'why' => $no]; else $cc[] = ['address' => $a, 'name' => (string) ($c['name'] ?? '')]; }
         $x = pmDeskSend(['ref' => $ref, 'to' => (string) $d['to'], 'name' => (string) ($d['name'] ?? ''), 'subject' => $m['subject'], 'text' => $m['text'], 'html' => $m['html'],
             'replyTo' => (string) ($d['replyto'] ?? ''), 'replyName' => (string) ($d['by'] ?? ''), 'w' => $w, 'org' => $id, 'company' => (string) $R['name'], 'by' => (string) ($d['by'] ?? $me)]
-            + (is_array($d['re'] ?? null) ? ['reply' => $d['re']] : []));
-        if (empty($x['ok'])) { $why = (string) ($x['why'] ?? 'it did not send'); withLock(fn() => commit($w, [$res(false, $why, (string) ($x['kind'] ?? 'other'))])); return ['state' => 'failed', 'why' => $why, 'to' => (string) $d['to']]; }
+            + (is_array($d['re'] ?? null) ? ['reply' => $d['re']] : []) + ($cc ? ['cc' => $cc] : []));
+        $ccOff = array_merge($ccOff, (array) ($x['ccOff'] ?? [])); $ccs = !empty($x['ok']) ? (array) ($x['cc'] ?? []) : [];
+        if (empty($x['ok'])) { $why = (string) ($x['why'] ?? 'it did not send'); withLock(fn() => commit($w, [$res(false, $why, (string) ($x['kind'] ?? 'other'))])); return ['state' => 'failed', 'why' => $why, 'to' => (string) $d['to'], 'cc' => [], 'ccOff' => $ccOff]; }
         $by = (string) ($d['by'] ?? $me);
-        $st = withLock(function () use ($w, $id, $ref, $d, $res, $by) {
+        $st = withLock(function () use ($w, $id, $ref, $d, $res, $by, $ccs) {
             sync($w, true); $R = recs($w)[$id]; $now = time(); $rows = [$res(true)];
             $seen = false; foreach ($R['touches'] ?? [] as $t) if (($t['ref'] ?? '') === $ref) $seen = true;
             if (!$seen) {
                 $fu = (string) ($d['fu'] ?? ''); if ($fu !== '' && $fu < date('Y-m-d')) $fu = '';
-                $touch = ['m' => 'email', 'out' => 'sent', 'note' => (is_array($d['re'] ?? null) ? 'Replied “' : 'Emailed “') . $d['subject'] . '” to ' . ((string) ($d['name'] ?? '') !== '' ? $d['name'] . ' (' . $d['to'] . ')' : $d['to']) . ' from the desk' . (is_array($d['re'] ?? null) ? ', answering their email' : ''), 'when' => $now, 'to' => (string) $d['to'], 'ref' => $ref, 'dm' => $ref];
+                $touch = ['m' => 'email', 'out' => 'sent', 'note' => (is_array($d['re'] ?? null) ? 'Replied “' : 'Emailed “') . $d['subject'] . '” to ' . ((string) ($d['name'] ?? '') !== '' ? $d['name'] . ' (' . $d['to'] . ')' : $d['to']) . ($ccs ? ', copying ' . implode(', ', $ccs) : '') . ' from the desk' . (is_array($d['re'] ?? null) ? ', answering their email' : ''), 'when' => $now, 'to' => (string) $d['to'], 'ref' => $ref, 'dm' => $ref];
                 if (!empty($d['tpl'])) $touch['tpl'] = (string) $d['tpl'];
                 if (!empty($d['for'])) $touch['for'] = (string) $d['for'];   /* sent by Claire for Matthew (2026-11-24) */
                 $rows = array_merge($rows, touchRows($w, $R, newKey(), $touch, $by, in_array($by, owners($w), true), $fu, (string) ($d['fuWhat'] ?? ''), $now));
             }
             commit($w, $rows); return (string) recs($w)[$id]['stage'];
         });
-        return ['state' => !empty($x['dup']) ? 'dup' : 'sent', 'why' => '', 'to' => (string) $d['to'], 'stage' => $st];
+        return ['state' => !empty($x['dup']) ? 'dup' : 'sent', 'why' => '', 'to' => (string) $d['to'], 'stage' => $st, 'cc' => $ccs, 'ccOff' => $ccOff];
     } catch (Throwable $e) {
         error_log('peak desk email: ' . $e->getMessage() . ' @' . $e->getLine());
         return ['state' => 'failed', 'why' => 'the desk hit a problem sending it'];

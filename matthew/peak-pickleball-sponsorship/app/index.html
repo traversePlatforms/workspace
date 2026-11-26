@@ -494,7 +494,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
 <script>
 (function () {
   'use strict';
-  var BUILD = '2026-11-25.1';
+  var BUILD = '2026-11-26.1';
   var API = 'api/desk.php';
   /* the place: which list (sponsors or expo), which tab, the chip under it; filters kept per list and tab */
   var S = { data: null, world: 'sponsor', tab: 'today', sub: {}, st: {}, qs: {}, sort: {}, lc: {}, list: 'all', sel: null, print: null, view: {}, xpri: 'all', xcat: 'all', more: {} };
@@ -2576,7 +2576,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         cl.appendChild(cb); body.appendChild(cl);
       }
       if (it.sentIn) body.appendChild(el('div', 'innote', it.sentIn.by + ' sent this to ' + (it.sentIn.to ? (it.sentIn.to === me() ? 'you' : it.sentIn.to) : 'the Inbox') + ', ' + when(it.sentIn.at) + (it.sentIn.note ? ': “' + it.sentIn.note + '”' : '.')));
-      (it.replies || []).forEach(function (x) { body.appendChild(el('div', x.ok ? 'tmline' : 'tmline bad', (x.ok ? 'Replied by ' : 'Reply not sent, by ') + x.by + ', ' + when(x.at) + (x.ok ? '' : ': ' + x.why))); });
+      (it.replies || []).forEach(function (x) { body.appendChild(el('div', x.ok ? 'tmline' : 'tmline bad', (x.ok ? 'Replied by ' : 'Reply not sent, by ') + x.by + ', ' + when(x.at) + (x.ok && x.cc ? ', copying ' + x.cc : '') + (x.ok ? '' : ': ' + x.why))); });
       if (it.answered) body.appendChild(el('div', 'tmline', 'Answered outside the desk by ' + it.answered.by + ', ' + when(it.answered.at)));
       if (readOnly()) { body.appendChild(el('div', 'fuhint', 'This account only looks: nothing can be answered or changed from it.')); return; }
       var acts = el('div', 'acts');
@@ -2660,6 +2660,15 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     pane.appendChild(el('div', 'dmre', 'Replying to ' + (it.name || it.from) + '’s email of ' + when(it.at) + ': it goes from ' + FROML() + ', signed by you, in the same thread.' + (it.card ? ' It is logged on ' + (it.card.name || 'the card') + '.' : ' Not on a card: Attach to a company first if you want it logged there.')));
     var two = el('div', 'two'), tn = el('input'), te = el('input'); tn.placeholder = 'Their name'; tn.value = it.name || ''; tn.className = 'dmname'; te.type = 'email'; te.value = it.from || ''; te.className = 'dmemail'; te.setAttribute('aria-label', 'Their email'); tn.setAttribute('aria-label', 'Their name');
     two.appendChild(tn); two.appendChild(te); pane.appendChild(el('label', 'lab', 'To')); pane.appendChild(two);
+    /* Reply all (2026-11-26, Matthew: "add the reply all option to the desk just in case more people do it"): only when others were on their
+       email (never Peak's own addresses); off until ticked; the server works out and checks the addresses itself */
+    var ra = null, oth = it.others || [], othText = oth.map(function (o) { return o.name && o.name.toLowerCase() !== o.email ? o.name + ' (' + o.email + ')' : o.email; }).join(', ');
+    if (oth.length) {
+      var rbx = el('div', 'tmtick'), rl = el('label'), rh = el('small'); ra = el('input'); ra.type = 'checkbox'; ra.setAttribute('data-in', 'replyall');
+      rl.appendChild(ra); rl.appendChild(el('span', '', 'Reply all')); rbx.appendChild(rl); rbx.appendChild(rh); rbx.style.marginTop = '6px'; pane.appendChild(rbx);
+      var rpaint = function () { rh.textContent = (ra.checked ? 'Also to: ' : 'Also on their email (not copied unless ticked): ') + othText; };
+      ra.addEventListener('change', rpaint); rpaint();
+    }
     var sj = el('input'); sj.className = 'dmsub'; sj.setAttribute('aria-label', 'Subject'); sj.value = /^re:/i.test(it.subject || '') ? it.subject : 'RE: ' + (it.subject || '');
     var bd = el('textarea'); bd.className = 'dmbody'; bd.rows = 8; bd.setAttribute('aria-label', 'Message'); bd.placeholder = 'Write your answer.';
     pane.appendChild(el('label', 'lab', 'Subject')); pane.appendChild(sj); pane.appendChild(el('label', 'lab', 'Message')); pane.appendChild(bd);
@@ -2669,16 +2678,17 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
     x.addEventListener('click', function () { pane.textContent = ''; });
     var send = function (take) {
       sd.disabled = true;
-      api('inboxreply', { iid: it.iid, to: te.value.trim(), name: tn.value.trim(), subject: sj.value, text: bd.value, take: !!take }).then(function (j) {
+      api('inboxreply', { iid: it.iid, to: te.value.trim(), name: tn.value.trim(), subject: sj.value, text: bd.value, take: !!take, all: !!(ra && ra.checked) }).then(function (j) {
         sd.disabled = false;
         if (j._status === 409 && j.claim) { if (isAdmin() && confirm(j.claim.by + ' is answering this. Take it over and send? Then only you can answer it.')) send(true); else if (!isAdmin()) toast(j.error); return; }
         if (!j.ok) { toast(j.error || 'Not sent.'); return; }
-        if (j.state === 'sent' || j.state === 'dup') after('Reply sent to ' + j.to); else toast('Not sent: ' + (j.why || 'it did not go') + '.');
+        var off = (j.ccOff || []).map(function (y) { return y.email; }), offT = off.length ? '. Left off: ' + off.join(', ') + ' (may not be emailed)' : '';
+        if (j.state === 'sent' || j.state === 'dup') after('Reply sent to ' + j.to + ((j.cc || []).length ? ', copying ' + j.cc.join(', ') : '') + offT); else toast('Not sent: ' + (j.why || 'it did not go') + offT + '.');
       }).catch(function () { sd.disabled = false; toast('No connection. Not sent.'); });
     };
     sd.addEventListener('click', function () {
       if (!te.value.trim() || !sj.value.trim() || !bd.value.trim()) { toast('Write the subject and the message first.'); return; }
-      if (!confirm('Send this reply to ' + te.value.trim() + ' now? It goes as ' + FROML() + ', signed by you, in the same thread.')) return;
+      if (!confirm('Send this reply to ' + te.value.trim() + (ra && ra.checked ? ', copying ' + othText : '') + ' now? It goes as ' + FROML() + ', signed by you, in the same thread.')) return;
       send(false);
     });
     bd.focus();
@@ -2758,7 +2768,7 @@ pre.eodpre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line
         cb.addEventListener('click', function () { var w = it.card.w; if (S.world !== w) { S.world = w; bar(); } var r = rec(it.card.id); if (r) openRec(r); else toast('That company is not on the desk now.'); });
         cl.appendChild(cb); body.appendChild(cl);
       }
-      (it.replies || []).forEach(function (x) { body.appendChild(el('div', x.ok ? 'tmline' : 'tmline bad', (x.ok ? 'Replied by ' : 'Reply not sent, by ') + x.by + ', ' + when(x.at) + (x.ok ? '' : ': ' + x.why))); });
+      (it.replies || []).forEach(function (x) { body.appendChild(el('div', x.ok ? 'tmline' : 'tmline bad', (x.ok ? 'Replied by ' : 'Reply not sent, by ') + x.by + ', ' + when(x.at) + (x.ok && x.cc ? ', copying ' + x.cc : '') + (x.ok ? '' : ': ' + x.why))); });
       if (it.answered) body.appendChild(el('div', 'tmline', 'Answered outside the desk by ' + it.answered.by + ', ' + when(it.answered.at)));
       (it.ev || []).forEach(function (e) { body.appendChild(el('div', 'myev', evText(e))); });
       if (sent && it.claim) body.appendChild(el('div', 'myev', it.claim.by + ' is answering it.'));

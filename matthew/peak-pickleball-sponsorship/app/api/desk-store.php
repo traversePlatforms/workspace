@@ -252,7 +252,7 @@ function apply(array &$M, string $w, array $r): void {
            is written only once it went. */
         case 'dmail': {
             if (!$has) return; $ref = (string) ($r['ref'] ?? ''); if ($ref === '') return;
-            $x = []; foreach (['to', 'name', 'subject', 'text', 'sig', 'replyto', 'tpl', 'fu', 'fuWhat', 'book', 're', 'for', 'otpl', 'oh'] as $f) if (isset($r[$f])) $x[$f] = $r[$f];
+            $x = []; foreach (['to', 'name', 'subject', 'text', 'sig', 'replyto', 'tpl', 'fu', 'fuWhat', 'book', 're', 'for', 'otpl', 'oh', 'cc'] as $f) if (isset($r[$f])) $x[$f] = $r[$f];
             $M['recs'][$id]['dmails'][$ref] = $x + ['ref' => $ref, 'by' => $by, 'at' => $at, 'state' => 'sending', 'tries' => 0, 'why' => ''];
             $dirty($id); return;
         }
