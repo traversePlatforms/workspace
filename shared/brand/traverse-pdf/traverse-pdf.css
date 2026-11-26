@@ -1,0 +1,48 @@
+/* Traverse PDF look (26 Nov 2026, Matthew: "Make most of our pdf branded with traverse").
+   Used by shared/tools/traverse-pdf.mjs, which inlines this file and the fonts into the page before printing.
+   Navy #13294b, flag #d6400c; headings Familjen Grotesk, text Atkinson Hyperlegible (fonts/ here, from Google Fonts, OFL). */
+@font-face{font-family:'Atkinson Hyperlegible';font-weight:400;font-style:normal;src:url('fonts/AtkinsonHyperlegible-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Atkinson Hyperlegible';font-weight:400;font-style:italic;src:url('fonts/AtkinsonHyperlegible-400-italic.woff2') format('woff2')}
+@font-face{font-family:'Atkinson Hyperlegible';font-weight:700;font-style:normal;src:url('fonts/AtkinsonHyperlegible-700-normal.woff2') format('woff2')}
+@font-face{font-family:'Familjen Grotesk';font-weight:500;font-style:normal;src:url('fonts/FamiljenGrotesk-500-normal.woff2') format('woff2')}
+@font-face{font-family:'Familjen Grotesk';font-weight:700;font-style:normal;src:url('fonts/FamiljenGrotesk-700-normal.woff2') format('woff2')}
+:root{--navy:#13294b;--flag:#d6400c;--ink:#1c2430;--soft:#56627a;--line:#dbe2ec;--pale:#eef3f9}
+@page{size:Letter;margin:0.55in 0 0.6in}
+@page:first{margin-top:0}   /* side margins live on body, so the band can run edge to edge */
+*{box-sizing:border-box}
+body{margin:0;padding:0 0.6in;font-family:'Atkinson Hyperlegible',Arial,sans-serif;font-size:10.4pt;line-height:1.42;color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+b,strong{color:#0f1d33}
+a{color:#1f5f8b;text-decoration:none}
+
+/* the navy band at the top of page one: <header class="tv-top"> ... </header><div class="tv-bar"></div> */
+.tv-top{background:var(--navy);color:#fff;margin:0 -0.6in;padding:0.36in 0.6in 0.28in;display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+.tv-brand{display:flex;align-items:center;gap:9px}
+.tv-brand svg{width:30px;height:30px}
+.tv-wm{font:700 15pt 'Familjen Grotesk'}
+.tv-kicker{font:700 7.8pt 'Familjen Grotesk';letter-spacing:.2em;text-transform:uppercase;color:#ff9b73;margin-top:10px}
+.tv-top h1{font:700 21pt/1.08 'Familjen Grotesk';margin:4px 0 0;color:#fff}
+.tv-top .tv-meta{text-align:right;font-size:8.6pt;color:#c9d5e6}
+.tv-top .tv-meta b{color:#fff;font:700 9.4pt 'Familjen Grotesk';display:block}
+.tv-bar{height:5px;background:var(--flag);margin:0 -0.6in 16px}
+
+h1{font:700 20pt/1.1 'Familjen Grotesk';color:var(--navy);margin:0 0 6px}
+h2{font:700 12.5pt 'Familjen Grotesk';color:var(--navy);margin:16px 0 6px;padding-left:8px;border-left:4px solid var(--flag);break-after:avoid}
+h3{font:700 11pt 'Familjen Grotesk';color:var(--navy);margin:12px 0 4px;break-after:avoid}
+p{margin:6px 0}
+ul{margin:0;padding-left:16px}li{margin:2px 0}li::marker{color:var(--flag)}
+table{width:100%;border-collapse:collapse;font-size:9.4pt;margin:6px 0}
+th{background:var(--navy);color:#fff;font:700 8.8pt 'Familjen Grotesk';text-align:left;padding:5px 7px}
+td{padding:5px 7px;border-bottom:1px solid var(--line);vertical-align:top}
+tr{break-inside:avoid}
+
+.tv-callout{background:var(--pale);border:1px solid #c9d7ea;border-left:5px solid var(--flag);border-radius:8px;padding:8px 12px;margin:0 0 12px}
+.tv-label{font:700 7.8pt 'Familjen Grotesk';letter-spacing:.16em;text-transform:uppercase;color:var(--flag)}
+.tv-warn{background:#fff4ee;border:1px solid #f3c7b3;border-radius:8px;padding:7px 11px;margin:10px 0}
+
+/* numbered list with navy discs: <ol class="tv-steps"> */
+ol.tv-steps{list-style:none;counter-reset:q;padding:0;margin:0}
+ol.tv-steps>li{counter-increment:q;position:relative;padding:0 0 0 30px;margin:0 0 10px;break-inside:avoid}
+ol.tv-steps>li::before{content:counter(q);position:absolute;left:0;top:1px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:#fff;font:700 9pt/20px 'Familjen Grotesk';text-align:center}
+ol.tv-steps>li>b:first-child{display:block;font:700 11.2pt 'Familjen Grotesk';color:var(--navy)}
+
+.tv-foot{margin-top:18px;border-top:1px solid var(--line);padding-top:6px;font-size:8pt;color:var(--soft);display:flex;justify-content:space-between;gap:12px}
