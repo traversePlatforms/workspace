@@ -112,8 +112,11 @@ HEAD = '''<!DOCTYPE html>
 '''
 
 # ---- the sponsor hand-out: categories, names, one line each; no prices, no hours ----
-css = ('body{counter-reset:q} ol.tv-steps{counter-reset:none} ol.tv-steps>li{margin-bottom:7px} h2{margin-top:13px}'
-       ' h2 small{font:400 9pt "Atkinson Hyperlegible";color:var(--soft);margin-left:6px}')
+css = ('body{counter-reset:q} ol.tv-steps{counter-reset:none} ol.tv-steps>li{margin-bottom:7px}'
+       # category headings (26 Nov, Matthew: "make it so the catergories are more prominent they fade a little into the distance")
+       ' h2{background:var(--navy);color:#fff;font:700 13.5pt "Familjen Grotesk";padding:6px 12px;margin:16px 0 9px;'
+       'border-left:6px solid var(--flag);border-radius:4px;letter-spacing:.01em}'
+       ' h2 small{font:400 9.2pt "Atkinson Hyperlegible";color:#c9d5e6;margin-left:10px}')
 out = [HEAD.format(title='Sponsor add-ons: what we can offer', css=css, kicker='Peak Pickleball sponsorships',
                    meta1='The tech side', meta2='of a Peak Pickleball sponsorship')]
 for cat, blurb, items in CATS:
@@ -125,10 +128,11 @@ out.append('</body>\n</html>\n')
 (HERE / 'sponsor-add-ons-list-2026-11-26.html').write_text('\n'.join(out))
 
 # ---- the internal time sheet ----
-css = ('body{font-size:9.6pt} table{font-size:8.9pt;margin-top:2px} td{padding:4px 7px} td.n{white-space:nowrap;text-align:center}'
+css = ('body{font-size:9.6pt} table{font-size:8.9pt;margin-top:2px} td{padding:3px 7px} td.n{white-space:nowrap;text-align:center}'
        ' th.n{text-align:center} td b{display:block;font:700 9.8pt "Familjen Grotesk";color:var(--navy)} .d{color:#3d4a5e}'
-       ' .dep{color:#a3420c;font-size:8.2pt} .ok{color:#1d6b45;font-weight:700} thead{display:table-header-group}'
-       ' tr.grp td{background:var(--pale);font:700 8pt "Familjen Grotesk";letter-spacing:.12em;text-transform:uppercase;color:var(--flag);padding:3px 7px}'
+       ' .dep{color:#a3420c;font-size:8.2pt} tbody.keep{break-inside:avoid} .ok{color:#1d6b45;font-weight:700} thead{display:table-header-group}'
+       ' tr.grp td{background:#dfe7f2;border-left:6px solid var(--flag);border-bottom:2px solid var(--navy);font:700 11pt "Familjen Grotesk";'
+       'letter-spacing:.04em;color:var(--navy);padding:7px 10px 5px}'
        ' .tv-callout{font-size:9pt;margin-bottom:8px} ul.notes{font-size:8.6pt;color:var(--soft);margin-top:6px}')
 out = [HEAD.format(title='Sponsor add-ons: time to build and run', css=css, kicker='Internal · for pricing',
                    meta1='For Matthew', meta2='Estimates, 26 Nov 2026'),
@@ -137,11 +141,14 @@ out = [HEAD.format(title='Sponsor add-ons: time to build and run', css=css, kick
        'is the hours per sponsor, per month, to keep it running. Price mostly on set-up plus monthly; the build is paid back over the first few sponsors.</div>',
        '<table>\n  <thead><tr><th>Add-on</th><th class="n">Build once</th><th class="n">Set up per sponsor</th><th class="n">Monthly per sponsor</th></tr></thead>']
 for cat, _, items in CATS:
-    out.append(f'  <tr class="grp"><td colspan="4">{e(cat)}</td></tr>')
-    for k, name, _, inner, dep, build, setup, monthly in items:
+    # the heading and its first row share a tbody that can't split, so a heading never sits alone at the foot of a page
+    out.append(f'  <tbody class="keep"><tr class="grp"><td colspan="4">{e(cat)}</td></tr>')
+    for j, (k, name, _, inner, dep, build, setup, monthly) in enumerate(items):
+        if j == 1: out.append('  </tbody><tbody>')
         d = f'{e(inner)}' + (f' <span class="dep">{e(dep)}</span>' if dep else '')
         b = e(build).replace(B, '<span class="ok">Built</span>')
         out.append(f'  <tr><td><b>{N[k]}. {e(name)}</b><span class="d">{d}</span></td><td class="n">{b}</td><td class="n">{e(setup)}</td><td class="n">{e(monthly)}</td></tr>')
+    out.append('  </tbody>')
 out.append('</table>')
 out.append(f'''<ul class="notes">
   <li><b>Typical bundles, per sponsor:</b> items {nums('qr', 'report', 'deals')} (QR codes, report, member deal) take about 1¼ h to set up and 30–45 min a month. Adding the TV slides, partner spot and sponsor page ({nums('tv', 'spot', 'page')}) brings it to about 3½ h to set up and 1½–2 h a month. Local search ({N['seo']}) adds 4–6 h to set up and 3–5 h a month.</li>
