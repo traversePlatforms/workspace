@@ -316,3 +316,45 @@ th { font-family: var(--head); color: var(--navy); background: var(--lgray); }
 .perks { font-family: var(--head); font-weight: 700; font-size: 1.05rem; }
 @media (max-width: 620px) { .perks { grid-template-columns: 1fr 1fr; gap: 14px; font-size: .95rem; } }
 @media (max-width: 1100px) { .menu-open .mbar { display: none; } .nav { max-height: calc(100vh - 120px); max-height: calc(100dvh - 120px); } }
+
+/* 26 Nov additions: one-tap booking (Play), compare table (Memberships), text-only card heads (Beyond the Court, Community) */
+.quick-book { background: var(--lgray); border: 1px solid #e3e8ec; border-radius: var(--radius); padding: 20px 20px 18px; margin: -12px 0 30px; }
+.qb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+.qb-grid .btn { padding: 10px 14px; font-size: .95rem; background: #fff; }
+.qb-grid .btn:hover { background: var(--navy); }
+.path .btn { margin-top: auto; align-self: flex-start; }
+.compare { margin-top: 44px; }
+.compare h3 { margin-bottom: 4px; }
+.compare table { min-width: 860px; font-size: .92rem; table-layout: fixed; }
+.compare thead th:first-child { width: 22%; }
+.compare th, .compare td { vertical-align: middle; }
+.compare caption { caption-side: top; text-align: left; padding: 14px 14px 10px; color: var(--dgray); font-size: .88rem; }
+.compare thead th { background: var(--navy); color: #fff; text-align: center; white-space: nowrap; }
+.compare thead th:first-child { text-align: left; }
+.compare tbody th { background: #fff; font-weight: 700; font-size: .92rem; min-width: 190px; }
+.compare td { text-align: center; color: var(--black); }
+.compare td.y { color: var(--navy); font-weight: 700; }
+.compare td.n { color: var(--dgray); }
+.compare tbody tr:nth-child(even) td, .compare tbody tr:nth-child(even) th { background: #f8fafb; }
+.compare .pop { background: #E6F8FC !important; }
+.compare thead th.pop { background: var(--cyan) !important; color: var(--navy); }
+.compare th:first-child { position: sticky; left: 0; z-index: 1; }
+.swipe-hint { display: none; }
+.card-text-head { aspect-ratio: 4/3; display: flex; flex-direction: column; justify-content: flex-end; padding: 22px; background: var(--navy); color: #fff; }
+.card-text-head b { font-family: var(--head); font-size: 1.7rem; font-weight: 800; line-height: 1.1; }
+.card-text-head span { color: var(--cyan); font-family: var(--head); font-weight: 700; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 6px; }
+.card-text-head.dark { background: var(--black); }
+.card-body ul { margin: 0 0 1em; padding-left: 20px; color: var(--dgray); font-size: .95rem; }
+.card-body li { margin-bottom: 4px; }
+.partner-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; text-align: left; max-width: 900px; margin: 0 auto 26px; }
+.partner-strip .card-text-head { aspect-ratio: auto; min-height: 150px; }
+@media (max-width: 620px) {
+  .swipe-hint { display: block; }
+  .compare table { min-width: 760px; }
+  .compare thead th:first-child { width: 140px; }
+  .compare tbody th { min-width: 0; font-size: .85rem; }
+  .partner-strip { grid-template-columns: 1fr; }
+  .quick-book { padding: 16px 14px; }
+  .qb-grid { grid-template-columns: 1fr 1fr; }
+  .card-text-head { aspect-ratio: auto; min-height: 140px; }
+}

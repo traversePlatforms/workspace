@@ -13,7 +13,9 @@ Matthew Sharpe's own work for Peak. A clickable mock to show Tyler and Cammie be
 
 ## Pages
 
-`index.html` (Home), `free-class.html` (the main conversion page), `memberships.html`, `play.html` (play schedule, leagues and tournaments, lessons and learning), `events.html` (upcoming events, private events, venue and expo rental, fundraisers, enquiry form), `sponsors.html` (Partner with Peak), and `coming-soon.html?p=<name>` for every other site-map item (PPU, FAQ, Fitness, Golf, Give 'Em Heaven, Amenities, Visit & Contact, Tournaments, privacy, terms, accessibility, About, Work with us).
+`index.html` (Home), `free-class.html` (the main conversion page), `memberships.html`, `play.html` (play schedule, leagues and tournaments, lessons and learning), `events.html` (upcoming events, private events, venue and expo rental, fundraisers, enquiry form), `sponsors.html` (Partner with Peak), `beyond.html` (Beyond the Court: Peak Golf, Peak Fitness, The Ernie, Senior Club, pro shop, amenities; added 26 Nov), and `coming-soon.html?p=<name>` for every other site-map item (PPU, FAQ, Give 'Em Heaven, Visit & Contact, Tournaments, privacy, terms, accessibility, About, Work with us, Volunteer).
+
+**Added 26 Nov 2026** (Matthew: "Add all 5 if they can provide purpose and use for us"): real dated events on `events.html` and a "Coming up" block on Home; a "Compare all plans" table on `memberships.html` (a real `<table>` with a caption and `scope` headers; scrolls sideways on phones with the plan-name column pinned); a "Community & partners" strip on Home (Give 'Em Heaven / $100,000 Club and Hotel Polaris as text cards, then "Your business here? Partner with Peak"); a "Book [type]" button for every play type on `play.html` plus a one-tap row of all nine; and `beyond.html`, linked from the Beyond the Court menu on every page. Employment and Volunteer stay footer links only. Event Register buttons carry `data-event="event_register_click"` (plan §3, Tournaments). The stylesheet link carries `?v=20261126` because the gate caches CSS for an hour.
 
 Shared header (logo, menus, "Try a free class" and "Book now"), footer (address, hours, phone, emails, Instagram, Facebook, policy links), a working phone menu, and the fixed phone bar (Free class / Book / Call), all per plan §3. Forms are mock only: submit shows a note and sends nothing.
 
@@ -34,6 +36,7 @@ Only `rclone lsf` / `copy` FROM the library with `--drive-shared-with-me`; nothi
 | `open-play-action`, `dupr-serve`, `players-laughing`, `sponsor-wall` | Tournaments / 5th Annual Veteran's Tournament / Day 2 Gender Doubles Content (_MG_0931, 0044, 0716, 0615) |
 | `tournament-podium`, `adaptive-play` | Tournaments / Pike Peak or Bust Tournament (IMG_5724, 5779) |
 | `neon-nights` | Events / Neon Nights / Neon Nights (IMG_4560) |
+| `fitness-gym` (26 Nov) | Peak Fitness / Peak fitness Branding (IMG_4834: the private gym, no people), cropped to 4:3, 1200 px, 62 KB |
 | `lounge-social`, `senior-group` | Holidays / Labor Day BBQ Bash (IMG_4396, 4403) |
 | "No experience needed / No equipment needed / Bring your friends / Bring your family / All ages welcome" | Peak Branding / Intro to Pickleball / "Your First Class Is Free at Peak Pickleball.png" (the flyer's text only; its photo was not used) |
 
@@ -62,6 +65,26 @@ Not used: "Random Peak Content" (an Air Force Academy event, not Peak's building
 | Sponsor names by tier; signs carry QR codes; many sponsors are local businesses | /peak-sponsors/ |
 | Instagram and Facebook links; CourtReserve memberships link | Home page |
 
+**From peakpickleball.us, fetched 26 Nov 2026 (curl), for the five additions:**
+
+| Fact | Page |
+|---|---|
+| Second Annual Christmas Cup: 12-13 Dec 2026, two-day team-based tournament, MLP-style format, competitive DUPR divisions, holiday spirit; its CR register link. Golden Ring: "Hotel Polaris Presents", 3rd annual, 15-17 Jan 2027, round robin and medal brackets, five event categories, multiple skill divisions, gold championship ring, early-bird registration open; its pickleballtournaments.com link. Friendsgiving Potluck (Wed 18 Nov 2026, 1-4pm) still listed but past, so left off | /events/ |
+| Every play type's CR list link used by the "Book [type]" buttons: Open Play WA5NF6FGDO, Leagues & Ladders 3ZAOTOKFQ5, Classes & Clinics WF1ZXMT7OM, Women's CJEBGYSSYM, Junior Z274XUWMY9, Senior 3KBXMKOKI7, DUPR S7K8LHTIRD, Veterans NTT4EPACS7 (all ...11811) | /play-pickleball/ |
+| Guided Open Play CR link HPD4A9BCX711811 | /guided-open-play/ |
+| Compare table: no new facts; every cell is from the plan cards (already logged from /membership/ on 23 Nov). Platinum's "everything in Unlimited" carries Unlimited's no-limits, discount and Family Plan rows | /membership/ (23 Nov) |
+| Community tiles: "Donate to Give'em Heaven" with the "$100,000 Club" tile image (text read from the image) and its GiveSmart donate link; "Hotel Polaris: Lowest Rates Hotel Polaris Offers Exclusive To Peak Pickleball" and its synxis booking link (promo H-PBAL, arrive 2026-03-10) | Home page |
+| Hotel Polaris "just minutes from Peak Pickleball"; "Visiting for a tournament" | /amenities/ |
+| Peak Golf: TrackMan indoor golf simulator upstairs by the private courts; lounge with couches and tables; food and drinks from Whistle Pig and Joey's Pizza; book in CourtReserve like a court; own clubs or Peak's; $50/hour Mon-Fri 7am-9pm and Sat-Sun 7am-8pm; CR booking link sId=20367; peakgolf.us | /peak-golf-simulator/ |
+| Peak Fitness: personal training in the private gym inside Peak; Alex Sistar, ISSA-certified; strength, mobility and injury prevention, conditioning, pickleball-specific performance; 30/60-minute sessions in 5 or 10 packs, 5 x 30 min $125; partner, online and hybrid options; CR account, book 24 h ahead, package first; CR booking link sId=22065 | /peak-fitness/ |
+| The Ernie: fitness for adults 55+, supportive weekly class, strength, balance, confidence on and off the court; join via the front counter (Member Group "The Ernie - Fitness Group"), then sign up in CR at no charge; monthly billing separate, by membership type; CR list QCC5SF4YP111811 | /the-ernie/ |
+| Senior Club: active adults 55+; Senior Open Play, Senior Drilling Sessions, 55+ DUPR Days, Top Gun Challenge Courts; CR list 3KBXMKOKI711811 | /senior-club/ |
+| Pro shop: Paddle Demo Program, 30 days to test demo paddles in the facility, demo fee refunded if you buy a paddle by the end of the trial; Player Assistance Desk; Komodo paddles and Bio Ball, Montis shoes, Dingk Sports | /visit-the-pro-shop/ |
+| Whistle Pig Brewing "a Colorado Springs favorite for over a decade", now pouring at Peak; free daily coffee, self-serve, courtesy of Peak (the Ziggi's vendor link on that page is not used); The Kitchen seats up to 20, tables, chairs, marker board, TV, near the courts, cornhole and table tennis | /amenities/ |
+| Employment ("collecting resumes", not hiring now) and Volunteer: footer links only, no sections | /employment/, /volunteer-at-peak/ |
+
+Not used: the golf leagues and lesson series on /peak-golf-simulator/ (February-April dates, not current); Alex Sistar's and the golf pro's personal phone numbers and emails; the 2024 construction posts.
+
 **From the plan (website-plan-2026-11-23.md):** the site map and menu structure; BOOK NOW link (CR public bookings); 4.9 stars from 587 Google reviews (Google Business Profile, 23 Nov); Starter $35 for Intro grads (CR sales data); partnerships@peakpickleball.us for sponsor forms; Title / Court / Logo tiers; the conflicts flagged below; the fixed phone bar; contrast rule (dark text on cyan).
 
 **Copy written for the mock (not factual claims):** headings, intros and button labels. Lines that would have needed a source were cut: "thousands of active members" (live sponsor page; Peak's own data doesn't support it), "one of the largest privately owned indoor pickleball facilities", the expo's square footage and the April 2026 Senior Lifestyle Expo (not on Peak's site, brand files or the plan).
@@ -72,6 +95,7 @@ Not used: "Random Peak Content" (an Air Force Academy event, not Peak's building
 - Brandon: final sponsor package contents, including Logo tier.
 - League lead: season dates, levels, formats.
 - Book a Pro booking link (the plan's "existing lesson link" wasn't on the pages fetched).
+- Added 26 Nov: Tyler, whether the events list (Home and Events) can come straight from CourtReserve; Cammie, Neon Nights and other club nights; Scott, a line on what Give 'Em Heaven does and what the $100,000 Club is; Peak, a fresh Hotel Polaris booking link (the live one opens on March 2026 dates); Peak Golf, 2027 leagues and lessons; Peak, The Ernie's monthly price by membership type and the demo paddle fee; Cammie, whether Whataburger Mondays still runs; Tyler, every cell of the compare table with the prices.
 
 **Unresolved:** the Veterans Play CR link exists on /play-pickleball/ today (the plan said it had none); used as found.
 
@@ -80,3 +104,8 @@ Not used: "Random Peak Content" (an Air Force Academy event, not Peak's building
 - curl: gate page 200 with X-Robots-Tag; any path without a session returns the sign-in form; a wrong code gets 401; with the code (read from the file, never printed) all 7 pages, CSS, JS, images and fonts return 200 with the right types; unknown paths 404; robots.txt shows the prefix rule.
 - Headless Chrome (CDP, signed in, 390 px wide): `tests/phone-index.png`, `tests/phone-free-class.png` (full page, phone bar hidden for the capture), `*-first-screen.png` (with the phone bar), `tests/phone-menu-open.png`. Desktop checked at 1440, 1280 and 1024 px. The phone menu shows below 1100 px.
 - Not yet done: Lighthouse speed run and a full WCAG pass (plan week 4).
+
+## Checks run (26 Nov 2026)
+
+- Headless Chrome (puppeteer-core, local `python3 -m http.server`), every page at 1440 and 390 wide: no console errors, no failed requests, no broken internal links or #anchors, no sideways page overflow, no visible button under 44 px. Screenshots of Home, Events, Memberships, Play and Beyond looked at by eye.
+- Deploy: the live private `site/` was backed up first to `~/upload-backups/peak-site-mock-site.before-5adds-20261126.tar.gz` (0600), then the HTML, CSS, JS, images and fonts were uploaded (0700/0600). Signed out, `/`, `beyond.html` and an image return the sign-in form; signed in (code read from the file, never printed), all 8 pages, CSS, JS and images return 200 with the right types; an unknown path is 404.
