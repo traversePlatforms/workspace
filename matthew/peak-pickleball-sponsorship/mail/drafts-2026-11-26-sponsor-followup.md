@@ -34,7 +34,7 @@ The 172 held sponsor contacts are the 2nd and 3rd people at the same 43 companie
 >
 > Thanks,
 
-## 3. Stephanie (Front Range Makers Market): Mon 30 Nov, only if she hasn't answered
+## 3. Stephanie (Front Range Makers Market): Tue 1 Dec, only if she hasn't answered (Matthew: give her through the holiday)
 Reply in her thread, from Peak Partnerships.
 
 > Hi Stephanie,
