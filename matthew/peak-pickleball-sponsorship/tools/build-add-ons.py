@@ -31,7 +31,7 @@ CATS = [
   ('tv', "Sponsor slides on Peak's TVs", 'Your business in a rotating reel on the screens around the club, including "Court 4 presented by" boards.',
    'Rotating reel and "Court 4 presented by" boards.', 'Depends on what runs the TVs.', '8–12 h', '1 h', '15–30 min'),
   ('spot', 'Partner spot in member emails', 'A "This month\'s partner" feature in Peak\'s emails to members.',
-   '"This month\'s partner" block, clicks counted.', '', '2 h', '15 min', '30 min*'),
+   '"This month\'s partner" block, clicks counted; time only in months they\'re featured.', '', '2 h', '15 min', '30 min'),
   ('page', "Sponsor page on Peak's website", 'A profile of your business on peakpickleball.us with links to you.',
    'Profile with tracked links.', 'Needs the website login.', '4–6 h', '1 h', '15 min'),
   ('staff', 'Staff sign-up link', 'If your sponsorship includes memberships for your team: a sign-up link that shows how many joined and played.',
@@ -85,6 +85,16 @@ CATS = [
  ]),
 ]
 
+# monthly per sponsor ONCE AUTOMATED (26 Nov, Matthew: "most of this can be automated though after the intial setup right?" -> "yes add the
+# column"). Automating costs about 20-40 h of extra one-time build in total. Judgment, writing and approvals stay human.
+AUTO = {'qr': '0', 'report': '~5 min', 'stats': '0', 'sstats': '0',
+        'tv': '~5 min', 'spot': '~10 min', 'page': '0', 'staff': '0', 'pres': '~15 min per event', 'event': '~10 min per event',
+        'cam': '~1 h', 'wifi': '0',
+        'health': 'none (one-time)', 'landing': '0', 'forms': '0', 'newsite': 'see hosting', 'host': '15–30 min',
+        'seo': '1–2 h', 'revreq': '0', 'revalert': '0',
+        'profile': 'none (one-time)', 'posts': '1–2 h', 'spotlight': '~10 min', 'video': '1–2 h per video',
+        'deals': '~5 min', 'ads': '~1 h', 'news': '45 min–1 h'}
+
 N = {}
 i = 0
 for _, _, items in CATS:
@@ -92,6 +102,7 @@ for _, _, items in CATS:
         i += 1
         N[it[0]] = i
 assert i == 27, i
+assert set(AUTO) == set(N), set(N) ^ set(AUTO)
 e = html.escape
 def nums(*ks): return ', '.join(str(N[k]) for k in ks[:-1]) + ' and ' + str(N[ks[-1]])
 
@@ -128,34 +139,34 @@ out.append('</body>\n</html>\n')
 (HERE / 'sponsor-add-ons-list-2026-11-26.html').write_text('\n'.join(out))
 
 # ---- the internal time sheet ----
-css = ('body{font-size:9.6pt} table{font-size:8.9pt;margin-top:2px} td{padding:3px 7px} td.n{white-space:nowrap;text-align:center}'
-       ' th.n{text-align:center} td b{display:block;font:700 9.8pt "Familjen Grotesk";color:var(--navy)} .d{color:#3d4a5e}'
+css = ('body{font-size:9.6pt} table{font-size:8.5pt;margin-top:2px;table-layout:fixed} td{padding:3px 6px} th,td{width:13%} th:first-child,td:first-child{width:48%} tr.grp td{width:auto} td.n{white-space:nowrap;text-align:center}'
+       ' th.n{text-align:center} td b{display:block;font:700 9.4pt "Familjen Grotesk";color:var(--navy)} .d{color:#3d4a5e}'
        ' .dep{color:#a3420c;font-size:8.2pt} tbody.keep{break-inside:avoid} .ok{color:#1d6b45;font-weight:700} thead{display:table-header-group}'
        ' tr.grp td{background:#dfe7f2;border-left:6px solid var(--flag);border-bottom:2px solid var(--navy);font:700 11pt "Familjen Grotesk";'
        'letter-spacing:.04em;color:var(--navy);padding:7px 10px 5px}'
-       ' .tv-callout{font-size:9pt;margin-bottom:8px} ul.notes{font-size:8.6pt;color:var(--soft);margin-top:6px}')
+       ' th.auto{background:#1d6b45} td.auto{background:#eef7f1;color:#1d6b45;font-weight:700} .tv-callout{font-size:9pt;margin-bottom:8px} ul.notes{font-size:8.6pt;color:var(--soft);margin-top:6px}')
 out = [HEAD.format(title='Sponsor add-ons: time to build and run', css=css, kicker='Internal · for pricing',
                    meta1='For Matthew', meta2='Estimates, 26 Nov 2026'),
        '<div class="tv-callout"><div class="tv-label">How to read it</div><b>Build once</b> is done one time and serves every sponsor after '
        '(<span class="ok">Built</span> = already running for Peak or Traverse). <b>Set up</b> is the time each new sponsor takes. <b>Monthly</b> '
-       'is the hours per sponsor, per month, to keep it running. Price mostly on set-up plus monthly; the build is paid back over the first few sponsors.</div>',
-       '<table>\n  <thead><tr><th>Add-on</th><th class="n">Build once</th><th class="n">Set up per sponsor</th><th class="n">Monthly per sponsor</th></tr></thead>']
+       'is the hours per sponsor, per month, to keep it running as it is today; <b>Once automated</b> is the same after the extra build '
+       '(about 20–40 h in all). Price on what it is worth to the sponsor, with these hours as the floor; automation is your margin and how far it scales. Orange notes depend on Peak\'s systems. All estimates, not quotes.</div>',
+       '<table>\n  <thead><tr><th>Add-on</th><th class="n">Build once</th><th class="n">Set up per sponsor</th><th class="n">Monthly per sponsor</th><th class="n auto">Monthly, once automated</th></tr></thead>']
 for cat, _, items in CATS:
     # the heading and its first row share a tbody that can't split, so a heading never sits alone at the foot of a page
-    out.append(f'  <tbody class="keep"><tr class="grp"><td colspan="4">{e(cat)}</td></tr>')
+    out.append(f'  <tbody class="keep"><tr class="grp"><td colspan="5">{e(cat)}</td></tr>')
     for j, (k, name, _, inner, dep, build, setup, monthly) in enumerate(items):
         if j == 1: out.append('  </tbody><tbody>')
         d = f'{e(inner)}' + (f' <span class="dep">{e(dep)}</span>' if dep else '')
         b = e(build).replace(B, '<span class="ok">Built</span>')
-        out.append(f'  <tr><td><b>{N[k]}. {e(name)}</b><span class="d">{d}</span></td><td class="n">{b}</td><td class="n">{e(setup)}</td><td class="n">{e(monthly)}</td></tr>')
+        out.append(f'  <tr><td><b>{N[k]}. {e(name)}</b><span class="d">{d}</span></td><td class="n">{b}</td><td class="n">{e(setup)}</td><td class="n">{e(monthly)}</td><td class="n auto">{e(AUTO[k])}</td></tr>')
     out.append('  </tbody>')
 out.append('</table>')
 out.append(f'''<ul class="notes">
-  <li><b>Typical bundles, per sponsor:</b> items {nums('qr', 'report', 'deals')} (QR codes, report, member deal) take about 1¼ h to set up and 30–45 min a month. Adding the TV slides, partner spot and sponsor page ({nums('tv', 'spot', 'page')}) brings it to about 3½ h to set up and 1½–2 h a month. Local search ({N['seo']}) adds 4–6 h to set up and 3–5 h a month.</li>
-  <li><b>A website and socials starter ({', '.join(str(N[k]) for k in ['stats', 'sstats', 'health', 'revreq', 'profile', 'posts'])}):</b> about 8–12 h to set up, then 3–5 h a month, almost all of it the monthly posts.</li>
-  <li><b>The real monthly labour</b> is local search ({N['seo']}), monthly posts ({N['posts']}), videos ({N['video']}), ads ({N['ads']}) and the newsletter ({N['news']}). Price those by the hour. Most of the rest runs itself once it's set up.</li>
-  <li>* The partner spot only costs time in months when that sponsor is featured.</li>
-  <li>Orange notes depend on Peak's systems, so those builds could run longer once we see them. These are estimates, not quotes.</li>
+  <li><b>Typical bundles, per sponsor:</b> items {nums('qr', 'report', 'deals')} (QR codes, report, member deal) take about 1¼ h to set up and 30–45 min a month today, <b>about 10 min once automated</b>. Adding the TV slides, partner spot and sponsor page ({nums('tv', 'spot', 'page')}) brings it to about 3½ h to set up and 1½–2 h a month today, <b>about 25 min once automated</b>. Local search ({N['seo']}) adds 4–6 h to set up and 3–5 h a month (1–2 h automated).</li>
+  <li><b>A website and socials starter ({', '.join(str(N[k]) for k in ['stats', 'sstats', 'health', 'revreq', 'profile', 'posts'])}):</b> about 8–12 h to set up, then 3–5 h a month today, <b>1–2 h once automated</b>, all of it the monthly posts.</li>
+  <li><b>What stays real work</b> even automated: local search ({N['seo']}), monthly posts ({N['posts']}), videos ({N['video']}), ads ({N['ads']}) and the newsletter ({N['news']}), because they need judgment, writing or the sponsor's approval. Nothing posts or sends without an OK.</li>
+  <li><b>Keep about 15 min a month per sponsor</b> on top of these for check-ins, questions and fixing what breaks.</li>
 </ul>
 </body>
 </html>
